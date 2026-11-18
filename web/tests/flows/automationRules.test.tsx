@@ -25,11 +25,7 @@ describe("Automation editor: publishing and schedule rules", () => {
     ).toBeChecked();
     expect(
       review.getByText(/^Runs every 6 hours, 08:00 to 20:00 \(Asia\/Kolkata\)/),
-    ).toHaveTextContent(
-      "Runs every 6 hours, 08:00 to 20:00 (Asia/Kolkata), at most 2 a day. " +
-        "Retries a failed run up to 2 times, after 15 minutes. Rejects runs scoring under 60. " +
-        "Publishes publicly when the score reaches 90, otherwise after you approve.",
-    );
+    ).toHaveTextContent(/Goes public at 18:00 \(Asia\/Kolkata\)\.$/);
     const schedule = sectionByName("Schedule");
     expect(schedule.getByLabelText(/^From/)).toHaveValue("08:00");
     expect(schedule.getByLabelText(/^At most/)).toHaveValue(2);

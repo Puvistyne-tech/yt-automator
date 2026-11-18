@@ -1,3 +1,5 @@
+import { toOneDecimal } from "@/shared/format/numbers";
+
 export const AUTO_REJECT_PREFIX = "Rejected automatically:";
 export const AUTO_RETRY_PREFIX = "Automatic retry ";
 export const AUTO_PUBLISH_STARTED = "Publishing automatically after approval";
@@ -5,7 +7,7 @@ export const AUTO_PUBLISH_STOPPED_PREFIX = "Auto-publish stopped:";
 const SKIPPED_START = /^Scheduled start at (.+) skipped: /;
 
 export function autoRejectMessage(score: number, threshold: number): string {
-  return `${AUTO_REJECT_PREFIX} the score ${score.toFixed(1)} is below the auto-reject threshold ${threshold}`;
+  return `${AUTO_REJECT_PREFIX} the score ${toOneDecimal(score)} is below the auto-reject threshold ${threshold}`;
 }
 
 export function autoRetryMessage(
@@ -15,6 +17,10 @@ export function autoRetryMessage(
   error: string,
 ): string {
   return `${AUTO_RETRY_PREFIX}${attempt} of ${count} from stage ${stageId} after: ${error}`;
+}
+
+export function autoPublishStoppedMessage(reason: string): string {
+  return `${AUTO_PUBLISH_STOPPED_PREFIX} ${reason}`;
 }
 
 export function skippedStartMessage(when: string, runId: string, state: string): string {

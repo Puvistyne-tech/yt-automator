@@ -35,6 +35,9 @@ function pendingRetry(run: Run): AutomaticEvent[] {
 
 function fromLog(log: RunLog, index: number): AutomaticEvent | null {
   const key = `log-${index}`;
+  if (log.stage_id !== null) {
+    return null;
+  }
   if (log.message.startsWith(AUTO_RETRY_PREFIX)) {
     return { key, tone: "info", title: "Retried automatically", detail: log.message };
   }

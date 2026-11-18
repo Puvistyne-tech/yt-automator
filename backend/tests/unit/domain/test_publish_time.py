@@ -66,6 +66,14 @@ def test_a_time_of_day_publish_in_the_spring_gap_moves_forward() -> None:
             {"publish_time_of_day": NEEDS_PUBLIC},
         ),
         (
+            {
+                "publish_time_of_day": "18:00",
+                "publish_delay_minutes": 5,
+                "privacy": Privacy.PRIVATE,
+            },
+            {"publish_time_of_day": DELAY_OR_TIME},
+        ),
+        (
             {"publish_time_of_day": "7"},
             {"publish_time_of_day": "'7' is not a time of day: use a 24-hour time such as 08:00"},
         ),

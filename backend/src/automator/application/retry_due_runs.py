@@ -19,10 +19,10 @@ def automatic_retry_reset(now: datetime, stored: Run) -> Run:
     return retry_reset(None, stored).model_copy(update={"auto_retries": stored.auto_retries + 1})
 
 
-def retry_message(run: Run) -> str:
-    stage = run.stages[retry_start(run, None)].stage_id if run.stages else "start"
-    attempt = f"{run.auto_retries + 1} of {run.retry_policy.auto_retry_count}"
-    return f"Automatic retry {attempt} from stage {stage} after: {run.error or 'failure'}"
+def retry_message(queued: Run, failure: str | None) -> str:
+    stage = queued.stages[retry_start(queued, None)].stage_id if queued.stages else "start"
+    attempt = f"{queued.auto_retries} of {queued.retry_policy.auto_retry_count}"
+    return f"Automatic retry {attempt} from stage {stage} after: {failure or 'failure'}"
 
 
 @dataclass(frozen=True)
@@ -37,12 +37,14 @@ class RetryDueRuns:
             (run for run in failed if retry_due(run, now)), key=lambda run: run.created_at
         )
 
+    def retried(self, run: Run, now: datetime) -> Run | None:
+        try:
+            queued = self.retry.requeue(run.id, partial(automatic_retry_reset, now))
+        except AppError:
+            return None
+        self.recorder.log(queued.id, retry_message(queued, run.error))
+        return self.runs.get(queued.id) or queued
+
     def execute(self, now: datetime) -> list[Run]:
-        retried: list[Run] = []
-        for run in self.due(now):
-            self.recorder.log(run.id, retry_message(run))
-            try:
-                retried.append(self.retry.requeue(run.id, partial(automatic_retry_reset, now)))
-            except AppError:
-                continue
-        return retried
+        retried = (self.retried(run, now) for run in self.due(now))
+        return [run for run in retried if run is not None]

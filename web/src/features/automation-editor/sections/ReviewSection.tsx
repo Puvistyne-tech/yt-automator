@@ -5,7 +5,8 @@ import {
   EditorSection,
   type SectionProps,
 } from "@/features/automation-editor/sections/EditorSection";
-import { RulesSummary, ToggleField } from "@/features/automation-editor/sections/ToggleField";
+import { RulesSummary } from "@/features/automation-editor/sections/RulesSummary";
+import { ToggleField } from "@/features/automation-editor/sections/ToggleField";
 import { FormField, NumberInput, RadioCards } from "@/shared/ui";
 
 const MODES = [

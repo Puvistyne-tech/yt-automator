@@ -1,6 +1,6 @@
 import { HttpResponse, http } from "msw";
 import { artifactResponse } from "@/api/mocks/artifactFiles";
-import { afterApproval } from "@/api/mocks/autoRules";
+import { queueAutoPublish } from "@/api/mocks/autoRules";
 import { db, noContent, notFound, ruleConflict } from "@/api/mocks/db";
 import { publishRun } from "@/api/mocks/publish";
 import { retriedRun } from "@/api/mocks/retry";
@@ -73,7 +73,7 @@ export const runHandlers = [
             "run_not_awaiting_review",
             `run ${run.id} is ${run.status}, not awaiting review`,
           )
-        : afterApproval({
+        : queueAutoPublish({
             ...run,
             status: body.decision,
             review: { decision: body.decision, notes: body.notes ?? "", decided_at: db.now() },

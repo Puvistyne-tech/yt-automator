@@ -1,7 +1,7 @@
 import { AUTO_PUBLISH_STARTED, autoRejectMessage } from "@/api/automaticEvents";
 import { DEFAULT_REVIEW_POLICY } from "@/api/automationDefaults";
 import { api } from "@/api/client";
-import { DELAY_OR_TIME, NEEDS_PUBLIC } from "@/api/mocks/automationRules";
+import { DELAY_OR_TIME, NEEDS_PUBLIC, NEVER_STARTS } from "@/api/mocks/automationRules";
 import { afterApproval, autoRejected, scoredStatus } from "@/api/mocks/autoRules";
 import { db } from "@/api/mocks/db";
 import { makeAutomation, makeRun, makeTarget } from "@/api/mocks/fixtures/factories";
@@ -48,6 +48,18 @@ describe("mock automation rules", () => {
     [
       { schedule: { ...base.schedule, active_from: "8", active_until: "09:00" } },
       { "schedule.active_from": "'8' is not a time of day: use a 24-hour time such as 08:00" },
+    ],
+    [
+      {
+        schedule: {
+          ...base.schedule,
+          kind: "cron" as const,
+          cron: "0 3 * * *",
+          active_from: "08:00",
+          active_until: "20:00",
+        },
+      },
+      { "schedule.active_from": NEVER_STARTS },
     ],
     [
       { schedule: { ...base.schedule, max_runs_per_day: 0 } },
@@ -118,6 +130,26 @@ describe("mock review rules", () => {
     expect(afterApproval(reviewRun({ status: "approved" })).status).toBe("approved");
   });
 
+  it("records when a scheduled public upload goes public", () => {
+    const policy = { ...DEFAULT_REVIEW_POLICY, auto_publish: true };
+    const timed = { privacy: "public" as const, publish_time_of_day: "18:00" };
+    db.state.automations = db.state.automations.map((a) => ({
+      ...a,
+      targets: a.targets.map((target) => ({ ...target, ...timed })),
+    }));
+    const published = afterApproval(reviewRun({ status: "approved", review_policy: policy }));
+    expect(published.uploads.every((upload) => upload.publish_at !== null)).toBe(true);
+  });
+
+  it("stops an auto-publish when every upload fails", () => {
+    const policy = { ...DEFAULT_REVIEW_POLICY, auto_publish: true };
+    const stopped = afterApproval(
+      reviewRun({ status: "approved", review_policy: policy, languages: ["xx"] }),
+    );
+    expect(stopped.status).toBe("approved");
+    expect(stopped.logs.at(-1)?.message).toBe("Auto-publish stopped: no upload succeeded");
+  });
+
   it("stops an auto-publish without targets", () => {
     const policy = { ...DEFAULT_REVIEW_POLICY, auto_publish: true };
     db.state.automations = db.state.automations.map((a) => ({ ...a, targets: [] }));
@@ -132,7 +164,24 @@ describe("mock review rules", () => {
     const policy = { ...DEFAULT_REVIEW_POLICY, auto_publish: true };
     db.state.runs = [reviewRun({ review_policy: policy })];
     const reviewed = await api.post<Run>("/runs/run-x/review", { decision: "approved" });
-    expect(reviewed.status).toBe("published");
+    expect(reviewed.status).toBe("approved");
+    expect(db.state.publishQueue).toEqual(["run-x"]);
+    tick();
+    expect(db.state.runs[0]?.status).toBe("published");
+    expect(db.state.publishQueue).toEqual([]);
+  });
+
+  it("approving by hand without auto-publish queues nothing", async () => {
+    db.state.runs = [reviewRun({})];
+    await api.post<Run>("/runs/run-x/review", { decision: "approved" });
+    expect(db.state.publishQueue).toEqual([]);
+  });
+
+  it("drops a queued auto-publish for a deleted run", () => {
+    db.state.publishQueue = ["run-gone"];
+    db.state.runs = [];
+    tick();
+    expect(db.state.publishQueue).toEqual([]);
   });
 
   it("the simulator rejects a run under the threshold", () => {

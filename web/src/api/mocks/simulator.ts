@@ -53,7 +53,21 @@ function advanceStages(run: Run): Run {
   return logged({ ...run, stages }, { level: "info", stage_id: updated.stage_id, message });
 }
 
+function publishQueued(runId: string) {
+  const run = db.state.runs.find((item) => item.id === runId);
+  if (run !== undefined) {
+    const published = afterApproval(run);
+    emit(run, "status", { status: published.status });
+    replaceRun(published);
+  }
+}
+
 export function tick() {
+  const queued = db.state.publishQueue.shift();
+  if (queued !== undefined) {
+    publishQueued(queued);
+    return;
+  }
   const run = db.state.runs.find((item) => item.status === "running" || item.status === "queued");
   if (run !== undefined) {
     replaceRun(run.status === "queued" ? startRun(run) : advanceStages(run));

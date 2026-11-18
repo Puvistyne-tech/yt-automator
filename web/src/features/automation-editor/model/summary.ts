@@ -61,8 +61,7 @@ export function retryPhrase(policy: RetryPolicy): string {
 export function privacyWord(targets: TargetDraft[], channels: Channel[]): string | null {
   const words = new Set(
     targets.map((target) => {
-      const channel = channels.find((c) => c.id === target.channel_id);
-      const privacy = target.privacy ?? channel?.defaults.privacy;
+      const privacy = effectivePrivacy(target, channels);
       return privacy === undefined ? "with the channel default" : PRIVACY_WORDS[privacy];
     }),
   );
@@ -70,6 +69,23 @@ export function privacyWord(targets: TargetDraft[], channels: Channel[]): string
     return null;
   }
   return words.size === 1 ? ([...words][0] ?? null) : "with each target's privacy";
+}
+
+function effectivePrivacy(target: TargetDraft, channels: Channel[]): Privacy | undefined {
+  return target.privacy ?? channels.find((c) => c.id === target.channel_id)?.defaults.privacy;
+}
+
+export function publishTimePhrase(targets: TargetDraft[], channels: Channel[]): string {
+  const times = new Set(
+    targets
+      .filter((target) => effectivePrivacy(target, channels) === "public")
+      .flatMap((target) =>
+        target.publish_time_of_day === null
+          ? []
+          : [`${target.publish_time_of_day} (${target.publish_timezone})`],
+      ),
+  );
+  return times.size === 0 ? "" : `Goes public at ${[...times].join(" and ")}.`;
 }
 
 function approvalPhrase(policy: ReviewPolicy): string {
@@ -100,6 +116,7 @@ export function automationSummary(draft: AutomationDraft, channels: Channel[]): 
     schedulePhrase(draft.schedule),
     retryPhrase(draft.retry_policy),
     reviewPhrase(draft.review_policy, privacy),
+    publishTimePhrase(draft.targets, channels),
   ]
     .filter((part) => part !== "")
     .join(" ");

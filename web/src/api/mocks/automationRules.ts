@@ -6,10 +6,12 @@ import type {
   Schedule,
   TargetInput,
 } from "@/api/types";
+import { cronTimesOfDay } from "@/shared/format/cron";
+import { isNotPublic, isTimeOfDay, minutesOfDay, withinHours } from "@/shared/format/timeOfDay";
 
-const TIME_OF_DAY = /^([01]\d|2[0-3]):[0-5]\d$/;
 const BOTH_ACTIVE_HOURS = "set both the start and the end of the active hours, or neither";
 export const DELAY_OR_TIME = "choose a publish delay or a time of day, not both";
+export const NEVER_STARTS = "the schedule never starts inside the active hours";
 export const NEEDS_PUBLIC =
   "a publish time only applies to public videos: set privacy to Public or Channel default";
 
@@ -25,10 +27,20 @@ function knownZone(zone: string): boolean {
 }
 
 function timeError(value: string | null, field: string): Errors {
-  if (value === null || TIME_OF_DAY.test(value)) {
+  if (value === null || isTimeOfDay(value)) {
     return {};
   }
   return { [field]: `'${value}' is not a time of day: use a 24-hour time such as 08:00` };
+}
+
+function neverStarts(schedule: Schedule): boolean {
+  const { active_from: from, active_until: until } = schedule;
+  if (schedule.kind !== "cron" || !isTimeOfDay(from) || !isTimeOfDay(until)) {
+    return false;
+  }
+  const window = [minutesOfDay(from), minutesOfDay(until)] as const;
+  const times = cronTimesOfDay(schedule.cron ?? "");
+  return times.length > 0 && !times.some((minute) => withinHours(minute, ...window));
 }
 
 function scheduleRuleErrors(schedule: Schedule): Errors {
@@ -44,6 +56,9 @@ function scheduleRuleErrors(schedule: Schedule): Errors {
   }
   if (schedule.max_runs_per_day !== null && schedule.max_runs_per_day < 1) {
     errors["schedule.max_runs_per_day"] = "Input should be greater than or equal to 1";
+  }
+  if (Object.keys(errors).length === 0 && neverStarts(schedule)) {
+    errors["schedule.active_from"] = NEVER_STARTS;
   }
   return errors;
 }
@@ -89,7 +104,7 @@ function publishTimeErrors(target: TargetInput, index: number): Errors {
   if (target.publish_delay_minutes > 0) {
     errors[at("publish_time_of_day")] ??= DELAY_OR_TIME;
   }
-  if (target.privacy === "private" || target.privacy === "unlisted") {
+  if (isNotPublic(target.privacy)) {
     errors[at("publish_time_of_day")] ??= NEEDS_PUBLIC;
   }
   return errors;

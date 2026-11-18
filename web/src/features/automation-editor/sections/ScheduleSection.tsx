@@ -7,11 +7,11 @@ import {
   type SectionProps,
 } from "@/features/automation-editor/sections/EditorSection";
 import { RetryFields } from "@/features/automation-editor/sections/RetryFields";
+import { RulesSummary } from "@/features/automation-editor/sections/RulesSummary";
 import {
   type ScheduleFieldsProps,
   ScheduleLimits,
 } from "@/features/automation-editor/sections/ScheduleLimits";
-import { RulesSummary } from "@/features/automation-editor/sections/ToggleField";
 import { describeSchedule, timezoneSelectOptions } from "@/shared/format/schedule";
 import { FormField, Icon, Input, NumberInput, RadioCards, Select } from "@/shared/ui";
 

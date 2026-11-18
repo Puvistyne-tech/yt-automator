@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from automator.domain.channels import Privacy
 from automator.domain.quality import ReviewMode, ReviewPolicy
 from automator.domain.run_enums import LogLevel, ReviewDecision, RunStatus, UploadStatus
@@ -7,10 +9,12 @@ from automator.domain.runs import Run
 from tests.fixtures.builders import execute_run, finished_run, started_run, target_input
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import review_run
+from tests.unit.application.test_run_races import cancels, scoring_with
 
 AUTO_PUBLISH = ReviewPolicy(mode=ReviewMode.AUTO_WHEN_SCORE_AT_LEAST, auto_publish=True)
 HAND_THEN_PUBLISH = ReviewPolicy(auto_publish=True)
 REJECT_UNDER_50 = ReviewPolicy(reject_below=50)
+TWO_TARGETS = (target_input(variants=("landscape",)), target_input(variants=("short",)))
 
 
 def messages(run: Run, level: LogLevel | None = None) -> list[str]:
@@ -90,3 +94,41 @@ def test_an_auto_publish_for_a_deleted_run_returns_the_last_known_run(harness: H
     approved = run.model_copy(update={"status": RunStatus.APPROVED})
     harness.runs.delete(run.id)
     assert harness.auto_publish.after_approval(approved) == approved
+
+
+def test_approving_by_hand_publishes_at_the_target_time_of_day(harness: Harness) -> None:
+    timed = target_input(privacy=Privacy.PUBLIC, publish_time_of_day="18:00")
+    run = finished_run(harness, targets=(timed,), review_policy=HAND_THEN_PUBLISH)
+    review_run(harness).execute(run.id, ReviewDecision.APPROVED)
+    published = execute_run(harness).execute(run.id)
+    six_pm = datetime(2026, 1, 5, 18, tzinfo=UTC)
+    assert published.status is RunStatus.PUBLISHED and published.uploads[0].publish_at == six_pm
+    assert harness.youtube.uploads[0].publish_at == six_pm
+
+
+def test_auto_publish_with_one_failing_target_still_publishes(harness: Harness) -> None:
+    harness.youtube.failing_videos = {"en-short.mp4"}
+    run = finished_run(harness, targets=TWO_TARGETS, review_policy=AUTO_PUBLISH)
+    assert run.status is RunStatus.PUBLISHED
+    assert [upload.status for upload in run.uploads] == [UploadStatus.DONE, UploadStatus.FAILED]
+
+
+def test_auto_publish_with_every_target_failing_stays_approved(harness: Harness) -> None:
+    harness.youtube.failing_videos = {"en-landscape.mp4", "en-short.mp4"}
+    run = finished_run(harness, targets=TWO_TARGETS, review_policy=AUTO_PUBLISH)
+    assert run.status is RunStatus.APPROVED
+    assert messages(run, LogLevel.WARNING)[-1] == "Auto-publish stopped: no upload succeeded"
+
+
+def test_an_auto_rejected_run_never_auto_publishes(harness: Harness) -> None:
+    policy = ReviewPolicy(reject_below=50, auto_publish=True)
+    run = finished_run(harness, settings={"score": 40}, review_policy=policy)
+    assert run.status is RunStatus.REJECTED and run.uploads == ()
+    assert harness.youtube.uploads == []
+
+
+def test_a_run_cancelled_while_scoring_is_not_rejected(harness: Harness) -> None:
+    scoring_with(harness, cancels(harness))
+    run = finished_run(harness, settings={"score": 40}, review_policy=REJECT_UNDER_50)
+    assert run.status is RunStatus.CANCELLED and run.review is None
+    assert messages(run, LogLevel.WARNING) == []

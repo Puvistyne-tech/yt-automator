@@ -41,6 +41,10 @@ def retry_reset(from_stage: str | None, run: Run) -> Run:
     )
 
 
+def manual_retry_reset(from_stage: str | None, run: Run) -> Run:
+    return retry_reset(from_stage, run).model_copy(update={"auto_retries": 0})
+
+
 @dataclass(frozen=True)
 class RetryRun:
     runs: RunRepository
@@ -50,7 +54,7 @@ class RetryRun:
 
     def execute(self, run_id: str, from_stage: str | None = None) -> Run:
         require_run(self.runs, run_id)
-        return self.requeue(run_id, partial(retry_reset, from_stage))
+        return self.requeue(run_id, partial(manual_retry_reset, from_stage))
 
     def requeue(self, run_id: str, reset: Prepare) -> Run:
         before: list[Run] = []

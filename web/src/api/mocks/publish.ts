@@ -1,6 +1,7 @@
 import { isKidsPipeline } from "@/api/capabilities";
 import { db } from "@/api/mocks/db";
 import { makeUpload } from "@/api/mocks/fixtures/factories";
+import { scheduledPublish } from "@/api/mocks/publishTime";
 import type { ChannelDefaults, Run, Target, Upload } from "@/api/types";
 
 export const NO_UPLOAD_SUCCEEDED = "no upload succeeded";
@@ -42,12 +43,14 @@ function effectiveAudience(run: Run, target: Target): Pick<Upload, "privacy" | "
 
 function uploadFor(run: Run, target: Target, variant: string): Upload {
   const reason = skipReason(run, target, variant);
+  const audience = effectiveAudience(run, target);
   return makeUpload({
     target_id: target.id,
     channel_id: target.channel_id,
     language: target.language,
     variant,
-    ...effectiveAudience(run, target),
+    ...audience,
+    publish_at: scheduledPublish(target, audience.privacy, new Date(db.now())),
     ...(reason === null
       ? { youtube_video_id: `vid${Math.random().toString(36).slice(2, 10)}` }
       : { status: "skipped", youtube_video_id: null, url: null, error: reason, quota_units: 0 }),

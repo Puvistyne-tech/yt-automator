@@ -47,18 +47,46 @@ def test_a_failed_run_is_retried_after_its_delay_from_the_failed_stage(harness: 
     assert queued.logs[-1].message == (
         "Automatic retry 1 of 2 from stage render after: stage render failed: render exploded"
     )
+    assert queued.auto_retries == 1
 
 
 def test_retries_stop_when_the_count_is_used(harness: Harness) -> None:
-    failed = failing_run(harness)
-    for attempt in (1, 2):
-        harness.clock.advance(minutes=10)
-        retry_due(harness).execute(harness.clock.now())
-        failed = execute_run(harness).execute(failed.id)
-        assert failed.status is RunStatus.FAILED and failed.auto_retries == attempt
+    failed = exhaust_retries(harness, failing_run(harness))
+    assert failed.status is RunStatus.FAILED and failed.auto_retries == 2
     assert failed.retry_at is None
     harness.clock.advance(days=1)
     assert retry_due(harness).execute(harness.clock.now()) == []
+
+
+def exhaust_retries(harness: Harness, failed: Run) -> Run:
+    for _ in range(failed.retry_policy.auto_retry_count):
+        harness.clock.advance(minutes=10)
+        retry_due(harness).execute(harness.clock.now())
+        failed = execute_run(harness).execute(failed.id)
+    return failed
+
+
+def test_a_manual_retry_starts_a_fresh_allowance(harness: Harness) -> None:
+    exhausted = exhaust_retries(harness, failing_run(harness))
+    assert exhausted.auto_retries == 2 and exhausted.retry_at is None
+    queued = retry_run(harness).execute(exhausted.id)
+    assert queued.auto_retries == 0
+    failed = execute_run(harness).execute(exhausted.id)
+    assert failed.retry_at == harness.clock.now() + timedelta(minutes=10)
+    again = exhaust_retries(harness, failed)
+    assert again.status is RunStatus.FAILED and again.auto_retries == 2
+    assert again.retry_at is None
+
+
+def test_a_due_retry_goes_ahead_while_another_run_of_the_automation_runs(
+    harness: Harness,
+) -> None:
+    failed = failing_run(harness)
+    other = harness.start_run.execute(failed.automation_id)
+    harness.progress.move(other.id, RunStatus.RUNNING)
+    harness.clock.advance(minutes=10)
+    [queued] = retry_due(harness).execute(harness.clock.now())
+    assert queued.id == failed.id and queued.status is RunStatus.QUEUED
 
 
 def test_a_retry_that_then_succeeds_finishes_normally(harness: Harness) -> None:
@@ -104,8 +132,9 @@ def test_a_retry_that_lost_a_race_is_skipped(harness: Harness) -> None:
     assert RetryDueRuns(harness.runs, raced, harness.recorder).execute(harness.clock.now()) == []
     stored = harness.runs.get(failed.id)
     assert stored is not None and stored.status is RunStatus.QUEUED and stored.auto_retries == 0
+    assert not any(log.message.startswith("Automatic retry") for log in stored.logs)
 
 
 def test_retry_messages_name_the_start_when_a_run_has_no_stages(harness: Harness) -> None:
-    failed = failing_run(harness).model_copy(update={"stages": (), "error": None})
-    assert retry_message(failed) == "Automatic retry 1 of 2 from stage start after: failure"
+    queued = failing_run(harness).model_copy(update={"stages": (), "auto_retries": 1})
+    assert retry_message(queued, None) == "Automatic retry 1 of 2 from stage start after: failure"

@@ -9,6 +9,7 @@ import { draftFromAutomation } from "@/features/automation-editor/model/draft";
 import {
   automationSummary,
   privacyWord,
+  publishTimePhrase,
   retryPhrase,
   reviewPhrase,
   schedulePhrase,
@@ -69,6 +70,25 @@ describe("summary phrases", () => {
       "Runs every 6 hours, 22:00 to 06:00 (Asia/Kolkata).",
     ],
     [schedule({ max_runs_per_day: 1 }), "Runs every 6 hours, at most once a day."],
+    [
+      schedule({
+        kind: "cron",
+        cron: "0 */2 * * *",
+        timezone: "Asia/Kolkata",
+        active_from: "08:00",
+        active_until: "20:00",
+      }),
+      "Runs every 2 hours, 08:00 to 20:00 (Asia/Kolkata).",
+    ],
+    [
+      schedule({
+        active_from: "08:00",
+        active_until: "20:00",
+        max_runs_per_day: 3,
+        skip_if_unfinished: false,
+      }),
+      "Runs every 6 hours, 08:00 to 20:00, at most 3 a day. Scheduled runs may overlap.",
+    ],
     [schedule({ skip_if_unfinished: false }), "Runs every 6 hours. Scheduled runs may overlap."],
   ])("describes %j", (input, text) => {
     expect(schedulePhrase(input)).toBe(text);
@@ -97,6 +117,32 @@ describe("summary phrases", () => {
     ],
   ])("describes review %j", (input, text) => {
     expect(reviewPhrase(input, "privately")).toBe(text);
+  });
+
+  it("combines auto-reject, auto-approve and auto-publish", () => {
+    const all = policy({ mode: "auto_when_score_at_least", auto_publish: true, reject_below: 40 });
+    expect(reviewPhrase(all, "publicly")).toBe(
+      "Rejects runs scoring under 40. Publishes publicly when the score reaches 85, " +
+        "otherwise after you approve.",
+    );
+  });
+
+  it("names the times of day public targets go public", () => {
+    const draft = draftFromAutomation(makeAutomation());
+    const target = draft.targets[0];
+    if (target === undefined) {
+      throw new Error("fixture has a target");
+    }
+    const timed = { ...target, publish_time_of_day: "18:00", publish_timezone: "Asia/Kolkata" };
+    const morning = { ...timed, privacy: "public" as const, publish_time_of_day: "09:00" };
+    expect(publishTimePhrase([target], channels)).toBe("");
+    expect(publishTimePhrase([timed], channels)).toBe("");
+    expect(publishTimePhrase([{ ...timed, privacy: "public" }], channels)).toBe(
+      "Goes public at 18:00 (Asia/Kolkata).",
+    );
+    expect(publishTimePhrase([{ ...timed, privacy: "public" }, morning, morning], channels)).toBe(
+      "Goes public at 18:00 (Asia/Kolkata) and 09:00 (Asia/Kolkata).",
+    );
   });
 
   it("says nothing publishes without targets", () => {

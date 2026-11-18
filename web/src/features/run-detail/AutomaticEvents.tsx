@@ -1,5 +1,5 @@
 import type { Run } from "@/api/types";
-import { automaticEvents } from "@/features/run-detail/automaticEvents";
+import { automaticEvents } from "@/features/run-detail/automaticEventList";
 import { Callout, Card } from "@/shared/ui";
 import "@/features/run-detail/automatic-events.css";
 

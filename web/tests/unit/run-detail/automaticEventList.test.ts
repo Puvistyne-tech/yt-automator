@@ -1,5 +1,9 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
+  AUTO_PUBLISH_STARTED,
   AUTO_PUBLISH_STOPPED_PREFIX,
+  autoPublishStoppedMessage,
   autoRejectMessage,
   autoRetryMessage,
   skippedStartMessage,
@@ -7,9 +11,23 @@ import {
 } from "@/api/automaticEvents";
 import { makeRun } from "@/api/mocks/fixtures/factories";
 import type { RunLog } from "@/api/types";
-import { automaticEvents } from "@/features/run-detail/automaticEvents";
+import { automaticEvents } from "@/features/run-detail/automaticEventList";
 import { formatDateTime } from "@/shared/format/dates";
 
+const SAMPLES = resolve(process.cwd(), "..", "docs", "spec", "automatic-events.json");
+const samples = JSON.parse(readFileSync(SAMPLES, "utf-8")) as {
+  auto_reject: { score: number; threshold: number; message: string };
+  auto_publish_started: { message: string };
+  auto_publish_stopped: { reason: string; message: string };
+  automatic_retry: {
+    attempt: number;
+    count: number;
+    stage: string;
+    failure: string;
+    message: string;
+  };
+  skipped_start: { local: string; run_id: string; state: string; message: string };
+};
 const AT = "2026-01-05T10:00:00Z";
 const log = (message: string): RunLog => ({ at: AT, level: "warning", stage_id: null, message });
 
@@ -64,18 +82,35 @@ describe("automatic events", () => {
     ]);
   });
 
-  it("mirrors the backend's wording", () => {
-    expect(autoRejectMessage(42.24, 50)).toBe(
-      "Rejected automatically: the score 42.2 is below the auto-reject threshold 50",
+  it("matches the shared samples the backend also checks", () => {
+    expect(autoRejectMessage(samples.auto_reject.score, samples.auto_reject.threshold)).toBe(
+      samples.auto_reject.message,
     );
-    expect(autoRetryMessage(1, 2, "render", "stage render failed: boom")).toBe(
-      "Automatic retry 1 of 2 from stage render after: stage render failed: boom",
+    expect(AUTO_PUBLISH_STARTED).toBe(samples.auto_publish_started.message);
+    const stopped = samples.auto_publish_stopped;
+    expect(autoPublishStoppedMessage(stopped.reason)).toBe(stopped.message);
+    const retry = samples.automatic_retry;
+    expect(autoRetryMessage(retry.attempt, retry.count, retry.stage, retry.failure)).toBe(
+      retry.message,
     );
-    const skipped = skippedStartMessage("2026-01-05 12:00 UTC", "run-1", "queued");
-    expect(skipped).toBe(
-      "Scheduled start at 2026-01-05 12:00 UTC skipped: run run-1 is still queued",
-    );
-    expect(skippedStartTime(skipped)).toBe("2026-01-05 12:00 UTC");
+    const skipped = samples.skipped_start;
+    expect(skippedStartMessage(skipped.local, skipped.run_id, skipped.state)).toBe(skipped.message);
+    expect(skippedStartTime(skipped.message)).toBe(skipped.local);
     expect(skippedStartTime("Run failed")).toBeNull();
+  });
+
+  it("classifies every shared sample logged by the run", () => {
+    const logged = [samples.automatic_retry, samples.skipped_start, samples.auto_publish_stopped];
+    const run = makeRun({ logs: logged.map((sample) => log(sample.message)) });
+    expect(automaticEvents(run).map((event) => event.title)).toEqual([
+      "Retried automatically",
+      "Scheduled start skipped",
+      "Auto-publish stopped",
+    ]);
+  });
+
+  it("ignores stage logs that look like automatic events", () => {
+    const stageLog = { ...log(samples.automatic_retry.message), stage_id: "render" };
+    expect(automaticEvents(makeRun({ logs: [stageLog] }))).toEqual([]);
   });
 });

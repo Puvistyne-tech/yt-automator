@@ -66,6 +66,10 @@ def test_the_daily_cap_moves_the_start_to_the_next_day() -> None:
     assert next_run_at(capped, at(5, 12), counter({date(2026, 1, 5): 1})) == at(5, 18)
 
 
+def test_a_cap_that_never_frees_a_day_gives_up() -> None:
+    assert next_run_at(every(1, max_runs_per_day=1), AFTER, lambda _: 5) is None
+
+
 def test_the_cap_and_active_hours_combine() -> None:
     both = every(6, max_runs_per_day=1, **DAYTIME)
     assert next_run_at(both, at(5, 8), counter({date(2026, 1, 5): 1})) == at(6, 8)

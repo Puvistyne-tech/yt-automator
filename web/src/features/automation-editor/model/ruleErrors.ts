@@ -4,14 +4,10 @@ import type { RetryPolicy, ReviewPolicy, Schedule } from "@/api/types";
 import type { TargetDraft } from "@/features/automation-editor/model/draft";
 import { cronError } from "@/shared/format/cron";
 import { isIntegerAtLeast } from "@/shared/format/numbers";
+import { isNotPublic, isTimeOfDay } from "@/shared/format/timeOfDay";
 
-const TIME_OF_DAY = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const TIME_HINT = "Use a 24-hour time such as 08:00.";
 export const NEEDS_PUBLIC = "A publish time only applies to public videos. Set privacy to Public.";
-
-export function isTimeOfDay(value: string | null): boolean {
-  return value !== null && TIME_OF_DAY.test(value);
-}
 
 function isScore(value: number): boolean {
   return Number.isFinite(value) && value >= 0 && value <= 100;
@@ -97,7 +93,7 @@ export function publishTimeErrors(target: TargetDraft, at: (field: string) => st
     errors[at("publish_time_of_day")] = TIME_HINT;
   } else if (target.publish_delay_minutes > 0) {
     errors[at("publish_time_of_day")] = "Choose a delay or a time of day, not both.";
-  } else if (target.privacy === "private" || target.privacy === "unlisted") {
+  } else if (isNotPublic(target.privacy)) {
     errors[at("publish_time_of_day")] = NEEDS_PUBLIC;
   }
   if (target.publish_timezone.trim() === "") {

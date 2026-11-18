@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from automator.application.run_due_automations import marked_skip, skip_message
@@ -113,7 +113,27 @@ def test_skip_messages_fall_back_to_utc_for_an_unknown_zone(harness: Harness) ->
     assert automation is not None
     broken = automation.model_copy(update={"schedule": hourly(timezone="Nowhere/City")})
     slot = datetime(2026, 1, 5, 12, tzinfo=UTC)
-    assert skip_message(broken, slot, run).startswith("Scheduled start at 2026-01-05 12:00 Nowhere")
+    assert skip_message(broken, slot, run) == (
+        f"Scheduled start at 2026-01-05 12:00 Nowhere/City skipped: run {run.id} is still queued"
+    )
+
+
+def created_at(harness: Harness, automation_id: str, moment: datetime) -> None:
+    run = harness.start_run.execute(automation_id)
+    harness.runs.update(run.id, lambda stored: stored.model_copy(update={"created_at": moment}))
+
+
+def test_the_cap_counts_the_23_hour_day_in_the_schedule_zone(harness: Harness) -> None:
+    automation = add_automation(harness, schedule=hourly(timezone="America/New_York"))
+    for moment in (
+        datetime(2026, 3, 8, 4, 59, tzinfo=UTC),
+        datetime(2026, 3, 8, 5, tzinfo=UTC),
+        datetime(2026, 3, 9, 3, 59, tzinfo=UTC),
+        datetime(2026, 3, 9, 4, tzinfo=UTC),
+    ):
+        created_at(harness, automation.id, moment)
+    counts = [harness.presenter.started_on(automation, date(2026, 3, day)) for day in (7, 8, 9)]
+    assert counts == [1, 2, 1]
 
 
 def test_marking_a_skip_keeps_the_latest_slot(harness: Harness) -> None:

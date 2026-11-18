@@ -29,6 +29,7 @@ export interface MockState {
   playlists: Record<string, Playlist[]>;
   automations: Automation[];
   runs: Run[];
+  publishQueue: string[];
   descriptors: ProviderDescriptor[];
   providerConfig: ProviderConfig[];
   secrets: SecretInfo[];
@@ -158,6 +159,7 @@ const SETTINGS: AppSettings = {
 };
 
 const SEED: Omit<MockState, "runs"> = {
+  publishQueue: [],
   pipelines: [kidsStoryPipeline],
   credentials: CREDENTIALS,
   channels: CHANNELS,

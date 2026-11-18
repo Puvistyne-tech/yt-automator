@@ -89,6 +89,19 @@ def test_next_local_midnight_follows_the_zone() -> None:
 
 
 @pytest.mark.parametrize(
+    ("after", "midnight"),
+    [
+        (datetime(2026, 3, 8, 6, tzinfo=UTC), datetime(2026, 3, 9, 4, tzinfo=UTC)),
+        (datetime(2026, 11, 1, 6, tzinfo=UTC), datetime(2026, 11, 2, 5, tzinfo=UTC)),
+    ],
+)
+def test_next_local_midnight_spans_the_23_and_25_hour_days(
+    after: datetime, midnight: datetime
+) -> None:
+    assert next_local_midnight(after, NEW_YORK) == midnight
+
+
+@pytest.mark.parametrize(
     ("hour", "start", "end", "inside"),
     [
         (8, time(8), time(20), True),

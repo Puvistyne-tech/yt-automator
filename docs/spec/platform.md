@@ -152,16 +152,21 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   <reject_below>", and the same text is logged as a warning. A run with no score is never rejected automatically.
 - With `auto_publish`, a run publishes as soon as it is approved: at once when the score approves it, and through
   the run queue when a person approves it. It logs "Publishing automatically after approval". When publishing
-  cannot start (quota, nothing to publish, automation deleted, a publish already started) the run stays `approved`
-  and logs a warning "Auto-publish stopped: <reason>". Without `auto_publish` nothing publishes until a person
+  cannot start (quota, nothing to publish, automation deleted, a publish already started), or every upload fails,
+  the run stays `approved` and logs a warning "Auto-publish stopped: <reason>" ("no upload succeeded" when every
+  upload failed). When some uploads succeed the run is `published` and the failed uploads keep their errors. Without `auto_publish` nothing publishes until a person
   presses Publish. A rejected run never publishes. Auto-publish uses the same upload plan as a manual publish, so
   privacy and made-for-kids follow the same rules.
 - When a run fails and it has used fewer than `retry_policy.auto_retry_count` automatic retries, `retry_at` is set
   to the failure time plus `retry_delay_minutes`. Any failure counts, including a run interrupted at startup. On
   the first scheduler tick at or after `retry_at`, the run is re-queued from its first stage that is not done
   (the failed stage), through one atomic run update that also adds 1 to `auto_retries`, and logs "Automatic retry
-  <n> of <count> from stage <stage> after: <error>". Re-queuing a run by hand clears `retry_at`; `auto_retries` is
-  never reset. Automatic retries do not create runs and do not count toward `max_runs_per_day`.
+  <n> of <count> from stage <stage> after: <error>". Re-queuing a run by hand clears `retry_at` and resets
+  `auto_retries` to 0, so a run that fails again gets the full allowance of automatic retries. A due automatic
+  retry goes ahead even while another run of the same automation is unfinished: `skip_if_unfinished` only governs
+  scheduled starts, and the worker pool's parallel run limit caps how many runs execute at once. The message is
+  logged only after the re-queue succeeds; a retry that lost a race with a manual retry or a delete logs nothing.
+  Automatic retries do not create runs and do not count toward `max_runs_per_day`.
 - Only an `approved` run can publish. Publishing creates one upload per target and variant. A target whose language is not in the run, whose channel no longer exists, or that has no matching video yields a `skipped` upload with the reason in `error`. A failed upload fails only itself; the run is `published` when at least one upload is done and none is pending.
 - Every upload records the effective `privacy` and `made_for_kids` it was planned with (target value, else the
   channel default; kids pipelines always force made-for-kids), skipped uploads included. Uploads stored before
@@ -207,7 +212,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   The newest run of the automation gets `skipped_start_at` set to the skipped start (one atomic run update), so
   that start is consumed and the next one follows the schedule, and the unfinished run logs the warning
   "Scheduled start at <YYYY-MM-DD HH:MM> <zone> skipped: run <id> is still <status, or waiting for an automatic
-  retry>". Turning it off lets scheduled runs overlap.
+  retry>". Turning it off lets scheduled runs overlap. The mark lives on that run: deleting it loses the mark,
+  so the same start can be skipped and logged again on the next tick.
 - Each scheduler tick first re-queues the failed runs whose automatic retry is due, oldest first, then starts the
   due automations.
 - Deleting a channel is refused while an enabled automation targets it. Deleting a credential is refused while a channel uses it. Deleting an automation keeps its runs.
@@ -413,7 +419,8 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   Review (mode, minimum score, auto-reject below, publish after approval). Client-side validation mirrors the
   rules; server errors map to fields (`retry_policy.*` errors show in Schedule). The editor shows one
   plain-language summary of the schedule and review rules, for example "Runs every 6 hours, 08:00 to 20:00,
-  at most 2 a day. Publishes privately after you approve.", built by a pure function.
+  at most 2 a day. Publishes privately after you approve.", built by a pure function. When a target goes public
+  at a time of day, the summary names it ("Goes public at 18:00 (Asia/Kolkata).").
   A saved automation without unsaved changes offers Run now; with unsaved changes it is disabled with the reason.
   A "Run queued" toast (list or editor) links to the new run; a toast with an action stays until it is
   used or dismissed, other toasts close after five seconds. An unknown automation id shows a not-found
@@ -425,7 +432,9 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   intermediate file, collapsed per stage in the run's stage order. The uploads table shows each upload's
   privacy, made-for-kids flag and scheduled publish time. Automatic events are called out above the logs:
   an automatic rejection with its reason, a pending automatic retry with its time and attempt, retries already
-  made, and skipped scheduled starts. Cancel is offered for the statuses the Rules allow. When the run's
+  made, skipped scheduled starts and stopped auto-publishes. Only run-level logs (no `stage_id`) are read as
+  automatic events, by the message prefixes in `docs/spec/automatic-events.json`; backend and web tests both
+  check those sample messages against their builders. Cancel is offered for the statuses the Rules allow. When the run's
   automation was deleted, the header says so instead of linking to it.
 - Channels: credentials and their quota meters, connect flow, per-channel defaults, disconnect.
 - Providers: per capability, an ordered chain with enable switches and options forms; secrets with set/clear.
