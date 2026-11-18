@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import partial
 
 from automator.application.lookups import descriptor_of, require_credential, require_run
 from automator.application.quota_report import QuotaReport
@@ -16,12 +17,18 @@ from automator.domain.ports import (
     PipelineRegistry,
     RunRepository,
 )
+from automator.domain.publish_outcome import publish_outcome
 from automator.domain.publish_plan import UploadPlan, plan_uploads, quota_needed
 from automator.domain.quota import quota_shortfalls
 from automator.domain.run_enums import RunStatus, UploadStatus
+from automator.domain.run_parts import Upload
 from automator.domain.run_state import ensure_transition
 from automator.domain.runs import Run
 from automator.shared.errors import RuleConflict
+
+
+def with_uploads(uploads: tuple[Upload, ...], stored: Run) -> Run:
+    return stored.model_copy(update={"uploads": uploads})
 
 
 @dataclass(frozen=True)
@@ -43,12 +50,14 @@ class PublishRun:
         plans = self.plans(run)
         self.ensure_quota(plans)
         uploads = tuple(plan.initial_upload() for plan in plans)
-        run = self.progress.move(run.model_copy(update={"uploads": uploads}), RunStatus.PUBLISHING)
+        run = self.progress.move(
+            run.id, RunStatus.PUBLISHING, prepare=partial(with_uploads, uploads)
+        )
         for index, plan in enumerate(plans):
             if plan.skip_reason is None:
                 uploading = run.uploads[index].model_copy(update={"status": UploadStatus.UPLOADING})
-                run = self.recorder.upload(run, index, uploading)
-                run = self.recorder.upload(run, index, self.performer.perform(run.id, plan))
+                run = self.recorder.upload(run.id, index, uploading)
+                run = self.recorder.upload(run.id, index, self.performer.perform(run.id, plan))
         return self.concluded(run)
 
     def automation(self, run: Run) -> Automation:
@@ -84,9 +93,5 @@ class PublishRun:
             raise RuleConflict("quota_exceeded", f"daily quota too low: {detail}")
 
     def concluded(self, run: Run) -> Run:
-        statuses = [upload.status for upload in run.uploads]
-        done = UploadStatus.DONE in statuses
-        pending = any(s in (UploadStatus.PENDING, UploadStatus.UPLOADING) for s in statuses)
-        if done and not pending:
-            return self.progress.move(run, RunStatus.PUBLISHED)
-        return self.progress.move(run, RunStatus.APPROVED, "no upload succeeded")
+        status, error = publish_outcome(run.uploads)
+        return self.progress.move(run.id, status, error)

@@ -6,7 +6,12 @@ from itertools import product
 import pytest
 
 from automator.domain.run_enums import RunStatus
-from automator.domain.run_state import ALLOWED_TRANSITIONS, can_transition, transition
+from automator.domain.run_state import (
+    ALLOWED_TRANSITIONS,
+    accepts_stage_results,
+    can_transition,
+    transition,
+)
 from automator.domain.runs import Run
 from automator.shared.errors import RuleConflict
 
@@ -84,3 +89,9 @@ def test_transition_does_not_mutate_the_original() -> None:
     original = make_run(S.QUEUED)
     transition(original, S.RUNNING, AT)
     assert original.status is S.QUEUED
+
+
+@pytest.mark.parametrize("status", list(RunStatus))
+def test_only_running_and_cancelled_runs_accept_stage_results(status: RunStatus) -> None:
+    accepted = {RunStatus("running"), RunStatus("cancelled")}
+    assert accepts_stage_results(status) is (status in accepted)

@@ -48,3 +48,10 @@ def transition(run: Run, target: RunStatus, at: datetime, error: str | None = No
     if target in FINISHED_STATUSES:
         changes["finished_at"] = at
     return run.model_copy(update=changes)
+
+
+STAGE_RESULT_STATUSES = frozenset({S.RUNNING, S.CANCELLED})
+
+
+def accepts_stage_results(status: RunStatus) -> bool:
+    return status in STAGE_RESULT_STATUSES

@@ -13,14 +13,17 @@ Dependencies flow in one direction. A layer may import only from the layers list
 | `pipelines` | content-type plugins and their stages | `domain`, `shared` |
 | `infrastructure` | database, YouTube, model providers, ffmpeg, scheduler, secrets | `domain`, `shared` |
 | `api` | FastAPI routers, request and response schemas | `application`, `domain`, `shared` |
+| `composition` | composition root helpers: the `Ports` bundle and the use-case graph | `api.container`, `application`, `domain`, `shared` |
 | `main.py` | composition root | everything |
 
 - `domain` performs no I/O and imports no framework: no FastAPI, SQLModel, httpx, subprocess, or filesystem access.
 - `application` reaches the outside world only through `domain/ports.py` interfaces.
 - `infrastructure` implements ports. Nothing imports `infrastructure` except `main.py`.
 - `pipelines` receive providers through ports. A pipeline never imports a concrete adapter or another pipeline.
+- `pipelines/registry.py` is the plugin index: it may import each plugin, and no plugin imports it.
 - `api` translates HTTP to use-case calls. No business rules, no database queries, no provider calls.
-- Only `main.py` constructs adapters and wires them to ports.
+- Only `main.py` constructs adapters and wires them to ports. `composition` binds ports to use cases,
+  constructs no adapter, and is imported only by `main.py`. `api` never imports `composition`.
 - `backend/tests/unit/test_architecture.py` enforces this table. Change both together.
 
 ## Web layers

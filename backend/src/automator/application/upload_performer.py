@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from functools import partial
 
 from automator.application.channel_auth import ChannelAuthorizer
+from automator.application.channel_expiry import ChannelExpiry
 from automator.application.quota_report import QuotaReport
 from automator.domain.channels import Channel
 from automator.domain.ports import ArtifactStore, YouTubeGateway
@@ -37,6 +38,7 @@ class UploadPerformer:
     store: ArtifactStore
     authorizer: ChannelAuthorizer
     quota_report: QuotaReport
+    expiry: ChannelExpiry
 
     def perform(self, run_id: str, plan: UploadPlan) -> Upload:
         base = plan.initial_upload()
@@ -49,7 +51,8 @@ class UploadPerformer:
         attempt = UploadAttempt(run_id, plan, plan.channel, auth)
         self.charge(attempt, self.quota_report.policy.video_units)
         try:
-            uploaded = self.youtube.upload_video(auth, self.request(attempt, plan.video))
+            with self.expiry.watching(plan.channel):
+                uploaded = self.youtube.upload_video(auth, self.request(attempt, plan.video))
         except Exception as error:
             return failed_upload(base, error, attempt.units)
         self.finish_extras(attempt, uploaded.video_id)
@@ -87,7 +90,8 @@ class UploadPerformer:
     ) -> None:
         self.charge(attempt, units)
         try:
-            action()
+            with self.expiry.watching(attempt.channel):
+                action()
         except Exception as error:
             attempt.problems.append(f"{label}: {describe_error(error)}")
 

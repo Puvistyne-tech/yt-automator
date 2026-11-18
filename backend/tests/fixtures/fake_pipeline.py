@@ -19,7 +19,7 @@ from automator.domain.pipeline_descriptors import (
     settings_schema_of,
 )
 from automator.domain.quality import ScoreItem
-from automator.domain.run_enums import ArtifactKind
+from automator.domain.run_enums import ArtifactKind, LogLevel
 
 LANGUAGES = (LanguageOption(code="en", name="English"), LanguageOption(code="ta", name="Tamil"))
 VARIANTS = (
@@ -147,6 +147,8 @@ class FakePipeline:
         )
     )
     raise_on_score: bool = False
+    score_warning: str = ""
+    score_hook: Callable[[StageContext], None] | None = None
     score_calls: list[str] = field(default_factory=list)
 
     @property
@@ -172,8 +174,12 @@ class FakePipeline:
 
     def score(self, context: StageContext) -> Sequence[ScoreItem]:
         self.score_calls.append(context.run_id)
+        if self.score_hook is not None:
+            self.score_hook(context)
         if self.raise_on_score:
             raise RuntimeError("scorer offline")
+        if self.score_warning:
+            context.log(self.score_warning, LogLevel.WARNING)
         return [ScoreItem(id="quality", title="Quality", score=settings_of(context).score)]
 
 

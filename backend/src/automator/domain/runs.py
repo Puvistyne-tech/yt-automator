@@ -5,7 +5,7 @@ from pydantic import AwareDatetime, Field
 from automator.domain.model_base import DomainModel, JsonObject
 from automator.domain.quality import ReviewPolicy, ScoreItem
 from automator.domain.run_enums import RunEventKind, RunStatus, RunTrigger
-from automator.domain.run_parts import Artifact, Review, StageRun, Upload
+from automator.domain.run_parts import Artifact, Review, RunLog, StageRun, Upload
 
 
 class RunSummary(DomainModel):
@@ -32,6 +32,7 @@ class Run(DomainModel):
     score_details: tuple[ScoreItem, ...] = ()
     review: Review | None = None
     uploads: tuple[Upload, ...] = ()
+    logs: tuple[RunLog, ...] = ()
     error: str | None = None
     created_at: AwareDatetime
     started_at: AwareDatetime | None = None

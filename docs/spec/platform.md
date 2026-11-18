@@ -25,6 +25,7 @@ Credential      id, name, client_id, daily_quota_units=10000, created_at
                 secret "credential/<id>/client_secret"
 Channel         id, credential_id, youtube_channel_id, title, thumbnail_url, status, defaults, connected_at
                 status: connected | expired | revoked
+                (becomes expired when a YouTube call fails with invalid_grant; reconnecting sets connected)
                 secret "channel/<id>/token"
 ChannelDefaults privacy: private|unlisted|public = private, made_for_kids: bool = false,
                 category_id: str = "22", default_language: str = "en", notify_subscribers: bool = false
@@ -49,7 +50,8 @@ ReviewPolicy    mode: always | auto_when_score_at_least, min_score: float 0..100
 Run             id, automation_id, automation_name, pipeline_type, status, trigger: manual|schedule,
                 languages, settings_snapshot, review_policy, stages: [StageRun], artifacts: [Artifact],
                 score (nullable),
-                score_details: [ScoreItem], review (nullable), uploads: [Upload], error (nullable),
+                score_details: [ScoreItem], review (nullable), uploads: [Upload], logs: [RunLog],
+                error (nullable),
                 created_at, started_at, finished_at
                 status: queued | running | awaiting_review | approved | rejected | publishing |
                         published | failed | cancelled
@@ -61,8 +63,11 @@ ScoreItem       id, title, score 0..100, weight, detail
 Review          decision: approved|rejected, notes, decided_at
 Upload          target_id, channel_id, language, variant, status: pending|uploading|done|failed|skipped,
                 youtube_video_id, url, error, quota_units
+RunLog          at, level: info|warning|error = info, stage_id (nullable: null outside a stage), message
 RunSummary      id, status, score, created_at, finished_at
 RunEvent        run_id, kind: status|stage|log|artifact|upload, at, payload (object)
+                payload by kind: status {status, error}; stage a StageRun; artifact an Artifact;
+                upload an Upload; log {level, stage_id, message}
 
 ProviderConfig  capability, chain: [ProviderChoice]
 ProviderChoice  provider_id, enabled, options (object)
@@ -80,10 +85,22 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 - Stage order is the pipeline's. A stage failure fails the run. A retry re-runs from a chosen stage and keeps earlier artifacts.
 - Retry is allowed from `failed`, `cancelled`, `awaiting_review`, `approved` and `rejected`. It re-queues the run and clears its score, score details, review and uploads.
 - Cancel is allowed from `queued`, `running`, `awaiting_review` and `approved`. A stage that fails after the run was cancelled is recorded as failed, but the run stays `cancelled` without an error.
+- A worker records a stage result only while the stored run is `running` or `cancelled`, onto the stored run.
+  If the run was retried meanwhile, the result is dropped and its unreferenced files are discarded; if the run
+  was deleted, its whole folder is removed. Every run change (status moves, stage results, uploads, logs)
+  is applied to the stored run through `RunRepository.update`, so concurrent cancel and retry are never lost.
+  A retry that arrives while the old worker is still busy runs once that worker returns.
+- Every `context.log(message, level)` call is stored on the run as a RunLog and published as a `log` event.
+  A run keeps only its newest `max_run_log_entries` entries (runtime setting, default 2000); older entries are dropped. Every entry is still published as an event.
 - Deleting a `queued`, `running` or `publishing` run is refused; cancel it first.
 - After the last stage the run is scored, then becomes `awaiting_review`, or `approved` directly when the policy is `auto_when_score_at_least` and the score reaches `min_score`.
 - Only an `approved` run can publish. Publishing creates one upload per target and variant. A target whose language is not in the run, whose channel no longer exists, or that has no matching video yields a `skipped` upload with the reason in `error`. A failed upload fails only itself; the run is `published` when at least one upload is done and none is pending.
 - When every upload fails the run returns to `approved` with the error "no upload succeeded", so it can be published again.
+- On startup, interrupted runs are recovered through the normal transitions, each emitting a `status` event:
+  a `running` run becomes `failed` ("interrupted: the app stopped while the run was running") and its running
+  stage `failed`; a `publishing` run has every `pending` or `uploading` upload marked `failed` with
+  "interrupted, check YouTube before publishing again", then becomes `published` if any upload is done, else
+  `approved` with "no upload succeeded". `queued` runs are queued again, oldest first.
 - A thumbnail, caption or playlist failure leaves the upload `done` and records the problem in its `error`.
 - `publish_delay_minutes` applies only when the effective privacy is `public`: the video is uploaded private with `publish_at` set to now plus the delay, and YouTube makes it public then.
 - Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track, 50 per playlist insertion).
@@ -103,7 +120,9 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 
 ## Ports (`domain/ports.py`)
 
-`CredentialRepository`, `AutomationRepository`, `RunRepository` (get, list, save, delete),
+`CredentialRepository`, `AutomationRepository` (get, list, save, delete),
+`RunRepository` (get, list, save, delete, update(run_id, change) -> the saved run, or None when the run is
+missing or `change` returns None; the read and the write happen in one transaction),
 `ChannelRepository` (get, find_by_youtube_id, list, save, delete), `ProviderConfigRepository` (list, save_all),
 `AppSettingsRepository` (get, save), `QuotaLedger` (used_today(credential_id, day), record(credential_id, units, day)),
 `SecretStore` (get, set, delete, has), `Clock` (now), `IdGenerator` (new), `PipelineRegistry` (list, get),
@@ -112,6 +131,8 @@ resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
 exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
 `ArtifactStore` (workspace for a run, save, open, discard one artifact, delete run), `RunQueue` (enqueue, cancel),
 `RunEvents` (publish, subscribe), `ScheduleCalculator` (next_run_at).
+
+A YouTube failure whose code is `youtube_invalid_grant` means the channel's authorization expired.
 
 ## Pipeline contract (`domain/pipeline.py`)
 
@@ -127,7 +148,8 @@ class Stage(Protocol):
     def run(self, context: StageContext) -> StageOutcome
 
 StageContext    run_id, settings (validated model instance), languages, workspace (Path),
-                artifacts (those produced so far), providers (ProviderResolver), log(message)
+                artifacts (those produced so far), providers (ProviderResolver),
+                log(message, level=info) tagged with the current stage
 StageOutcome    artifacts: [NewArtifact], provider: str, message: str
 NewArtifact     kind, path (inside workspace), language, variant, media_type, meta
 ProviderResolver.resolve(capability) -> a provider for the capability (see Provider resolution)
@@ -177,7 +199,12 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
 ## HTTP API
 
 Base path `/api`. Errors are `{"error": {"code": str, "message": str, "fields": {path: message}}}` with
-status 400 (validation), 404, 409 (rule conflict) or 502 (upstream). Lists return bare JSON arrays.
+status 400 (validation), 404 (`not_found` or `<entity>_not_found`), 405 (`method_not_allowed`), 409 (rule
+conflict) or 502 (upstream). Any other failure is 500 with code `internal_error` and the message
+"Unexpected server error"; the exception text is never returned. Lists return bare JSON arrays.
+The secrets file being unreadable (missing key or corrupt file) is 409 `secrets_unreadable`, naming the
+secrets and key files to remove and telling the user to reconnect their channels. The next write after
+removal creates a new key. A 500 carries an `X-Request-Id` header; the log names only the error type and id.
 
 | Method and path | Body | Returns |
 | --- | --- | --- |
@@ -186,12 +213,12 @@ status 400 (validation), 404, 409 (rule conflict) or 502 (upstream). Lists retur
 | GET `/pipelines` | | `[PipelineDescriptor]` |
 | GET `/pipelines/{type_id}` | | `PipelineDescriptor` |
 | GET `/credentials` | | `[Credential + has_secret + quota_used_today]` |
-| POST `/credentials` | `{name, client_id, client_secret, daily_quota_units?}` | Credential, 201 |
-| PATCH `/credentials/{id}` | any of the above | Credential |
+| POST `/credentials` | `{name, client_id, client_secret, daily_quota_units?}` | Credential + has_secret + quota_used_today, 201 |
+| PATCH `/credentials/{id}` | any of the above | Credential + has_secret + quota_used_today |
 | DELETE `/credentials/{id}` | | 204 |
 | GET `/channels` | | `[Channel]` |
 | POST `/channels/connect` | `{credential_id}` | `{authorization_url}` |
-| GET `/oauth/callback?code&state` | | redirects to `/channels?connected=<id>` or `?error=<code>` |
+| GET `/oauth/callback?code&state` | | redirects to `/channels?connected=<id>` or `?error=<code>` (`missing_code`, `validation_failed`, `youtube_scope_denied`, other upstream codes) |
 | PATCH `/channels/{id}` | `{defaults}` | Channel |
 | DELETE `/channels/{id}` | | 204 |
 | GET `/channels/{id}/playlists` | | `[{id, title}]` |
@@ -210,8 +237,8 @@ status 400 (validation), 404, 409 (rule conflict) or 502 (upstream). Lists retur
 | POST `/runs/{id}/review` | `{decision, notes?}` | Run |
 | POST `/runs/{id}/publish` | | Run |
 | DELETE `/runs/{id}` | | 204 |
-| GET `/runs/{id}/artifacts/{artifact_id}` | | the file, with range support |
-| GET `/events` | | server-sent events, each `data:` a RunEvent |
+| GET `/runs/{id}/artifacts/{artifact_id}` | | the file, with range support; 416 for an unsatisfiable range, 404 `artifact_file_not_found` when the file is gone |
+| GET `/events` | | server-sent events: first `: connected`, then each `data:` a RunEvent, with `: heartbeat` comments |
 | GET `/providers` | | `{descriptors: [ProviderDescriptor], config: [ProviderConfig]}` |
 | PUT `/providers` | `[ProviderConfig]` | `[ProviderConfig]`, 400 with field errors (see Rules) |
 | GET `/secrets` | | `[{name, title, description, is_set}]` |
@@ -221,6 +248,9 @@ status 400 (validation), 404, 409 (rule conflict) or 502 (upstream). Lists retur
 | PUT `/settings` | AppSettings without `data_dir` | AppSettings |
 
 `AutomationInput` is Automation without `id`, timestamps and derived fields. Target `id` is optional on input.
+
+The built UI is served at `/`. A path without a file extension that matches no file returns `index.html`;
+a missing path with an extension (such as `/assets/missing.js`) and any `/api` path return the 404 envelope.
 
 ## UI
 
