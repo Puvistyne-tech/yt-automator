@@ -1,8 +1,7 @@
+import { isKidsPipeline } from "@/api/capabilities";
 import { db } from "@/api/mocks/db";
 import { makeUpload } from "@/api/mocks/fixtures/factories";
 import type { ChannelDefaults, Run, Target, Upload } from "@/api/types";
-
-const KIDS_CAPABILITY = "kids_content";
 
 export const NO_UPLOAD_SUCCEEDED = "no upload succeeded";
 
@@ -34,7 +33,7 @@ function effectiveAudience(run: Run, target: Target): Pick<Upload, "privacy" | "
   const defaults =
     db.state.channels.find((c) => c.id === target.channel_id)?.defaults ?? FALLBACK_DEFAULTS;
   const pipeline = db.state.pipelines.find((p) => p.type_id === run.pipeline_type);
-  const kids = pipeline?.capabilities.includes(KIDS_CAPABILITY) ?? false;
+  const kids = isKidsPipeline(pipeline);
   return {
     privacy: target.privacy ?? defaults.privacy,
     made_for_kids: kids || (target.made_for_kids ?? defaults.made_for_kids),

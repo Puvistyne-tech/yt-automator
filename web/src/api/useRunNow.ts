@@ -1,11 +1,8 @@
 import { useNavigate } from "react-router";
 import { useRunAutomation } from "@/api/automations";
+import { runPath } from "@/api/paths";
 import type { Automation, Run } from "@/api/types";
 import { useMutationNotifier } from "@/api/useMutationNotifier";
-
-export function runPath(run: Pick<Run, "id">): string {
-  return `/runs/${encodeURIComponent(run.id)}`;
-}
 
 export function useRunNow() {
   const run = useRunAutomation();

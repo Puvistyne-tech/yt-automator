@@ -10,7 +10,6 @@ import {
   draftToInput,
   emptyDraft,
   initialDraft,
-  isKidsPipeline,
   newTarget,
   normalizeSchedule,
   withEveryHours,
@@ -25,12 +24,6 @@ const plainPipeline: PipelineDescriptor = {
 };
 
 describe("draft model", () => {
-  it("detects kids pipelines by capability", () => {
-    expect(isKidsPipeline(kidsStoryPipeline)).toBe(true);
-    expect(isKidsPipeline(plainPipeline)).toBe(false);
-    expect(isKidsPipeline(undefined)).toBe(false);
-  });
-
   it("starts empty with a manual schedule in the given timezone", () => {
     expect(emptyDraft("Asia/Kolkata")).toMatchObject({
       name: "",

@@ -7,8 +7,7 @@ import {
   intermediateByStage,
   isFinalOutput,
   isTallArtifact,
-  posterFor,
-  splitGroup,
+  splitArtifacts,
 } from "@/features/run-detail/artifacts";
 import { itemAt } from "../../helpers/itemAt";
 
@@ -34,8 +33,8 @@ describe("groupArtifacts", () => {
       "English — Short · 9:16",
     ]);
     expect(groups[3]?.artifacts.map((a) => a.id)).toEqual(["a4", "a5"]);
-    expect(posterFor(itemAt(groups, 3))?.id).toBe("a5");
-    expect(posterFor(itemAt(groups, 1))).toBeUndefined();
+    expect(splitArtifacts(itemAt(groups, 3).artifacts).poster?.id).toBe("a5");
+    expect(splitArtifacts(itemAt(groups, 1).artifacts).poster).toBeUndefined();
   });
 
   it("names all-language groups and unknown variants, ordering unknowns last", () => {
@@ -59,16 +58,13 @@ describe("groupArtifacts", () => {
     expect(groupArtifacts(run)[0]?.title).toBe("fr — reel");
   });
 
-  it("splits a group into media, documents, captions and poster", () => {
-    const run = makeRun({
-      artifacts: [
-        makeArtifact({ id: "v" }),
-        makeArtifact({ id: "t", kind: "thumbnail" }),
-        makeArtifact({ id: "s", kind: "subtitle" }),
-        makeArtifact({ id: "m", kind: "metadata" }),
-      ],
-    });
-    const parts = splitGroup(itemAt(groupArtifacts(run, kidsStoryPipeline), 0));
+  it("splits artifacts into media, documents, captions and poster", () => {
+    const parts = splitArtifacts([
+      makeArtifact({ id: "v" }),
+      makeArtifact({ id: "t", kind: "thumbnail" }),
+      makeArtifact({ id: "s", kind: "subtitle" }),
+      makeArtifact({ id: "m", kind: "metadata" }),
+    ]);
     expect(parts.media.map((a) => a.id)).toEqual(["v", "t"]);
     expect(parts.documents.map((a) => a.id)).toEqual(["s", "m"]);
     expect(parts.captions?.id).toBe("s");
@@ -96,6 +92,7 @@ describe("groupArtifacts", () => {
         makeArtifact({ id: "odd", kind: "text", stage_id: "extra", language: null }),
         makeArtifact({ id: "story", kind: "text", stage_id: "story", language: null }),
         makeArtifact({ id: "scene2", kind: "image", stage_id: "images", language: null }),
+        makeArtifact({ id: "odd2", kind: "text", stage_id: "alpha", language: null }),
       ],
     });
 
@@ -107,6 +104,7 @@ describe("groupArtifacts", () => {
       ["images", "Illustrate scenes", ["scene", "scene2"]],
       ["motion", "Animate", ["clip"]],
       ["extra", "extra", ["odd"]],
+      ["alpha", "alpha", ["odd2"]],
     ]);
   });
 

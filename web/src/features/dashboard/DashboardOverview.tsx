@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { useDashboard } from "@/api/catalog";
 import { RUN_STATUSES } from "@/api/labels";
+import { runPath } from "@/api/paths";
 import { useRuns } from "@/api/runs";
 import type { Dashboard, DashboardRun, QuotaUsage, Run } from "@/api/types";
 import { formatRelative } from "@/shared/format/dates";
@@ -39,7 +40,7 @@ function ReviewQueueList({ runs }: { runs: Run[] }) {
     <ul className="list-reset divided-list">
       {runs.map((run) => (
         <li key={run.id}>
-          <Link to={`/runs/${run.id}`} className="review-item">
+          <Link to={runPath(run)} className="review-item">
             <span className="cell-stack">
               <span className="cell-title">{run.automation_name}</span>
               <span className="subtle">
@@ -98,7 +99,7 @@ function RecentRuns({ runs }: { runs: DashboardRun[] }) {
       {runs.map((run) => (
         <tr key={run.id}>
           <td>
-            <Link to={`/runs/${run.id}`} className="cell-title">
+            <Link to={runPath(run)} className="cell-title">
               {run.automation_name}
             </Link>
           </td>

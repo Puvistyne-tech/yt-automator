@@ -126,6 +126,16 @@ describe("SchemaForm", () => {
     expect(last()?.scenes).toBe("first_n");
   });
 
+  it("clears an optional choice when Not set is chosen", async () => {
+    const { user, last } = setup();
+    await user.selectOptions(screen.getByLabelText("Mood"), "funny");
+    expect(last()?.mood).toBe("funny");
+
+    await user.selectOptions(screen.getByLabelText("Mood"), "Not set");
+
+    expect(last()?.mood).toBeUndefined();
+  });
+
   it("renders multi select arrays as checkboxes in enum order", async () => {
     const { user, last } = setup();
 

@@ -1,3 +1,4 @@
+import { KIDS_CAPABILITY } from "@/api/capabilities";
 import type { JsonObject, PipelineDescriptor } from "@/api/types";
 
 function choices(titles: Record<string, string>) {
@@ -185,5 +186,5 @@ export const kidsStoryPipeline: PipelineDescriptor = {
     { id: "episode", name: "Episode", aspect: "16:9", description: "Full story, landscape." },
     { id: "short", name: "Short", aspect: "9:16", description: "Under 60 seconds, vertical." },
   ],
-  capabilities: ["kids_content"],
+  capabilities: [KIDS_CAPABILITY],
 };

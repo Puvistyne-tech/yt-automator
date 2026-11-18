@@ -26,21 +26,14 @@ describe("Run actions", () => {
     const { user } = await openRun("run-live");
 
     await user.click(screen.getByRole("button", { name: "Cancel run" }));
+    const dialog = await findDialog("Cancel this run?");
+    expect(
+      dialog.getByText("The current stage stops and the run is marked cancelled."),
+    ).toBeInTheDocument();
     await confirmDialog(user, "Cancel this run?", "Cancel run");
 
     await findToast("Run cancelled.");
     expect(storedRun("run-live")?.status).toBe("cancelled");
-  });
-
-  it("explains that cancelling a run awaiting review keeps it from being published", async () => {
-    const { user } = await openRun("run-review");
-
-    await user.click(screen.getByRole("button", { name: "Cancel run" }));
-
-    const dialog = await findDialog("Cancel this run?");
-    expect(
-      dialog.getByText("The finished run is marked cancelled and will not be published."),
-    ).toBeInTheDocument();
   });
 
   it("deletes a run after confirmation and returns to the list", async () => {

@@ -1,3 +1,4 @@
+import { isKidsPipeline } from "@/api/capabilities";
 import type {
   Automation,
   AutomationInput,
@@ -35,7 +36,6 @@ export interface AutomationDraft {
   enabled: boolean;
 }
 
-export const KIDS_CAPABILITY = "kids_content";
 export const DEFAULT_INTERVAL_HOURS = 24;
 export const DEFAULT_CRON = "0 18 * * *";
 export const DEFAULT_MIN_SCORE = 85;
@@ -45,10 +45,6 @@ let keySeed = 0;
 function nextKey(): string {
   keySeed += 1;
   return `target-draft-${keySeed}`;
-}
-
-export function isKidsPipeline(pipeline: PipelineDescriptor | undefined): boolean {
-  return pipeline?.capabilities.includes(KIDS_CAPABILITY) ?? false;
 }
 
 export function emptyDraft(timezone = "UTC"): AutomationDraft {

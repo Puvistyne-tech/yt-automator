@@ -3,7 +3,6 @@ import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import type { RunStatus, UploadStatus } from "@/api/types";
 import {
   availableActions,
-  canCancelRun,
   cancelMessage,
   defaultRetryStage,
   publishDescription,
@@ -40,25 +39,12 @@ describe("availableActions", () => {
     expect(enabled.sort()).toEqual([...allowed].sort());
   });
 
-  it.each<[RunStatus, boolean]>([
-    ["queued", true],
-    ["running", true],
-    ["awaiting_review", true],
-    ["approved", true],
-    ["rejected", false],
-    ["publishing", false],
-    ["published", false],
-    ["failed", false],
-    ["cancelled", false],
-  ])("allows cancelling a %s run exactly as the backend does: %s", (status, allowed) => {
-    expect(canCancelRun(status)).toBe(allowed);
-  });
-
   it.each<[RunStatus, string]>([
     ["queued", "The run stops before it starts and is marked cancelled."],
     ["running", "The current stage stops and the run is marked cancelled."],
     ["awaiting_review", "The finished run is marked cancelled and will not be published."],
     ["approved", "The finished run is marked cancelled and will not be published."],
+    ["failed", "The finished run is marked cancelled and will not be published."],
   ])("explains what cancelling a %s run does", (status, message) => {
     expect(cancelMessage(status)).toBe(message);
   });

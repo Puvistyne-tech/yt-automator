@@ -88,25 +88,13 @@ export function groupArtifacts(
   );
 }
 
-function findKind(artifacts: Artifact[], kind: Artifact["kind"]): Artifact | undefined {
-  return artifacts.find((a) => a.kind === kind);
-}
-
-export function posterFor(group: ArtifactGroup): Artifact | undefined {
-  return findKind(group.artifacts, "thumbnail");
-}
-
 export function splitArtifacts(artifacts: Artifact[]): GroupParts {
   return {
     media: artifacts.filter((a) => MEDIA_KINDS.has(a.kind)),
     documents: artifacts.filter((a) => !MEDIA_KINDS.has(a.kind)),
-    captions: findKind(artifacts, "subtitle"),
-    poster: findKind(artifacts, "thumbnail"),
+    captions: artifacts.find((a) => a.kind === "subtitle"),
+    poster: artifacts.find((a) => a.kind === "thumbnail"),
   };
-}
-
-export function splitGroup(group: ArtifactGroup): GroupParts {
-  return splitArtifacts(group.artifacts);
 }
 
 export function isFinalOutput(artifact: Artifact): boolean {

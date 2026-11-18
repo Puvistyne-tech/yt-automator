@@ -1,4 +1,5 @@
 import { PRIVACY_LABELS } from "@/api/labels";
+import { canCancel, canDelete, canRetry } from "@/api/runRules";
 import type { ReviewPolicy, Run, RunStatus, ScoreItem, Upload } from "@/api/types";
 
 export interface RunActions {
@@ -12,16 +13,8 @@ export interface RunActions {
 
 export type Decision = "approved" | "rejected";
 
-const CANCELLABLE: RunStatus[] = ["queued", "running", "awaiting_review", "approved"];
-const RETRYABLE: RunStatus[] = ["failed", "cancelled", "awaiting_review", "approved", "rejected"];
-const UNDELETABLE: RunStatus[] = ["queued", "running", "publishing"];
-
 export const GOOD_SCORE = 85;
 export const FAIR_SCORE = 60;
-
-export function canCancelRun(status: RunStatus): boolean {
-  return CANCELLABLE.includes(status);
-}
 
 export function cancelMessage(status: RunStatus): string {
   if (status === "queued") {
@@ -35,11 +28,11 @@ export function cancelMessage(status: RunStatus): string {
 export function availableActions(run: Run): RunActions {
   const canPublish = run.status === "approved";
   return {
-    canCancel: canCancelRun(run.status),
-    canRetry: RETRYABLE.includes(run.status),
+    canCancel: canCancel(run.status),
+    canRetry: canRetry(run.status),
     canReview: run.status === "awaiting_review",
     canPublish,
-    canDelete: !UNDELETABLE.includes(run.status),
+    canDelete: canDelete(run.status),
     showPublish: canPublish || run.status === "publishing" || run.uploads.length > 0,
   };
 }

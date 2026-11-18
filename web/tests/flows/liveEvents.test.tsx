@@ -111,6 +111,20 @@ describe("Live run events", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Awaiting review");
   });
 
+  it("marks a status change of another run stale without fetching it or touching the open run", async () => {
+    const { client } = renderApp("/runs/run-live");
+    await screen.findByRole("heading", { level: 1 });
+    act(() => latest().onopen?.());
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+
+    latest().emit({ ...event("status", { status: "failed", error: "Boom" }), run_id: "run-other" });
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: keys.run("run-other") });
+    expect(client.getQueryState(keys.run("run-other"))).toBeUndefined();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Running");
+    expect(screen.queryByText("Boom")).not.toBeInTheDocument();
+  });
+
   it("reconnects with backoff after an error", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     renderApp("/");

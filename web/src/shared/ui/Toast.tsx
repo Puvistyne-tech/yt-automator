@@ -61,7 +61,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       nextId += 1;
       const id = nextId;
       setItems((current) => [...current.slice(-3), { id, tone, message, action }]);
-      setTimeout(() => dismiss(id), DURATION_MS);
+      if (action === undefined) {
+        setTimeout(() => dismiss(id), DURATION_MS);
+      }
     },
     [dismiss],
   );

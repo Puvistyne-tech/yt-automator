@@ -3,7 +3,7 @@ import { artifactResponse } from "@/api/mocks/artifactFiles";
 import { db, noContent, notFound, ruleConflict } from "@/api/mocks/db";
 import { publishRun } from "@/api/mocks/publish";
 import { retriedRun } from "@/api/mocks/retry";
-import { canCancel, canDelete, canRetry } from "@/api/mocks/runRules";
+import { canCancel, canDelete, canRetry } from "@/api/runRules";
 import type { Run } from "@/api/types";
 
 const find = (id: unknown) => db.state.runs.find((run) => run.id === id);

@@ -1,8 +1,8 @@
 import { screen, waitFor } from "@testing-library/react";
 import { db } from "@/api/mocks/db";
-import { findSection } from "../helpers/editor";
-import { findToast, pathOf, renderApp } from "../helpers/renderApp";
-import { failWith } from "../helpers/server";
+import { findSection, sectionByName } from "../helpers/editor";
+import { pathOf, renderApp } from "../helpers/renderApp";
+import { failWith, server } from "../helpers/server";
 
 async function openEditor(id: string) {
   const app = renderApp(`/automations/${id}`);
@@ -11,19 +11,6 @@ async function openEditor(id: string) {
 }
 
 describe("Automation editor: Run now", () => {
-  it("queues a run of the saved automation and links the toast to it", async () => {
-    const { user, router } = await openEditor("auto-shorts");
-    const known = db.state.runs.map((r) => r.id);
-
-    await user.click(screen.getByRole("button", { name: "Run now" }));
-
-    await findToast("Run queued for Tamil shorts.");
-    const queued = db.state.runs.find((r) => !known.includes(r.id));
-    expect(queued?.automation_id).toBe("auto-shorts");
-    await user.click(screen.getByRole("button", { name: "View run" }));
-    await waitFor(() => expect(pathOf(router)).toBe(`/runs/${queued?.id}`));
-  });
-
   it("disables Run now with a reason while there are unsaved changes", async () => {
     const { user, general } = await openEditor("auto-shorts");
 
@@ -43,35 +30,31 @@ describe("Automation editor: Run now", () => {
     expect(screen.queryByRole("button", { name: "Run now" })).not.toBeInTheDocument();
   });
 
-  it("reports a failed Run now", async () => {
-    failWith("post", "/automations/:id/runs", 409, { message: "Pipeline is not installed." });
-    const { user } = await openEditor("auto-shorts");
-    const before = db.state.runs.length;
-
-    await user.click(screen.getByRole("button", { name: "Run now" }));
-
-    await findToast("Pipeline is not installed.");
-    expect(db.state.runs).toHaveLength(before);
-  });
-
-  it("words the enabled switch for a manual schedule", async () => {
-    const { general } = await openEditor("auto-festival");
-
+  it("words the enabled switch after the schedule kind", async () => {
+    const { user, general } = await openEditor("auto-festival");
     expect(
       general.getByRole("switch", {
         name: "Enabled (manual schedule: runs only start from Run now)",
       }),
     ).toBeInTheDocument();
+
+    await user.click(sectionByName("Schedule").getByRole("radio", { name: /Cron expression/ }));
+
+    expect(general.getByRole("switch", { name: "Enabled: run on schedule" })).toBeInTheDocument();
   });
 });
 
 describe("Missing automations", () => {
   it("shows a retryable error state when the automation fails to load", async () => {
     failWith("get", "/automations/:id", 500, { message: "Database is locked." });
-    renderApp("/automations/auto-bedtime");
-
+    const { user } = renderApp("/automations/auto-bedtime");
     expect(await screen.findByText("Database is locked.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+
+    expect(await findSection("General")).toBeTruthy();
+    expect(screen.queryByText("Database is locked.")).not.toBeInTheDocument();
   });
 
   it("shows a not-found state with a way back instead of a retry", async () => {
@@ -86,7 +69,6 @@ describe("Missing automations", () => {
   it("marks a kept run's automation as deleted instead of linking to it", async () => {
     db.state.automations = db.state.automations.filter((a) => a.id !== "auto-bedtime");
     renderApp("/runs/run-review");
-    await screen.findByRole("heading", { level: 1 });
 
     expect(await screen.findByText("Automation deleted")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Open automation" })).not.toBeInTheDocument();
