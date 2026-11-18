@@ -36,7 +36,9 @@ class ScoreWeights(SettingsSection):
 
 class QualitySettings(SettingsSection):
     weights: ScoreWeights = Field(
-        default_factory=ScoreWeights, title="Weights", description="Weight of each check."
+        default_factory=ScoreWeights,
+        title="Weights",
+        description="How much each check counts towards the overall score.",
     )
     subtitle_min_coverage: float = Field(
         default=0.95,
@@ -78,4 +80,25 @@ class QualitySettings(SettingsSection):
         le=100,
         title="Points lost per word per minute",
         description="Score lost per word per minute outside the speaking rate range.",
+    )
+    points_lost_per_problem: float = Field(
+        default=50.0,
+        ge=0,
+        le=100,
+        title="Points lost per story problem",
+        description="Score lost per reading level or ending problem found in a story.",
+    )
+    subtitle_overlap_penalty: float = Field(
+        default=0.5,
+        ge=0,
+        le=1,
+        title="Overlapping subtitle factor",
+        description="The subtitle score is multiplied by this when any two subtitles overlap.",
+    )
+    subtitle_out_of_bounds_penalty: float = Field(
+        default=0.5,
+        ge=0,
+        le=1,
+        title="Out of bounds subtitle factor",
+        description="The subtitle score is multiplied by this when a subtitle runs past the video.",
     )

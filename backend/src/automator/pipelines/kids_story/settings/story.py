@@ -63,7 +63,11 @@ class StorySettings(SettingsSection):
         title="Theme choice",
         description="Rotate through the theme list, or always use the fixed theme.",
     )
-    themes: list[str] = text_list(THEMES, "Themes", "Themes to rotate through.")
+    themes: list[str] = text_list(
+        THEMES,
+        "Themes",
+        "Story themes the writer rotates through, one per episode.",
+    )
     fixed_theme: str = Field(
         default="sharing", title="Fixed theme", description="Used when theme choice is fixed."
     )
@@ -119,7 +123,7 @@ class StorySettings(SettingsSection):
         description="How simple the language must be.",
     )
     max_average_sentence_words: LocalizedNumber = localized_number(
-        12, 9, "Longest average sentence", "Average words per sentence allowed."
+        12, 9, "Longest average sentence", "Most words a narration sentence may have on average."
     )
     long_word_graphemes: LocalizedNumber = localized_number(
         9, 10, "Long word size", "Words with more letters than this count as long."
@@ -131,6 +135,13 @@ class StorySettings(SettingsSection):
         title="Most long words",
         description="Largest share of long words allowed in the narration.",
     )
+    ending_scenes: int = Field(
+        default=2,
+        ge=1,
+        le=5,
+        title="Closing scenes",
+        description="How many final scenes must contain the moral and the refrain.",
+    )
     question_count: int = Field(
         default=2,
         ge=0,
@@ -139,7 +150,11 @@ class StorySettings(SettingsSection):
         description="Questions for children added to the description.",
     )
     temperature: float = Field(
-        default=0.8, ge=0, le=2, title="Creativity", description="Higher is more surprising."
+        default=0.8,
+        ge=0,
+        le=2,
+        title="Creativity",
+        description="How surprising the writer may be: 0 is predictable, 2 is wild.",
     )
     translation_temperature: float = Field(
         default=0.3,

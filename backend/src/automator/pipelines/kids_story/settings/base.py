@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,6 +12,22 @@ HexColor = Annotated[str, Field(pattern=HEX_COLOR, json_schema_extra={"format": 
 class StoryLanguage(StrEnum):
     ENGLISH = "en"
     TAMIL = "ta"
+
+
+class Placement(StrEnum):
+    TOP = "top"
+    BOTTOM = "bottom"
+    CENTER = "center"
+    TOP_LEFT = "top_left"
+    TOP_RIGHT = "top_right"
+    BOTTOM_LEFT = "bottom_left"
+    BOTTOM_RIGHT = "bottom_right"
+
+
+Corner = Literal[
+    Placement.TOP_LEFT, Placement.TOP_RIGHT, Placement.BOTTOM_LEFT, Placement.BOTTOM_RIGHT
+]
+Edge = Literal[Placement.TOP, Placement.BOTTOM]
 
 
 class SettingsSection(BaseModel):
@@ -30,8 +46,10 @@ class LocalizedText(SettingsSection):
 
 
 class LocalizedNumber(SettingsSection):
-    en: float = Field(default=0.0, ge=0, title="English", description="Value for English.")
-    ta: float = Field(default=0.0, ge=0, title="Tamil", description="Value for Tamil.")
+    en: float = Field(
+        default=0.0, ge=0, title="English", description="Value used for English videos."
+    )
+    ta: float = Field(default=0.0, ge=0, title="Tamil", description="Value used for Tamil videos.")
 
     def for_language(self, language: str) -> float:
         value = self.model_dump().get(language)
@@ -39,8 +57,12 @@ class LocalizedNumber(SettingsSection):
 
 
 class LocalizedList(SettingsSection):
-    en: list[str] = Field(default_factory=list, title="English", description="Items for English.")
-    ta: list[str] = Field(default_factory=list, title="Tamil", description="Items for Tamil.")
+    en: list[str] = Field(
+        default_factory=list, title="English", description="Entries used for English videos."
+    )
+    ta: list[str] = Field(
+        default_factory=list, title="Tamil", description="Entries used for Tamil videos."
+    )
 
     def for_language(self, language: str) -> list[str]:
         value = self.model_dump().get(language)

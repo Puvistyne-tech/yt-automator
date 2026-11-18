@@ -12,7 +12,7 @@
   "order": {
     "series": ["name", "tagline", "art_style", "negative_prompt", "refrain", "intro_line", "outro_line", "editorial_rules"],
     "cast": ["id", "name", "species", "visual_descriptor", "personality", "palette", "voice_override"],
-    "story": ["source", "primary_language", "theme_mode", "themes", "fixed_theme", "recent_themes", "avoid_repeat_last", "morals", "age_min", "age_max", "target_duration_seconds", "duration_tolerance_seconds", "scene_count_min", "scene_count_max", "words_per_scene_min", "words_per_scene_max", "words_per_minute", "reading_level", "max_average_sentence_words", "long_word_graphemes", "max_long_word_share", "question_count", "temperature", "translation_temperature", "max_tokens", "max_attempts"],
+    "story": ["source", "primary_language", "theme_mode", "themes", "fixed_theme", "recent_themes", "avoid_repeat_last", "morals", "age_min", "age_max", "target_duration_seconds", "duration_tolerance_seconds", "scene_count_min", "scene_count_max", "words_per_scene_min", "words_per_scene_max", "words_per_minute", "reading_level", "max_average_sentence_words", "long_word_graphemes", "max_long_word_share", "ending_scenes", "question_count", "temperature", "translation_temperature", "max_tokens", "max_attempts"],
     "short": ["enabled", "resolution", "max_duration_seconds", "scene_selection", "first_n_scenes", "max_scenes", "hook_line"]
   },
   "widgets": {
@@ -37,6 +37,7 @@
     "visuals.crop_focus": {"widget": "slider", "step": 0.05},
     "visuals.short_art_mode": {"widget": "radio"},
     "visuals.badge_corner": {"widget": "select"},
+    "visuals.badge_size_ratio": {"widget": "slider", "step": 0.005},
     "visuals.card_camera": {"widget": "select"},
     "voice.speed": {"widget": "slider", "step": 0.05},
     "music.mood_prompt": {"widget": "textarea", "rows": 2},
@@ -52,9 +53,13 @@
     "thumbnail.text_position": {"widget": "radio"},
     "thumbnail.text_color": {"widget": "color"},
     "thumbnail.outline_color": {"widget": "color"},
+    "thumbnail.jpeg_quality": {"widget": "slider", "step": 1},
+    "thumbnail.min_jpeg_quality": {"widget": "slider", "step": 1},
     "metadata.description_template.en": {"widget": "textarea", "rows": 10},
     "metadata.description_template.ta": {"widget": "textarea", "rows": 10},
     "metadata.category": {"widget": "select"},
-    "quality.subtitle_min_coverage": {"widget": "slider", "step": 0.01}
+    "quality.subtitle_min_coverage": {"widget": "slider", "step": 0.01},
+    "quality.subtitle_overlap_penalty": {"widget": "slider", "step": 0.05},
+    "quality.subtitle_out_of_bounds_penalty": {"widget": "slider", "step": 0.05}
   }
 }

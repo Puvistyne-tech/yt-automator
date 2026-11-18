@@ -4,25 +4,7 @@ from enum import StrEnum
 
 from pydantic import Field
 
-from automator.pipelines.kids_story.settings.base import (
-    LocalizedList,
-    SettingsSection,
-    localized_list,
-)
-from automator.pipelines.kids_story.settings.subtitles import color
-
-LATIN_FONTS = [
-    "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
-    "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-    "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-]
-TAMIL_FONTS = [
-    "/System/Library/Fonts/Supplemental/Tamil Sangam MN.ttc",
-    "/System/Library/Fonts/Supplemental/Tamil MN.ttc",
-    "/usr/share/fonts/truetype/noto/NotoSansTamil-Bold.ttf",
-    "/usr/share/fonts/truetype/noto/NotoSansTamil-Regular.ttf",
-]
+from automator.pipelines.kids_story.settings.base import SettingsSection
 
 
 class LandscapeResolution(StrEnum):
@@ -41,11 +23,6 @@ class ShortSceneSelection(StrEnum):
     FIRST_N = "first_n"
 
 
-class TextPosition(StrEnum):
-    TOP = "top"
-    BOTTOM = "bottom"
-
-
 def size_of(resolution: StrEnum) -> tuple[int, int]:
     width, height = str(resolution.value).split("x")
     return int(width), int(height)
@@ -53,38 +30,95 @@ def size_of(resolution: StrEnum) -> tuple[int, int]:
 
 class EpisodeSettings(SettingsSection):
     resolution: LandscapeResolution = Field(
-        default=LandscapeResolution.FULL_HD, title="Resolution", description="Episode size."
+        default=LandscapeResolution.FULL_HD,
+        title="Resolution",
+        description="Width and height of the 16:9 episode video.",
     )
-    fps: int = Field(default=30, ge=12, le=60, title="Frames per second", description="Episode.")
-    intro_card: bool = Field(default=True, title="Intro card", description="Open with a card.")
-    outro_card: bool = Field(default=True, title="Outro card", description="Close with a card.")
+    fps: int = Field(
+        default=30,
+        ge=12,
+        le=60,
+        title="Frames per second",
+        description="Frames per second for every video, both the episode and the Short.",
+    )
+    intro_card: bool = Field(
+        default=True,
+        title="Intro card",
+        description="Open the episode with a card showing the series name and story title.",
+    )
+    outro_card: bool = Field(
+        default=True,
+        title="Outro card",
+        description="Close the episode with a card showing the refrain and series name.",
+    )
     card_seconds: float = Field(
-        default=3.0, gt=0, le=15, title="Card length", description="Shortest card, in seconds."
+        default=3.0,
+        gt=0,
+        le=15,
+        title="Card length",
+        description="Shortest time in seconds an intro or outro card stays on screen.",
+    )
+    card_text_size_ratio: float = Field(
+        default=0.11,
+        gt=0,
+        le=0.4,
+        title="Card text size",
+        description="Letter height on the intro and outro cards as a share of the card height.",
     )
     scene_lead_in_seconds: float = Field(
-        default=0.4, ge=0, le=5, title="Pause before narration", description="Per scene."
+        default=0.4,
+        ge=0,
+        le=5,
+        title="Pause before narration",
+        description="Seconds of picture shown in each scene before the narrator starts.",
     )
     scene_tail_seconds: float = Field(
-        default=0.8, ge=0, le=5, title="Pause after narration", description="Per scene."
+        default=0.8,
+        ge=0,
+        le=5,
+        title="Pause after narration",
+        description="Seconds each scene stays on screen after the narrator finishes.",
     )
     min_scene_seconds: float = Field(
-        default=3.0, gt=0, le=30, title="Shortest scene", description="Seconds."
+        default=3.0,
+        gt=0,
+        le=30,
+        title="Shortest scene",
+        description="Shortest time in seconds any scene stays on screen.",
     )
     loudness_lufs: float = Field(
-        default=-16.0, ge=-30, le=-8, title="Loudness target", description="Integrated LUFS."
+        default=-16.0,
+        ge=-30,
+        le=-8,
+        title="Loudness target",
+        description="Overall loudness every video is mixed to, in integrated LUFS.",
     )
     fade_seconds: float = Field(
-        default=0.5, ge=0, le=5, title="Fade", description="Fade in and out, in seconds."
+        default=0.5,
+        ge=0,
+        le=5,
+        title="Fade",
+        description="Seconds of fade in at the start and fade out at the end of every video.",
     )
 
 
 class ShortSettings(SettingsSection):
-    enabled: bool = Field(default=True, title="Make a Short", description="Vertical 9:16 cut.")
+    enabled: bool = Field(
+        default=True,
+        title="Make a Short",
+        description="Also make a vertical 9:16 Short from the best scenes of each story.",
+    )
     resolution: PortraitResolution = Field(
-        default=PortraitResolution.FULL_HD, title="Resolution", description="Short size."
+        default=PortraitResolution.FULL_HD,
+        title="Resolution",
+        description="Width and height of the vertical Short video.",
     )
     max_duration_seconds: float = Field(
-        default=58, ge=10, le=60, title="Longest Short", description="Seconds."
+        default=58,
+        ge=10,
+        le=60,
+        title="Longest Short",
+        description="Most seconds a Short may last; scenes that do not fit are left out.",
     )
     scene_selection: ShortSceneSelection = Field(
         default=ShortSceneSelection.AUTO,
@@ -92,48 +126,19 @@ class ShortSettings(SettingsSection):
         description="Let the story pick the best scenes, or use the first scenes.",
     )
     first_n_scenes: int = Field(
-        default=4, ge=1, le=10, title="First scenes", description="Used with first scenes."
+        default=4,
+        ge=1,
+        le=10,
+        title="First scenes",
+        description="How many opening scenes the Short uses when scenes are taken from the start.",
     )
     max_scenes: int = Field(
-        default=5, ge=1, le=10, title="Most scenes", description="Scenes the Short may use."
+        default=5,
+        ge=1,
+        le=10,
+        title="Most scenes",
+        description="Most scenes a Short may use, whichever way they are chosen.",
     )
     hook_line: bool = Field(
         default=True, title="Hook line", description="Open the Short with the story's hook line."
-    )
-
-
-class ThumbnailSettings(SettingsSection):
-    title_text: bool = Field(
-        default=True, title="Title on thumbnail", description="Draw the story title."
-    )
-    width: int = Field(default=1280, ge=320, le=3840, title="Width", description="Pixels.")
-    height: int = Field(default=720, ge=180, le=2160, title="Height", description="Pixels.")
-    text_position: TextPosition = Field(
-        default=TextPosition.BOTTOM, title="Title position", description="Top or bottom."
-    )
-    text_size_ratio: float = Field(
-        default=0.11,
-        gt=0,
-        le=0.4,
-        title="Title size",
-        description="Letter height as a share of the thumbnail height.",
-    )
-    margin_ratio: float = Field(
-        default=0.05,
-        ge=0,
-        le=0.3,
-        title="Title margin",
-        description="Space between the title and the edge, as a share of the height.",
-    )
-    outline_ratio: float = Field(
-        default=0.08,
-        ge=0,
-        le=0.5,
-        title="Outline thickness",
-        description="Outline width as a share of the letter height.",
-    )
-    text_color: str = color("#FFFFFF", "Title colour", "Colour of the title letters.")
-    outline_color: str = color("#3A2A1A", "Title outline", "Colour around the title letters.")
-    font_files: LocalizedList = localized_list(
-        LATIN_FONTS, TAMIL_FONTS, "Font files", "Font files tried in order, per language."
     )

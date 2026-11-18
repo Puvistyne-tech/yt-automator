@@ -56,13 +56,13 @@ class MetadataSettings(SettingsSection):
         "{title} | {series}",
         "{title} | {series}",
         "Episode title",
-        "Placeholders: {title} {series} {moral} {theme}.",
+        "Episode title per language; {title}, {series}, {moral} and {theme} are filled in.",
     )
     short_title_template: LocalizedText = localized_text(
         "{title} #Shorts",
         "{title} #Shorts",
         "Short title",
-        "Placeholders: {title} {series} {moral} {theme} {hook}.",
+        "Short title per language; {title}, {series}, {moral}, {theme} and {hook} are filled in.",
     )
     description_template: LocalizedText = localized_text(
         DESCRIPTION_EN,
@@ -71,7 +71,12 @@ class MetadataSettings(SettingsSection):
         "Placeholders: {title} {series} {tagline} {moral} {theme} {questions} {hashtags} "
         "{characters} {refrain} {hook}.",
     )
-    tags: LocalizedList = localized_list(TAGS_EN, TAGS_TA, "Tags", "Search tags per language.")
+    tags: LocalizedList = localized_list(
+        TAGS_EN,
+        TAGS_TA,
+        "Tags",
+        "Search tags added to every upload; tags past YouTube's 500 letter limit are dropped.",
+    )
     hashtags: LocalizedList = localized_list(
         ["#KidsStories", "#KuttyStories", "#MoralStories"],
         ["#தமிழ்கதைகள்", "#KuttyStories", "#KidsStories"],
