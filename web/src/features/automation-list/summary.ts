@@ -1,3 +1,4 @@
+import { channelsNeedingReconnect } from "@/api/channelHealth";
 import type { Automation, Channel, PipelineDescriptor } from "@/api/types";
 import { formatRelative } from "@/shared/format/dates";
 
@@ -35,4 +36,13 @@ export function sortAutomations(automations: Automation[]): Automation[] {
 
 export function nextRunLabel(automation: Automation): string {
   return automation.enabled ? `Next ${formatRelative(automation.next_run_at)}` : "Paused";
+}
+
+export function reconnectWarning(automation: Automation, channels: Channel[]): string | null {
+  const ids = automation.targets.map((target) => target.channel_id);
+  const stale = channelsNeedingReconnect(ids, channels);
+  if (stale.length === 0) {
+    return null;
+  }
+  return `Reconnect ${stale.map((channel) => channel.title).join(", ")} to keep publishing.`;
 }

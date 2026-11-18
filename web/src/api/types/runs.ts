@@ -22,6 +22,8 @@ export type ArtifactKind =
   | "audio"
   | "text";
 export type RunTrigger = "manual" | "schedule";
+export type LogLevel = "info" | "warning" | "error";
+export type ReviewDecision = "approved" | "rejected";
 
 export interface RunSummary {
   id: string;
@@ -35,8 +37,8 @@ export interface StageRun {
   stage_id: string;
   title: string;
   status: StageStatus;
-  provider: string | null;
-  message: string | null;
+  provider: string;
+  message: string;
   started_at: string | null;
   finished_at: string | null;
 }
@@ -62,7 +64,7 @@ export interface ScoreItem {
 }
 
 export interface Review {
-  decision: "approved" | "rejected";
+  decision: ReviewDecision;
   notes: string;
   decided_at: string;
 }
@@ -95,6 +97,7 @@ export interface Run {
   score_details: ScoreItem[];
   review: Review | null;
   uploads: Upload[];
+  logs: RunLog[];
   error: string | null;
   created_at: string;
   started_at: string | null;
@@ -110,11 +113,11 @@ export interface RunEvent {
   payload: JsonObject;
 }
 
-export interface LogLine {
+export interface RunLog {
   at: string;
-  message: string;
-  level: string;
+  level: LogLevel;
   stage_id: string | null;
+  message: string;
 }
 
 export interface RunFilters {

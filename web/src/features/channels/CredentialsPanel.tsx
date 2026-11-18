@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCredentials, useDeleteCredential } from "@/api/channels";
-import type { CredentialSummary } from "@/api/types";
+import type { CredentialView } from "@/api/types";
 import { useConfirmedMutation } from "@/api/useConfirmedMutation";
 import { CredentialDialog } from "@/features/channels/CredentialDialog";
 import { CredentialItem } from "@/features/channels/CredentialItem";
@@ -15,16 +15,16 @@ import {
 } from "@/shared/ui";
 import "@/features/channels/channels.css";
 
-type Editing = { credential: CredentialSummary | undefined } | null;
+type Editing = { credential: CredentialView | undefined } | null;
 
 function CredentialList({
   list,
   onEdit,
   onDelete,
 }: {
-  list: CredentialSummary[];
-  onEdit: (credential: CredentialSummary) => void;
-  onDelete: (credential: CredentialSummary) => void;
+  list: CredentialView[];
+  onEdit: (credential: CredentialView) => void;
+  onDelete: (credential: CredentialView) => void;
 }) {
   return (
     <ul className="list-reset divided-list">
@@ -53,7 +53,7 @@ function AddCredentialButton({ onAdd, primary }: { onAdd: () => void; primary?: 
   );
 }
 
-function DeleteCredentialDialog({ confirm }: { confirm: ConfirmTarget<CredentialSummary> }) {
+function DeleteCredentialDialog({ confirm }: { confirm: ConfirmTarget<CredentialView> }) {
   const { onConfirm, busy } = useConfirmedMutation({
     confirm,
     mutation: useDeleteCredential(),
@@ -75,7 +75,7 @@ function DeleteCredentialDialog({ confirm }: { confirm: ConfirmTarget<Credential
 export function CredentialsPanel() {
   const credentials = useCredentials();
   const [editing, setEditing] = useState<Editing>(null);
-  const deleting = useConfirmTarget<CredentialSummary>();
+  const deleting = useConfirmTarget<CredentialView>();
   const add = () => setEditing({ credential: undefined });
   return (
     <Card

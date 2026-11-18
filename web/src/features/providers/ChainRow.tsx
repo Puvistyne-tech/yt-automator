@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { type FieldErrors, hasErrors } from "@/api/errors";
 import type { ProviderChoice, ProviderDescriptor } from "@/api/types";
-import { hasOptions } from "@/features/providers/chain";
+import { type ChoiceErrors, hasOptions } from "@/features/providers/chain";
 import { SchemaForm } from "@/shared/schema-form/SchemaForm";
 import { Badge, Button, IconButton, Switch } from "@/shared/ui";
 
@@ -9,6 +10,7 @@ interface ChainRowProps {
   total: number;
   choice: ProviderChoice;
   descriptor: ProviderDescriptor | undefined;
+  errors: ChoiceErrors;
   onChange: (patch: Partial<ProviderChoice>) => void;
   onMove: (delta: -1 | 1) => void;
   onRemove: () => void;
@@ -60,7 +62,7 @@ function ChainControls({
   onChange,
   onMove,
   onRemove,
-}: Omit<ChainRowProps, "descriptor"> & { name: string }) {
+}: Omit<ChainRowProps, "descriptor" | "errors"> & { name: string }) {
   return (
     <div className="chain-controls">
       <Switch
@@ -88,13 +90,16 @@ function ChainControls({
 function ChainOptions({
   descriptor,
   choice,
+  errors,
   onChange,
 }: {
   descriptor: ProviderDescriptor;
   choice: ProviderChoice;
+  errors: FieldErrors;
   onChange: (patch: Partial<ProviderChoice>) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [toggled, setOpen] = useState(false);
+  const open = toggled || hasErrors(errors);
   return (
     <div className="chain-options">
       <Button
@@ -111,6 +116,7 @@ function ChainOptions({
           idPrefix={`provider-${descriptor.provider_id}`}
           schema={descriptor.options_schema}
           value={choice.options}
+          errors={errors}
           onChange={(options) => onChange({ options })}
         />
       )}
@@ -131,8 +137,18 @@ export function ChainRow(props: ChainRowProps) {
         <ChainInfo name={name} descriptor={descriptor} />
         <ChainControls {...props} name={name} />
       </div>
+      {props.errors.message && (
+        <p className="field-error" role="alert">
+          {props.errors.message}
+        </p>
+      )}
       {descriptor && hasOptions(descriptor) && (
-        <ChainOptions descriptor={descriptor} choice={choice} onChange={props.onChange} />
+        <ChainOptions
+          descriptor={descriptor}
+          choice={choice}
+          errors={props.errors.options}
+          onChange={props.onChange}
+        />
       )}
     </li>
   );

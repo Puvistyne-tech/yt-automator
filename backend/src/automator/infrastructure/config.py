@@ -7,9 +7,14 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from automator.domain.diagnostics import DoctorPolicy
 from automator.domain.run_parts import DEFAULT_MAX_RUN_LOGS
+from automator.infrastructure.runtime.python_requirement import required_python
 
 ENV_PREFIX = "AUTOMATOR_"
+LOOPBACK_HOST = "127.0.0.1"
+WILDCARD_HOSTS = frozenset({"", "0.0.0.0", "::"})
+DEFAULT_MIN_FREE_GB: float = DoctorPolicy.model_fields["min_free_gb"].default
 OAUTH_CALLBACK_PATH = "/api/oauth/callback"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 
@@ -24,6 +29,11 @@ def default_data_dir() -> Path:
     return Path.home() / ".yt-automator"
 
 
+def default_redirect_base(host: str, port: int) -> str:
+    reachable = LOOPBACK_HOST if host in WILDCARD_HOSTS else host
+    return f"http://{reachable}:{port}"
+
+
 class RuntimeConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -32,7 +42,8 @@ class RuntimeConfig(BaseModel):
     port: int = Field(default=8000, ge=1, le=65535, description="Port the web server binds to")
     reload: bool = Field(default=False, description="Restart the server when code changes")
     redirect_base_url: str = Field(
-        default="http://127.0.0.1:8000", description="Public base URL used for the OAuth redirect"
+        default="",
+        description="Public base URL used for the OAuth redirect; empty follows host and port",
     )
     ui_base_url: str = Field(default="", description="Base URL the OAuth callback redirects to")
     scheduler_tick_seconds: float = Field(
@@ -80,14 +91,32 @@ class RuntimeConfig(BaseModel):
         default=DEFAULT_MAX_RUN_LOGS, ge=1, description="Newest log entries kept on each run"
     )
     log_level: str = Field(default="info", description="Server log level")
+    doctor_min_free_gb: float = Field(
+        default=DEFAULT_MIN_FREE_GB,
+        ge=0,
+        description="Free disk space below which the doctor warns, in GB",
+    )
+    doctor_tool_timeout_seconds: float = Field(
+        default=5.0, gt=0, description="Seconds the doctor waits for ffmpeg -version"
+    )
 
     @property
     def oauth_redirect_uri(self) -> str:
-        return self.redirect_base_url.rstrip("/") + OAUTH_CALLBACK_PATH
+        return self.redirect_base.rstrip("/") + OAUTH_CALLBACK_PATH
+
+    @property
+    def redirect_base(self) -> str:
+        return self.redirect_base_url or default_redirect_base(self.host, self.port)
 
     @property
     def database_path(self) -> Path:
         return self.data_dir / "automator.db"
+
+    @property
+    def doctor_policy(self) -> DoctorPolicy:
+        policy = DoctorPolicy(min_free_gb=self.doctor_min_free_gb)
+        minimum = required_python()
+        return policy.model_copy(update={"min_python": minimum}) if minimum else policy
 
 
 def env_value(name: str, raw: str) -> Any:

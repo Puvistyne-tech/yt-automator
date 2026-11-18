@@ -45,25 +45,50 @@ describe("Channels page", () => {
 
     await waitFor(() =>
       expect(navigateExternal).toHaveBeenCalledWith(
-        expect.stringContaining("credential=cred-main"),
+        expect.stringMatching(/\/channels\?connected=/),
       ),
     );
   });
 
-  it("reports a connect flow that cannot start", async () => {
-    failWith("post", "/channels/connect", 502, { message: "Google is unreachable." });
+  it("offers reconnect for an expired channel through the same connect flow", async () => {
     const { user, navigateExternal } = renderApp("/channels");
-    const main = await findCredential("Main Google project");
+    const row = await findRow("Channels", "Kutty Classics");
+    expect(row.getByText("Token expired")).toBeInTheDocument();
 
-    await user.click(main.getByRole("button", { name: "Connect channel" }));
+    await user.click(row.getByRole("button", { name: "Reconnect Kutty Classics" }));
 
-    await findToast("Google is unreachable.");
+    await waitFor(() =>
+      expect(navigateExternal).toHaveBeenCalledWith(expect.stringContaining("connected=chan-old")),
+    );
+    expect(channel("chan-old")?.status).toBe("expired");
+  });
+
+  it("offers no reconnect for a connected channel", async () => {
+    renderApp("/channels");
+    const row = await findRow("Channels", "Kutty Stories");
+    expect(row.queryByRole("button", { name: /Reconnect/ })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["Reconnect Kutty Classics", () => findRow("Channels", "Kutty Classics")],
+    ["Connect channel", () => findCredential("Main Google project")],
+  ])("reports when %s cannot start", async (button, findScope) => {
+    failWith("post", "/channels/connect", 409, {
+      code: "credential_secret_missing",
+      message: "credential cred-main has no client secret",
+    });
+    const { user, navigateExternal } = renderApp("/channels");
+    const scope = await findScope();
+
+    await user.click(scope.getByRole("button", { name: button }));
+
+    await findToast("credential cred-main has no client secret");
     expect(navigateExternal).not.toHaveBeenCalled();
   });
 
   it.each([
     ["?connected=chan-ta", "Connected Kutty Kathaigal."],
-    ["?error=access_denied", "Connecting the channel failed: access denied."],
+    ["?error=access_denied", "Google sign-in was cancelled, so no channel was connected."],
   ])("shows a toast when returning with %s and cleans the url", async (query, message) => {
     const { router } = renderApp(`/channels${query}`);
 
@@ -106,13 +131,13 @@ describe("Channel defaults and disconnect", () => {
 
     await user.click(row.getByRole("button", { name: "Disconnect Kutty Stories" }));
     await confirmDialog(user, "Disconnect channel?", "Disconnect");
-    await findToast("An enabled automation still publishes to this channel.");
+    await findToast("channel is targeted by enabled automations: Bedtime stories");
 
     db.state.automations = [];
     await user.click(row.getByRole("button", { name: "Disconnect Kutty Stories" }));
     await confirmDialog(user, "Disconnect channel?", "Disconnect");
     await findToast("Disconnected Kutty Stories.");
-    expect(db.state.channels.map((c) => c.id)).toEqual(["chan-ta"]);
+    expect(db.state.channels.map((c) => c.id)).toEqual(["chan-ta", "chan-old"]);
   });
 
   it("keeps a channel when disconnecting is cancelled", async () => {
@@ -123,6 +148,6 @@ describe("Channel defaults and disconnect", () => {
     await cancelDialog(user, "Disconnect channel?");
 
     expect(row.getByText("Kutty Stories")).toBeInTheDocument();
-    expect(db.state.channels.map((c) => c.id)).toEqual(["chan-en", "chan-ta"]);
+    expect(db.state.channels.map((c) => c.id)).toEqual(["chan-en", "chan-ta", "chan-old"]);
   });
 });

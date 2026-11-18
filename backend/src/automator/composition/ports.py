@@ -10,6 +10,7 @@ from automator.application.credential_views import CredentialViews
 from automator.application.quota_report import QuotaReport
 from automator.application.run_progress import RunProgress
 from automator.application.run_recorder import RunRecorder
+from automator.domain.diagnostics import DoctorPolicy
 from automator.domain.ports import (
     AppSettingsRepository,
     ArtifactStore,
@@ -27,6 +28,7 @@ from automator.domain.ports import (
     RunRepository,
     ScheduleCalculator,
     SecretStore,
+    SystemInspector,
     YouTubeGateway,
 )
 from automator.domain.quota import QuotaPolicy
@@ -52,8 +54,10 @@ class Ports:
     pipelines: PipelineRegistry
     catalog: ProviderCatalog
     youtube: YouTubeGateway
+    inspector: SystemInspector
     quota: QuotaPolicy = field(default_factory=QuotaPolicy)
     run_logs: RunLogPolicy = field(default_factory=RunLogPolicy)
+    doctor_policy: DoctorPolicy = field(default_factory=DoctorPolicy)
 
 
 @dataclass(frozen=True)

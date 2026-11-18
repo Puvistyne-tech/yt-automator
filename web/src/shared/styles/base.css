@@ -214,6 +214,14 @@ textarea {
   text-decoration: none;
 }
 
+.cell-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-warning);
+}
+
 .avatar {
   width: 32px;
   height: 32px;

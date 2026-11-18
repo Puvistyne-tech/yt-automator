@@ -12,7 +12,7 @@ import type {
   AppSettings,
   Automation,
   Channel,
-  CredentialSummary,
+  CredentialView,
   PipelineDescriptor,
   Playlist,
   ProviderConfig,
@@ -23,7 +23,7 @@ import type {
 
 export interface MockState {
   pipelines: PipelineDescriptor[];
-  credentials: CredentialSummary[];
+  credentials: CredentialView[];
   channels: Channel[];
   playlists: Record<string, Playlist[]>;
   automations: Automation[];
@@ -79,7 +79,7 @@ const FESTIVAL = makeAutomation({
   id: "auto-festival",
   name: "Festival specials",
   description: "Hand-triggered festival episodes.",
-  targets: [],
+  targets: [makeTarget({ id: "target-classics", channel_id: "chan-old", variants: ["episode"] })],
   schedule: { kind: "manual", every_hours: null, cron: null, timezone: "UTC" },
   enabled: false,
   next_run_at: null,
@@ -109,6 +109,12 @@ const CHANNELS = [
       default_language: "ta",
       notify_subscribers: true,
     },
+  }),
+  makeChannel({
+    id: "chan-old",
+    youtube_channel_id: "UC_kutty_classics_003",
+    title: "Kutty Classics",
+    status: "expired",
   }),
 ];
 

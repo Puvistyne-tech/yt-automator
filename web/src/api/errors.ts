@@ -29,14 +29,23 @@ function readFields(value: unknown): FieldErrors {
   );
 }
 
-export function apiErrorFromBody(status: number, body: unknown, fallback: string): ApiError {
+function withRequestId(message: string, requestId: string | null): string {
+  return requestId ? `${message} (request id ${requestId})` : message;
+}
+
+export function apiErrorFromBody(
+  status: number,
+  body: unknown,
+  fallback: string,
+  requestId: string | null = null,
+): ApiError {
   const error = isRecord(body) && isRecord(body.error) ? body.error : null;
   if (error === null) {
-    return new ApiError(status, `http_${status}`, fallback);
+    return new ApiError(status, `http_${status}`, withRequestId(fallback, requestId));
   }
   const code = typeof error.code === "string" ? error.code : `http_${status}`;
   const message = typeof error.message === "string" ? error.message : fallback;
-  return new ApiError(status, code, message, readFields(error.fields));
+  return new ApiError(status, code, withRequestId(message, requestId), readFields(error.fields));
 }
 
 export function errorMessage(error: unknown): string {
@@ -61,6 +70,11 @@ export function normalizeFieldErrors(fields: FieldErrors): FieldErrors {
   return Object.fromEntries(
     Object.entries(fields).map(([path, message]) => [normalizeFieldPath(path), message]),
   );
+}
+
+export function errorAt(errors: FieldErrors, path: string): string | undefined {
+  const nested = Object.keys(errors).find((key) => key.startsWith(`${path}.`));
+  return errors[path] ?? (nested === undefined ? undefined : errors[nested]);
 }
 
 export function hasErrors(errors: FieldErrors): boolean {

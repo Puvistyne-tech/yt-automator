@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from automator.infrastructure.config import RuntimeConfig
 from automator.main import Overrides, Runtime, create_app
+from tests.fixtures.fake_diagnostics import FakeInspector
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry, kids_pipeline
 from tests.fixtures.fake_providers import FakeProviderCatalog
 from tests.fixtures.fake_runtime import InMemorySecrets
@@ -43,6 +44,7 @@ def overrides(youtube: FakeYouTube, secrets: InMemorySecrets) -> Overrides:
         catalog=FakeProviderCatalog(),
         pipelines=FakePipelineRegistry([FakePipeline(), kids_pipeline()]),
         secrets=secrets,
+        inspector=FakeInspector(),
     )
 
 

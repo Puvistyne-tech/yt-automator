@@ -8,6 +8,7 @@ import {
   languageOptionsWithOrphan,
   orphanTargets,
   privacyOptions,
+  targetChannelWarning,
   targetOptions,
   updateTarget,
   withoutOrphanTargets,
@@ -20,6 +21,19 @@ const twoTargets = () =>
       targets: [makeTarget(), makeTarget({ id: "target-ta", language: "ta", playlist_id: "pl-1" })],
     }),
   );
+
+describe("targetChannelWarning", () => {
+  it.each([
+    [undefined, null],
+    [makeChannel(), null],
+    [
+      makeChannel({ title: "Old", status: "expired" }),
+      "Old needs reconnecting on the Channels page before runs can publish to it.",
+    ],
+  ])("warns for %j", (channel, warning) => {
+    expect(targetChannelWarning(channel)).toBe(warning);
+  });
+});
 
 describe("target options", () => {
   it("offers channels with status, only selected languages and every variant", () => {

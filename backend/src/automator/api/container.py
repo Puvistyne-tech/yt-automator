@@ -34,6 +34,7 @@ from automator.application.publish_run import PublishRun
 from automator.application.recover_interrupted_runs import RecoverInterruptedRuns
 from automator.application.retry_run import RetryRun
 from automator.application.review_run import ReviewRun
+from automator.application.run_doctor import RunDoctor
 from automator.application.run_due_automations import RunDueAutomations
 from automator.application.save_provider_config import SaveProviderConfig
 from automator.application.save_settings import SaveSettings
@@ -108,6 +109,7 @@ class ConfigUseCases:
     delete_secret: DeleteSecret
     get_settings: GetSettings
     save_settings: SaveSettings
+    doctor: RunDoctor
 
 
 @dataclass(frozen=True)

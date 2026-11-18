@@ -14,6 +14,7 @@ export { LoadingState, Spinner } from "@/shared/ui/Spinner";
 export { Switch } from "@/shared/ui/Switch";
 export { EmptyState, ErrorState, QueryState } from "@/shared/ui/states";
 export {
+  AlertCallout,
   Badge,
   Callout,
   Card,

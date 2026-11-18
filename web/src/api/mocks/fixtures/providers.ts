@@ -12,7 +12,7 @@ function descriptor(seed: DescriptorSeed): ProviderDescriptor {
     required_secrets: [],
     offline: true,
     available: true,
-    unavailable_reason: null,
+    unavailable_reason: "",
     ...seed,
   };
 }

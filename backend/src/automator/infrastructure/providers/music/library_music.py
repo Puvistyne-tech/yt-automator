@@ -25,6 +25,10 @@ class LibraryMusicOptions(AudioFitOptions):
     )
 
 
+def default_music_folder(data_dir: Path) -> Path:
+    return data_dir / "assets" / "music"
+
+
 def words_of(text: str) -> set[str]:
     return {normalised(word) for word in text.replace("_", " ").replace("-", " ").split()} - {""}
 
@@ -46,11 +50,9 @@ class LibraryMusic:
         self.context = context
 
     def folder(self) -> Path:
-        return (
-            Path(self.options.folder)
-            if self.options.folder
-            else self.context.data_dir / "assets" / "music"
-        )
+        if self.options.folder:
+            return Path(self.options.folder)
+        return default_music_folder(self.context.data_dir)
 
     def tracks(self) -> list[Path]:
         folder = self.folder()

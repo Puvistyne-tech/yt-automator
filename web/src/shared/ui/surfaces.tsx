@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import { Icon } from "@/shared/ui/Icon";
 
 export type Tone = "neutral" | "accent" | "success" | "warning" | "danger" | "info";
 
@@ -114,5 +115,22 @@ export function Callout({
     <div className={`callout callout-${tone}`} role={role}>
       {children}
     </div>
+  );
+}
+
+export function AlertCallout({
+  tone,
+  role = "status",
+  children,
+}: {
+  tone: "warning" | "danger" | "info";
+  role?: "alert" | "status";
+  children: ReactNode;
+}) {
+  return (
+    <Callout tone={tone} role={role}>
+      <Icon name="alert" />
+      <span>{children}</span>
+    </Callout>
   );
 }

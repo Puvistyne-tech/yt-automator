@@ -14,7 +14,6 @@ export const keys = {
   runLists: ["runs", "list"] as const,
   runList: (filters: RunFilters) => ["runs", "list", filters] as const,
   run: (id: string) => ["runs", "detail", id] as const,
-  runLogs: (id: string) => ["run-logs", id] as const,
   artifactText: (runId: string, artifactId: string) =>
     ["artifact-text", runId, artifactId] as const,
   providers: ["providers"] as const,

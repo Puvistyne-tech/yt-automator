@@ -6,17 +6,16 @@ import {
   stagesWith,
 } from "@/api/mocks/fixtures/factories";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
-import type { LogLine } from "@/api/types";
 import {
   languagesLabel,
   nextRunLabel,
   pipelineName,
+  reconnectWarning,
   sortAutomations,
   targetsLabel,
 } from "@/features/automation-list/summary";
-import { mergeLogLines, stageLines } from "@/features/run-detail/logLines";
+import { logRows } from "@/features/run-detail/logLines";
 import { hasActiveFilters, readFilters, withFilter } from "@/features/runs-list/filters";
-import { itemAt } from "../../helpers/itemAt";
 
 describe("automation summary", () => {
   it("names pipelines and languages, falling back to ids", () => {
@@ -51,6 +50,25 @@ describe("automation summary", () => {
       makeAutomation({ id: "3", name: "Beta", enabled: true }),
     ]);
     expect(sorted.map((a) => a.name)).toEqual(["Beta", "Zeta", "Alpha"]);
+  });
+});
+
+describe("reconnectWarning", () => {
+  const channels = [
+    makeChannel({ id: "a", title: "A" }),
+    makeChannel({ id: "b", title: "B", status: "expired" }),
+    makeChannel({ id: "c", title: "C", status: "revoked" }),
+  ];
+  const targeting = (...ids: string[]) =>
+    makeAutomation({ targets: ids.map((channel_id) => makeTarget({ channel_id })) });
+
+  it.each([
+    [["a"], null],
+    [[], null],
+    [["a", "b"], "Reconnect B to keep publishing."],
+    [["b", "c"], "Reconnect B, C to keep publishing."],
+  ])("warns about targets on %j", (ids, warning) => {
+    expect(reconnectWarning(targeting(...ids), channels)).toBe(warning);
   });
 });
 
@@ -96,43 +114,32 @@ describe("run filters", () => {
   });
 });
 
-describe("mergeLogLines", () => {
-  const line = (at: string, message: string, stage_id: string | null = "s"): LogLine => ({
-    at,
-    message,
-    level: "info",
-    stage_id,
-  });
+describe("logRows", () => {
+  const AT = "2026-01-01T00:00:01Z";
 
-  const summary = (lines: LogLine[]) => lines.map((l) => `${l.at.slice(-3, -1)} ${l.message}`);
-
-  it("drops stage lines that also arrived live", () => {
-    const merged = mergeLogLines(
-      [line("2026-01-01T00:00:01Z", "done")],
-      [line("2026-01-01T00:00:02Z", "done"), line("2026-01-01T00:00:03Z", "done", null)],
-    );
-    expect(summary(merged)).toEqual(["02 done", "03 done"]);
-  });
-
-  it("sorts lines by time", () => {
-    const merged = mergeLogLines(
-      [line("2026-01-01T00:00:03Z", "c"), line("2026-01-01T00:00:01Z", "a")],
-      [line("2026-01-01T00:00:02Z", "b")],
-    );
-    expect(summary(merged)).toEqual(["01 a", "02 b", "03 c"]);
-  });
-
-  it("returns nothing for empty input", () => {
-    expect(mergeLogLines([], [])).toEqual([]);
-  });
-
-  it("turns finished stage messages into lines, failed ones as errors", () => {
-    const stages = stagesWith(["done", "failed", "pending"]);
-    const failed = { ...itemAt(stages, 1), message: "Boom" };
-    const run = makeRun({ stages: [itemAt(stages, 0), failed, itemAt(stages, 2)] });
-    expect(stageLines(run).map((l) => [l.level, l.message])).toEqual([
-      ["info", "Write story finished"],
-      ["error", "Boom"],
+  it("names each line's stage by its title, the run itself, or its id", () => {
+    const run = makeRun({
+      stages: stagesWith(["done"]),
+      logs: [
+        { at: AT, level: "info", stage_id: "story", message: "Wrote it" },
+        { at: AT, level: "error", stage_id: null, message: "Run failed" },
+        { at: AT, level: "warning", stage_id: "gone_stage", message: "Odd" },
+      ],
+    });
+    expect(logRows(run).map((row) => [row.stage, row.level, row.message])).toEqual([
+      ["Write story", "info", "Wrote it"],
+      ["Run", "error", "Run failed"],
+      ["Gone stage", "warning", "Odd"],
     ]);
+  });
+
+  it("gives repeated lines distinct keys", () => {
+    const line = { at: AT, level: "info" as const, stage_id: null, message: "same" };
+    const keys = logRows(makeRun({ logs: [line, line] })).map((row) => row.key);
+    expect(new Set(keys).size).toBe(2);
+  });
+
+  it("returns nothing for a run without logs", () => {
+    expect(logRows(makeRun({ logs: [] }))).toEqual([]);
   });
 });

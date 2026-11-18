@@ -1,3 +1,4 @@
+import { errorAt } from "@/api/errors";
 import type { PipelineDescriptor } from "@/api/types";
 import {
   languageName,
@@ -47,7 +48,7 @@ export function LanguagesSection(props: LanguagesSectionProps) {
           layout="cards"
           value={draft.languages}
           onChange={(languages) => onChange({ ...draft, languages })}
-          error={errors.languages}
+          error={errorAt(errors, "languages")}
           options={pipeline.languages.map((language) => ({
             value: language.code,
             label: language.name,
