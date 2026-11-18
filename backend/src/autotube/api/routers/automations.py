@@ -3,8 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from autotube.api.container import App
-from autotube.api.schemas.requests import EnabledRequest
+from autotube.api.schemas.requests import EnabledRequest, ImportRequest
 from autotube.api.schemas.responses import CREATED, ERROR_RESPONSES, NO_CONTENT_RESPONSE
+from autotube.domain.automation_export import AutomationDocument, ImportPreview
 from autotube.domain.automations import Automation, AutomationInput
 from autotube.domain.runs import Run
 
@@ -19,6 +20,28 @@ def list_automations(app: App) -> list[Automation]:
 @router.post("", status_code=CREATED, summary="Create an automation")
 def create_automation(body: AutomationInput, app: App) -> Automation:
     return app.automations.create.execute(body)
+
+
+@router.post(
+    "/import/preview",
+    summary="Check an automation export and list the channels that need a choice",
+)
+def preview_import(body: ImportRequest, app: App) -> ImportPreview:
+    return app.automations.import_automation.preview(body.document, body.channel_map)
+
+
+@router.post(
+    "/import",
+    status_code=CREATED,
+    summary="Create a disabled automation from an export",
+)
+def import_automation(body: ImportRequest, app: App) -> Automation:
+    return app.automations.import_automation.execute(body.document, body.channel_map)
+
+
+@router.get("/{automation_id}/export", summary="Export an automation as a portable document")
+def export_automation(automation_id: str, app: App) -> AutomationDocument:
+    return app.automations.export.execute(automation_id)
 
 
 @router.get("/{automation_id}", summary="Get one automation")

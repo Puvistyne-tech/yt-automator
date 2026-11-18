@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
 
 from autotube.domain.channels import ChannelDefaults
+from autotube.domain.model_base import JsonObject
 from autotube.domain.run_enums import ReviewDecision
 from autotube.domain.settings import AppSettingsInput
 
@@ -23,6 +24,14 @@ class ChannelPatchRequest(RequestModel):
 
 class EnabledRequest(RequestModel):
     enabled: bool = Field(description="Whether the automation runs on its schedule")
+
+
+class ImportRequest(RequestModel):
+    document: JsonObject = Field(description="An automation export file, as written by Export")
+    channel_map: dict[str, str | None] = Field(
+        default_factory=dict,
+        description="Exported channel id to a connected channel id, or null to leave it out",
+    )
 
 
 class RetryRequest(RequestModel):
