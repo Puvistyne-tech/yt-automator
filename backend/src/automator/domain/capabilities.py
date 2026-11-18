@@ -105,8 +105,12 @@ class SubtitleStyle(DomainModel):
 
 
 class VideoComposition(DomainModel):
-    width: int = Field(ge=1)
-    height: int = Field(ge=1)
+    width: int = Field(
+        ge=1, description="Output width in pixels; an odd value is rounded down to even, min 2."
+    )
+    height: int = Field(
+        ge=1, description="Output height in pixels; an odd value is rounded down to even, min 2."
+    )
     fps: int = Field(default=30, ge=1)
     visuals: tuple[TimedClip, ...]
     narration: tuple[TimedClip, ...] = ()
