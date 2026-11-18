@@ -113,10 +113,6 @@ def test_read_document_refuses_other_files(app: str | None) -> None:
     assert document is None and "app" in errors
 
 
-def without_automation(raw: dict[str, Any]) -> None:
-    del raw["automation"]
-
-
 Change = Callable[[dict[str, Any]], None]
 
 
@@ -133,7 +129,7 @@ def set_at(*path: str | int, value: Any) -> Change:
 @pytest.mark.parametrize(
     ("change", "field"),
     [
-        (without_automation, "automation"),
+        (lambda raw: raw.pop("automation"), "automation"),
         (set_at("automation", "languages", value=[]), "automation.languages"),
         (set_at("automation", "languages", value="en"), "automation.languages"),
         (set_at("automation", "schedule", value="daily"), "automation.schedule"),
