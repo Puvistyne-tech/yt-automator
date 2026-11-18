@@ -4,6 +4,7 @@ type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 type QueryValue = string | number | undefined;
 
 export const API_BASE = "/api";
+const REQUEST_ID = "X-Request-Id";
 
 export function apiUrl(path: string, query: Record<string, QueryValue> = {}): string {
   const url = new URL(`${API_BASE}${path}`, window.location.origin);
@@ -48,7 +49,8 @@ export async function request<T>(
   const response = await send(method, apiUrl(path, options.query), options.body);
   const body = await readBody(response);
   if (!response.ok) {
-    throw apiErrorFromBody(response.status, body, response.statusText || "Request failed");
+    const fallback = response.statusText || "Request failed";
+    throw apiErrorFromBody(response.status, body, fallback, response.headers.get(REQUEST_ID));
   }
   return body as T;
 }

@@ -3,7 +3,7 @@ import type {
   Artifact,
   Automation,
   Channel,
-  CredentialSummary,
+  CredentialView,
   Run,
   StageRun,
   StageStatus,
@@ -17,7 +17,7 @@ export function hoursAgo(hours: number, from = FIXED_NOW): string {
   return new Date(new Date(from).getTime() - hours * 3_600_000).toISOString();
 }
 
-export function makeCredential(overrides: Partial<CredentialSummary> = {}): CredentialSummary {
+export function makeCredential(overrides: Partial<CredentialView> = {}): CredentialView {
   return {
     id: "cred-main",
     name: "Main Google project",
@@ -92,8 +92,8 @@ export function stagesWith(statuses: StageStatus[]): StageRun[] {
       stage_id: stage.id,
       title: stage.title,
       status,
-      provider: status === "pending" ? null : `fake-${stage.id}`,
-      message: status === "done" ? `${stage.title} finished` : null,
+      provider: status === "pending" ? "" : `fake-${stage.id}`,
+      message: status === "done" ? `${stage.title} finished` : "",
       started_at: started,
       finished_at: status === "done" || status === "failed" ? hoursAgo(1.95 - index * 0.1) : null,
     };
@@ -132,6 +132,7 @@ export function makeRun(overrides: Partial<Run> = {}): Run {
     score_details: [],
     review: null,
     uploads: [],
+    logs: [],
     error: null,
     created_at: hoursAgo(2),
     started_at: hoursAgo(2),

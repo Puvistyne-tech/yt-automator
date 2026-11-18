@@ -1,6 +1,6 @@
 import { useSaveCredential } from "@/api/channels";
 import type { FieldErrors } from "@/api/errors";
-import type { Credential, CredentialSummary } from "@/api/types";
+import type { Credential, CredentialView } from "@/api/types";
 import { useFieldErrors } from "@/api/useFieldErrors";
 import { useMutationNotifier } from "@/api/useMutationNotifier";
 import {
@@ -14,12 +14,12 @@ import { usePatchState } from "@/shared/hooks/usePatchState";
 import { FormDialog, FormField, Input, NumberInput } from "@/shared/ui";
 
 interface CredentialDialogProps {
-  credential: CredentialSummary | undefined;
+  credential: CredentialView | undefined;
   onClose: () => void;
 }
 
 interface CredentialFieldsProps {
-  credential: CredentialSummary | undefined;
+  credential: CredentialView | undefined;
   values: CredentialValues;
   errors: FieldErrors;
   onChange: (patch: Partial<CredentialValues>) => void;

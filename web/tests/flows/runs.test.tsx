@@ -59,9 +59,34 @@ describe("Run detail", () => {
     expect(screen.getByText("1 uploaded · 1 failed · 0 pending · 1 skipped")).toBeInTheDocument();
   });
 
+  it("shows an empty log for a run without log lines", async () => {
+    const { user } = await openRun("run-review");
+    await user.click(screen.getByRole("tab", { name: "Logs" }));
+
+    expect(screen.getByText("No log lines yet")).toBeInTheDocument();
+    expect(screen.getByText("Log lines appear here as the run progresses.")).toBeInTheDocument();
+  });
+
+  it("styles stored log lines by level and names their stage", async () => {
+    const { user } = await openRun("run-failed");
+    await user.click(screen.getByRole("tab", { name: "Logs" }));
+
+    const line = (text: string) => screen.getByText(text).closest(".log-line");
+    const failed = line("No text-to-speech provider can speak Tamil");
+    expect(failed).toHaveAttribute("data-level", "error");
+    expect(failed).toHaveTextContent("Narrate");
+    expect(line("Kokoro has no Tamil voice, trying the next provider")).toHaveAttribute(
+      "data-level",
+      "warning",
+    );
+    const runLine = line("Run failed");
+    expect(runLine).toHaveAttribute("data-level", "info");
+    expect(runLine?.querySelector(".log-stage")).toHaveTextContent(/^Run$/);
+  });
+
   it("shows an error state for an unknown run", async () => {
     renderApp("/runs/nope");
 
-    expect(await screen.findByText("Run was not found.")).toBeInTheDocument();
+    expect(await screen.findByText("run 'nope' was not found")).toBeInTheDocument();
   });
 });

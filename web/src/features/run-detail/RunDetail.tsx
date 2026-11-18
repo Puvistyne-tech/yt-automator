@@ -13,7 +13,7 @@ import { ScoreBreakdown } from "@/features/run-detail/ScoreBreakdown";
 import { StageTimeline } from "@/features/run-detail/StageTimeline";
 import { formatDateTime, formatDuration } from "@/shared/format/dates";
 import { humanizeId } from "@/shared/format/text";
-import { Callout, Card, Icon, PageHeader, StatusBadge, Tabs } from "@/shared/ui";
+import { AlertCallout, Card, Icon, PageHeader, StatusBadge, Tabs } from "@/shared/ui";
 import "@/features/run-detail/run-detail.css";
 
 function Details({ run }: { run: Run }) {
@@ -98,10 +98,9 @@ export function RunDetail({ run }: { run: Run }) {
       <div className="run-layout">
         <div className="stack run-main">
           {run.error && (
-            <Callout tone="danger" role="alert">
-              <Icon name="alert" />
-              <span>{run.error}</span>
-            </Callout>
+            <AlertCallout tone="danger" role="alert">
+              {run.error}
+            </AlertCallout>
           )}
           {actions.canReview && <ReviewPanel run={run} />}
           {actions.showPublish && <PublishPanel run={run} canPublish={actions.canPublish} />}

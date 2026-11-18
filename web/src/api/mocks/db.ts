@@ -43,7 +43,15 @@ export function apiError(
   return HttpResponse.json({ error: { code, message, fields } }, { status });
 }
 
-export const notFound = (what: string) => apiError(404, "not_found", `${what} was not found.`);
+export const EMPTY_VALUE_MESSAGE = "String should have at least 1 character";
+
+export const notFound = (entity: string, id: unknown) =>
+  apiError(404, `${entity}_not_found`, `${entity} '${String(id)}' was not found`);
+
+export const validationFailed = (fields: Record<string, string>) =>
+  apiError(400, "validation_failed", "Validation failed", fields);
+
+export const ruleConflict = (code: string, message: string) => apiError(409, code, message);
 
 export function noContent() {
   return new HttpResponse(null, { status: 204 });

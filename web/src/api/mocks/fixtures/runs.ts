@@ -1,6 +1,15 @@
 import { artifactsFor, FULL_ARTIFACTS, STORY_ARTIFACT } from "@/api/mocks/fixtures/artifacts";
 import { hoursAgo, makeRun, makeUpload, stagesWith } from "@/api/mocks/fixtures/factories";
-import type { ReviewPolicy, Run, ScoreItem } from "@/api/types";
+import type { LogLevel, ReviewPolicy, Run, RunLog, ScoreItem } from "@/api/types";
+
+function log(
+  hours: number,
+  stage_id: string | null,
+  message: string,
+  level: LogLevel = "info",
+): RunLog {
+  return { at: hoursAgo(hours), level, stage_id, message };
+}
 
 const SCORE_DETAILS: ScoreItem[] = [
   {
@@ -51,6 +60,11 @@ const RUN_LIVE = makeRun({
   languages: ["en", "ta"],
   stages: stagesWith(["done", "done", "running", "pending", "pending", "pending"]),
   artifacts: [STORY_ARTIFACT],
+  logs: [
+    log(0.29, "story", "Story written in English and Tamil"),
+    log(0.25, "images", "Scene 4 needed a second attempt", "warning"),
+    log(0.2, "motion", "Animating 8 scenes"),
+  ],
   score: null,
   created_at: hoursAgo(0.3),
   started_at: hoursAgo(0.3),
@@ -107,6 +121,11 @@ const RUN_FAILED = makeRun({
   status: "failed",
   stages: stagesWith(["done", "done", "done", "failed", "pending", "pending"]),
   error: "Narrate: the Tamil voice model is not installed.",
+  logs: [
+    log(7.95, "voice", "Kokoro has no Tamil voice, trying the next provider", "warning"),
+    log(7.9, "voice", "No text-to-speech provider can speak Tamil", "error"),
+    log(7.8, null, "Run failed"),
+  ],
   created_at: hoursAgo(8),
   started_at: hoursAgo(8),
   finished_at: hoursAgo(7.8),

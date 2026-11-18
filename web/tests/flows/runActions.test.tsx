@@ -50,7 +50,7 @@ describe("Run actions", () => {
     await user.click(screen.getByRole("button", { name: "Cancel run" }));
     await confirmDialog(user, "Cancel this run?", "Cancel run");
 
-    await findToast("This run cannot be cancelled in its current status.");
+    await findToast("run run-live cannot move from published to cancelled");
     expect(storedRun("run-live")?.status).toBe("published");
   });
 

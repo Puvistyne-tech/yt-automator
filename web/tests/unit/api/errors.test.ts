@@ -1,6 +1,7 @@
 import {
   ApiError,
   apiErrorFromBody,
+  errorAt,
   errorMessage,
   fieldErrorsOf,
   hasErrors,
@@ -75,5 +76,23 @@ describe("error helpers", () => {
     expect(normalizeFieldErrors({ "body.targets[1].language": "Bad" })).toEqual({
       "targets.1.language": "Bad",
     });
+  });
+});
+
+describe("errorAt", () => {
+  const errors = {
+    languages: "pick one",
+    "targets.0.variants.1": "unknown",
+    "targets.10.x": "far",
+  };
+
+  it.each([
+    ["languages", "pick one"],
+    ["targets.0.variants", "unknown"],
+    ["targets.1", undefined],
+    ["targets.1.x", undefined],
+    ["missing", undefined],
+  ])("finds the error at or under %s", (path, expected) => {
+    expect(errorAt(errors, path)).toBe(expected);
   });
 });

@@ -4,10 +4,9 @@ import { invalidateWithDashboard, keys } from "@/api/keys";
 import type {
   Channel,
   ChannelDefaults,
-  Credential,
   CredentialInput,
   CredentialPatch,
-  CredentialSummary,
+  CredentialView,
   Playlist,
 } from "@/api/types";
 
@@ -17,7 +16,7 @@ const channelPath = (id: string) => `/channels/${encodeURIComponent(id)}`;
 export function useCredentials() {
   return useQuery({
     queryKey: keys.credentials,
-    queryFn: () => api.get<CredentialSummary[]>("/credentials"),
+    queryFn: () => api.get<CredentialView[]>("/credentials"),
   });
 }
 
@@ -26,8 +25,8 @@ export function useSaveCredential(id: string | undefined) {
   return useMutation({
     mutationFn: (input: CredentialInput | CredentialPatch) =>
       id === undefined
-        ? api.post<Credential>("/credentials", input)
-        : api.patch<Credential>(credentialPath(id), input),
+        ? api.post<CredentialView>("/credentials", input)
+        : api.patch<CredentialView>(credentialPath(id), input),
     onSuccess: () => invalidateWithDashboard(client, keys.credentials),
   });
 }

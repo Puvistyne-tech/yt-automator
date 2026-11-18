@@ -7,7 +7,11 @@ import {
   validateCredential,
 } from "@/features/channels/credentialForm";
 import { channelDefaultsPayload, validateChannelDefaults } from "@/features/channels/defaultsForm";
-import { oauthReturnMessage, withoutOAuthParams } from "@/features/channels/oauthReturn";
+import {
+  oauthErrorMessage,
+  oauthReturnMessage,
+  withoutOAuthParams,
+} from "@/features/channels/oauthReturn";
 import { validateSecretValue } from "@/features/secrets/secretForm";
 
 const values = { name: " Main ", client_id: " id ", client_secret: "", daily_quota_units: 500 };
@@ -82,7 +86,19 @@ describe("oauthReturnMessage", () => {
     ["connected=other", { tone: "success", message: "Channel connected." }],
     [
       "error=access_denied",
-      { tone: "error", message: "Connecting the channel failed: access denied." },
+      { tone: "error", message: "Google sign-in was cancelled, so no channel was connected." },
+    ],
+    [
+      "error=youtube_scope_denied",
+      {
+        tone: "error",
+        message:
+          "Google granted fewer permissions than needed. Connect again and allow every permission.",
+      },
+    ],
+    [
+      "error=some_new_code",
+      { tone: "error", message: "Connecting the channel failed: some new code." },
     ],
     ["connected=chan-en&error=x", { tone: "success", message: "Connected Kutty Stories." }],
     ["", null],
@@ -90,8 +106,46 @@ describe("oauthReturnMessage", () => {
     expect(oauthReturnMessage(new URLSearchParams(query), title)).toEqual(expected);
   });
 
+  it.each([
+    ["missing_code", "Google did not send an authorization code. Start connecting again."],
+    [
+      "validation_failed",
+      "The sign-in link was invalid or expired, or its credential was changed or removed. Start connecting again.",
+    ],
+    [
+      "youtube_no_channel",
+      "That Google account has no YouTube channel. Choose an account that owns one.",
+    ],
+    [
+      "youtube_oauth_failed",
+      "Google rejected the sign-in. Check the credential's client id and secret, then try again.",
+    ],
+    ["youtube_invalid_grant", "Google refused the authorization code. Start connecting again."],
+    [
+      "youtube_unreachable",
+      "Google could not be reached. Check the internet connection and try again.",
+    ],
+    [
+      "youtube_quota_exceeded",
+      "The credential's YouTube quota is used up for today. Try again after midnight Pacific time.",
+    ],
+    ["credential_secret_missing", "Add the credential's client secret, then connect again."],
+    [
+      "secrets_unreadable",
+      "Stored secrets could not be read. The error on the Google API credentials card names the files to remove; remove them, then reconnect.",
+    ],
+  ])("explains the %s return code in plain words", (code, message) => {
+    expect(oauthErrorMessage(code)).toBe(message);
+  });
+
+  it("has no message for a code the backend never sends", () => {
+    expect(oauthErrorMessage("credential_not_found")).toBe(
+      "Connecting the channel failed: credential not found.",
+    );
+  });
+
   it("strips only the oauth parameters from the url", () => {
-    const params = new URLSearchParams("connected=a&error=b&credential=c&tab=x");
+    const params = new URLSearchParams("connected=a&error=b&tab=x");
     expect(withoutOAuthParams(params).toString()).toBe("tab=x");
   });
 });

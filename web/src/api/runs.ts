@@ -1,7 +1,7 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, apiUrl, requestText } from "@/api/client";
 import { invalidateWithDashboard, keys } from "@/api/keys";
-import type { LogLine, Run, RunFilters } from "@/api/types";
+import type { ReviewDecision, Run, RunFilters } from "@/api/types";
 
 const path = (id: string) => `/runs/${encodeURIComponent(id)}`;
 
@@ -26,15 +26,6 @@ export function useRun(id: string | undefined) {
     queryKey: keys.run(id ?? ""),
     queryFn: () => api.get<Run>(path(id ?? "")),
     enabled: id !== undefined,
-  });
-}
-
-export function useRunLogs(id: string) {
-  return useQuery<LogLine[]>({
-    queryKey: keys.runLogs(id),
-    queryFn: () => [],
-    staleTime: Number.POSITIVE_INFINITY,
-    gcTime: Number.POSITIVE_INFINITY,
   });
 }
 
@@ -66,7 +57,7 @@ export const useCancelRun = () =>
   useRunAction<undefined>((id) => api.post<Run>(`${path(id)}/cancel`));
 
 export const useReviewRun = () =>
-  useRunAction<{ decision: "approved" | "rejected"; notes?: string }>((id, vars) =>
+  useRunAction<{ decision: ReviewDecision; notes?: string }>((id, vars) =>
     api.post<Run>(`${path(id)}/review`, vars),
   );
 

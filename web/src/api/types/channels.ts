@@ -10,7 +10,7 @@ export interface Credential {
   created_at: string;
 }
 
-export interface CredentialSummary extends Credential {
+export interface CredentialView extends Credential {
   has_secret: boolean;
   quota_used_today: number;
 }

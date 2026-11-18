@@ -4,9 +4,13 @@ import {
   activeProvider,
   addableProviders,
   capabilitiesOf,
+  cardError,
   chainChanged,
   chainDescription,
   chainFor,
+  choiceErrors,
+  configErrors,
+  defaultOrderDescription,
   hasOptions,
   moveChoice,
   newChoice,
@@ -104,5 +108,62 @@ describe("provider chains", () => {
       hasOptions({ ...itemAt(providerDescriptors, 0), options_schema: { type: "object" } }),
     ).toBe(false);
     expect(hasOptions(undefined)).toBe(false);
+  });
+});
+
+describe("default provider order", () => {
+  it("names every provider of the capability in registry order", () => {
+    expect(defaultOrderDescription(providerDescriptors, "llm")).toBe(
+      "No order saved: runs try Ollama, Google Gemini, Offline fake in turn.",
+    );
+  });
+
+  it("says when no provider offers the capability", () => {
+    expect(defaultOrderDescription(providerDescriptors, "video")).toBe(
+      "No installed provider offers this capability.",
+    );
+  });
+});
+
+describe("provider save errors", () => {
+  const fields = {
+    "0.capability": "capability is configured twice",
+    "0.chain.1.provider_id": "unknown provider 'nope'",
+    "0.chain.1.options.topic_words": "Input should be a valid integer",
+    "1.chain.0.options": "Input should be a valid dictionary",
+  };
+
+  it("scopes errors to the request index of the capability's config", () => {
+    expect(configErrors(fields, providerConfig, "image")).toEqual({
+      "chain.0.options": "Input should be a valid dictionary",
+    });
+    expect(configErrors(fields, providerConfig, "unsaved")).toEqual({});
+  });
+
+  it("drops errors for an index or key shape that matches no saved config", () => {
+    expect(configErrors({ "5.capability": "x", body: "y" }, providerConfig, "llm")).toEqual({});
+  });
+
+  it("shows an unknown key of the card's own config on the card", () => {
+    expect(cardError(configErrors({ "0.foo": "x" }, providerConfig, "llm"))).toBe("x");
+  });
+
+  it("finds the card error outside any chain entry", () => {
+    const llm = configErrors(fields, providerConfig, "llm");
+    expect(cardError(llm)).toBe("capability is configured twice");
+    expect(cardError(configErrors(fields, providerConfig, "image"))).toBeUndefined();
+  });
+
+  it("splits one chain entry's errors into a message and option field errors", () => {
+    const llm = configErrors(fields, providerConfig, "llm");
+    expect(choiceErrors(llm, 1)).toEqual({
+      message: "unknown provider 'nope'",
+      options: { topic_words: "Input should be a valid integer" },
+    });
+    expect(choiceErrors(llm, 0)).toEqual({ message: undefined, options: {} });
+    expect(choiceErrors(configErrors(fields, providerConfig, "image"), 0)).toEqual({
+      message: "Input should be a valid dictionary",
+      options: { "": "Input should be a valid dictionary" },
+    });
   });
 });

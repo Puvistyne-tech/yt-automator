@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { needsReconnect } from "@/api/channelHealth";
 import { useChannels, useCredentials, useDisconnectChannel } from "@/api/channels";
 import { CHANNEL_STATUSES, PRIVACY_LABELS } from "@/api/labels";
 import type { Channel } from "@/api/types";
 import { useConfirmedMutation } from "@/api/useConfirmedMutation";
 import { ChannelDefaultsDialog } from "@/features/channels/ChannelDefaultsDialog";
+import { useStartConnect } from "@/features/channels/useStartConnect";
 import { formatDateTime } from "@/shared/format/dates";
 import {
   ACTIONS_COLUMN,
@@ -48,6 +50,22 @@ function ChannelDefaultsBadges({ channel }: { channel: Channel }) {
   );
 }
 
+function ReconnectButton({ channel }: { channel: Channel }) {
+  const connect = useStartConnect();
+  return (
+    <Button
+      size="sm"
+      variant="primary"
+      icon="link"
+      loading={connect.pending}
+      aria-label={`Reconnect ${channel.title}`}
+      onClick={() => connect.start(channel.credential_id)}
+    >
+      Reconnect
+    </Button>
+  );
+}
+
 function ChannelRow({ channel, handlers }: { channel: Channel; handlers: RowHandlers }) {
   return (
     <tr>
@@ -69,6 +87,7 @@ function ChannelRow({ channel, handlers }: { channel: Channel; handlers: RowHand
       </td>
       <td>{formatDateTime(channel.connected_at)}</td>
       <td className="cell-actions">
+        {needsReconnect(channel) && <ReconnectButton channel={channel} />}
         <Button size="sm" variant="ghost" icon="settings" onClick={() => handlers.onEdit(channel)}>
           Defaults
         </Button>

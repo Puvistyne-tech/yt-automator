@@ -1,5 +1,5 @@
 import type { FieldErrors } from "@/api/errors";
-import type { CredentialInput, CredentialPatch, CredentialSummary } from "@/api/types";
+import type { CredentialInput, CredentialPatch, CredentialView } from "@/api/types";
 import { isIntegerAtLeast } from "@/shared/format/numbers";
 
 export interface CredentialValues {
@@ -11,7 +11,7 @@ export interface CredentialValues {
 
 export const DEFAULT_DAILY_QUOTA = 10_000;
 
-export function credentialValues(credential: CredentialSummary | undefined): CredentialValues {
+export function credentialValues(credential: CredentialView | undefined): CredentialValues {
   return {
     name: credential?.name ?? "",
     client_id: credential?.client_id ?? "",
@@ -53,7 +53,7 @@ export function credentialPayload(
   return secret === "" ? base : { ...base, client_secret: secret };
 }
 
-export function credentialSecretHint(credential: CredentialSummary | undefined): string {
+export function credentialSecretHint(credential: CredentialView | undefined): string {
   if (credential === undefined) {
     return "Stored in the keychain. It is never shown again.";
   }
