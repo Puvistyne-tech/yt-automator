@@ -1,48 +1,21 @@
 from __future__ import annotations
 
-from enum import StrEnum
-
 from pydantic import Field
 
 from autotube.pipelines.kids_story.settings.base import SettingsSection
-from autotube.pipelines.kids_story.settings.choices import (
+from autotube.pipelines.kids_story.settings.story_choices import (
     ENDING_STYLE_CHOICES,
     LEAD_MODE_CHOICES,
     STORY_CHECK_CHOICES,
+    EndingStyle,
+    LeadMode,
+    StoryCheck,
 )
 
 TONE = "warm, gentle"
 WRITING_STYLE = "Short sentences, simple everyday words, warm and calm tone."
 QUESTION_STYLE = '"What happens next?" style questions for children'
 TRANSLATION_STYLE = "natural, simple, warm"
-
-
-class EndingStyle(StrEnum):
-    MORAL_AND_REFRAIN = "moral_and_refrain"
-    REFRAIN_ONLY = "refrain_only"
-    OPEN = "open"
-
-
-class LeadMode(StrEnum):
-    FIXED = "fixed"
-    ROTATE = "rotate"
-
-
-class StoryCheck(StrEnum):
-    SCENE_COUNT = "scene_count"
-    WORDS_PER_SCENE = "words_per_scene"
-    DURATION = "duration"
-    ENDING = "ending"
-    READING_LEVEL = "reading_level"
-    CAST = "cast"
-
-
-def says_moral(style: EndingStyle) -> bool:
-    return style is EndingStyle.MORAL_AND_REFRAIN
-
-
-def says_refrain(style: EndingStyle) -> bool:
-    return style is not EndingStyle.OPEN
 
 
 class StoryWritingSettings(SettingsSection):
@@ -71,8 +44,9 @@ class StoryWritingSettings(SettingsSection):
         default=EndingStyle.MORAL_AND_REFRAIN,
         json_schema_extra=ENDING_STYLE_CHOICES,
         title="Ending",
-        description="How a story ends. The ending check and translations follow it; adjust the "
-        "editorial rules if they mention the ending.",
+        description="How a story ends. Story prompts, translations and the ending check follow "
+        "it. Bundled stories drop the refrain when the ending has none, but keep the moral "
+        "their characters say.",
     )
     question_style: str = Field(
         default=QUESTION_STYLE,
@@ -100,8 +74,9 @@ class StoryWritingSettings(SettingsSection):
         default=LeadMode.FIXED,
         json_schema_extra=LEAD_MODE_CHOICES,
         title="Lead character",
-        description="The first cast member always leads, or the lead changes from episode to "
-        "episode. The next cast members in order join the lead.",
+        description="The first cast member always leads, or each episode's lead is picked from "
+        "its run, so the same lead can come up twice in a row. The next cast members in order "
+        "join the lead.",
     )
     enabled_checks: list[StoryCheck] = Field(
         default_factory=lambda: list(StoryCheck),

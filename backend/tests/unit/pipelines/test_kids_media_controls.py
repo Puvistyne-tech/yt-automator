@@ -12,15 +12,27 @@ from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from autotube.pipelines.kids_story.stages.music import bed_prompt
 from autotube.pipelines.kids_story.stages.voice import Line, speech_request
 from autotube.pipelines.kids_story.story.model import StoryScene
-from tests.fixtures.kids_data import quick_settings
+from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, run_chain
+from tests.fixtures.kids_fakes import FakeProviders
 
 SCHEMA = KidsStorySettings.model_json_schema()
 SCENE = StoryScene(narration="Hi.", visual="a fox", mood="sleepy")
 
 
-def test_a_stored_single_speed_applies_to_every_language() -> None:
-    speed = quick_settings(voice={"speed": 0.8}).voice.speed
-    assert (speed.for_language("en"), speed.for_language("ta")) == (0.8, 0.8)
+@pytest.mark.parametrize(
+    ("stored", "expected"),
+    [(0.8, (0.8, 0.8)), (1, (1.0, 1.0)), ({"en": 1.2}, (1.2, 0.95)), (0.5, (0.5, 0.5))],
+)
+def test_stored_speeds_load_for_every_language(
+    stored: object, expected: tuple[float, float]
+) -> None:
+    speed = quick_settings(voice={"speed": stored}).voice.speed
+    assert (speed.for_language("en"), speed.for_language("ta")) == expected
+
+
+def test_speed_boundaries_are_accepted() -> None:
+    speed = quick_settings(voice={"speed": {"en": 0.5, "ta": 1.5}}).voice.speed
+    assert (speed.for_language("en"), speed.for_language("ta")) == (0.5, 1.5)
 
 
 def test_speed_per_language_reaches_each_speech_request() -> None:
@@ -30,7 +42,7 @@ def test_speed_per_language_reaches_each_speech_request() -> None:
     assert speech_request(settings, line, "ta").speed == 0.7
 
 
-@pytest.mark.parametrize("speed", [0.2, {"en": 1.0, "ta": 2.0}, True])
+@pytest.mark.parametrize("speed", [0.2, 0.49, 1.51, {"en": 1.0, "ta": 2.0}, True])
 def test_speeds_outside_the_range_are_rejected(speed: object) -> None:
     with pytest.raises(ValidationError):
         quick_settings(voice={"speed": speed})
@@ -52,18 +64,43 @@ def test_the_short_mood_replaces_the_main_mood_only_for_shorts(
     assert bed_prompt(settings, variant) == expected
 
 
+def test_the_music_stage_uses_the_short_mood_only_for_short_beds(tmp_path: Path) -> None:
+    settings = quick_settings(
+        music={"mood_prompt": "harp", "short_mood_prompt": "bouncy"},
+        sound_effects={"enabled": False},
+    )
+    providers = FakeProviders()
+    rig = run_chain(StageRig(tmp_path, settings=settings, providers=providers), "music")
+    assert providers.music is not None
+    beds = zip(meta_of(rig, "music"), providers.music.requests, strict=True)
+    by_variant = {(bed.language, bed.variant, request.prompt) for bed, request in beds}
+    assert by_variant == {
+        ("en", "episode", "harp"),
+        ("ta", "episode", "harp"),
+        ("en", "short", "bouncy"),
+        ("ta", "short", "bouncy"),
+    }
+
+
 def test_the_motion_prompt_setting_fills_scene_and_card_placeholders() -> None:
-    settings = quick_settings(visuals={"motion_prompt": "Bouncy {visual} feeling {mood} {other}"})
-    assert motion_prompt(settings, SCENE) == "Bouncy a fox feeling sleepy {other}"
+    settings = quick_settings(visuals={"motion_prompt": "Cost $5 {Visual} {} {visual}, {mood}"})
+    assert motion_prompt(settings, SCENE) == "Cost $5 {Visual} {} a fox, sleepy"
     assert motion_prompt(settings, None, "drift") == (
-        "Bouncy a title card feeling warm {other} Camera: drift."
+        "Cost $5 {Visual} {} a title card, warm Camera: drift."
     )
 
 
+def test_an_unknown_motion_placeholder_is_rejected_naming_the_field() -> None:
+    with pytest.raises(
+        ValidationError, match=r"motion_prompt[\s\S]*unknown: \{colour\}, \{other\}"
+    ):
+        quick_settings(visuals={"motion_prompt": "{visual} {other} {colour}"})
+
+
 def test_the_judge_criteria_setting_reaches_the_judge(tmp_path: Path) -> None:
-    settings = quick_settings(visuals={"judge_criteria": "Pick the funniest picture."})
+    settings = quick_settings(visuals={"judge_criteria": "Pick $count funny {visual} {}."})
     prompt = judge_request(settings, SCENE, [tmp_path]).prompt
-    assert "in the order given. Pick the funniest picture.\nAnswer with only" in prompt
+    assert "in the order given. Pick $count funny {visual} {}.\nAnswer with only" in prompt
 
 
 def test_enabled_checks_are_offered_as_checkboxes_without_child_safety() -> None:

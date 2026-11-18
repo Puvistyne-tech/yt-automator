@@ -44,7 +44,7 @@ class StoryAuthor:
             except StoryFormatError as error:
                 feedback = [str(error)]
             else:
-                feedback = story_problems(story, self.settings)
+                feedback = story_problems(story, self.settings, self.seed)
                 if not feedback:
                     return story
             self.log(

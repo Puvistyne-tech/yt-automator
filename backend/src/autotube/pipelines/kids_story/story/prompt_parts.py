@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from autotube.pipelines.kids_story.settings.story_controls import (
+from autotube.pipelines.kids_story.settings.story_choices import (
     EndingStyle,
     says_moral,
     says_refrain,

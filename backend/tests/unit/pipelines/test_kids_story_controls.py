@@ -29,6 +29,24 @@ def test_extra_instructions_become_one_requirement_per_line() -> None:
     assert "- Mention the rain.\n- Count to three.\n- The last scene" in user
 
 
+def test_dollar_and_brace_text_passes_through_unchanged() -> None:
+    system, user = story_prompts(tone="$tone {mood}", extra_instructions="Say $lead {visual} {}.")
+    assert "You write $tone {mood}, original stories" in system
+    assert "- Say $lead {visual} {}.\n" in user
+
+
+def test_the_default_prompts_state_the_ending_once() -> None:
+    system, user = story_prompts()
+    prompts = system + user
+    assert prompts.count("refrain") == 1 and "the moral word for word" in user
+
+
+def test_stored_rules_lose_only_the_retired_ending_rule() -> None:
+    stored = ["Be nice.", "End with the moral said plainly, then the series refrain.", "Rhyme."]
+    rules = quick_settings(series={"editorial_rules": stored}).series.editorial_rules
+    assert rules == ["Be nice.", "Rhyme."]
+
+
 def test_avoid_topics_are_listed_in_the_system_prompt() -> None:
     settings = quick_settings(safety={"avoid_topics": ["the dark", "  ", "getting lost"]})
     system = story_request(settings, "sharing", "en").system or ""
@@ -98,8 +116,8 @@ def test_cast_per_episode_lists_only_the_episode_cast() -> None:
 
 
 @pytest.mark.parametrize("seed", ["run-1", "run-2", "run-3", "run-4"])
-def test_rotating_lead_leads_the_story_written_for_its_seed(seed: str) -> None:
-    settings = quick_settings(story={"lead_mode": "rotate", "cast_per_episode": 1})
+def test_per_episode_lead_leads_the_story_written_for_its_seed(seed: str) -> None:
+    settings = quick_settings(story={"lead_mode": "per_episode", "cast_per_episode": 1})
     lead = episode_cast(settings, seed)[0].id
     user = story_request(settings, "sharing", "en", seed=seed).prompt
     assert f"{lead} leads the story" in user and f'"characters": ["{lead}"]' in user

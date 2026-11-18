@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from autotube.domain.capabilities import CameraMove
 from autotube.pipelines.kids_story.settings.base import (
@@ -15,12 +15,14 @@ from autotube.pipelines.kids_story.settings.choices import (
     CORNER_CHOICES,
     SHORT_ART_CHOICES,
 )
+from autotube.pipelines.kids_story.text.templates import unknown_placeholders
 
 STYLE_MOTION_NOTE = "Used when Move the way the style suggests is off, or for a custom style."
 MOTION_PROMPT = (
     "Gentle, slow animation of a children's picture-book scene: {visual}. Mood: {mood}. "
     "Soft natural movement, no sudden changes."
 )
+MOTION_PLACEHOLDERS = frozenset({"visual", "mood"})
 JUDGE_CRITERIA = (
     "Pick the picture that best matches the scene, keeps every character on model, "
     "looks warm and safe for small children and has no text in it."
@@ -148,3 +150,14 @@ class VisualSettings(SettingsSection):
         title="Brand mark size",
         description="Brand mark letter height as a share of the picture height.",
     )
+
+    @field_validator("motion_prompt")
+    @classmethod
+    def check_motion_placeholders(cls, value: str) -> str:
+        unknown = unknown_placeholders(value, MOTION_PLACEHOLDERS)
+        if unknown:
+            names = ", ".join(f"{{{name}}}" for name in unknown)
+            raise ValueError(
+                f"motion prompt may only use {{visual}} and {{mood}}; unknown: {names}"
+            )
+        return value

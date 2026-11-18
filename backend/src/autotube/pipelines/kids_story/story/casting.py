@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from autotube.pipelines.kids_story.settings.cast import Character
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.settings.story_controls import LeadMode
+from autotube.pipelines.kids_story.settings.story_choices import LeadMode
 from autotube.pipelines.kids_story.story.themes import stable_index
 
 
