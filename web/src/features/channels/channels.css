@@ -1,0 +1,36 @@
+.credential {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(180px, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.credential-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.credential-main .mono {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.credential-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+@media (max-width: 1080px) {
+  .credential {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .credential-quota {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

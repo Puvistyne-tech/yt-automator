@@ -1,0 +1,129 @@
+import { artifactsFor, FULL_ARTIFACTS, STORY_ARTIFACT } from "@/api/mocks/fixtures/artifacts";
+import { hoursAgo, makeRun, makeUpload, stagesWith } from "@/api/mocks/fixtures/factories";
+import type { ReviewPolicy, Run, ScoreItem } from "@/api/types";
+
+const SCORE_DETAILS: ScoreItem[] = [
+  {
+    id: "story",
+    title: "Story quality",
+    score: 92,
+    weight: 0.3,
+    detail: "Clear moral, age-appropriate words.",
+  },
+  {
+    id: "visuals",
+    title: "Visual consistency",
+    score: 86,
+    weight: 0.25,
+    detail: "Kutty looks the same in 11 of 12 scenes.",
+  },
+  {
+    id: "audio",
+    title: "Narration clarity",
+    score: 90,
+    weight: 0.25,
+    detail: "No clipping; pace 140 wpm.",
+  },
+  {
+    id: "safety",
+    title: "Child safety",
+    score: 100,
+    weight: 0.2,
+    detail: "No unsafe content detected.",
+  },
+];
+
+const SHORTS_POLICY: ReviewPolicy = { mode: "auto_when_score_at_least", min_score: 90 };
+
+const SHORTS = {
+  automation_id: "auto-shorts",
+  automation_name: "Tamil shorts",
+  languages: ["ta"],
+  review_policy: SHORTS_POLICY,
+  artifacts: [],
+  score: null,
+};
+
+const RUN_LIVE = makeRun({
+  id: "run-live",
+  status: "running",
+  trigger: "manual",
+  languages: ["en", "ta"],
+  stages: stagesWith(["done", "done", "running", "pending", "pending", "pending"]),
+  artifacts: [STORY_ARTIFACT],
+  score: null,
+  created_at: hoursAgo(0.3),
+  started_at: hoursAgo(0.3),
+  finished_at: null,
+});
+
+const RUN_REVIEW = makeRun({
+  id: "run-review",
+  languages: ["en", "ta"],
+  artifacts: FULL_ARTIFACTS,
+  score: 91.4,
+  score_details: SCORE_DETAILS,
+  created_at: hoursAgo(3),
+});
+
+const PUBLISHED_UPLOADS = [
+  makeUpload(),
+  makeUpload({
+    variant: "short",
+    status: "failed",
+    youtube_video_id: null,
+    url: null,
+    error: "Upload quota exceeded for today.",
+    quota_units: 0,
+  }),
+  makeUpload({
+    target_id: "target-ta",
+    channel_id: "chan-ta",
+    language: "ta",
+    status: "skipped",
+    youtube_video_id: null,
+    url: null,
+    error: "Language ta is not in this run.",
+    quota_units: 0,
+  }),
+];
+
+const RUN_PUBLISHED = makeRun({
+  id: "run-published",
+  status: "published",
+  score: 89,
+  score_details: SCORE_DETAILS,
+  artifacts: [...artifactsFor("en", "episode"), ...artifactsFor("en", "short")],
+  review: { decision: "approved", notes: "Lovely one.", decided_at: hoursAgo(26) },
+  uploads: PUBLISHED_UPLOADS,
+  created_at: hoursAgo(27),
+  started_at: hoursAgo(27),
+  finished_at: hoursAgo(25),
+});
+
+const RUN_FAILED = makeRun({
+  ...SHORTS,
+  id: "run-failed",
+  status: "failed",
+  stages: stagesWith(["done", "done", "done", "failed", "pending", "pending"]),
+  error: "Narrate: the Tamil voice model is not installed.",
+  created_at: hoursAgo(8),
+  started_at: hoursAgo(8),
+  finished_at: hoursAgo(7.8),
+});
+
+const RUN_QUEUED = makeRun({
+  ...SHORTS,
+  id: "run-queued",
+  status: "queued",
+  stages: stagesWith([]),
+  created_at: hoursAgo(0.1),
+  started_at: null,
+  finished_at: null,
+});
+
+const SEED_RUNS: Run[] = [RUN_LIVE, RUN_REVIEW, RUN_PUBLISHED, RUN_FAILED, RUN_QUEUED];
+
+export function seedRuns(): Run[] {
+  return structuredClone(SEED_RUNS);
+}
