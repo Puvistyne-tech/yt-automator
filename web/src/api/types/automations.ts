@@ -72,3 +72,31 @@ export interface AutomationInput {
   retry_policy: RetryPolicy;
   enabled: boolean;
 }
+
+export type ExportedTarget = Omit<Target, "id">;
+
+export interface ExportedChannel {
+  id: string;
+  youtube_channel_id: string;
+  title: string;
+}
+
+export interface AutomationDocument {
+  app: string;
+  format_version: number;
+  exported_at: string | null;
+  automation: Omit<AutomationInput, "enabled" | "targets"> & { targets: ExportedTarget[] };
+  channels: ExportedChannel[];
+}
+
+export type ChannelChoices = Record<string, string | null>;
+
+export interface ImportRequest {
+  document: JsonObject;
+  channel_map: ChannelChoices;
+}
+
+export interface ImportPreview {
+  automation: AutomationInput;
+  unknown_channels: ExportedChannel[];
+}

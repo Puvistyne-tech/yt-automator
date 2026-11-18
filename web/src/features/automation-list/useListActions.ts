@@ -1,5 +1,6 @@
 import { useDuplicateAutomation, useToggleAutomation } from "@/api/automations";
 import type { Automation } from "@/api/types";
+import { useExportFile } from "@/api/useExportFile";
 import { useMutationNotifier } from "@/api/useMutationNotifier";
 import { useRunNow } from "@/api/useRunNow";
 import { useDeleteFlow } from "@/features/automation-list/useDeleteFlow";
@@ -10,6 +11,7 @@ export function useListActions() {
   const runNow = useRunNow();
   const duplicate = useDuplicateAutomation();
   const deleteFlow = useDeleteFlow();
+  const exporter = useExportFile();
   return {
     deleteFlow,
     askDelete: deleteFlow.confirm.ask,
@@ -19,6 +21,7 @@ export function useListActions() {
         notifier.handlers({ success: `${automation.name} ${enabled ? "enabled" : "paused"}.` }),
       ),
     runNow: runNow.start,
+    exportFile: exporter.exportFile,
     duplicate: (automation: Automation) =>
       duplicate.mutate(
         automation.id,

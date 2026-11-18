@@ -1,4 +1,5 @@
 import type { Channel, PipelineDescriptor } from "@/api/types";
+import { ExportButton } from "@/features/automation-editor/ExportButton";
 import type { AutomationDraft } from "@/features/automation-editor/model/draft";
 import {
   EDITOR_SECTIONS,
@@ -72,6 +73,7 @@ export function AutomationEditor(props: AutomationEditorProps) {
           onSave={editor.submit}
         >
           <RunNowButton automationId={props.automationId} name={draft.name} dirty={editor.dirty} />
+          <ExportButton automationId={props.automationId} dirty={editor.dirty} />
           <ButtonLink to="/automations">Cancel</ButtonLink>
         </SaveBar>
       </div>
