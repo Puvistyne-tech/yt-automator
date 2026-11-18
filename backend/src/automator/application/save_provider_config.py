@@ -14,6 +14,7 @@ class SaveProviderConfig:
     configs: ProviderConfigRepository
 
     def execute(self, configs: Sequence[ProviderConfig]) -> list[ProviderConfig]:
-        raise_if_invalid(provider_config_errors(configs, self.catalog.descriptors()))
+        errors = provider_config_errors(configs, self.catalog.descriptors())
+        raise_if_invalid(errors | self.catalog.option_errors(configs))
         self.configs.save_all(configs)
         return self.configs.list()

@@ -2,33 +2,43 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
 
-from automator.domain.capabilities import Capability
-from automator.domain.pipeline import ProviderResolver
-from automator.domain.ports import ProviderCatalog, SecretStore
+from automator.domain.port_catalogs import ProviderCatalog
+from automator.domain.port_runtime import SecretStore
 from automator.domain.providers import ProviderConfig, ProviderDescriptor
 from automator.domain.secrets import SecretDefinition
-from automator.shared.errors import RuleConflict
+from automator.infrastructure.providers.context import ProviderContext
+from automator.infrastructure.providers.option_validation import config_option_errors
+from automator.infrastructure.providers.registry import ALL_SPECS, AnySpec
+from automator.infrastructure.providers.resolver import ChainResolver
+from automator.infrastructure.providers.secret_definitions import PROVIDER_SECRETS
 
 
-class UnavailableResolver:
-    def resolve(self, capability: Capability) -> Any:
-        raise RuleConflict(
-            "provider_unavailable", f"no provider is installed for {capability.value}"
-        )
+class LocalProviderCatalog:
+    def __init__(
+        self,
+        context: ProviderContext,
+        specs: Sequence[AnySpec] = ALL_SPECS,
+        secret_definitions: Sequence[SecretDefinition] = PROVIDER_SECRETS,
+    ) -> None:
+        self.context = context
+        self.specs = {spec.provider_id: spec for spec in specs}
+        self.secret_definitions = list(secret_definitions)
 
-
-class EmptyProviderCatalog:
     def descriptors(self) -> list[ProviderDescriptor]:
-        return []
+        return [
+            spec.descriptor(spec.default(self.context).available()) for spec in self.specs.values()
+        ]
 
     def secrets(self) -> list[SecretDefinition]:
-        return []
+        return list(self.secret_definitions)
 
-    def resolver(self, configs: Sequence[ProviderConfig]) -> ProviderResolver:  # noqa: ARG002
-        return UnavailableResolver()
+    def option_errors(self, configs: Sequence[ProviderConfig]) -> dict[str, str]:
+        return config_option_errors(self.specs, configs)
+
+    def resolver(self, configs: Sequence[ProviderConfig]) -> ChainResolver:
+        return ChainResolver(self.specs, configs, self.context)
 
 
-def build_provider_catalog(secrets: SecretStore, data_dir: Path) -> ProviderCatalog:  # noqa: ARG001
-    return EmptyProviderCatalog()
+def build_provider_catalog(secrets: SecretStore, data_dir: Path) -> ProviderCatalog:
+    return LocalProviderCatalog(ProviderContext(secrets=secrets, data_dir=data_dir))
