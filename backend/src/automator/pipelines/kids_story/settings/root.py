@@ -9,7 +9,6 @@ from automator.pipelines.kids_story.settings.base import SettingsSection
 from automator.pipelines.kids_story.settings.cast import Character, default_cast
 from automator.pipelines.kids_story.settings.media import (
     MusicSettings,
-    SoundEffectSettings,
     VisualSettings,
     VoiceSettings,
 )
@@ -21,6 +20,7 @@ from automator.pipelines.kids_story.settings.output import (
 )
 from automator.pipelines.kids_story.settings.quality import QualitySettings
 from automator.pipelines.kids_story.settings.series import SafetySettings, SeriesSettings
+from automator.pipelines.kids_story.settings.sound_effects import SoundEffectSettings
 from automator.pipelines.kids_story.settings.story import StorySettings
 from automator.pipelines.kids_story.settings.subtitles import SubtitleSettings
 from automator.pipelines.kids_story.settings.thumbnail import ThumbnailSettings

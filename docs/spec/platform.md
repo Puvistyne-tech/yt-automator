@@ -62,7 +62,8 @@ Artifact        id, kind: video|subtitle|thumbnail|metadata|image|audio|text, st
 ScoreItem       id, title, score 0..100, weight, detail
 Review          decision: approved|rejected, notes, decided_at
 Upload          target_id, channel_id, language, variant, status: pending|uploading|done|failed|skipped,
-                youtube_video_id, url, error, quota_units
+                youtube_video_id, url, error, quota_units,
+                privacy (nullable: private|unlisted|public), made_for_kids (nullable bool)
 RunLog          at, level: info|warning|error = info, stage_id (nullable: null outside a stage), message
 RunSummary      id, status, score, created_at, finished_at
 RunEvent        run_id, kind: status|stage|log|artifact|upload, at, payload (object)
@@ -88,6 +89,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
 ### Rules
 
 - An automation's `settings` must validate against its pipeline's settings model. Unknown pipeline type is an error.
+- A settings choice field with human titles is published in `settings_schema` as `oneOf: [{const, title}]`
+  (with `type: "string"`) instead of a bare `enum`; the form shows each `title` and stores the `const`. Kutty
+  Stories titles every choice field this way through `titled_choices`.
 - Every automation language must be one the pipeline offers. Every target language must be in the automation's languages. Every target variant must be one the pipeline offers. Every target channel must exist.
 - An automation with schedule `interval` needs `every_hours >= 1`. With `cron` it needs a valid 5-field expression.
 - A run snapshots the automation's settings, languages and review policy at creation. Editing or deleting the automation never changes a past or queued run.
@@ -104,6 +108,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
 - Deleting a `queued`, `running` or `publishing` run is refused; cancel it first.
 - After the last stage the run is scored, then becomes `awaiting_review`, or `approved` directly when the policy is `auto_when_score_at_least` and the score reaches `min_score`.
 - Only an `approved` run can publish. Publishing creates one upload per target and variant. A target whose language is not in the run, whose channel no longer exists, or that has no matching video yields a `skipped` upload with the reason in `error`. A failed upload fails only itself; the run is `published` when at least one upload is done and none is pending.
+- Every upload records the effective `privacy` and `made_for_kids` it was planned with (target value, else the
+  channel default; kids pipelines always force made-for-kids), skipped uploads included. Uploads stored before
+  these fields existed report them as null.
 - When every upload fails the run returns to `approved` with the error "no upload succeeded", so it can be published again.
 - On startup, interrupted runs are recovered through the normal transitions, each emitting a `status` event:
   a `running` run becomes `failed` ("interrupted: the app stopped while the run was running") and its running
@@ -323,8 +330,16 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
 - Automation editor: sections General, Content (form generated from `settings_schema` and `ui_schema`),
   Languages (multi-select from the pipeline's languages), Targets (rows of channel, language, variants,
   privacy, playlist), Schedule, Review. Client-side validation mirrors the rules; server errors map to fields.
-- Run detail: live stage timeline, logs, artifacts grouped by language and variant with video players,
-  subtitles and metadata, score breakdown, approve or reject with notes, publish, retry from stage.
+  A saved automation without unsaved changes offers Run now; with unsaved changes it is disabled with the reason.
+  A "Run queued" toast (list or editor) links to the new run. An unknown automation id shows a not-found
+  state with a link back to Automations.
+- Run detail: live stage timeline, logs, score breakdown, approve or reject with notes, publish, retry from
+  stage. A `status` event refetches the open run so score, score details and timestamps update live.
+  Artifacts list final outputs first (kinds `video`, `thumbnail`, `subtitle`, `metadata` with a language),
+  grouped by language and variant with video players, subtitles and metadata; every other artifact is an
+  intermediate file, collapsed per stage in the run's stage order. The uploads table shows each upload's
+  privacy and made-for-kids flag. Cancel is offered for the statuses the Rules allow. When the run's
+  automation was deleted, the header says so instead of linking to it.
 - Channels: credentials and their quota meters, connect flow, per-channel defaults, disconnect.
 - Providers: per capability, an ordered chain with enable switches and options forms; secrets with set/clear.
 - Every list has loading, empty and error states. Every destructive action asks for confirmation.

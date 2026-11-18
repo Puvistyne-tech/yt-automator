@@ -11,6 +11,12 @@ from automator.pipelines.kids_story.settings.base import (
     localized_number,
     text_list_field,
 )
+from automator.pipelines.kids_story.settings.choices import (
+    LANGUAGE_CHOICES,
+    READING_LEVEL_CHOICES,
+    STORY_SOURCE_CHOICES,
+    THEME_MODE_CHOICES,
+)
 
 THEMES = [
     "sharing",
@@ -50,16 +56,19 @@ class StorySource(StrEnum):
 class StorySettings(SettingsSection):
     source: StorySource = Field(
         default=StorySource.LLM_WITH_FALLBACK,
+        json_schema_extra=STORY_SOURCE_CHOICES,
         title="Story source",
         description="Write new stories with the language model, or only use the bundled stories.",
     )
     primary_language: StoryLanguage = Field(
         default=StoryLanguage.ENGLISH,
+        json_schema_extra=LANGUAGE_CHOICES,
         title="Writing language",
         description="The story is written in this language and translated into the others.",
     )
     theme_mode: ThemeMode = Field(
         default=ThemeMode.ROTATE,
+        json_schema_extra=THEME_MODE_CHOICES,
         title="Theme choice",
         description="Rotate through the theme list, or always use the fixed theme.",
     )
@@ -121,6 +130,7 @@ class StorySettings(SettingsSection):
     )
     reading_level: ReadingLevel = Field(
         default=ReadingLevel.PRESCHOOL,
+        json_schema_extra=READING_LEVEL_CHOICES,
         title="Reading level",
         description="How simple the language must be.",
     )

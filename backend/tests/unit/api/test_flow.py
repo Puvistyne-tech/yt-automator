@@ -26,6 +26,8 @@ def test_end_to_end_from_credential_to_published_upload(api: Api, youtube: FakeY
     published = ok(client.post(f"/api/runs/{run['id']}/publish"))
     assert published["status"] == "published"
     assert [upload["status"] for upload in published["uploads"]] == ["done"]
+    assert published["uploads"][0]["privacy"] == "private"
+    assert published["uploads"][0]["made_for_kids"] is False
     assert youtube.uploads[0].title == "Story in en"
     [listed] = ok(client.get("/api/credentials"))
     assert listed["quota_used_today"] == published["uploads"][0]["quota_units"] > 0

@@ -66,6 +66,8 @@ class UploadPlan(DomainModel):
             variant=self.variant,
             status=UploadStatus.SKIPPED if skipped else UploadStatus.PENDING,
             error=self.skip_reason,
+            privacy=self.privacy,
+            made_for_kids=self.made_for_kids,
         )
 
 

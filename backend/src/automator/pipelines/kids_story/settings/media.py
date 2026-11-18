@@ -12,6 +12,11 @@ from automator.pipelines.kids_story.settings.base import (
     SettingsSection,
     localized_text,
 )
+from automator.pipelines.kids_story.settings.choices import (
+    CAMERA_MOVE_CHOICES,
+    CORNER_CHOICES,
+    SHORT_ART_CHOICES,
+)
 
 
 class ShortArtMode(StrEnum):
@@ -77,11 +82,13 @@ class VisualSettings(SettingsSection):
     )
     card_camera: CameraMove = Field(
         default=CameraMove.PUSH_IN,
+        json_schema_extra=CAMERA_MOVE_CHOICES,
         title="Card camera move",
         description="How the camera moves over the intro and outro cards.",
     )
     short_art_mode: ShortArtMode = Field(
         default=ShortArtMode.CROP,
+        json_schema_extra=SHORT_ART_CHOICES,
         title="Vertical pictures",
         description="Crop the wide picture for the Short, or draw a new vertical one.",
     )
@@ -105,6 +112,7 @@ class VisualSettings(SettingsSection):
     )
     badge_corner: Corner = Field(
         default=Placement.TOP_LEFT,
+        json_schema_extra=CORNER_CHOICES,
         title="Brand mark corner",
         description="The corner of the picture where the brand mark is drawn.",
     )
@@ -161,37 +169,4 @@ class MusicSettings(SettingsSection):
         le=1,
         title="Ducking",
         description="How much the music dips while the narrator speaks.",
-    )
-
-
-class SoundEffectSettings(SettingsSection):
-    enabled: bool = Field(
-        default=True, title="Sound effects", description="Add the story's sound effect cues."
-    )
-    prompt_template: str = Field(
-        default="soft cartoon sound effect for a children's story: {cue}",
-        min_length=1,
-        title="Sound effect prompt",
-        description="Prompt per cue. {cue} is replaced by the cue.",
-    )
-    duration_seconds: float = Field(
-        default=1.5,
-        gt=0,
-        le=10,
-        title="Effect length",
-        description="How many seconds each sound effect lasts.",
-    )
-    volume: float = Field(
-        default=0.5,
-        ge=0,
-        le=2,
-        title="Effect volume",
-        description="Loudness of each sound effect: 1 is unchanged, 2 is twice as loud.",
-    )
-    offset_seconds: float = Field(
-        default=0.3,
-        ge=0,
-        le=10,
-        title="Effect delay",
-        description="Seconds after a scene starts before its sound effect plays.",
     )
