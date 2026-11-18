@@ -13,7 +13,7 @@ from tests.unit.infrastructure.providers.fakes import chain_config, local_catalo
 EXPECTED_ORDER = {
     Capability.LLM: ["groq", "gemini", "ollama", "offline_text"],
     Capability.IMAGE: ["mflux", "offline_image"],
-    Capability.MOTION: ["depthflow", "ffmpeg_pan_zoom"],
+    Capability.MOTION: ["ltx_mlx", "depthflow", "ffmpeg_pan_zoom"],
     Capability.TTS: ["edge_tts", "kokoro", "espeak", "offline_speech"],
     Capability.MUSIC: ["ace_step", "library_music", "synth_music"],
     Capability.MEDIA: ["ffmpeg"],
