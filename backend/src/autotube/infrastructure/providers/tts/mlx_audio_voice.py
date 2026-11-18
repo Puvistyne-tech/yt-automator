@@ -30,17 +30,17 @@ WORKER_SCRIPT = Path(mlx_audio_worker.__file__)
 
 class MlxAudioOptions(ProviderOptions):
     python: str = Field(
-        default="/Users/styne/Documents/DEV/yt/kutty/bakeoff/.venv/bin/python",
+        default="~/.autotube/venvs/mlx/bin/python",
         title="mlx-audio Python",
         description="Python of a separate venv with mlx-audio installed.",
     )
     models_root: str = Field(
-        default="/Volumes/backup/bakeoff-models/local",
+        default="~/.autotube/models",
         title="Models folder",
         description="Folder holding one subfolder per mlx-audio model.",
     )
     hf_home: str = Field(
-        default="/Volumes/backup/bakeoff-models/hf",
+        default="~/.autotube/hf",
         title="Hugging Face cache",
         description="HF_HOME for the model process, which runs with the hub offline.",
     )
@@ -64,9 +64,13 @@ class MlxAudioOptions(ProviderOptions):
     )
 
 
+def expanded(path: str) -> str:
+    return str(Path(path).expanduser())
+
+
 def worker_job(preset: VoicePreset, request: SpeechRequest, models_root: str, output: Path) -> str:
     job = {
-        "model_dir": str(Path(models_root) / preset.model),
+        "model_dir": str(Path(expanded(models_root)) / preset.model),
         "text": request.text,
         "kwargs": preset.kwargs,
         "sentence_split": preset.sentence_split,
@@ -92,8 +96,8 @@ class MlxAudioSpeech:
     def available(self) -> str | None:
         host = self.context.host
         return first_reason(
-            host.missing_path(self.options.python, "mlx-audio Python"),
-            host.missing_path(self.options.models_root, "mlx-audio models folder"),
+            host.missing_path(expanded(self.options.python), "mlx-audio Python"),
+            host.missing_path(expanded(self.options.models_root), "mlx-audio models folder"),
         )
 
     def synthesize(self, request: SpeechRequest, output: Path) -> Speech:
@@ -101,10 +105,10 @@ class MlxAudioSpeech:
         preset = choose_preset(self.options.presets, self.options.default_voice, request)
         ensure_parent(output)
         self.context.runner.run(
-            [self.options.python, "-I", str(WORKER_SCRIPT)],
+            [expanded(self.options.python), "-I", str(WORKER_SCRIPT)],
             self.options.timeout_seconds,
             stdin=worker_job(preset, request, self.options.models_root, output),
-            env={"HF_HOME": self.options.hf_home, "HF_HUB_OFFLINE": "1"},
+            env={"HF_HOME": expanded(self.options.hf_home), "HF_HUB_OFFLINE": "1"},
         )
         duration = wav_duration(output)
         return estimated_speech(output, duration, request, self.aligner, self.options.alignment)

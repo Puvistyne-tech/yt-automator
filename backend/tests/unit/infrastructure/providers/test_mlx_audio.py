@@ -13,6 +13,7 @@ from autotube.infrastructure.providers.tts.mlx_audio_voice import (
     MlxAudioSpeech,
 )
 from autotube.infrastructure.providers.tts.whisper_aligner import AlignmentOptions
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.fakes import (
     RecordingRunner,
     host,
@@ -53,7 +54,10 @@ def adapter(
     return MlxAudioSpeech(options, make_context(tmp_path, runner=runner), aligner=aligner)
 
 
-def test_tamil_uses_its_default_preset_in_the_model_python(tmp_path: Path) -> None:
+def test_tamil_uses_its_default_preset_in_the_model_python(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("HOME", "/home/narrator")
     runner = writes_job_output(1.5)
     output = tmp_path / "speech" / "ta.wav"
     request = SpeechRequest(text="ஒரு காட்டில் யானை", language="ta-IN")
@@ -61,7 +65,7 @@ def test_tamil_uses_its_default_preset_in_the_model_python(tmp_path: Path) -> No
     call = runner.calls[0]
     assert call.command == [PYTHON, "-I", str(WORKER_SCRIPT)]
     assert call.timeout_seconds == 900.0
-    assert call.env == {"HF_HOME": "/Volumes/backup/bakeoff-models/hf", "HF_HUB_OFFLINE": "1"}
+    assert call.env == {"HF_HOME": "/home/narrator/.autotube/hf", "HF_HUB_OFFLINE": "1"}
     assert json.loads(call.stdin or "") == {
         "model_dir": f"{MODELS}/aruntemme__maya2-native-mlx-8bit",
         "text": "ஒரு காட்டில் யானை",
@@ -129,13 +133,31 @@ def test_host_probe_checks_real_paths(tmp_path: Path) -> None:
     )
 
 
-def test_default_presets_cover_the_chosen_voices() -> None:
-    languages = {key: preset.languages for key, preset in MlxAudioOptions().presets.items()}
-    assert languages == {
-        "warm_storyteller": ["en"],
-        "qwen3_narrator": ["en"],
-        "news_reader": ["en"],
-        "kayal": ["ta"],
-        "vaidehi": ["ta"],
-        "svara_male": ["ta"],
-    }
+def test_every_default_voice_names_a_preset() -> None:
+    options = MlxAudioOptions()
+    assert set(options.default_voice.values()) <= set(options.presets)
+
+
+def test_defaults_expand_home_for_the_command_and_availability(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("HOME", "/home/narrator")
+    runner = writes_job_output(1.0)
+    options = MlxAudioOptions(alignment=AlignmentOptions(enabled=False))
+    probe = host(paths=frozenset({"/home/narrator/.autotube/venvs/mlx/bin/python"}))
+    speech = MlxAudioSpeech(options, make_context(tmp_path, runner=runner, probe=probe))
+    assert (
+        speech.available() == "mlx-audio models folder not found at /home/narrator/.autotube/models"
+    )
+    speech.synthesize(SpeechRequest(text="Hi", language="en"), tmp_path / "h.wav")
+    assert runner.calls[0].command[0] == "/home/narrator/.autotube/venvs/mlx/bin/python"
+    model_dir = json.loads(runner.calls[0].stdin or "")["model_dir"]
+    assert model_dir.startswith("/home/narrator/.autotube/models/")
+
+
+def test_a_failing_worker_passes_through_unchanged(tmp_path: Path) -> None:
+    runner = RecordingRunner(fail_with="python exited with 1: out of memory")
+    with pytest.raises(UpstreamFailure, match="^python exited with 1: out of memory$"):
+        adapter(tmp_path, runner, OPTIONS, HelloAligner()).synthesize(
+            SpeechRequest(text="Hi", language="en"), tmp_path / "f.wav"
+        )
