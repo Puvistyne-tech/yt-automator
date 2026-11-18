@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
 from automator.domain.model_base import JsonObject
 from automator.domain.pipeline_descriptors import Aspect
+from automator.domain.ui_schema import ui_schema_problems
 from automator.domain.validation import validated_settings
 from automator.pipelines.kids_story.plugin import KidsStoryPipeline
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
@@ -50,24 +51,29 @@ def test_empty_settings_equal_the_defaults_for_every_language() -> None:
     assert empty == defaults
 
 
-def test_ui_order_and_widgets_name_real_fields() -> None:
+def test_ui_schema_follows_the_ui_schema_contract() -> None:
+    descriptor = KidsStoryPipeline().descriptor
+    assert ui_schema_problems(descriptor.ui_schema, descriptor.settings_schema) == []
+
+
+def test_ui_orders_list_every_field_of_their_section() -> None:
     ui = KidsStoryPipeline().descriptor.ui_schema
-    order, widgets = ui["order"], ui["widgets"]
-    assert isinstance(order, dict) and isinstance(widgets, dict)
-    for section, names in order.items():
-        assert isinstance(names, list) and set(names) == section_fields(section), section
-    for path in widgets:
-        section, field = path.split(".")[:2]
-        assert field in section_fields(section), path
+    for section in ("series", "story", "short"):
+        node = ui[section]
+        assert isinstance(node, dict) and set(cast(list[str], node["ui:order"])) == (
+            section_fields(section)
+        ), section
+    cast_items = cast(dict[str, Any], ui["cast"])["items"]
+    assert set(cast_items["ui:order"]) == section_fields("cast")
 
 
 def test_settings_helpers_resolve_sizes_and_characters() -> None:
     settings = KidsStorySettings()
     assert settings.video_size("episode") == (1920, 1080)
     assert settings.video_size("short") == (1080, 1920)
-    assert [member.id for member in settings.characters(["mittu", "nobody", "kutty"])] == [
+    assert [member.id for member in settings.characters(["mittu", "nobody", "kavin"])] == [
         "mittu",
-        "kutty",
+        "kavin",
     ]
 
 
@@ -75,13 +81,13 @@ def test_default_settings_validate_and_round_trip() -> None:
     descriptor = KidsStoryPipeline().descriptor
     settings = KidsStorySettings.model_validate(descriptor.default_settings)
     assert settings == KidsStorySettings()
-    assert settings.cast[0].id == "kutty" and settings.cast[0].species == "baby elephant"
+    assert settings.cast[0].id == "kavin" and settings.cast[0].species == "baby elephant"
     assert 3 <= len(settings.cast) <= 4
 
 
 def test_descriptor_declares_languages_variants_and_kids_content() -> None:
     descriptor = KidsStoryPipeline().descriptor
-    assert descriptor.type_id == "kids_story" and descriptor.name == "Kutty Stories"
+    assert descriptor.type_id == "kids_story" and descriptor.name == "Kids story videos"
     assert descriptor.makes_kids_content
     assert descriptor.language_codes == {"en", "ta"}
     aspects = {variant.id: variant.aspect for variant in descriptor.variants}
@@ -98,18 +104,21 @@ def test_descriptor_declares_languages_variants_and_kids_content() -> None:
 
 
 def test_ui_schema_sections_cover_every_settings_section() -> None:
-    descriptor = KidsStoryPipeline().descriptor
-    sections = descriptor.ui_schema["sections"]
-    assert isinstance(sections, list)
-    covered: set[str] = set()
-    for section in sections:
-        assert isinstance(section, dict) and isinstance(section["fields"], list)
-        covered.update(str(name) for name in section["fields"])
-    assert covered == set(KidsStorySettings.model_fields)
-    widgets = descriptor.ui_schema["widgets"]
-    assert isinstance(widgets, dict) and widgets["music.volume"] == {
-        "widget": "slider",
-        "step": 0.01,
+    ui = KidsStoryPipeline().descriptor.ui_schema
+    sections = cast(list[dict[str, Any]], ui["ui:sections"])
+    assert [section["title"] for section in sections] == [
+        "Series",
+        "Story",
+        "Pictures and motion",
+        "Sound",
+        "Subtitles",
+        "Videos",
+        "Publishing",
+        "Quality checks",
+    ]
+    assert cast(dict[str, Any], ui["music"])["volume"] == {
+        "ui:widget": "range",
+        "ui:options": {"step": 0.01},
     }
 
 
@@ -145,6 +154,22 @@ def test_settings_saved_with_the_old_pixel_margins_still_load() -> None:
     loaded = KidsStorySettings.model_validate(stored).subtitles
     assert loaded.max_lines == 3
     assert loaded.bottom_margin_share == SubtitleSettings().bottom_margin_share
+
+
+@pytest.mark.parametrize(
+    ("name", "blank"), [({"en": "", "ta": "கதை"}, "en"), ({"en": "Tales", "ta": "  "}, "ta")]
+)
+def test_a_blank_series_name_is_rejected_with_a_field_error(name: JsonObject, blank: str) -> None:
+    errors = validated_settings(KidsStorySettings, {"series": {"name": name}})[1]
+    assert errors == {
+        "settings.series.name": f"Value error, enter a series name for every language; "
+        f"blank: {blank}"
+    }
+
+
+def test_the_brand_mark_has_no_default_text() -> None:
+    visuals = KidsStorySettings().visuals
+    assert visuals.badge_text == "" and not visuals.overlay_series_badge
 
 
 @pytest.mark.parametrize("family", ["Fonts & Co.", "Kid's Font", ""])

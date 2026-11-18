@@ -1,26 +1,16 @@
 import {
-  ariaDescribedByIds,
   type BaseInputTemplateProps,
-  type EnumOptionsType,
   getInputProps,
   type RegistryWidgetsType,
   type WidgetProps,
 } from "@rjsf/utils";
 import type { ChangeEvent } from "react";
-import { offersNotSet } from "@/shared/schema-form/choices";
+import { CheckboxesWidget, RadioWidget, SelectWidget } from "@/shared/schema-form/choiceWidgets";
+import { positiveNumberOption } from "@/shared/schema-form/options";
+import { common, isLocked } from "@/shared/schema-form/widgetProps";
 import { Switch } from "@/shared/ui/Switch";
 
-function common(props: WidgetProps) {
-  return {
-    id: props.id,
-    name: props.htmlName ?? props.id,
-    disabled: Boolean(props.disabled || props.readonly),
-    "aria-describedby": ariaDescribedByIds(props.id),
-    "aria-invalid": (props.rawErrors?.length ?? 0) > 0 ? true : undefined,
-    onBlur: () => props.onBlur(props.id, props.value),
-    onFocus: () => props.onFocus(props.id, props.value),
-  };
-}
+const DEFAULT_TEXTAREA_ROWS = 4;
 
 export function BaseInputTemplate(props: BaseInputTemplateProps) {
   const inputProps = getInputProps(props.schema, props.type, props.options);
@@ -45,7 +35,7 @@ export function BaseInputTemplate(props: BaseInputTemplateProps) {
 }
 
 function TextareaWidget(props: WidgetProps) {
-  const rows = typeof props.options.rows === "number" ? props.options.rows : 4;
+  const rows = positiveNumberOption(props.options, "rows") ?? DEFAULT_TEXTAREA_ROWS;
   return (
     <textarea
       className="input textarea"
@@ -60,69 +50,12 @@ function TextareaWidget(props: WidgetProps) {
   );
 }
 
-function optionFor(options: EnumOptionsType[], raw: string) {
-  return options.find((option) => String(option.value) === raw);
-}
-
-function toggled(values: unknown[], option: EnumOptionsType, all: EnumOptionsType[]): unknown[] {
-  const has = values.some((v) => String(v) === String(option.value));
-  const next = has
-    ? values.filter((v) => String(v) !== String(option.value))
-    : [...values, option.value];
-  return all.map((o) => o.value).filter((v) => next.some((n) => String(n) === String(v)));
-}
-
-function CheckboxesWidget(props: WidgetProps) {
-  const options = props.options.enumOptions ?? [];
-  const values: unknown[] = Array.isArray(props.value) ? props.value : [];
-  return (
-    <fieldset className="checkbox-options" aria-labelledby={`${props.id}__label`}>
-      {options.map((option, index) => (
-        <label key={String(option.value)} className="checkbox-option">
-          <input
-            type="checkbox"
-            id={`${props.id}-${index}`}
-            checked={values.some((v) => String(v) === String(option.value))}
-            disabled={Boolean(props.disabled || props.readonly)}
-            onChange={() => props.onChange(toggled(values, option, options))}
-          />
-          <span>{option.label}</span>
-        </label>
-      ))}
-    </fieldset>
-  );
-}
-
-function SelectWidget(props: WidgetProps) {
-  if (props.multiple) {
-    return <CheckboxesWidget {...props} />;
-  }
-  const options = props.options.enumOptions ?? [];
-  return (
-    <select
-      className="input select"
-      {...common(props)}
-      value={props.value === undefined || props.value === null ? "" : String(props.value)}
-      onChange={(event) =>
-        props.onChange(optionFor(options, event.target.value)?.value ?? props.options.emptyValue)
-      }
-    >
-      {offersNotSet(props.required, props.schema) && <option value="">Not set</option>}
-      {options.map((option) => (
-        <option key={String(option.value)} value={String(option.value)}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  );
-}
-
 function CheckboxWidget(props: WidgetProps) {
   return (
     <Switch
       id={props.id}
       checked={props.value === true}
-      disabled={Boolean(props.disabled || props.readonly)}
+      disabled={isLocked(props)}
       onChange={(checked) => props.onChange(checked)}
       label={props.label}
     />
@@ -130,7 +63,9 @@ function CheckboxWidget(props: WidgetProps) {
 }
 
 function RangeWidget(props: WidgetProps) {
-  const { min, max, step } = getInputProps(props.schema, "range", props.options);
+  const spec = getInputProps(props.schema, "range", props.options);
+  const { min, max } = spec;
+  const step = positiveNumberOption(props.options, "step") ?? spec.step;
   const value = typeof props.value === "number" ? props.value : Number(min ?? 0);
   return (
     <div className="range">
@@ -170,6 +105,7 @@ function ColorWidget(props: WidgetProps) {
 export const widgets: RegistryWidgetsType = {
   TextareaWidget,
   SelectWidget,
+  RadioWidget,
   CheckboxesWidget,
   CheckboxWidget,
   RangeWidget,

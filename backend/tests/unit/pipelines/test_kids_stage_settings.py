@@ -43,7 +43,7 @@ def test_settings_reach_requests_compositions_and_metadata(tmp_path: Path) -> No
         for item in meta_of(rig, "upload_metadata")
         if item.variant == "episode"
     }
-    assert titles == {"en": "EN Kutty and the Golden Mango", "ta": "TA குட்டியும் தங்க மாம்பழமும்"}
+    assert titles == {"en": "EN Kavin and the Golden Mango", "ta": "TA கவினும் தங்க மாம்பழமும்"}
 
 
 def speaker_rig(root: Path, override: dict[str, str], languages: tuple[str, ...]) -> StageRig:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from automator.domain.capabilities import Capability, SpeechRequest, SpeechSynthesizer
@@ -7,12 +8,15 @@ from automator.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from automator.domain.pipeline_descriptors import StageDescriptor
 from automator.domain.run_enums import ArtifactKind
 from automator.pipelines.kids_story.artifacts import Role, artifact, folder, scene_key
+from automator.pipelines.kids_story.publishing.templates import template_values
+from automator.pipelines.kids_story.settings.base import LocalizedText
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.stages.media_types import WAV
 from automator.pipelines.kids_story.stages.run_settings import kids_settings
 from automator.pipelines.kids_story.stages.story_loading import load_story
 from automator.pipelines.kids_story.story.model import Story
 from automator.pipelines.kids_story.story.normalise import speakable
+from automator.pipelines.kids_story.text.templates import render_template
 from automator.pipelines.kids_story.timeline.variants import HOOK, INTRO, OUTRO
 from automator.pipelines.kids_story.timeline.voices import timings_meta
 
@@ -27,16 +31,20 @@ class Line:
     scene: int | None = None
 
 
+def filled_line(line: LocalizedText, values: Mapping[str, str], language: str) -> str:
+    return render_template(line.for_language(language), values)
+
+
 def lines_to_speak(story: Story, settings: KidsStorySettings) -> list[Line]:
-    language = story.language
+    language, values = story.language, template_values(story, settings)
     lines = [
         Line(scene_key(index), scene.narration, scene.speaker, index)
         for index, scene in enumerate(story.scenes)
     ]
     if settings.voice.include_intro:
-        lines.insert(0, Line(INTRO, settings.series.intro_line.for_language(language)))
+        lines.insert(0, Line(INTRO, filled_line(settings.series.intro_line, values, language)))
     if settings.voice.include_outro:
-        lines.append(Line(OUTRO, settings.series.outro_line.for_language(language)))
+        lines.append(Line(OUTRO, filled_line(settings.series.outro_line, values, language)))
     if settings.short.enabled and settings.short.hook_line and story.hook_line:
         lines.append(Line(HOOK, story.hook_line))
     return [line for line in lines if line.text.strip()]

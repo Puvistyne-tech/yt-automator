@@ -29,7 +29,7 @@ def metadata_artifact(**meta: JsonValue) -> Artifact:
         filename="m.json",
         media_type="application/json",
         size_bytes=1,
-        meta={"title": "Kutty", **meta},
+        meta={"title": "Kavin", **meta},
     )
 
 
@@ -37,12 +37,12 @@ def test_video_metadata_reads_category_language_hashtags_and_playlist() -> None:
     found = metadata_artifact(
         category_id="27",
         default_language="ta",
-        hashtags=["#Kutty", "#Tamil"],
-        playlist_title="Kutty Stories",
+        hashtags=["#Kavin", "#Tamil"],
+        playlist_title="Bedtime tales",
     )
     read = video_metadata([found], "ta", "episode", "fallback")
     assert (read.category_id, read.default_language) == ("27", "ta")
-    assert read.hashtags == ("#Kutty", "#Tamil") and read.playlist_title == "Kutty Stories"
+    assert read.hashtags == ("#Kavin", "#Tamil") and read.playlist_title == "Bedtime tales"
     bare = video_metadata([metadata_artifact(category_id=5)], "ta", "episode", "fallback")
     assert bare.category_id is None and bare.default_language is None and bare.hashtags == ()
 

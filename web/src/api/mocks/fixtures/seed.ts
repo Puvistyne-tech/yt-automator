@@ -100,8 +100,8 @@ const CHANNELS = [
   makeChannel(),
   makeChannel({
     id: "chan-ta",
-    youtube_channel_id: "UC_kutty_ta_002",
-    title: "Kutty Kathaigal",
+    youtube_channel_id: "UC_bedtime_ta_002",
+    title: "Kathai Neram",
     defaults: {
       privacy: "unlisted",
       made_for_kids: true,
@@ -112,8 +112,8 @@ const CHANNELS = [
   }),
   makeChannel({
     id: "chan-old",
-    youtube_channel_id: "UC_kutty_classics_003",
-    title: "Kutty Classics",
+    youtube_channel_id: "UC_bedtime_classics_003",
+    title: "Story Classics",
     status: "expired",
   }),
 ];
@@ -123,7 +123,7 @@ const PLAYLISTS: Record<string, Playlist[]> = {
     { id: "pl-bedtime", title: "Bedtime stories" },
     { id: "pl-kindness", title: "Kindness tales" },
   ],
-  "chan-ta": [{ id: "pl-ta-shorts", title: "Kutty shorts" }],
+  "chan-ta": [{ id: "pl-ta-shorts", title: "Tamil shorts" }],
 };
 
 const SETTINGS: AppSettings = {

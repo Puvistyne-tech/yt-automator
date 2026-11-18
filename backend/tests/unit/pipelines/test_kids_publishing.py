@@ -27,10 +27,10 @@ def test_render_template_fills_known_and_keeps_unknown_placeholders() -> None:
 
 def test_template_values_are_localised() -> None:
     values = template_values(story("ta"), quick_settings())
-    assert values["series"] == "குட்டி கதைகள்"
+    assert values["series"] == "கதை நேரம்"
     assert values["questions"].startswith("• ")
-    assert "#KuttyStories" in values["hashtags"]
-    assert values["characters"].startswith("குட்டி")
+    assert "#MoralStories" in values["hashtags"]
+    assert values["characters"].startswith("கவின்")
 
 
 @pytest.mark.parametrize(("length", "kept"), [(99, True), (100, True), (101, False)])
@@ -87,12 +87,32 @@ def test_upload_metadata_uses_templates_per_variant() -> None:
         }
     )
     episode = upload_metadata(story(), settings, "episode")
-    assert episode.title == "Kutty Stories: Kutty and the Golden Mango"
+    assert episode.title == "Story Time: Kavin and the Golden Mango"
     assert episode.description.startswith("Moral: Sharing makes everyone happier.")
     assert episode.category_id == "27"
-    assert episode.default_language == "en" and episode.playlist_title == "Kutty Stories"
+    assert episode.default_language == "en" and episode.playlist_title == "Story Time"
     short = upload_metadata(story(), settings, "short")
-    assert short.title == "Kutty and the Golden Mango #Shorts"
+    assert short.title == "Kavin and the Golden Mango #Shorts"
+
+
+@pytest.mark.parametrize(
+    ("language", "playlist", "expected"),
+    [
+        ("en", {}, "Story Time"),
+        ("ta", {}, "இரவுக் கதைகள்"),
+        ("en", {"en": "", "ta": ""}, ""),
+        ("en", {"en": "Bedtime picks", "ta": ""}, "Bedtime picks"),
+        ("ta", {"en": "", "ta": "{series} - {nope}"}, "இரவுக் கதைகள் - {nope}"),
+    ],
+)
+def test_playlist_title_fills_in_the_series_name(
+    language: str, playlist: dict[str, str], expected: str
+) -> None:
+    metadata = {"playlist_title": playlist} if playlist else {}
+    settings = quick_settings(
+        series={"name": {"en": "Story Time", "ta": "இரவுக் கதைகள்"}}, metadata=metadata
+    )
+    assert upload_metadata(story(language), settings, "episode").playlist_title == expected
 
 
 @pytest.mark.parametrize("language", ["en", "ta"])

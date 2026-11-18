@@ -21,7 +21,7 @@ def test_story_prompt_reflects_settings_and_feedback() -> None:
     request = story_request(settings, "being patient", "en", ["fix scene 2"])
     assert "Between 5 and 6 scenes" in request.prompt and "being patient" in request.prompt
     assert "- fix scene 2" in request.prompt and request.temperature == 1.1
-    assert 'id "kutty": Kutty, a baby elephant' in request.prompt
+    assert 'id "kavin": Kavin, a baby elephant' in request.prompt
     assert "Be kind, be brave, be you!" in request.prompt
     assert "No violence" in request.system and "aged 3 to 7" in request.system
     assert request.json_schema is not None and request.json_schema["title"] == "StoryDraft"
@@ -29,14 +29,14 @@ def test_story_prompt_reflects_settings_and_feedback() -> None:
 
 def test_translation_prompt_keeps_structure() -> None:
     request = translation_request(SETTINGS, story(), "en", "ta")
-    assert "exactly 9 narrations" in request.prompt and "Kutty = குட்டி" in request.prompt
+    assert "exactly 9 narrations" in request.prompt and "Kavin = கவின்" in request.prompt
     assert "அன்பாக இரு, துணிவாக இரு, நீயாகவே இரு!" in request.prompt
     assert request.temperature == SETTINGS.story.translation_temperature
 
 
 def test_parse_model_accepts_fenced_json_and_reports_problems() -> None:
     parsed = parse_model("```json\n" + as_json(draft_dict()) + "\n```", StoryDraft)
-    assert parsed.title == "Kutty and the Golden Mango"
+    assert parsed.title == "Kavin and the Golden Mango"
     with pytest.raises(StoryFormatError, match="one JSON object"):
         parse_model("no json here", Story)
     with pytest.raises(StoryFormatError, match="invalid"):
@@ -50,7 +50,7 @@ def test_author_retries_with_feedback_then_succeeds() -> None:
     writer = scripted_writer([as_json(bad), "nonsense", as_json(draft_dict())])
     logs = LogBook()
     written = StoryAuthor(writer, SETTINGS, logs).written("sharing", "en")
-    assert written is not None and written.title == "Kutty and the Golden Mango"
+    assert written is not None and written.title == "Kavin and the Golden Mango"
     assert "use between 8 and 10 scenes, not 3" in writer.requests[1].prompt
     assert "answer with one JSON object" in writer.requests[2].prompt
     assert len(logs.lines) == 2
@@ -76,7 +76,7 @@ def test_author_reports_a_shape_problem_and_accepts_fenced_json() -> None:
     fenced = "```json\n" + as_json(draft_dict()) + "\n```"
     writer = scripted_writer([as_json({**draft_dict(), "scenes": []}), fenced])
     written = StoryAuthor(writer, SETTINGS, LogBook()).written("sharing", "en")
-    assert written is not None and written.title == "Kutty and the Golden Mango"
+    assert written is not None and written.title == "Kavin and the Golden Mango"
     assert "does not match the shape" in writer.requests[1].prompt
 
 

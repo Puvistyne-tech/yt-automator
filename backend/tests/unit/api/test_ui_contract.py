@@ -17,8 +17,11 @@ from tests.fixtures.fake_runtime import RecordingEvents
 from tests.unit.api.client import Api, ok, streamed_events, wired
 
 UI_SCHEMA: dict[str, Any] = {
-    "ui:sections": [{"title": "Story", "fields": ["topic", "score"]}],
-    "topic": {"ui:widget": "textarea", "ui:help": "What the story is about"},
+    "ui:sections": [
+        {"title": "Story", "fields": ["topic", "score"]},
+        {"title": "Testing", "fields": ["fail_stage", "with_thumbnail", "extra_meta"]},
+    ],
+    "topic": {"ui:widget": "textarea", "ui:options": {"rows": 2}},
 }
 
 
@@ -28,7 +31,8 @@ class SectionedPipeline:
 
     @property
     def descriptor(self) -> PipelineDescriptor:
-        return self.inner.descriptor.model_copy(update={"ui_schema": UI_SCHEMA})
+        inner = self.inner.descriptor.model_dump()
+        return PipelineDescriptor.model_validate({**inner, "ui_schema": UI_SCHEMA})
 
     @property
     def settings_model(self) -> type[BaseModel]:

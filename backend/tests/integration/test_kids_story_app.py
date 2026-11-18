@@ -120,7 +120,7 @@ def reviewed_run(api: Api) -> dict[str, Any]:
     ]
     automation = api.automation(
         channel_id,
-        name="Kutty Stories",
+        name="Bedtime tales",
         pipeline_type="kids_story",
         settings=SMALL_SETTINGS,
         languages=list(TARGETS),
@@ -168,7 +168,7 @@ def check_uploads(youtube: FakeYouTube) -> None:
     assert {upload.privacy for upload in youtube.uploads} == {Privacy.PRIVATE}
     assert {upload.default_language for upload in youtube.uploads} == {"en", "ta"}
     assert {upload.category_id for upload in youtube.uploads} == {"1"}
-    assert all("#KuttyStories" in upload.description.split() for upload in youtube.uploads)
+    assert all("#KidsStories" in upload.description.split() for upload in youtube.uploads)
 
 
 def test_kids_story_runs_through_the_real_app(

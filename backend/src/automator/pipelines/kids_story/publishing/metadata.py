@@ -44,5 +44,5 @@ def upload_metadata(story: Story, settings: KidsStorySettings, variant: str) -> 
         hashtags=metadata.hashtags.for_language(language),
         category_id=metadata.category.value,
         default_language=language,
-        playlist_title=metadata.playlist_title.for_language(language),
+        playlist_title=render_template(metadata.playlist_title.for_language(language), values),
     )

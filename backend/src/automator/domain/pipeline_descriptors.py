@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from automator.domain.model_base import DomainModel, JsonObject
+from automator.domain.ui_schema import ui_schema_problems
 
 KIDS_CONTENT = "kids_content"
 
@@ -44,6 +45,13 @@ class PipelineDescriptor(DomainModel):
     languages: tuple[LanguageOption, ...]
     variants: tuple[VariantOption, ...]
     capabilities: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def check_ui_schema(self) -> PipelineDescriptor:
+        problems = ui_schema_problems(self.ui_schema, self.settings_schema)
+        if problems:
+            raise ValueError(f"{self.type_id} ui_schema breaks the contract: {'; '.join(problems)}")
+        return self
 
     @property
     def language_codes(self) -> frozenset[str]:

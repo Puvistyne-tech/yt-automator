@@ -2,8 +2,8 @@
 
 A local web app that connects your YouTube channels and runs configurable automations that create
 and publish videos. Each automation combines a pipeline type, its settings, target channels,
-languages, a schedule and a review rule. The first pipeline type is Kutty Stories: short story
-videos for children.
+languages, a schedule and a review rule. The first pipeline type is kids story videos: short,
+gentle illustrated story videos for children. Your own series name, cast and branding are settings.
 
 Everything runs on your own Mac at zero cost. Text, images, motion, voices and music come from
 local models or free tiers, and every provider has an offline fallback, so the app always starts.
@@ -99,10 +99,11 @@ refuses to publish when the remaining quota is too low.
 2. Connect channel: sign in with a test user, choose the channel and allow every permission.
 3. Set the channel defaults: privacy, made for kids, category, language.
 
-## Create the first Kutty Stories automation
+## Create the first kids story automation
 
-1. Automations, New. Pick the Kutty Stories pipeline (it appears in the list once installed).
-2. Content: the form comes from the pipeline's settings, with a default for every field.
+1. Automations, New. Pick the Kids story videos pipeline (it appears in the list once installed).
+2. Content: the form comes from the pipeline's settings, with a default for every field. Set your
+   series name (and, if you want one, the brand mark text) under Series and Pictures.
 3. Languages: for example English and Tamil.
 4. Targets: one row per channel and language, with the video variants to publish.
 5. Schedule: manual, every N hours, or a cron expression in your time zone.

@@ -19,7 +19,7 @@ import { hasActiveFilters, readFilters, withFilter } from "@/features/runs-list/
 
 describe("automation summary", () => {
   it("names pipelines and languages, falling back to ids", () => {
-    expect(pipelineName([kidsStoryPipeline], "kutty_stories")).toBe("Kutty Stories");
+    expect(pipelineName([kidsStoryPipeline], "kids_story")).toBe("Kids story videos");
     expect(pipelineName([], "other")).toBe("other");
     expect(languagesLabel(["en", "ta", "fr"], kidsStoryPipeline)).toBe("English, Tamil, fr");
     expect(languagesLabel([], kidsStoryPipeline)).toBe("—");

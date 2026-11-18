@@ -79,10 +79,10 @@ describe("credential form", () => {
 });
 
 describe("oauthReturnMessage", () => {
-  const title = (id: string) => (id === "chan-en" ? "Kutty Stories" : undefined);
+  const title = (id: string) => (id === "chan-en" ? "Bedtime tales" : undefined);
 
   it.each([
-    ["connected=chan-en", { tone: "success", message: "Connected Kutty Stories." }],
+    ["connected=chan-en", { tone: "success", message: "Connected Bedtime tales." }],
     ["connected=other", { tone: "success", message: "Channel connected." }],
     [
       "error=access_denied",
@@ -100,7 +100,7 @@ describe("oauthReturnMessage", () => {
       "error=some_new_code",
       { tone: "error", message: "Connecting the channel failed: some new code." },
     ],
-    ["connected=chan-en&error=x", { tone: "success", message: "Connected Kutty Stories." }],
+    ["connected=chan-en&error=x", { tone: "success", message: "Connected Bedtime tales." }],
     ["", null],
   ])("reads ?%s", (query, expected) => {
     expect(oauthReturnMessage(new URLSearchParams(query), title)).toEqual(expected);

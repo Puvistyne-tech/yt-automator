@@ -105,7 +105,7 @@ class VisualSettings(SettingsSection):
         description="Draw the brand mark in a corner of every episode and Short scene picture.",
     )
     badge_text: str = Field(
-        default="Kutty Stories",
+        default="",
         max_length=40,
         title="Brand mark text",
         description="The brand mark shown in the corner of every picture. Empty means no mark.",

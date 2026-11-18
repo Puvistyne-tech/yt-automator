@@ -90,8 +90,33 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
 
 - An automation's `settings` must validate against its pipeline's settings model. Unknown pipeline type is an error.
 - A settings choice field with human titles is published in `settings_schema` as `oneOf: [{const, title}]`
-  (with `type: "string"`) instead of a bare `enum`; the form shows each `title` and stores the `const`. Kutty
-  Stories titles every choice field this way through `titled_choices`.
+  (with `type: "string"`) instead of a bare `enum`; the form shows each `title` and stores the `const`. The kids
+  story pipeline titles every choice field this way through `titled_choices`.
+- `ui_schema` is a react-jsonschema-form uiSchema restricted to these keys, and `domain/ui_schema.py`
+  (`ui_schema_problems`) checks a pipeline's `ui_schema` against its `settings_schema`:
+  - `ui:sections` (root only, optional): a list of `{title: string, fields: [string]}`. Each field is a
+    top-level settings property, and when sections are given every top-level property is in exactly one
+    section. The form shows the sections in list order, each under its title; without sections the form is one
+    ungrouped list.
+  - Any other key names a settings property and holds the hints for it; `items` holds the hints for the
+    items of an array property. Nesting follows the settings schema, resolving local `$ref`s (`#/...`) and,
+    for an optional property written as `anyOf`/`oneOf`, its first non-null branch (`domain/json_schema.py`).
+  - `ui:widget`: one of `textarea`, `select`, `radio`, `checkboxes`, `range`, `color` (`UI_WIDGETS`; this line is
+    the source both test suites read).
+  - `ui:order`: a list of property names of that object. It either names every property or ends with `"*"`
+    for the rest; leaving a property out without `"*"` is a problem.
+  - `ui:options`: an object; the form honours `rows` on `textarea` and `step` on `range`. A `step` that is not a
+    finite number above zero is ignored and the schema's own step is used.
+  - No other `ui:` key is allowed. Help text comes from each field's `description` in the settings schema.
+    The web mock pipeline uses this same format.
+- `PipelineDescriptor` rejects a `ui_schema` with any problem, so a broken plugin fails when it is loaded.
+- The kids story pipeline (`kids_story`, shown as "Kids story videos") carries no channel identity in its
+  defaults: the series name defaults to "Story Time", the brand mark text is empty (no mark is drawn), and
+  `{series}` is filled in with the automation's series name in the intro line, outro line, titles,
+  descriptions and playlist title; the intro and outro lines take the same placeholders as the description,
+  and unknown placeholders stay as written. The series name must not be blank in any language. When no bundled story
+  fits the automation's cast ids and languages, the story stage fails naming both what the automation has
+  and what the bundled stories need.
 - Every automation language must be one the pipeline offers. Every target language must be in the automation's languages. Every target variant must be one the pipeline offers. Every target channel must exist.
 - An automation with schedule `interval` needs `every_hours >= 1`. With `cron` it needs a valid 5-field expression.
 - A run snapshots the automation's settings, languages and review policy at creation. Editing or deleting the automation never changes a past or queued run.
@@ -255,7 +280,7 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   shaping (needed for Tamil and other Indic scripts). When `font_file` is set its folder is the font
   folder, otherwise the provider's configured fonts folder, otherwise the system fonts.
 - `domain/srt.py` parses SRT into entries (start, end, lines); producers and the media toolkit share it.
-- Kutty Stories wraps each cue line to the measured frame width and splits a cue that needs more than
+- The kids story pipeline wraps each cue line to the measured frame width and splits a cue that needs more than
   `max_lines` lines into consecutive screens, each shown for at least `min_cue_seconds`, using free time
   before the next cue. Text is never dropped: when there is no time to show the parts, they join into
   one screen that may exceed `max_lines`, and sentences that start in the last `min_cue_seconds` of a

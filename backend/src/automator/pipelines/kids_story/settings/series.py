@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from automator.pipelines.kids_story.settings.base import (
     LocalizedText,
@@ -61,7 +61,11 @@ BRAND_NAMES = [
 
 class SeriesSettings(SettingsSection):
     name: LocalizedText = localized_text(
-        "Kutty Stories", "குட்டி கதைகள்", "Series name", "The channel's series name per language."
+        "Story Time",
+        "கதை நேரம்",
+        "Series name",
+        "Your series name per language, shown on the cards and filled in wherever {series} "
+        "appears in the intro, outro, titles, descriptions and playlist title.",
     )
     tagline: LocalizedText = localized_text(
         "Gentle stories for little hearts",
@@ -87,22 +91,32 @@ class SeriesSettings(SettingsSection):
         "The line every story ends with, said after the moral.",
     )
     intro_line: LocalizedText = localized_text(
-        "Hello, little friends! Welcome to Kutty Stories. Let's begin!",
-        "வணக்கம், குட்டி நண்பர்களே! குட்டி கதைகளுக்கு வருக. கதையைத் தொடங்குவோம்!",
+        "Hello, little friends! Welcome to {series}. Let's begin!",
+        "வணக்கம், சின்ன நண்பர்களே! {series} உங்களை அன்புடன் வரவேற்கிறது. கதையைத் தொடங்குவோம்!",
         "Intro line",
-        "Spoken over the intro card at the start of every episode.",
+        "Spoken over the intro card at the start of every episode; {series} and the other "
+        "description placeholders are filled in.",
     )
     outro_line: LocalizedText = localized_text(
         "Thank you for listening, little friends. See you in the next story!",
-        "கதையைக் கேட்டதற்கு நன்றி, குட்டி நண்பர்களே. அடுத்த கதையில் சந்திப்போம்!",
+        "கதையைக் கேட்டதற்கு நன்றி, சின்ன நண்பர்களே. அடுத்த கதையில் சந்திப்போம்!",
         "Outro line",
-        "Spoken over the outro card at the end of every episode.",
+        "Spoken over the outro card at the end of every episode; {series} and the other "
+        "description placeholders are filled in.",
     )
     editorial_rules: list[str] = text_list_field(
         EDITORIAL_RULES,
         "Editorial rules",
         "Rules the story writer must follow. Each rule is one line in the prompt.",
     )
+
+    @field_validator("name")
+    @classmethod
+    def check_name(cls, value: LocalizedText) -> LocalizedText:
+        blank = [code for code, text in value.model_dump().items() if not text.strip()]
+        if blank:
+            raise ValueError(f"enter a series name for every language; blank: {', '.join(blank)}")
+        return value
 
 
 class SafetySettings(SettingsSection):

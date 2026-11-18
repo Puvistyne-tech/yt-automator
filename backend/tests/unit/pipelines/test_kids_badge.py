@@ -9,22 +9,29 @@ from automator.pipelines.kids_story.text.scripts import script_language
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, run_chain, with_font
 from tests.fixtures.kids_pictures import corner_is_solid, is_solid, scene_visual_files
 
-TAMIL_MARK = "குட்டி கதைகள்"
+TAMIL_MARK = "இரவுக் கதைகள்"
 
 
 def visual_files(rig: StageRig, variant: str) -> list[Path]:
     return scene_visual_files(rig.root, meta_of(rig, "visual"), variant)
 
 
-def badge_run(root: Path, fonts: dict[str, list[str]], text: str = "Kutty Stories") -> StageRig:
-    visuals = {"overlay_series_badge": True, "badge_text": text}
+LATIN_MARK = "Bedtime tales"
+
+
+def badge_on(text: str = LATIN_MARK) -> dict[str, object]:
+    return {"overlay_series_badge": True, "badge_text": text}
+
+
+def badge_run(root: Path, fonts: dict[str, list[str]], text: str = LATIN_MARK) -> StageRig:
+    visuals = badge_on(text)
     settings = quick_settings(visuals=visuals, thumbnail={"font_files": fonts})
     return run_chain(StageRig(root, settings=settings), "art")
 
 
 @pytest.mark.parametrize(
     ("text", "language"),
-    [(TAMIL_MARK, "ta"), ("Kutty Stories", "en"), ("Kutty குட்டி", "ta"), ("", "en"), ("௧", "ta")],
+    [(TAMIL_MARK, "ta"), (LATIN_MARK, "en"), ("Kavin கவின்", "ta"), ("", "en"), ("௧", "ta")],
 )
 def test_script_language_follows_the_tamil_block(text: str, language: str) -> None:
     assert script_language(text) == language
@@ -34,7 +41,7 @@ def test_script_language_follows_the_tamil_block(text: str, language: str) -> No
 def test_brand_mark_is_drawn_after_cropping_on_every_variant(
     tmp_path: Path, font_file: Path
 ) -> None:
-    settings = with_font(font_file, visuals={"overlay_series_badge": True})
+    settings = with_font(font_file, visuals=badge_on())
     rig = run_chain(StageRig(tmp_path, settings=settings), "art")
     for path in [*visual_files(rig, "episode"), *visual_files(rig, "short")]:
         assert path.name.endswith("-badge.png") and not corner_is_solid(path)
@@ -66,11 +73,14 @@ def test_brand_mark_without_a_font_is_skipped_and_logged(tmp_path: Path) -> None
     assert any("brand mark skipped" in line for line in rig.book.warnings())
 
 
-@pytest.mark.parametrize("visuals", [{"overlay_series_badge": False}, {"badge_text": "  "}])
+@pytest.mark.parametrize(
+    "visuals",
+    [{**badge_on(), "overlay_series_badge": False}, badge_on("  "), {"overlay_series_badge": True}],
+)
 def test_no_brand_mark_keeps_the_chosen_picture(
     tmp_path: Path, font_file: Path, visuals: dict[str, object]
 ) -> None:
-    settings = with_font(font_file, visuals={"overlay_series_badge": True, **visuals})
+    settings = with_font(font_file, visuals=visuals)
     rig = run_chain(StageRig(tmp_path, settings=settings), "art")
     names = [path.name for path in visual_files(rig, "episode")]
     assert names and all("-c" in name and "badge" not in name for name in names)

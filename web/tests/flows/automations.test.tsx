@@ -11,9 +11,9 @@ describe("Automations list", () => {
     renderApp("/automations");
 
     const row = await findRow("Automations", "Bedtime stories");
-    expect(row.getByText("Kutty Stories", { selector: "td span" })).toBeInTheDocument();
+    expect(row.getByText("Kids story videos", { selector: "td span" })).toBeInTheDocument();
     expect(row.getByText("English, Tamil")).toBeInTheDocument();
-    expect(row.getByText("Kutty Stories, Kutty Kathaigal")).toBeInTheDocument();
+    expect(row.getByText("Bedtime tales, Kathai Neram")).toBeInTheDocument();
     expect(row.getByText("Every day at 18:00 (Asia/Kolkata)")).toBeInTheDocument();
     expect(row.getByText("Awaiting review")).toBeInTheDocument();
     const shorts = await findRow("Automations", "Tamil shorts");
@@ -21,7 +21,7 @@ describe("Automations list", () => {
     const festival = await findRow("Automations", "Festival specials");
     expect(festival.getByText("Paused")).toBeInTheDocument();
     expect(
-      festival.getByRole("link", { name: "Reconnect Kutty Classics to keep publishing." }),
+      festival.getByRole("link", { name: "Reconnect Story Classics to keep publishing." }),
     ).toHaveAttribute("href", "/channels");
     expect(row.queryByText(/to keep publishing/)).not.toBeInTheDocument();
   });

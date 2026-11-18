@@ -35,14 +35,12 @@ TAGS_EN = [
     "moral stories",
     "bedtime stories",
     "animated stories",
-    "Kutty Stories",
 ]
 TAGS_TA = [
     "தமிழ் கதைகள்",
     "குழந்தைகள் கதைகள்",
     "நீதிக் கதைகள்",
     "Tamil kids stories",
-    "Kutty Stories",
 ]
 
 
@@ -79,17 +77,18 @@ class MetadataSettings(SettingsSection):
         "Search tags added to every upload; tags past YouTube's 500 letter limit are dropped.",
     )
     hashtags: LocalizedList = localized_list(
-        ["#KidsStories", "#KuttyStories", "#MoralStories"],
-        ["#தமிழ்கதைகள்", "#KuttyStories", "#KidsStories"],
+        ["#KidsStories", "#MoralStories", "#BedtimeStories"],
+        ["#தமிழ்கதைகள்", "#KidsStories", "#MoralStories"],
         "Hashtags",
         "Placed where {hashtags} appears in the description; any still missing are added at "
         "the end when the video is uploaded, up to YouTube's 60 hashtags.",
     )
     playlist_title: LocalizedText = localized_text(
-        "Kutty Stories",
-        "குட்டி கதைகள்",
+        "{series}",
+        "{series}",
         "Playlist title",
-        "Shown with the episode for reference; uploads go to the target's own playlist.",
+        "Shown with the episode for reference, with {series} filled in; uploads go to the "
+        "target's own playlist.",
     )
     category: YouTubeCategory = Field(
         default=YouTubeCategory.FILM_AND_ANIMATION,

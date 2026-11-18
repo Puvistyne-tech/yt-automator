@@ -24,7 +24,7 @@ describe("Automation editor: warnings and server errors", () => {
 
     expect(
       targetRow(1).getByText(
-        "Kutty Classics needs reconnecting on the Channels page before runs can publish to it.",
+        "Story Classics needs reconnecting on the Channels page before runs can publish to it.",
       ),
     ).toBeInTheDocument();
   });

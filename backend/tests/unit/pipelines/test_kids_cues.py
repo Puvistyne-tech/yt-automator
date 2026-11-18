@@ -64,8 +64,8 @@ def test_cue_rules_use_the_line_length_and_line_count_of_each_variant() -> None:
 
 
 def test_cues_break_at_sentences() -> None:
-    groups = word_groups(timed("Kutty smiled. Mittu sang!"), RULES)
-    assert words_in(groups) == [["Kutty", "smiled."], ["Mittu", "sang!"]]
+    groups = word_groups(timed("Kavin smiled. Mittu sang!"), RULES)
+    assert words_in(groups) == [["Kavin", "smiled."], ["Mittu", "sang!"]]
 
 
 def test_time_limit_splits_mid_sentence_and_a_sentence_end_still_closes_a_cue() -> None:
@@ -84,7 +84,7 @@ def test_other_words_do_not_end_a_sentence(word: str) -> None:
 
 
 def test_tamil_lines_count_graphemes_not_code_points() -> None:
-    text = "குட்டி யானை பெரிய மாமரத்தை நோக்கி நடந்தான்."
+    text = "கவின் யானை பெரிய மாமரத்தை நோக்கி நடந்தான்."
     lines = wrapped(text.split(), RULES.model_copy(update={"max_chars": 12}))
     assert all(grapheme_length(line) <= 12 for line in lines)
     assert " ".join(lines) == text
