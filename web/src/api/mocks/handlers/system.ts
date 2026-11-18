@@ -1,5 +1,6 @@
 import { HttpResponse, http } from "msw";
-import { apiError, db, noContent, notFound } from "@/api/mocks/db";
+import { db, EMPTY_VALUE_MESSAGE, noContent, notFound, validationFailed } from "@/api/mocks/db";
+import { providerConfigErrors } from "@/api/mocks/providerRules";
 import type { AppSettingsInput, Dashboard, ProviderConfig } from "@/api/types";
 
 function dashboard(): Dashboard {
@@ -32,7 +33,7 @@ function setSecret(name: string, isSet: boolean) {
   db.state.secrets = db.state.secrets.map((s) => (s.name === name ? { ...s, is_set: isSet } : s));
   db.state.descriptors = db.state.descriptors.map((d) =>
     d.required_secrets.includes(name)
-      ? { ...d, available: isSet, unavailable_reason: isSet ? null : `Secret ${name} is not set.` }
+      ? { ...d, available: isSet, unavailable_reason: isSet ? "" : `Secret ${name} is not set.` }
       : d,
   );
 }
@@ -43,20 +44,25 @@ export const systemHandlers = [
   http.get("/api/pipelines", () => HttpResponse.json(db.state.pipelines)),
   http.get("/api/pipelines/:typeId", ({ params }) => {
     const pipeline = db.state.pipelines.find((p) => p.type_id === params.typeId);
-    return pipeline ? HttpResponse.json(pipeline) : notFound("Pipeline");
+    return pipeline ? HttpResponse.json(pipeline) : notFound("pipeline", params.typeId);
   }),
   http.get("/api/providers", () =>
     HttpResponse.json({ descriptors: db.state.descriptors, config: db.state.providerConfig }),
   ),
   http.put("/api/providers", async ({ request }) => {
-    db.state.providerConfig = (await request.json()) as ProviderConfig[];
-    return HttpResponse.json(db.state.providerConfig);
+    const configs = (await request.json()) as ProviderConfig[];
+    const errors = providerConfigErrors(configs, db.state.descriptors);
+    if (Object.keys(errors).length > 0) {
+      return validationFailed(errors);
+    }
+    db.state.providerConfig = configs;
+    return HttpResponse.json(configs);
   }),
   http.get("/api/secrets", () => HttpResponse.json(db.state.secrets)),
   http.put("/api/secrets/:name", async ({ params, request }) => {
     const { value } = (await request.json()) as { value: string };
     if (value === "") {
-      return apiError(400, "validation_error", "A value is required.", { value: "Enter a value." });
+      return validationFailed({ value: EMPTY_VALUE_MESSAGE });
     }
     setSecret(String(params.name), true);
     return noContent();

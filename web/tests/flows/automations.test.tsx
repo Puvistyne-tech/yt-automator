@@ -20,6 +20,10 @@ describe("Automations list", () => {
     expect(shorts.getByText("Every 6 hours")).toBeInTheDocument();
     const festival = await findRow("Automations", "Festival specials");
     expect(festival.getByText("Paused")).toBeInTheDocument();
+    expect(
+      festival.getByRole("link", { name: "Reconnect Kutty Classics to keep publishing." }),
+    ).toHaveAttribute("href", "/channels");
+    expect(row.queryByText(/to keep publishing/)).not.toBeInTheDocument();
   });
 
   it("shows an empty state with a call to action when there are none", async () => {

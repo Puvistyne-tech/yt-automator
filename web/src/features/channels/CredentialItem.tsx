@@ -1,17 +1,15 @@
-import { useConnectChannel } from "@/api/channels";
-import type { CredentialSummary } from "@/api/types";
-import { useMutationNotifier } from "@/api/useMutationNotifier";
+import type { CredentialView } from "@/api/types";
+import { useStartConnect } from "@/features/channels/useStartConnect";
 import { formatNumber } from "@/shared/format/numbers";
-import { useExternalNavigate } from "@/shared/hooks/externalNavigation";
 import { Badge, Button, IconButton, ProgressMeter } from "@/shared/ui";
 
 interface CredentialItemProps {
-  credential: CredentialSummary;
+  credential: CredentialView;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-function CredentialSummaryBlock({ credential }: { credential: CredentialSummary }) {
+function CredentialViewBlock({ credential }: { credential: CredentialView }) {
   return (
     <div className="credential-main">
       <div className="row">
@@ -27,7 +25,7 @@ function CredentialSummaryBlock({ credential }: { credential: CredentialSummary 
   );
 }
 
-function CredentialQuota({ credential }: { credential: CredentialSummary }) {
+function CredentialQuota({ credential }: { credential: CredentialView }) {
   const used = credential.quota_used_today;
   const limit = credential.daily_quota_units;
   return (
@@ -43,24 +41,17 @@ function CredentialQuota({ credential }: { credential: CredentialSummary }) {
 }
 
 function CredentialActions({ credential, onEdit, onDelete }: CredentialItemProps) {
-  const connect = useConnectChannel();
-  const navigateExternal = useExternalNavigate();
-  const notifier = useMutationNotifier();
-  const start = () =>
-    connect.mutate(credential.id, {
-      onSuccess: ({ authorization_url }) => navigateExternal(authorization_url),
-      onError: notifier.fail,
-    });
+  const connect = useStartConnect();
   return (
     <div className="credential-actions">
       <Button
         size="sm"
         variant="primary"
         icon="link"
-        loading={connect.isPending}
+        loading={connect.pending}
         disabled={!credential.has_secret}
         title={credential.has_secret ? undefined : "Add the client secret first"}
-        onClick={start}
+        onClick={() => connect.start(credential.id)}
       >
         Connect channel
       </Button>
@@ -78,7 +69,7 @@ function CredentialActions({ credential, onEdit, onDelete }: CredentialItemProps
 export function CredentialItem(props: CredentialItemProps) {
   return (
     <li className="credential divided-list-item">
-      <CredentialSummaryBlock credential={props.credential} />
+      <CredentialViewBlock credential={props.credential} />
       <CredentialQuota credential={props.credential} />
       <CredentialActions {...props} />
     </li>

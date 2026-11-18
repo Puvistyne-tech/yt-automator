@@ -1,25 +1,33 @@
-import type { LogLine, Run } from "@/api/types";
+import type { LogLevel, Run, RunLog } from "@/api/types";
+import { humanizeId } from "@/shared/format/text";
 
-export function stageLines(run: Run): LogLine[] {
-  return run.stages.flatMap((stage) =>
-    stage.message && stage.finished_at
-      ? [
-          {
-            at: stage.finished_at,
-            message: stage.message,
-            level: stage.status === "failed" ? "error" : "info",
-            stage_id: stage.stage_id,
-          },
-        ]
-      : [],
-  );
+export interface LogRow {
+  key: string;
+  at: string;
+  level: LogLevel;
+  stage: string;
+  message: string;
 }
 
-const lineKey = (line: LogLine) => `${line.stage_id}|${line.message}`;
+const RUN_STAGE_LABEL = "Run";
 
-export function mergeLogLines(stage: LogLine[], live: LogLine[]): LogLine[] {
-  const seen = new Set(live.map(lineKey));
-  return [...stage.filter((line) => !seen.has(lineKey(line))), ...live].sort((a, b) =>
-    a.at.localeCompare(b.at),
-  );
+function stageLabel(run: Run, stageId: string | null): string {
+  if (stageId === null) {
+    return RUN_STAGE_LABEL;
+  }
+  return run.stages.find((stage) => stage.stage_id === stageId)?.title ?? humanizeId(stageId);
+}
+
+function rowOf(run: Run, log: RunLog, index: number): LogRow {
+  return {
+    key: `${index}|${log.at}`,
+    at: log.at,
+    level: log.level,
+    stage: stageLabel(run, log.stage_id),
+    message: log.message,
+  };
+}
+
+export function logRows(run: Run): LogRow[] {
+  return run.logs.map((log, index) => rowOf(run, log, index));
 }

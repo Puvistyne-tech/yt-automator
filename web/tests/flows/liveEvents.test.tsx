@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import { keys } from "@/api/keys";
 import { db } from "@/api/mocks/db";
 import type { JsonObject, RunEvent } from "@/api/types";
@@ -61,16 +61,26 @@ describe("Live run events", () => {
     expect(await screen.findByText("Live updates on")).toBeInTheDocument();
   });
 
-  it("applies status and log events to the open run", async () => {
+  it("shows stored logs and appends live ones with their stage and level", async () => {
     const { user } = renderApp("/runs/run-live");
     await screen.findByRole("heading", { level: 1 });
     act(() => latest().onopen?.());
+    await user.click(screen.getByRole("tab", { name: "Logs" }));
+    const log = screen.getByRole("log", { name: "Run log" });
+    expect(within(log).getByText("Story written in English and Tamil")).toBeInTheDocument();
 
     latest().emit(
-      event("log", { message: "Painting scene 3 of 8", level: "info", stage_id: "visuals" }),
+      event("log", { message: "Scene 3 looks dark", level: "warning", stage_id: "images" }),
     );
-    await user.click(screen.getByRole("tab", { name: "Logs" }));
-    expect(screen.getByText("Painting scene 3 of 8")).toBeInTheDocument();
+    const line = (await screen.findByText("Scene 3 looks dark")).closest(".log-line");
+    expect(line).toHaveAttribute("data-level", "warning");
+    expect(line).toHaveTextContent("Illustrate scenes");
+  });
+
+  it("applies status events to the open run", async () => {
+    renderApp("/runs/run-live");
+    await screen.findByRole("heading", { level: 1 });
+    act(() => latest().onopen?.());
 
     db.state.runs = db.state.runs.map((r) =>
       r.id === "run-live" ? { ...r, status: "failed" } : r,
@@ -114,26 +124,6 @@ describe("Live run events", () => {
 
     expect(await screen.findByText("Live updates on")).toBeInTheDocument();
     expect(invalidate).not.toHaveBeenCalledWith({ queryKey: keys.runs });
-  });
-
-  it("keeps only the newest log lines", async () => {
-    const { client } = renderApp("/runs/run-live");
-    await screen.findByRole("heading", { level: 1 });
-    const source = latest();
-
-    act(() => {
-      for (let index = 0; index <= 2000; index += 1) {
-        source.onmessage?.(
-          new MessageEvent("message", {
-            data: JSON.stringify(event("log", { message: `line ${index}` })),
-          }),
-        );
-      }
-    });
-
-    const lines = client.getQueryData<{ message: string }[]>(keys.runLogs("run-live")) ?? [];
-    expect(lines).toHaveLength(2000);
-    expect(lines[0]?.message).toBe("line 1");
   });
 
   it("closes the stream when the app unmounts", () => {

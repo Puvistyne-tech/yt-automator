@@ -67,9 +67,9 @@ describe("Automation editor: create", () => {
 
   it("shows server field errors on the matching inputs", async () => {
     failWith("post", "/automations", 400, {
-      code: "validation_error",
-      message: "The automation is not valid.",
-      fields: { "body.targets[0].channel_id": "Channel was disconnected." },
+      code: "validation_failed",
+      message: "Validation failed",
+      fields: { "targets.0.channel_id": "Channel was disconnected." },
     });
     const { user, general } = await openNew();
 
@@ -77,7 +77,7 @@ describe("Automation editor: create", () => {
     await user.click(sectionByName("Targets").getByRole("button", { name: "Add target" }));
     await user.click(screen.getByRole("button", { name: "Create automation" }));
 
-    await findToast("The automation is not valid.");
+    await findToast("Validation failed");
     expect(await targetRow(1).findByText("Channel was disconnected.")).toBeInTheDocument();
     expect(targetRow(1).getByLabelText(/^Channel/)).toHaveAttribute("aria-invalid", "true");
 
@@ -195,6 +195,6 @@ describe("Automation editor: edit", () => {
   it("shows an error state for an unknown automation", async () => {
     renderApp("/automations/missing");
 
-    expect(await screen.findByText("Automation was not found.")).toBeInTheDocument();
+    expect(await screen.findByText("automation 'missing' was not found")).toBeInTheDocument();
   });
 });

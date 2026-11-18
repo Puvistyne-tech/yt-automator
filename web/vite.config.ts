@@ -5,10 +5,14 @@ import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
 const backendOrigin = process.env.AUTOMATOR_API_ORIGIN ?? "http://127.0.0.1:8000";
+const servedFrom = "/";
+const buildDir = "dist";
 
 export default defineConfig(({ mode }) => {
   const useMocks = loadEnv(mode, process.cwd(), "VITE_").VITE_USE_MOCKS === "1";
   return {
+    base: servedFrom,
+    build: { outDir: buildDir, emptyOutDir: true },
     plugins: useMocks ? [react(), msw({ mode: "worker-only" })] : [react()],
     resolve: {
       alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },

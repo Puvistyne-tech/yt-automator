@@ -1,3 +1,4 @@
+import { needsReconnect } from "@/api/channelHealth";
 import { CHANNEL_STATUSES, PRIVACY_LABELS, PRIVACY_OPTIONS } from "@/api/labels";
 import type { Channel, PipelineDescriptor } from "@/api/types";
 import {
@@ -118,4 +119,11 @@ export function kidsFromValue(value: string): boolean | null {
 export function privacyOptions(channel: Channel | undefined): SelectOption[] {
   const fallback = channel ? ` (${PRIVACY_LABELS[channel.defaults.privacy]})` : "";
   return [{ value: "", label: `Channel default${fallback}` }, ...PRIVACY_OPTIONS];
+}
+
+export function targetChannelWarning(channel: Channel | undefined): string | null {
+  if (channel === undefined || !needsReconnect(channel)) {
+    return null;
+  }
+  return `${channel.title} needs reconnecting on the Channels page before runs can publish to it.`;
 }

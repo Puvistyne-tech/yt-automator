@@ -42,7 +42,7 @@ export interface ProviderDescriptor {
   required_secrets: string[];
   offline: boolean;
   available: boolean;
-  unavailable_reason: string | null;
+  unavailable_reason: string;
 }
 
 export interface ProvidersResponse {
