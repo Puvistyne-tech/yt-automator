@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pydantic import JsonValue
+
 from automator.domain.artifact_selection import VideoMetadata, video_metadata
 from automator.domain.channels import ChannelDefaults
 from automator.domain.run_enums import ArtifactKind
@@ -13,7 +15,7 @@ from automator.domain.upload_details import (
 DEFAULTS = ChannelDefaults(category_id="22", default_language="en")
 
 
-def metadata_artifact(**meta: object) -> Artifact:
+def metadata_artifact(**meta: JsonValue) -> Artifact:
     return Artifact(
         id="m",
         kind=ArtifactKind.METADATA,
