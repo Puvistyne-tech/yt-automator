@@ -1,0 +1,40 @@
+{
+  "abbreviations": {
+    "Mr.": "Mister",
+    "Mrs.": "Missus",
+    "Ms.": "Miss",
+    "Dr.": "Doctor",
+    "St.": "Saint",
+    "e.g.": "for example",
+    "i.e.": "that is",
+    "etc.": "and so on",
+    "vs.": "versus",
+    "km": "kilometres",
+    "kg": "kilograms",
+    "cm": "centimetres"
+  },
+  "symbols": {
+    "&": "and",
+    "%": "percent",
+    "+": "plus",
+    "=": "equals",
+    "@": "at",
+    "°": "degrees",
+    "₹": "rupees",
+    "$": "dollars",
+    "#": "number",
+    "×": "times"
+  },
+  "numbers": {
+    "units": ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"],
+    "tens": ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"],
+    "tens_prefix": ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"],
+    "tens_joiner": "-",
+    "hundreds": ["", "one hundred", "two hundred", "three hundred", "four hundred", "five hundred", "six hundred", "seven hundred", "eight hundred", "nine hundred"],
+    "hundreds_prefix": ["", "one hundred and", "two hundred and", "three hundred and", "four hundred and", "five hundred and", "six hundred and", "seven hundred and", "eight hundred and", "nine hundred and"],
+    "thousand": "thousand",
+    "thousand_prefix": "thousand",
+    "one_thousand": "one thousand",
+    "one_thousand_prefix": "one thousand"
+  }
+}
