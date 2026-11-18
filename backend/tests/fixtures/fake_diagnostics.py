@@ -61,5 +61,5 @@ def run_doctor(facts: SystemFacts | None = None, secrets: SecretStore | None = N
         catalog=FakeProviderCatalog(),
         secrets=secrets or InMemorySecrets(),
         inspector=FakeInspector(facts),
-        policy=DoctorPolicy(),
+        policy=DoctorPolicy,
     )

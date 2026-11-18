@@ -58,7 +58,8 @@ Run             id, automation_id, automation_name, pipeline_type, status, trigg
                 artifacts: [Artifact], score (nullable),
                 score_details: [ScoreItem], review (nullable), uploads: [Upload], logs: [RunLog],
                 error (nullable),
-                created_at, started_at, finished_at
+                created_at, started_at, finished_at,
+                intermediate_removed_at (nullable: when the cleanup removed its working files)
                 status: queued | running | awaiting_review | approved | rejected | publishing |
                         published | failed | cancelled
 StageRun        stage_id, title, status: pending|running|done|failed|skipped, provider, message,
@@ -81,7 +82,20 @@ ProviderConfig  capability, chain: [ProviderChoice]
 ProviderChoice  provider_id, enabled, options (object)
 ProviderDescriptor  provider_id, capability, name, description, options_schema, required_secrets: [name],
                     offline: bool, available: bool, unavailable_reason
-AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, data_dir (read-only)
+AppSettings     timezone = "UTC", max_parallel_runs = 1 (>= 1), keep_runs_days = 30 (>= 0),
+                keep_intermediate_days = 0 (>= 0), auto_cleanup_enabled = false,
+                cleanup_interval_hours = 24 (>= 0, whole hours),
+                caption_track_name = "", max_run_log_entries = 2000 (>= 1),
+                log_level: debug | info | warning | error | critical = info,
+                doctor_min_free_gb = 10 (>= 0),
+                data_dir (read-only), locked: {field: reason} (read-only),
+                restart_required: [field] (read-only, ["log_level"])
+StorageReport   data_dir, data_dir_bytes, free_bytes (nullable), disk_bytes (nullable), final_bytes,
+                intermediate_bytes, orphan_bytes, other_bytes, automations: [AutomationUsage]
+AutomationUsage automation_id, automation_name, runs, final_bytes, intermediate_bytes
+CleanupReport   dry_run, keep_runs_days, keep_intermediate_days, items: [CleanupItem], total_bytes
+CleanupItem     run_id, action: delete_run | remove_intermediate | remove_orphan,
+                automation_id (nullable), automation_name, status (nullable), finished_at (nullable), bytes
 
 DoctorReport    can_start: bool, checks: [HealthCheck], capabilities: [HealthCheck],
                 providers: [ProviderHealth], missing_secrets: [SecretDefinition]
@@ -90,7 +104,7 @@ ProviderHealth  provider_id, capability, name, available, reason
 SystemFacts     python_version, data_dir, data_dir_writable, free_bytes (nullable), ffmpeg_version,
                 ffprobe_version ("" when missing), database_path, database_revision (nullable),
                 database_head (nullable), database_revision_known, database_error, web_dist_dir, ui_built
-DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_min_free_gb`)
+DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_free_gb`)
 ```
 
 ### Rules
@@ -185,6 +199,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
 - A run snapshots the automation's settings, languages, review policy and retry policy at creation. Editing or deleting the automation never changes a past or queued run.
 - Stage order is the pipeline's. A stage failure fails the run. A retry re-runs from a chosen stage and keeps earlier artifacts.
 - Retry is allowed from `failed`, `cancelled`, `awaiting_review`, `approved` and `rejected`. It re-queues the run and clears its score, score details, review and uploads.
+  Once the cleanup removed a run's working files (`intermediate_removed_at` set), a retry without a stage
+  starts from the first stage, a retry from any later stage is refused with 409 `intermediate_files_removed`,
+  and a retry clears `intermediate_removed_at`.
 - Cancel is allowed from `queued`, `running`, `awaiting_review` and `approved`. A stage that fails after the run was cancelled is recorded as failed, but the run stays `cancelled` without an error.
 - A worker records a stage result only while the stored run is `running` or `cancelled`, onto the stored run.
   If the run was retried meanwhile, the result is dropped and its unreferenced files are discarded; if the run
@@ -192,7 +209,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   is applied to the stored run through `RunRepository.update`, so concurrent cancel and retry are never lost.
   A retry that arrives while the old worker is still busy runs once that worker returns.
 - Every `context.log(message, level)` call is stored on the run as a RunLog and published as a `log` event.
-  A run keeps only its newest `max_run_log_entries` entries (runtime setting, default 2000); older entries are dropped. Every entry is still published as an event.
+  A run keeps only its newest `max_run_log_entries` entries (app setting, default 2000, read at every
+  log call); older entries are dropped. Every entry is still published as an event.
 - Deleting a `queued`, `running` or `publishing` run is refused; cancel it first.
 - After the last stage the run is scored, then becomes `awaiting_review`, or `approved` directly when the policy is `auto_when_score_at_least` and the score reaches `min_score`.
 - When `reject_below` is set and the score is below it, the run becomes `rejected` instead, whatever the mode. Its
@@ -297,20 +315,77 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   the key already created uses it, and a store opened before the key existed reloads it from disk.
 - A keychain that cannot be used (locked, or access denied) raises the same 409 `secrets_unreadable`
   as an unreadable secrets file; the message names the keychain error type, never a value.
+- App settings come from three places, strongest first: an `AUTOMATOR_*` environment variable that is set
+  (`AUTOMATOR_YOUTUBE_CAPTION_TRACK_NAME`, `AUTOMATOR_MAX_RUN_LOG_ENTRIES`, `AUTOMATOR_LOG_LEVEL`,
+  `AUTOMATOR_DOCTOR_MIN_FREE_GB`, `AUTOMATOR_CLEANUP_INTERVAL_HOURS`), the stored value, the default.
+  A field set by the environment is listed in `locked` with the reason naming the variable. `PUT /settings`
+  changes only the fields it sends; a field left out keeps its current value. Saving a locked
+  field with a value other than the environment's is a 400 naming the field; saving it unchanged keeps the
+  stored value underneath, which applies again once the variable is unset. Settings stored before a field
+  existed load with that field's default, and unknown stored keys (such as an old `data_dir`) are ignored.
+- Every app setting applies without a restart except the fields in `restart_required`: `log_level` sets the
+  `automator` loggers when the app starts. The caption track name is read at each caption upload, the run
+  log cap at each log call, the doctor threshold at each doctor report, the cleanup interval at each
+  scheduler tick and `max_parallel_runs` at each worker poll. Tuning internals (tick and poll intervals,
+  queue sizes, chunk sizes, database timeouts) stay environment-only. Secrets are never app settings.
+- Retention. Final outputs are artifacts of kind `video`, `thumbnail`, `subtitle` or `metadata` that have a
+  language; every other artifact and the run's workspace are working files. A run's age counts from
+  `finished_at`, or `created_at` when it has none.
+  - The cleanup never touches a run that is `queued`, `running`, `awaiting_review`, `approved` or
+    `publishing`, nor a `failed` run with a pending `retry_at` (it is still unfinished), nor a run with a
+    `pending` or `uploading` upload, nor one with an upload whose `publish_at` is still in the future.
+  - Uploads stored before `publish_at` existed do not say whether they were scheduled. A `done` upload
+    without `publish_at` whose privacy is `public` or unknown holds its run until the latest time it could
+    have gone public under its target's current rule: with `publish_time_of_day`, the next such time in
+    `publish_timezone` after `finished_at`; otherwise `finished_at` plus `publish_delay_minutes`. When the
+    target no longer exists or its time zone is unknown the release time cannot be known and the run is kept
+    until it is deleted by hand. Private and unlisted uploads never hold a run.
+  - Any other run that is at least `keep_runs_days` days old is deleted together with its folder.
+  - Any other run that is at least `keep_intermediate_days` days old (and younger than `keep_runs_days`)
+    loses its working files: the run, its logs and its final outputs stay, its other artifacts leave
+    `artifacts`, `intermediate_removed_at` is set once, and a log entry says how much was freed.
+  - A folder under `runs/` with no run is a stray folder and is removed. Only real folders directly under
+    `runs/` with an opaque id as their name count: a symbolic link is never a run folder, an `artifacts`
+    link inside a run is not followed, and a link inside a run folder is removed without following it, so
+    nothing outside `runs/` is measured or removed.
+  - A run folder that is still there after its removal is a failure, not bytes freed.
+  - 0 days keeps runs, or working files, forever.
+  - Each removal re-checks the stored run in the same transaction as its database change, so a run that was
+    retried, reviewed or published since the plan is left alone. Working files are removed only after the
+    run is read again and is still pruned and finished, so a run retried in between keeps its files.
+  - Database first, then disk: a deleted run's row goes before its folder, and pruned artifacts leave the
+    row before their files. A crash in between leaves only files that the next cleanup finds (a stray
+    folder, or working files of a pruned run) and removes, so there is never a row pointing at missing
+    files. Folders are listed before rows, so a folder of a run created during the cleanup is never stray.
+  - Running the cleanup twice removes nothing the second time. Every removal is logged with its size; a
+    removal that fails is logged and skipped, and the rest continue.
+  - The automatic cleanup is off until `auto_cleanup_enabled` is switched on, so an upgrade never deletes a
+    run on its own. While it is on, the scheduler runs the cleanup on its next tick and then every
+    `cleanup_interval_hours`; 0 also keeps it off. `POST /storage/cleanup` runs it at once; `GET /storage/cleanup` is a dry run that
+    reports the same items and sizes and removes nothing.
+- Storage. `GET /storage` measures the data folder on disk: its total size, final outputs and working files
+  per automation (runs grouped by `automation_id`, largest first), stray folders, everything else
+  (`other_bytes`: the database, secrets and other files), and the disk's size and free space, the same
+  free space the doctor's `disk_space` check reads. Sizes are unknown (null) when the disk cannot be read.
 - Made-for-kids on a target can only be forced on by a pipeline that declares the capability `kids_content`; such a pipeline's targets are always made for kids.
 
 ## Ports (`domain/ports.py`)
 
 `CredentialRepository`, `AutomationRepository` (get, list, save, delete),
 `RunRepository` (get, list, save, delete, update(run_id, change) -> the saved run, or None when the run is
-missing or `change` returns None; the read and the write happen in one transaction),
+missing or `change` returns None; the read and the write happen in one transaction;
+delete_if(run_id, check) -> the deleted run, or None when it is missing or `check` refuses it, in one transaction),
 `ChannelRepository` (get, find_by_youtube_id, list, save, delete), `ProviderConfigRepository` (list, save_all),
 `AppSettingsRepository` (get, save), `QuotaLedger` (used_today(credential_id, day), record(credential_id, units, day)),
 `SecretStore` (get, set, delete, has), `Clock` (now), `IdGenerator` (new), `PipelineRegistry` (list, get),
 `ProviderCatalog` (descriptors, secrets, option_errors(configs) -> {path: message},
 resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
 exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
-`ArtifactStore` (workspace for a run, save, open, discard one artifact, delete run), `RunQueue` (enqueue, cancel),
+`ArtifactStore` (workspace for a run, save, open, discard one artifact, delete run),
+`RunFileStore` (run_ids on disk, usage(run_id, final_ids) -> FileUsage, remove_intermediate(run_id, final_ids)
+-> bytes freed, delete_run(run_id) -> bytes freed or a failure when the folder is still there,
+disk() -> DiskSpace; every removal is idempotent and never follows a symbolic link out of `runs/`),
+`RunQueue` (enqueue, cancel),
 `RunEvents` (publish, subscribe), `ScheduleCalculator` (next_run_at(schedule, after, started_on) where
 `started_on(local date) -> int` counts the automation's runs created that day in the schedule's zone),
 `SystemInspector` (facts() -> SystemFacts: Python, data directory, free space, ffmpeg and ffprobe
@@ -459,7 +534,10 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | PUT `/secrets/{name}` | `{value}` | 204 |
 | DELETE `/secrets/{name}` | | 204 |
 | GET `/settings` | | AppSettings |
-| PUT `/settings` | AppSettings without `data_dir` | AppSettings |
+| PUT `/settings` | any AppSettings fields; fields left out keep their value; `data_dir`, `locked` and `restart_required` are ignored | AppSettings, 400 with field errors |
+| GET `/storage` | | StorageReport |
+| GET `/storage/cleanup` | | CleanupReport with `dry_run: true`; removes nothing |
+| POST `/storage/cleanup` | | CleanupReport with `dry_run: false` and what was removed |
 
 `AutomationInput` is Automation without `id`, timestamps and derived fields. Target `id` is optional on input.
 
@@ -497,6 +575,15 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   automatic events, by the message prefixes in `docs/spec/automatic-events.json`; backend and web tests both
   check those sample messages against their builders. Cancel is offered for the statuses the Rules allow. When the run's
   automation was deleted, the header says so instead of linking to it.
+- Settings: three groups. General (timezone, parallel runs, caption track name), Storage and cleanup (the
+  storage card with disk use per automation, final outputs versus working files and free space; keep runs,
+  keep working files, the "Clean up automatically" switch (off by default) with its interval; "Clean up
+  now", which works whether or not the switch is on), Logging and diagnostics (log entries per run, log
+  level, free disk space warning, data folder). Every field has help text; a field in `restart_required`
+  says "Applies after restart"; a locked field is read-only and shows its reason. Client-side checks mirror
+  the schema and server field errors show on their fields. "Clean up now" opens a confirmation listing the
+  dry run (each run, what happens to it, its size, and the total); confirming runs the cleanup and a toast
+  reports what was freed; cancelling removes nothing.
 - Channels: credentials and their quota meters, connect flow, per-channel defaults, disconnect.
 - Providers: per capability, an ordered chain with enable switches and options forms; secrets with set/clear.
 - Every list has loading, empty and error states. Every destructive action asks for confirmation.

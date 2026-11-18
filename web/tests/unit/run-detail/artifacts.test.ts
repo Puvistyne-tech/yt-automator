@@ -5,10 +5,10 @@ import {
   finalOutputs,
   groupArtifacts,
   intermediateByStage,
-  isFinalOutput,
   isTallArtifact,
   splitArtifacts,
 } from "@/features/run-detail/artifacts";
+import { isFinalOutput } from "@/shared/artifacts";
 import { itemAt } from "../../helpers/itemAt";
 
 describe("groupArtifacts", () => {

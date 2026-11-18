@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from automator.application.lookups import require
 from automator.domain.model_base import JsonObject
-from automator.domain.ports import Clock, RunChange, RunEvents, RunRepository
+from automator.domain.ports import Clock, RunChange, RunCheck, RunEvents, RunRepository
 from automator.domain.run_edits import with_artifacts, with_stage, with_upload
 from automator.domain.run_enums import LogLevel, RunEventKind
 from automator.domain.run_parts import Artifact, RunLog, RunLogPolicy, StageRun, Upload
 from automator.domain.runs import Run, RunEvent
 
-RunCheck = Callable[[Run], bool]
+LogPolicySource = Callable[[], RunLogPolicy]
 
 
 @dataclass(frozen=True)
@@ -19,7 +19,7 @@ class RunRecorder:
     runs: RunRepository
     events: RunEvents
     clock: Clock
-    log_policy: RunLogPolicy = field(default_factory=RunLogPolicy)
+    log_policy: LogPolicySource = RunLogPolicy
 
     def emit(self, run_id: str, kind: RunEventKind, payload: JsonObject) -> None:
         self.events.publish(
@@ -81,4 +81,4 @@ class RunRecorder:
         self.emit(run_id, RunEventKind.LOG, entry.model_dump(mode="json", exclude={"at"}))
 
     def logged(self, stored: Run, entry: RunLog) -> Run:
-        return stored.model_copy(update={"logs": self.log_policy.appended(stored.logs, entry)})
+        return stored.model_copy(update={"logs": self.log_policy().appended(stored.logs, entry)})

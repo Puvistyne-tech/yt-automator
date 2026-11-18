@@ -40,6 +40,7 @@ OVERRIDES: list[tuple[str, str, Any]] = [
     ("max_run_log_entries", "50", 50),
     ("log_level", "debug", "debug"),
     ("doctor_min_free_gb", "2.5", 2.5),
+    ("cleanup_interval_hours", "6", 6),
     ("doctor_tool_timeout_seconds", "1.5", 1.5),
 ]
 DEFAULTS: dict[str, Any] = {
@@ -66,6 +67,7 @@ DEFAULTS: dict[str, Any] = {
     "max_run_log_entries": 2000,
     "log_level": "info",
     "doctor_min_free_gb": 10.0,
+    "cleanup_interval_hours": 24,
     "doctor_tool_timeout_seconds": 5.0,
 }
 
@@ -153,6 +155,8 @@ def test_empty_cors_origins_allow_none() -> None:
         ("max_run_log_entries", "0"),
         ("doctor_min_free_gb", "-1"),
         ("doctor_tool_timeout_seconds", "0"),
+        ("log_level", "loud"),
+        ("cleanup_interval_hours", "-1"),
     ],
 )
 def test_invalid_values_are_rejected(field: str, raw: str) -> None:

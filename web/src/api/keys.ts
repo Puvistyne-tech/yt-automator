@@ -19,6 +19,8 @@ export const keys = {
   providers: ["providers"] as const,
   secrets: ["secrets"] as const,
   settings: ["settings"] as const,
+  storage: ["storage"] as const,
+  cleanupPreview: ["storage", "cleanup"] as const,
 };
 
 export function invalidateWithDashboard(

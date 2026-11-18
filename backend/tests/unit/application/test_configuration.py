@@ -13,7 +13,6 @@ from automator.application.save_settings import SaveSettings
 from automator.application.set_secret import SetSecret
 from automator.domain.capabilities import Capability
 from automator.domain.providers import ProviderChoice, ProviderConfig
-from automator.domain.settings import AppSettingsInput
 from automator.shared.errors import NotFound, ValidationFailed
 from tests.fixtures.harness import Harness
 
@@ -103,7 +102,7 @@ def test_unknown_secret_names_are_not_found(harness: Harness, action: str) -> No
 
 def test_settings_round_trip_keeps_data_dir(harness: Harness) -> None:
     saved = SaveSettings(harness.app_settings).execute(
-        AppSettingsInput(timezone="Asia/Kolkata", max_parallel_runs=2, keep_runs_days=7)
+        {"timezone": "Asia/Kolkata", "max_parallel_runs": 2, "keep_runs_days": 7}
     )
     assert GetSettings(harness.app_settings).execute() == saved
     assert saved.data_dir == "/tmp/automator" and saved.timezone == "Asia/Kolkata"
@@ -111,7 +110,7 @@ def test_settings_round_trip_keeps_data_dir(harness: Harness) -> None:
 
 def test_settings_reject_unknown_timezone(harness: Harness) -> None:
     with pytest.raises(ValidationFailed) as raised:
-        SaveSettings(harness.app_settings).execute(AppSettingsInput(timezone="Moon/Base"))
+        SaveSettings(harness.app_settings).execute({"timezone": "Moon/Base"})
     assert set(raised.value.fields) == {"timezone"}
 
 

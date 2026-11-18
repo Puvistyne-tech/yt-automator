@@ -1,27 +1,46 @@
 import type { FieldErrors } from "@/api/errors";
-import type { AppSettings, AppSettingsInput } from "@/api/types";
+import { SETTING_MINIMUMS, settingsInput } from "@/api/settingsFields";
+import type { AppSettingName, AppSettings, AppSettingsInput } from "@/api/types";
 import { isIntegerAtLeast } from "@/shared/format/numbers";
 
-export function settingsInput(settings: AppSettings): AppSettingsInput {
-  return {
-    timezone: settings.timezone,
-    max_parallel_runs: settings.max_parallel_runs,
-    keep_runs_days: settings.keep_runs_days,
-  };
+export { settingsInput };
+
+function unitText(name: AppSettingName): string {
+  if (name.endsWith("_days")) {
+    return " of days";
+  }
+  return name.endsWith("_hours") ? " of hours" : "";
 }
 
-export function validateSettings(input: AppSettingsInput): FieldErrors {
+export function minimumMessage(name: AppSettingName, minimum: number): string {
+  const bound = minimum === 0 ? "0 or more" : `at least ${minimum}`;
+  return `Use a whole number${unitText(name)}, ${bound}.`;
+}
+
+const WHOLE_NUMBERS = Object.entries(SETTING_MINIMUMS) as [AppSettingName, number][];
+
+function numberValue(input: AppSettingsInput, name: AppSettingName): number | null {
+  const value = input[name];
+  return typeof value === "number" ? value : null;
+}
+
+export function validateSettings(
+  input: AppSettingsInput,
+  locked: AppSettings["locked"] = {},
+): FieldErrors {
   const errors: FieldErrors = {};
   if (input.timezone.trim() === "") {
     errors.timezone = "Choose a timezone.";
   }
-  if (!isIntegerAtLeast(input.max_parallel_runs, 1)) {
-    errors.max_parallel_runs = "Use a whole number, at least 1.";
+  for (const [name, minimum] of WHOLE_NUMBERS) {
+    if (!isIntegerAtLeast(numberValue(input, name), minimum)) {
+      errors[name] = minimumMessage(name, minimum);
+    }
   }
-  if (!isIntegerAtLeast(input.keep_runs_days, 1)) {
-    errors.keep_runs_days = "Keep runs for at least 1 day.";
+  if (!(input.doctor_min_free_gb >= 0)) {
+    errors.doctor_min_free_gb = "Use a number, 0 or more.";
   }
-  return errors;
+  return Object.fromEntries(Object.entries(errors).filter(([name]) => !(name in locked)));
 }
 
 export function settingsChanged(input: AppSettingsInput, settings: AppSettings): boolean {

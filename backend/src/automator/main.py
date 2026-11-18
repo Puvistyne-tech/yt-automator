@@ -14,19 +14,10 @@ from automator.api.app import build_api
 from automator.api.container import ApiOptions, UseCases
 from automator.api.spa import mount_web_ui
 from automator.application.run_doctor import RunDoctor
+from automator.composition.overrides import Overrides as Overrides
 from automator.composition.ports import Ports
 from automator.composition.use_cases import build_use_cases
-from automator.domain.ports import (
-    Clock,
-    IdGenerator,
-    PipelineRegistry,
-    ProviderCatalog,
-    RunEvents,
-    SecretStore,
-    SystemInspector,
-    YouTubeGateway,
-)
-from automator.domain.run_parts import RunLogPolicy
+from automator.domain.ports import AppSettingsRepository, SecretStore
 from automator.infrastructure.config import RuntimeConfig, load_config
 from automator.infrastructure.db.database import Database
 from automator.infrastructure.db.entity_repositories import (
@@ -50,24 +41,14 @@ from automator.infrastructure.runtime.system import RandomIds, SystemClock, pack
 from automator.infrastructure.runtime.worker_pool import WorkerPoolQueue
 from automator.infrastructure.scheduling.schedule_calculator import StandardScheduleCalculator
 from automator.infrastructure.secrets.selection import build_secret_store
+from automator.infrastructure.settings_env import settings_overrides
 from automator.infrastructure.storage.artifact_store import FileArtifactStore
+from automator.infrastructure.storage.run_storage import FileRunStorage
 from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
 from automator.infrastructure.youtube.settings import youtube_settings
 from automator.pipelines.registry import installed_pipelines
 
 logger = logging.getLogger("automator")
-
-
-@dataclass(frozen=True)
-class Overrides:
-    youtube: YouTubeGateway | None = None
-    catalog: ProviderCatalog | None = None
-    pipelines: PipelineRegistry | None = None
-    secrets: SecretStore | None = None
-    clock: Clock | None = None
-    ids: IdGenerator | None = None
-    events: RunEvents | None = None
-    inspector: SystemInspector | None = None
 
 
 @dataclass(frozen=True)
@@ -80,6 +61,7 @@ class Runtime:
     use_cases: UseCases
 
     def start(self) -> None:
+        logger.setLevel(self.ports.app_settings.get().log_level.upper())
         report = self.use_cases.runs.recover.execute()
         if report.total():
             logger.info("recovered %d interrupted runs", report.total())
@@ -93,8 +75,11 @@ class Runtime:
         self.database.dispose()
 
 
-def youtube_gateway(config: RuntimeConfig) -> GoogleYouTubeGateway:
-    return GoogleYouTubeGateway(youtube_settings(config))
+def youtube_gateway(
+    config: RuntimeConfig, settings: AppSettingsRepository | None = None
+) -> GoogleYouTubeGateway:
+    name = (lambda: settings.get().caption_track_name) if settings is not None else None
+    return GoogleYouTubeGateway(youtube_settings(config), caption_name=name)
 
 
 def secret_store(config: RuntimeConfig) -> SecretStore:
@@ -105,33 +90,38 @@ def build_doctor(environ: Mapping[str, str]) -> RunDoctor:
     config = load_config(environ)
     secrets = secret_store(config)
     catalog = build_provider_catalog(secrets, config.data_dir)
-    return RunDoctor(catalog, secrets, build_system_inspector(config), config.doctor_policy)
+    return RunDoctor(catalog, secrets, build_system_inspector(config), lambda: config.doctor_policy)
+
+
+def app_settings(config: RuntimeConfig, database: Database) -> SqlAppSettingsRepository:
+    return SqlAppSettingsRepository(database, str(config.data_dir), settings_overrides(config))
 
 
 def build_ports(
     config: RuntimeConfig, database: Database, queue: WorkerPoolQueue, overrides: Overrides
 ) -> Ports:
     secrets = overrides.secrets or secret_store(config)
+    settings = app_settings(config, database)
     return Ports(
         credentials=SqlCredentialRepository(database),
         channels=SqlChannelRepository(database),
         automations=SqlAutomationRepository(database),
         runs=SqlRunRepository(database),
         provider_configs=SqlProviderConfigRepository(database),
-        app_settings=SqlAppSettingsRepository(database, str(config.data_dir)),
+        app_settings=settings,
         ledger=SqlQuotaLedger(database),
         secrets=secrets,
         clock=overrides.clock or SystemClock(),
         ids=overrides.ids or RandomIds(),
         schedules=StandardScheduleCalculator(),
         store=FileArtifactStore(config.data_dir),
+        files=FileRunStorage(config.data_dir),
         queue=queue,
         events=overrides.events or InProcessRunEvents(config.event_queue_size),
         pipelines=overrides.pipelines or StaticPipelineRegistry(installed_pipelines()),
         catalog=overrides.catalog or build_provider_catalog(secrets, config.data_dir),
-        youtube=overrides.youtube or youtube_gateway(config),
+        youtube=overrides.youtube or youtube_gateway(config, settings),
         inspector=overrides.inspector or build_system_inspector(config),
-        run_logs=RunLogPolicy(max_entries=config.max_run_log_entries),
         doctor_policy=config.doctor_policy,
     )
 
@@ -139,13 +129,12 @@ def build_ports(
 def build_runtime(config: RuntimeConfig, overrides: Overrides) -> Runtime:
     database = Database(config.database_path, config.database_busy_timeout_ms)
     database.migrate()
-    settings = SqlAppSettingsRepository(database, str(config.data_dir))
+    settings = app_settings(config, database)
     queue = WorkerPoolQueue(lambda: settings.get().max_parallel_runs, config.worker_poll_seconds)
     ports = build_ports(config, database, queue, overrides)
     use_cases = build_use_cases(ports)
-    scheduler = SchedulerTicker(
-        use_cases.automations.scheduler.execute, ports.clock, config.scheduler_tick_seconds
-    )
+    ticks = (use_cases.automations.scheduler.execute, use_cases.storage.scheduled_cleanup.execute)
+    scheduler = SchedulerTicker(ticks, ports.clock, config.scheduler_tick_seconds)
     return Runtime(config, database, ports, queue, scheduler, use_cases)
 
 
@@ -191,7 +180,7 @@ def main() -> None:
         host=config.host,
         port=config.port,
         reload=config.reload,
-        log_level=config.log_level,
+        log_level=config.log_level.value,
     )
 
 

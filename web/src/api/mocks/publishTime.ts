@@ -23,7 +23,7 @@ function zonedInstant(wall: number, zone: string): number {
   return wall - (wallClock(guess, zone) - guess);
 }
 
-function nextLocalTime(now: number, time: string, zone: string): number {
+export function nextLocalTime(now: number, time: string, zone: string): number {
   const wallNow = wallClock(now, zone);
   const today = wallNow - (wallNow % DAY_MS) + minutesOfDay(time) * MINUTE_MS;
   const instant = zonedInstant(today, zone);

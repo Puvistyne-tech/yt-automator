@@ -71,27 +71,3 @@ def test_secrets_are_set_and_cleared_without_echo(api: Api, secrets: InMemorySec
     error_of(client.put("/api/secrets/unknown", json={"value": "x"}), 404)
     error_of(client.delete("/api/secrets/unknown"), 404)
     error_of(client.put("/api/secrets/cloud_api_key", json={"value": ""}), 400)
-
-
-def test_settings_round_trip_with_read_only_data_dir(api: Api) -> None:
-    client = api.client
-    data_dir = str(api.runtime.config.data_dir)
-    current = ok(client.get("/api/settings"))
-    assert current == {
-        "timezone": "UTC",
-        "max_parallel_runs": 1,
-        "keep_runs_days": 30,
-        "data_dir": data_dir,
-    }
-    changed = current | {"timezone": "Asia/Kolkata", "max_parallel_runs": 2, "data_dir": "/x"}
-    saved = ok(client.put("/api/settings", json=changed))
-    assert saved == changed | {"data_dir": data_dir}
-    assert ok(client.get("/api/settings")) == saved
-
-
-@pytest.mark.parametrize(
-    ("body", "field"),
-    [({"timezone": "Mars/Base"}, "timezone"), ({"max_parallel_runs": 0}, "max_parallel_runs")],
-)
-def test_invalid_settings(api: Api, body: dict[str, Any], field: str) -> None:
-    assert field in error_of(api.client.put("/api/settings", json=body), 400)["fields"]

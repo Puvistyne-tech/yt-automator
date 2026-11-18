@@ -52,4 +52,4 @@ def get_settings(app: App) -> AppSettings:
 
 @router.put("/settings", summary="Change application settings; data_dir is read-only")
 def save_settings(body: SettingsRequest, app: App) -> AppSettings:
-    return app.config.save_settings.execute(body.changes())
+    return app.config.save_settings.execute(body.sent_fields())

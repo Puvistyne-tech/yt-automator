@@ -155,6 +155,7 @@ export function makeRun(overrides: Partial<Run> = {}): Run {
     created_at: hoursAgo(2),
     started_at: hoursAgo(2),
     finished_at: hoursAgo(1),
+    intermediate_removed_at: null,
     ...overrides,
   };
 }

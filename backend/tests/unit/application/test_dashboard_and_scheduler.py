@@ -6,6 +6,7 @@ import pytest
 
 from automator.domain.run_enums import RunStatus, RunTrigger
 from automator.domain.schedules import Schedule, ScheduleKind
+from automator.domain.settings import AppSettingsInput
 from tests.fixtures.builders import add_automation, add_credential, automation_input, finished_run
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import get_dashboard, run_due, update_automation
@@ -35,9 +36,7 @@ def test_dashboard_counts_and_quota(harness: Harness) -> None:
 def test_runs_today_uses_app_timezone(harness: Harness, zone: str, count: int) -> None:
     harness.clock.current = datetime(2026, 1, 5, 18, 0, tzinfo=UTC)
     finished_run(harness)
-    harness.app_settings.settings = harness.app_settings.settings.model_copy(
-        update={"timezone": zone}
-    )
+    harness.app_settings.stored = AppSettingsInput(timezone=zone)
     harness.clock.current = datetime(2026, 1, 5, 19, 0, tzinfo=UTC)
     assert get_dashboard(harness).execute().runs_today == count
 

@@ -6,6 +6,7 @@ from typing import Annotated
 from fastapi import Depends, Request
 
 from automator.application.cancel_run import CancelRun
+from automator.application.clean_up_storage import CleanUpStorage
 from automator.application.complete_channel_connect import CompleteChannelConnect
 from automator.application.create_automation import CreateAutomation
 from automator.application.create_credential import CreateCredential
@@ -22,6 +23,7 @@ from automator.application.get_pipeline import GetPipeline
 from automator.application.get_providers import GetProviders
 from automator.application.get_run import GetRun
 from automator.application.get_settings import GetSettings
+from automator.application.get_storage import GetStorage
 from automator.application.list_automations import ListAutomations
 from automator.application.list_channel_playlists import ListChannelPlaylists
 from automator.application.list_channels import ListChannels
@@ -30,6 +32,7 @@ from automator.application.list_pipelines import ListPipelines
 from automator.application.list_runs import ListRuns
 from automator.application.list_secrets import ListSecrets
 from automator.application.open_run_artifact import OpenRunArtifact
+from automator.application.preview_cleanup import PreviewCleanup
 from automator.application.publish_run import PublishRun
 from automator.application.recover_interrupted_runs import RecoverInterruptedRuns
 from automator.application.retry_run import RetryRun
@@ -37,6 +40,7 @@ from automator.application.review_run import ReviewRun
 from automator.application.run_doctor import RunDoctor
 from automator.application.save_provider_config import SaveProviderConfig
 from automator.application.save_settings import SaveSettings
+from automator.application.scheduled_cleanup import ScheduledCleanup
 from automator.application.scheduler_tick import SchedulerTick
 from automator.application.set_automation_enabled import SetAutomationEnabled
 from automator.application.set_secret import SetSecret
@@ -113,11 +117,20 @@ class ConfigUseCases:
 
 
 @dataclass(frozen=True)
+class StorageUseCases:
+    get_storage: GetStorage
+    preview_cleanup: PreviewCleanup
+    clean_up: CleanUpStorage
+    scheduled_cleanup: ScheduledCleanup
+
+
+@dataclass(frozen=True)
 class UseCases:
     channels: ChannelUseCases
     automations: AutomationUseCases
     runs: RunUseCases
     config: ConfigUseCases
+    storage: StorageUseCases
     events: RunEvents
 
 

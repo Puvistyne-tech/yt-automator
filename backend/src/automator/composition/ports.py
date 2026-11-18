@@ -24,6 +24,7 @@ from automator.domain.ports import (
     ProviderConfigRepository,
     QuotaLedger,
     RunEvents,
+    RunFileStore,
     RunQueue,
     RunRepository,
     ScheduleCalculator,
@@ -33,6 +34,7 @@ from automator.domain.ports import (
 )
 from automator.domain.quota import QuotaPolicy
 from automator.domain.run_parts import RunLogPolicy
+from automator.domain.settings_overrides import doctor_policy, run_log_policy
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,7 @@ class Ports:
     ids: IdGenerator
     schedules: ScheduleCalculator
     store: ArtifactStore
+    files: RunFileStore
     queue: RunQueue
     events: RunEvents
     pipelines: PipelineRegistry
@@ -56,7 +59,6 @@ class Ports:
     youtube: YouTubeGateway
     inspector: SystemInspector
     quota: QuotaPolicy = field(default_factory=QuotaPolicy)
-    run_logs: RunLogPolicy = field(default_factory=RunLogPolicy)
     doctor_policy: DoctorPolicy = field(default_factory=DoctorPolicy)
 
 
@@ -72,8 +74,16 @@ class Collaborators:
     credential_views: CredentialViews
 
 
+def current_log_policy(p: Ports) -> RunLogPolicy:
+    return run_log_policy(p.app_settings.get())
+
+
+def current_doctor_policy(p: Ports) -> DoctorPolicy:
+    return doctor_policy(p.doctor_policy, p.app_settings.get())
+
+
 def collaborators(p: Ports) -> Collaborators:
-    recorder = RunRecorder(p.runs, p.events, p.clock, p.run_logs)
+    recorder = RunRecorder(p.runs, p.events, p.clock, lambda: current_log_policy(p))
     quota_report = QuotaReport(p.ledger, p.clock, p.quota)
     return Collaborators(
         authorizer=ChannelAuthorizer(p.credentials, p.secrets),

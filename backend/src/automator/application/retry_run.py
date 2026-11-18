@@ -11,10 +11,10 @@ from automator.domain.run_enums import RunStatus, StageStatus
 from automator.domain.run_parts import StageRun
 from automator.domain.run_state import ensure_transition
 from automator.domain.runs import Run
-from automator.shared.errors import ValidationFailed
+from automator.shared.errors import RuleConflict, ValidationFailed
 
 
-def retry_start(run: Run, from_stage: str | None) -> int:
+def requested_start(run: Run, from_stage: str | None) -> int:
     stage_ids = [stage.stage_id for stage in run.stages]
     if from_stage is not None:
         if from_stage not in stage_ids:
@@ -22,6 +22,17 @@ def retry_start(run: Run, from_stage: str | None) -> int:
         return stage_ids.index(from_stage)
     unfinished = [i for i, stage in enumerate(run.stages) if stage.status is not StageStatus.DONE]
     return unfinished[0] if unfinished else 0
+
+
+def retry_start(run: Run, from_stage: str | None) -> int:
+    if run.intermediate_removed_at is None:
+        return requested_start(run, from_stage)
+    if from_stage is not None and requested_start(run, from_stage) > 0:
+        raise RuleConflict(
+            "intermediate_files_removed",
+            f"run {run.id} had its working files removed; retry it from the first stage",
+        )
+    return 0
 
 
 def retry_reset(from_stage: str | None, run: Run) -> Run:
@@ -37,6 +48,7 @@ def retry_reset(from_stage: str | None, run: Run) -> Run:
             "score_details": (),
             "review": None,
             "uploads": (),
+            "intermediate_removed_at": None,
         }
     )
 

@@ -52,7 +52,13 @@ from automator.application.update_automation import UpdateAutomation
 from automator.application.update_channel_defaults import UpdateChannelDefaults
 from automator.application.update_credential import UpdateCredential
 from automator.application.upload_performer import UploadPerformer
-from automator.composition.ports import Collaborators, Ports, collaborators
+from automator.composition.ports import (
+    Collaborators,
+    Ports,
+    collaborators,
+    current_doctor_policy,
+)
+from automator.composition.storage import storage_use_cases
 
 
 def channel_use_cases(p: Ports, c: Collaborators) -> ChannelUseCases:
@@ -164,7 +170,7 @@ def config_use_cases(p: Ports, c: Collaborators) -> ConfigUseCases:
         delete_secret=DeleteSecret(p.catalog, p.secrets),
         get_settings=GetSettings(p.app_settings),
         save_settings=SaveSettings(p.app_settings),
-        doctor=RunDoctor(p.catalog, p.secrets, p.inspector, p.doctor_policy),
+        doctor=RunDoctor(p.catalog, p.secrets, p.inspector, lambda: current_doctor_policy(p)),
     )
 
 
@@ -175,5 +181,6 @@ def build_use_cases(ports: Ports) -> UseCases:
         automations=automation_use_cases(ports, shared),
         runs=run_use_cases(ports, shared),
         config=config_use_cases(ports, shared),
+        storage=storage_use_cases(ports, shared),
         events=ports.events,
     )

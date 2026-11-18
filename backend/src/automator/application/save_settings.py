@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from automator.domain.ports import AppSettingsRepository
-from automator.domain.settings import AppSettings, AppSettingsInput, app_settings_errors
+from automator.domain.settings import (
+    AppSettings,
+    app_settings_errors,
+    locked_field_errors,
+    with_sent_fields,
+)
 from automator.shared.errors import raise_if_invalid
 
 
@@ -11,8 +17,9 @@ from automator.shared.errors import raise_if_invalid
 class SaveSettings:
     settings: AppSettingsRepository
 
-    def execute(self, changes: AppSettingsInput) -> AppSettings:
-        raise_if_invalid(app_settings_errors(changes))
-        updated = self.settings.get().with_input(changes)
-        self.settings.save(updated)
-        return updated
+    def execute(self, sent: Mapping[str, object]) -> AppSettings:
+        current = self.settings.get()
+        changes = with_sent_fields(current.input(), sent)
+        raise_if_invalid(app_settings_errors(changes) | locked_field_errors(changes, current))
+        self.settings.save(current.with_input(changes))
+        return self.settings.get()

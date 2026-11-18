@@ -13,14 +13,28 @@ from tests.unit.api.client import Api
 from tests.unit.infrastructure.records import run
 
 
+def test_caption_names_follow_the_saved_settings(
+    config: RuntimeConfig, overrides: Overrides
+) -> None:
+    runtime: Runtime = create_app(config, overrides).state.runtime
+    gateway = youtube_gateway(config, runtime.ports.app_settings)
+    runtime.ports.app_settings.save(
+        runtime.ports.app_settings.get().model_copy(update={"caption_track_name": "Tamil"})
+    )
+    assert gateway.caption_name() == "Tamil"
+    runtime.database.dispose()
+
+
 def test_youtube_settings_come_from_the_runtime_config() -> None:
     config = RuntimeConfig(
         youtube_caption_track_name="English",
         youtube_playlist_page_size=10,
         upload_chunk_bytes=512 * 1024,
     )
-    settings = youtube_gateway(config).settings
+    gateway = youtube_gateway(config)
+    settings = gateway.settings
     assert (settings.caption_track_name, settings.playlist_page_size) == ("English", 10)
+    assert gateway.caption_name() == "English"
     assert settings.upload_chunk_bytes == 512 * 1024
     assert settings.redirect_uri == config.oauth_redirect_uri
 
@@ -51,8 +65,7 @@ def test_the_run_log_cap_comes_from_the_runtime_config(
 ) -> None:
     app = create_app(config.model_copy(update={"max_run_log_entries": 7}), overrides)
     runtime: Runtime = app.state.runtime
-    assert runtime.ports.run_logs.max_entries == 7
-    assert runtime.use_cases.runs.execute.recorder.log_policy.max_entries == 7
+    assert runtime.use_cases.runs.execute.recorder.log_policy().max_entries == 7
 
 
 def test_the_doctor_policy_comes_from_the_runtime_config(
@@ -60,8 +73,7 @@ def test_the_doctor_policy_comes_from_the_runtime_config(
 ) -> None:
     app = create_app(config.model_copy(update={"doctor_min_free_gb": 7}), overrides)
     runtime: Runtime = app.state.runtime
-    assert runtime.ports.doctor_policy.min_free_gb == 7
-    assert runtime.use_cases.config.doctor.policy.min_free_gb == 7
+    assert runtime.use_cases.config.doctor.policy().min_free_gb == 7
 
 
 def test_the_busy_timeout_comes_from_the_runtime_config(

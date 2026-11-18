@@ -1,5 +1,4 @@
 import { makeChannel, makeCredential } from "@/api/mocks/fixtures/factories";
-import { settingsChanged, settingsInput, validateSettings } from "@/features/app-settings/validate";
 import {
   credentialPayload,
   credentialSecretHint,
@@ -150,27 +149,6 @@ describe("oauthReturnMessage", () => {
   });
 });
 
-describe("app settings", () => {
-  const settings = { timezone: "UTC", max_parallel_runs: 2, keep_runs_days: 30, data_dir: "/d" };
-
-  it("drops read-only fields from the input", () => {
-    expect(settingsInput(settings)).toEqual({
-      timezone: "UTC",
-      max_parallel_runs: 2,
-      keep_runs_days: 30,
-    });
-  });
-
-  it.each([
-    [{ timezone: "" }, { timezone: "Choose a timezone." }],
-    [{ max_parallel_runs: 0 }, { max_parallel_runs: "Use a whole number, at least 1." }],
-    [{ keep_runs_days: 1.5 }, { keep_runs_days: "Keep runs for at least 1 day." }],
-    [{}, {}],
-  ])("validates %j", (patch, errors) => {
-    expect(validateSettings({ ...settingsInput(settings), ...patch })).toEqual(errors);
-  });
-});
-
 describe("channel defaults form", () => {
   const defaults = makeChannel().defaults;
 
@@ -192,22 +170,5 @@ describe("secret form", () => {
   it("trims the value and rejects blanks", () => {
     expect(validateSecretValue("  ")).toEqual({ ok: false, error: "Enter a value." });
     expect(validateSecretValue(" key ")).toEqual({ ok: true, value: "key" });
-  });
-});
-
-describe("settingsChanged", () => {
-  const settings = {
-    timezone: "UTC",
-    max_parallel_runs: 1,
-    keep_runs_days: 30,
-    data_dir: "/data",
-  };
-
-  it("is false when the input matches the saved settings", () => {
-    expect(settingsChanged(settingsInput(settings), settings)).toBe(false);
-  });
-
-  it("is true when any field differs", () => {
-    expect(settingsChanged({ ...settingsInput(settings), keep_runs_days: 7 }, settings)).toBe(true);
   });
 });

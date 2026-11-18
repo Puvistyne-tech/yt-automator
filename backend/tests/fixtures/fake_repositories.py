@@ -8,10 +8,15 @@ from typing import Protocol
 from automator.domain.automations import Automation
 from automator.domain.channels import Channel
 from automator.domain.credentials import Credential
-from automator.domain.ports import RunChange
+from automator.domain.ports import RunChange, RunCheck
 from automator.domain.providers import ProviderConfig
 from automator.domain.runs import Run, RunQuery
-from automator.domain.settings import AppSettings
+from automator.domain.settings import AppSettings, AppSettingsInput
+from automator.domain.settings_overrides import (
+    Overrides,
+    effective_settings,
+    storable_settings,
+)
 
 
 class HasId(Protocol):
@@ -89,6 +94,13 @@ class InMemoryRuns:
     def delete(self, run_id: str) -> None:
         self.items.pop(run_id, None)
 
+    def delete_if(self, run_id: str, check: RunCheck) -> Run | None:
+        with self.lock:
+            stored = self.items.get(run_id)
+            if stored is None or not check(stored):
+                return None
+            return self.items.pop(run_id)
+
 
 class InMemoryProviderConfigs:
     def __init__(self) -> None:
@@ -102,11 +114,13 @@ class InMemoryProviderConfigs:
 
 
 class InMemoryAppSettings:
-    def __init__(self, data_dir: str = "/tmp/automator") -> None:
-        self.settings = AppSettings(data_dir=data_dir)
+    def __init__(self, data_dir: str = "/tmp/automator", overrides: Overrides = ()) -> None:
+        self.data_dir = data_dir
+        self.overrides = tuple(overrides)
+        self.stored = AppSettingsInput()
 
     def get(self) -> AppSettings:
-        return self.settings
+        return effective_settings(self.stored, self.overrides, self.data_dir)
 
     def save(self, settings: AppSettings) -> None:
-        self.settings = settings
+        self.stored = storable_settings(settings.input(), self.stored, list(settings.locked))

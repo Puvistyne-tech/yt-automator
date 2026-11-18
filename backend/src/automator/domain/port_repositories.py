@@ -11,6 +11,7 @@ from automator.domain.runs import Run, RunQuery
 from automator.domain.settings import AppSettings
 
 RunChange = Callable[[Run], Run | None]
+RunCheck = Callable[[Run], bool]
 
 
 class CredentialRepository(Protocol):
@@ -55,6 +56,8 @@ class RunRepository(Protocol):
     def update(self, run_id: str, change: RunChange) -> Run | None: ...
 
     def delete(self, run_id: str) -> None: ...
+
+    def delete_if(self, run_id: str, check: RunCheck) -> Run | None: ...
 
 
 class ProviderConfigRepository(Protocol):

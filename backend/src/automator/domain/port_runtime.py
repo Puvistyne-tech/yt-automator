@@ -11,6 +11,7 @@ from automator.domain.run_parts import Artifact
 from automator.domain.runs import RunEvent
 from automator.domain.schedule_timing import StartCounter
 from automator.domain.schedules import Schedule
+from automator.domain.storage import DiskSpace, FileUsage
 
 
 class Clock(Protocol):
@@ -53,6 +54,18 @@ class ArtifactStore(Protocol):
     def discard(self, run_id: str, artifact: Artifact) -> None: ...
 
     def delete_run(self, run_id: str) -> None: ...
+
+
+class RunFileStore(Protocol):
+    def run_ids(self) -> frozenset[str]: ...
+
+    def usage(self, run_id: str, final_ids: frozenset[str]) -> FileUsage: ...
+
+    def remove_intermediate(self, run_id: str, final_ids: frozenset[str]) -> int: ...
+
+    def delete_run(self, run_id: str) -> int: ...
+
+    def disk(self) -> DiskSpace: ...
 
 
 class RunQueue(Protocol):

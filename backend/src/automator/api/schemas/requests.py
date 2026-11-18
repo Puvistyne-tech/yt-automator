@@ -6,6 +6,8 @@ from automator.domain.channels import ChannelDefaults
 from automator.domain.run_enums import ReviewDecision
 from automator.domain.settings import AppSettingsInput
 
+READ_ONLY_SETTINGS = frozenset({"data_dir", "locked", "restart_required"})
+
 
 class RequestModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -38,6 +40,10 @@ class SecretValueRequest(RequestModel):
 
 class SettingsRequest(AppSettingsInput):
     data_dir: str | None = Field(default=None, description="Read-only, ignored when sent")
+    locked: dict[str, str] | None = Field(default=None, description="Read-only, ignored when sent")
+    restart_required: list[str] | None = Field(
+        default=None, description="Read-only, ignored when sent"
+    )
 
-    def changes(self) -> AppSettingsInput:
-        return AppSettingsInput(**self.model_dump(exclude={"data_dir"}))
+    def sent_fields(self) -> dict[str, object]:
+        return self.model_dump(exclude_unset=True, exclude=set(READ_ONLY_SETTINGS))
