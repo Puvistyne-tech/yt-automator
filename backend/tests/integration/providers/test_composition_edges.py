@@ -64,8 +64,13 @@ def test_ducked_music_keeps_playing_after_the_narration_ends(tmp_path: Path) -> 
         music_ducking=0.5,
         fade_seconds=0,
     )
-    media = (
-        build_provider_catalog(InMemorySecrets(), tmp_path).resolver([]).resolve(Capability.MEDIA)
-    )
-    video = media.compose_video(composition, tmp_path / "out.mp4")
-    assert mean_volume_after(video, 2.0) > -40.0
+    assert mean_volume_after(compose(tmp_path, composition), 2.0) > -40.0
+
+
+def test_odd_sizes_render_at_the_nearest_even_size(tmp_path: Path) -> None:
+    clip = TimedClip(path=still_image(tmp_path), start_seconds=0, duration_seconds=1)
+    video = compose(tmp_path, VideoComposition(width=65, height=37, fps=10, visuals=(clip,)))
+    command = ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries"]
+    command += ["stream=width,height", "-of", "csv=p=0", str(video)]
+    probed = subprocess.run(command, capture_output=True, text=True, check=True).stdout
+    assert probed.strip() == "64,36"

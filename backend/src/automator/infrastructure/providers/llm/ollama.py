@@ -7,13 +7,13 @@ from pydantic import Field
 
 from automator.domain.capabilities import Capability, TextRequest
 from automator.infrastructure.providers.context import ProviderContext
-from automator.infrastructure.providers.http_retry import BaseUrlHttpOptions, post_provider_json
+from automator.infrastructure.providers.http_retry import HttpOptions, post_provider_json
 from automator.infrastructure.providers.json_response import dig
 from automator.infrastructure.providers.llm.image_payload import image_base64
 from automator.infrastructure.providers.spec import ProviderSpec
 
 
-class OllamaOptions(BaseUrlHttpOptions):
+class OllamaOptions(HttpOptions):
     model: str = Field(
         default="gemma3:12b",
         min_length=1,
@@ -21,6 +21,7 @@ class OllamaOptions(BaseUrlHttpOptions):
         description="A pulled Ollama model. Use a vision model (gemma3, qwen2.5vl) for images.",
     )
     base_url: str = Field(
+        min_length=1,
         default="http://127.0.0.1:11434",
         title="Server URL",
         description="Where the local Ollama server listens.",
@@ -81,6 +82,7 @@ class OllamaText:
         body = post_provider_json(
             self.context,
             self.options,
+            self.options.base_url,
             "api/chat",
             ollama_payload(request, self.options.model),
             {},

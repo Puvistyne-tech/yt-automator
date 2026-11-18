@@ -5,16 +5,12 @@ from collections.abc import Mapping, Sequence
 from pydantic import ValidationError
 
 from automator.domain.providers import ProviderChoice, ProviderConfig
-from automator.domain.validation import field_errors, field_path
+from automator.domain.validation import field_errors, field_path, validated_settings
 from automator.infrastructure.providers.registry import AnySpec
 
 
 def choice_option_errors(spec: AnySpec, choice: ProviderChoice, prefix: str) -> dict[str, str]:
-    try:
-        spec.options.model_validate(dict(choice.options))
-    except ValidationError as error:
-        return field_errors(error, prefix)
-    return {}
+    return validated_settings(spec.options, dict(choice.options), prefix)[1]
 
 
 def matching_spec(

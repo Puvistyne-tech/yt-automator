@@ -17,6 +17,7 @@ from automator.infrastructure.providers.host import first_reason
 from automator.infrastructure.providers.output_path import ensure_parent
 from automator.infrastructure.providers.spec import ProviderSpec
 from automator.infrastructure.providers.tts.edge_stream import EdgeChunk, EdgeStream, EdgeTtsLibrary
+from automator.infrastructure.providers.tts.speech_text import require_text
 from automator.infrastructure.providers.tts.voice_language import lookup_language
 from automator.infrastructure.providers.tts.word_timing import estimate_timings, spoken_words
 from automator.infrastructure.providers.wav_io import wav_duration
@@ -82,6 +83,7 @@ class EdgeTtsSpeech:
         return voice
 
     def synthesize(self, request: SpeechRequest, output: Path) -> Speech:
+        require_text(self.provider_id, request)
         chunks = self.stream.stream(request.text, self.voice_for(request), edge_rate(request.speed))
         audio = b"".join(chunk.data for chunk in chunks if chunk.kind == "audio")
         if not audio:

@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 from automator.domain.capabilities import TimedClip, VideoComposition
+from automator.infrastructure.providers.even_size import even
 from automator.infrastructure.providers.media.composition_inputs import InputPlan
 from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 from automator.infrastructure.providers.media.subtitle_filter import subtitle_filter
-
-
-def even(size: int) -> int:
-    return max(2, size - size % 2)
 
 
 def frame_size(composition: VideoComposition) -> tuple[int, int]:

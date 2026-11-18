@@ -6,7 +6,7 @@ from pydantic import Field
 
 from automator.domain.capabilities import Capability, TextRequest
 from automator.infrastructure.providers.context import ProviderContext
-from automator.infrastructure.providers.http_retry import BaseUrlHttpOptions, post_provider_json
+from automator.infrastructure.providers.http_retry import HttpOptions, post_provider_json
 from automator.infrastructure.providers.json_response import dig
 from automator.infrastructure.providers.llm.image_payload import reject_images
 from automator.infrastructure.providers.spec import ProviderSpec
@@ -14,7 +14,7 @@ from automator.infrastructure.providers.spec import ProviderSpec
 SECRET = "groq_api_key"
 
 
-class GroqOptions(BaseUrlHttpOptions):
+class GroqOptions(HttpOptions):
     model: str = Field(
         default="openai/gpt-oss-120b",
         min_length=1,
@@ -22,6 +22,7 @@ class GroqOptions(BaseUrlHttpOptions):
         description="Groq model id, for example openai/gpt-oss-120b or llama-3.3-70b-versatile.",
     )
     base_url: str = Field(
+        min_length=1,
         default="https://api.groq.com/openai/v1",
         title="Base URL",
         description="OpenAI-compatible API root.",
@@ -71,6 +72,7 @@ class GroqText:
         body = post_provider_json(
             self.context,
             self.options,
+            self.options.base_url,
             "chat/completions",
             chat_payload(request, self.options),
             {"Authorization": f"Bearer {self.context.secret(SECRET)}"},

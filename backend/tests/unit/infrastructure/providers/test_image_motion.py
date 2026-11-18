@@ -111,6 +111,14 @@ def test_pan_zoom_filter_supersamples_and_eases() -> None:
     )
 
 
+def test_pan_zoom_rounds_odd_sizes_down_to_even() -> None:
+    tuning = PanZoomTuning(max_zoom=0.4, supersample=2, crf=18, preset="fast")
+    odd = motion().model_copy(update={"width": 321, "height": 1})
+    steps = pan_zoom_filter(odd, tuning).split(",")
+    assert steps[0].startswith("scale=640:4:")
+    assert ":s=320x2:" in pan_zoom_filter(odd, tuning)
+
+
 def test_every_camera_move_has_distinct_expressions() -> None:
     expressions = {camera_expressions(camera, 0.3, "E") for camera in CameraMove}
     assert len(expressions) == len(CameraMove)

@@ -89,6 +89,11 @@ def test_frame_sizes_are_rounded_down_to_even(width: int, height: int, size: str
     ]
 
 
+@pytest.mark.parametrize(("width", "height"), [(320, 180), (321, 181)])
+def test_burned_subtitles_scale_with_the_even_height(width: int, height: int) -> None:
+    assert "FontSize=57.6" in video_of(width=width, height=height)[-1]
+
+
 def test_background_colour_is_configurable_and_validated() -> None:
     options = FfmpegOptions(background_color="#112233")
     assert video_of(options)[0].startswith("color=c=#112233:")

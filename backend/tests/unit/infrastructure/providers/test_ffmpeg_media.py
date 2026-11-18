@@ -102,6 +102,14 @@ def writes_empty_frame(command: list[str]) -> None:
     Path(command[-1]).write_bytes(b"")
 
 
+def test_a_stale_frame_is_not_mistaken_for_a_new_one(tmp_path: Path) -> None:
+    stale = tmp_path / "f.png"
+    stale.write_bytes(b"old frame")
+    with pytest.raises(UpstreamFailure, match="wrote nothing"):
+        media(tmp_path, RecordingRunner()).extract_frame(Path("/w/v.mp4"), 99.0, stale)
+    assert not stale.exists()
+
+
 @pytest.mark.parametrize("effect", [None, writes_empty_frame], ids=["missing", "empty"])
 def test_frame_past_the_end_of_the_video_is_an_upstream_failure(
     tmp_path: Path, effect: Callable[[list[str]], None] | None

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from automator.domain.capabilities import CameraMove, MotionRequest
+from automator.infrastructure.providers.even_size import even
 from automator.infrastructure.providers.ffmpeg_args import ffmpeg_command
 
 CENTER_X = "(iw-iw/zoom)/2"
@@ -46,13 +47,13 @@ def pan_zoom_filter(request: MotionRequest, tuning: PanZoomTuning) -> str:
     frames = frame_count(request)
     extra = tuning.max_zoom * request.intensity
     zoom, x, y = camera_expressions(request.camera, extra, eased_progress(frames))
-    wide, tall = request.width * tuning.supersample, request.height * tuning.supersample
+    width, height = even(request.width), even(request.height)
+    wide, tall = width * tuning.supersample, height * tuning.supersample
     return ",".join(
         [
             f"scale={wide}:{tall}:force_original_aspect_ratio=increase:flags=lanczos",
             f"crop={wide}:{tall}",
-            f"zoompan=z='{zoom}':x='{x}':y='{y}':d={frames}"
-            f":s={request.width}x{request.height}:fps={request.fps}",
+            f"zoompan=z='{zoom}':x='{x}':y='{y}':d={frames}:s={width}x{height}:fps={request.fps}",
             "format=yuv420p",
         ]
     )

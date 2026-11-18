@@ -31,6 +31,7 @@ SYNTHESIZERS: dict[str, SpeechFactory] = {
     "espeak": lambda context: EspeakSpeech(EspeakOptions(), context),
     "offline_speech": lambda context: OfflineSpeech(OfflineSpeechOptions(), context),
     "kokoro": lambda context: KokoroSpeech(KokoroOptions(), context, engine=FakeKokoro()),
+    "edge_tts": lambda context: EdgeTtsSpeech(EdgeTtsOptions(), context, stream=FakeStream([])),
 }
 
 
@@ -39,8 +40,11 @@ SYNTHESIZERS: dict[str, SpeechFactory] = {
 def test_blank_text_is_refused(tmp_path: Path, provider_id: str, text: str) -> None:
     runner = RecordingRunner()
     synthesizer = SYNTHESIZERS[provider_id](make_context(tmp_path, runner=runner))
-    with pytest.raises(UpstreamFailure, match=f"^{provider_id} needs some text to speak$"):
+    with pytest.raises(
+        UpstreamFailure, match=f"^{provider_id} needs some text to speak$"
+    ) as raised:
         synthesizer.synthesize(SpeechRequest(text=text, language="en"), tmp_path / "v.wav")
+    assert raised.value.code == "text_missing"
     assert runner.calls == []
     assert not (tmp_path / "v.wav").exists()
 

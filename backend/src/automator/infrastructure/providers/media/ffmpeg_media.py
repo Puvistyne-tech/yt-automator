@@ -68,7 +68,8 @@ class FfmpegMedia:
         return output
 
     def extract_frame(self, video: Path, at_seconds: float, output: Path) -> Path:
-        self.run(frame_command(video, at_seconds, ensure_parent(output), self.options))
+        ensure_parent(output).unlink(missing_ok=True)
+        self.run(frame_command(video, at_seconds, output, self.options))
         return require_written(output, f"ffmpeg frame at {at_seconds:g}s")
 
     def loudness_lufs(self, media: Path) -> float:

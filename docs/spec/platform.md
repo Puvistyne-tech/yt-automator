@@ -94,8 +94,8 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 - Saving provider configs (PUT `/providers`) rejects an unknown provider, a provider listed under the
   wrong capability or twice, a capability configured twice, and options that do not validate against the
   provider's options schema. Options are checked for every entry, enabled or not. Errors are keyed by
-  position in the request: `<config index>.chain.<position>.provider_id` or
-  `<config index>.chain.<position>.options.<field>` (for example `0.chain.1.options.topic_words`).
+  position in the request: `<config index>.capability`, `<config index>.chain.<position>.provider_id`
+  or `<config index>.chain.<position>.options.<field>` (for example `0.chain.1.options.topic_words`).
 - Descriptor availability (`available`, `unavailable_reason`) is evaluated with each provider's
   default options, not the saved ones, so a provider that needs a custom path or URL may show as
   unavailable while the resolver can still use it.
@@ -137,7 +137,7 @@ ProviderResolver.resolve(capability) -> a provider for the capability (see Provi
 
 - The chain is the saved `ProviderConfig` for the capability. With no config, or a config whose chain
   is empty, the chain is every provider of the capability in registry order: hosted or heavy providers
-  first, the always-available offline provider last.
+  first and, where the capability has one, the always-available offline provider last.
 - An entry is skipped when it is unknown, offers another capability, is disabled, has options that no
   longer validate, or reports itself unavailable. The resolver records the reason for every skipped
   entry. When no entry remains, `resolve` raises a 409 rule conflict `provider_unavailable` whose
@@ -163,8 +163,8 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
        extract_frame(video, at_seconds, output) -> Path, loudness_lufs(media)
 ```
 
-- `VideoComposition` width and height are rounded down to the nearest even number (minimum 2), as
-  H.264 with 4:2:0 chroma needs even sizes.
+- `VideoComposition` and `MotionRequest` width and height are rounded down to the nearest even number
+  (minimum 2), as H.264 with 4:2:0 chroma needs even sizes.
 - Ducking lowers the music only while narration plays; the music continues at its set volume after
   the last narration clip.
 - `extract_frame` fails with an upstream failure when no frame was written, for example past the end.

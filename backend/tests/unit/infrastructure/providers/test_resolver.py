@@ -3,10 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from automator.domain.capabilities import Capability, TextRequest
 from automator.domain.model_base import JsonObject
 from automator.domain.providers import ProviderChoice, ProviderConfig
+from automator.infrastructure.providers.llm.offline_text import OfflineTextOptions
+from automator.infrastructure.providers.option_validation import invalid_options_reason
 from automator.shared.errors import RuleConflict
 from tests.unit.infrastructure.providers.fakes import chain_config, local_catalog
 
@@ -98,3 +101,12 @@ def test_option_errors_are_empty_for_valid_options(tmp_path: Path) -> None:
         Capability.LLM, ProviderChoice(provider_id="groq", options={"max_retries": 0})
     )
     assert local_catalog(tmp_path).option_errors([chain]) == {}
+
+
+def test_invalid_options_reason_joins_every_field_error() -> None:
+    with pytest.raises(ValidationError) as raised:
+        OfflineTextOptions.model_validate({"topic_words": 0, "nope": 1})
+    assert invalid_options_reason(raised.value) == (
+        "invalid options (topic_words: Input should be greater than or equal to 1; "
+        "nope: Extra inputs are not permitted)"
+    )

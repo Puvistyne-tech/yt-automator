@@ -31,10 +31,6 @@ class HttpOptions(ProviderOptions):
     )
 
 
-class BaseUrlHttpOptions(HttpOptions):
-    base_url: str = Field(min_length=1, title="Base URL", description="API root.")
-
-
 def is_retryable(status: int) -> bool:
     return status == 429 or status >= 500
 
@@ -102,12 +98,13 @@ def post_json(
 
 def post_provider_json(
     context: ProviderContext,
-    options: BaseUrlHttpOptions,
+    options: HttpOptions,
+    base_url: str,
     path: str,
     payload: Mapping[str, Any],
     headers: Mapping[str, str],
     label: str,
 ) -> dict[str, Any]:
-    url = f"{options.base_url.rstrip('/')}/{path.lstrip('/')}"
+    url = f"{base_url.rstrip('/')}/{path.lstrip('/')}"
     client = context.http(options.timeout_seconds)
     return post_json(client, url, payload, headers, options, context.sleep, label)
