@@ -5,6 +5,11 @@ from enum import StrEnum
 from pydantic import Field
 
 from automator.pipelines.kids_story.settings.base import SettingsSection
+from automator.pipelines.kids_story.settings.choices import (
+    LANDSCAPE_CHOICES,
+    PORTRAIT_CHOICES,
+    SCENE_SELECTION_CHOICES,
+)
 
 
 class LandscapeResolution(StrEnum):
@@ -33,6 +38,7 @@ def size_of(resolution: StrEnum) -> tuple[int, int]:
 class EpisodeSettings(SettingsSection):
     resolution: LandscapeResolution = Field(
         default=LandscapeResolution.FULL_HD,
+        json_schema_extra=LANDSCAPE_CHOICES,
         title="Resolution",
         description="Width and height of the 16:9 episode video.",
     )
@@ -112,6 +118,7 @@ class ShortSettings(SettingsSection):
     )
     resolution: PortraitResolution = Field(
         default=PortraitResolution.FULL_HD,
+        json_schema_extra=PORTRAIT_CHOICES,
         title="Resolution",
         description="Width and height of the vertical Short video.",
     )
@@ -124,6 +131,7 @@ class ShortSettings(SettingsSection):
     )
     scene_selection: ShortSceneSelection = Field(
         default=ShortSceneSelection.AUTO,
+        json_schema_extra=SCENE_SELECTION_CHOICES,
         title="Scenes",
         description="Let the story pick the best scenes, or use the first scenes.",
     )

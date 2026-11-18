@@ -1,10 +1,13 @@
 import { makeArtifact, makeRun } from "@/api/mocks/fixtures/factories";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
+import type { ArtifactKind } from "@/api/types";
 import {
+  finalOutputs,
   groupArtifacts,
+  intermediateByStage,
+  isFinalOutput,
   isTallArtifact,
-  posterFor,
-  splitGroup,
+  splitArtifacts,
 } from "@/features/run-detail/artifacts";
 import { itemAt } from "../../helpers/itemAt";
 
@@ -30,8 +33,8 @@ describe("groupArtifacts", () => {
       "English — Short · 9:16",
     ]);
     expect(groups[3]?.artifacts.map((a) => a.id)).toEqual(["a4", "a5"]);
-    expect(posterFor(itemAt(groups, 3))?.id).toBe("a5");
-    expect(posterFor(itemAt(groups, 1))).toBeUndefined();
+    expect(splitArtifacts(itemAt(groups, 3).artifacts).poster?.id).toBe("a5");
+    expect(splitArtifacts(itemAt(groups, 1).artifacts).poster).toBeUndefined();
   });
 
   it("names all-language groups and unknown variants, ordering unknowns last", () => {
@@ -55,20 +58,54 @@ describe("groupArtifacts", () => {
     expect(groupArtifacts(run)[0]?.title).toBe("fr — reel");
   });
 
-  it("splits a group into media, documents, captions and poster", () => {
-    const run = makeRun({
-      artifacts: [
-        makeArtifact({ id: "v" }),
-        makeArtifact({ id: "t", kind: "thumbnail" }),
-        makeArtifact({ id: "s", kind: "subtitle" }),
-        makeArtifact({ id: "m", kind: "metadata" }),
-      ],
-    });
-    const parts = splitGroup(itemAt(groupArtifacts(run, kidsStoryPipeline), 0));
+  it("splits artifacts into media, documents, captions and poster", () => {
+    const parts = splitArtifacts([
+      makeArtifact({ id: "v" }),
+      makeArtifact({ id: "t", kind: "thumbnail" }),
+      makeArtifact({ id: "s", kind: "subtitle" }),
+      makeArtifact({ id: "m", kind: "metadata" }),
+    ]);
     expect(parts.media.map((a) => a.id)).toEqual(["v", "t"]);
     expect(parts.documents.map((a) => a.id)).toEqual(["s", "m"]);
     expect(parts.captions?.id).toBe("s");
     expect(parts.poster?.id).toBe("t");
+  });
+
+  it("treats per-language videos, thumbnails, captions and metadata as final outputs", () => {
+    const final = (kind: ArtifactKind, language: string | null) =>
+      isFinalOutput(makeArtifact({ kind, language }));
+    expect(
+      ["video", "thumbnail", "subtitle", "metadata"].map((k) => final(k as ArtifactKind, "en")),
+    ).toEqual([true, true, true, true]);
+    expect(final("video", null)).toBe(false);
+    expect(final("image", "en")).toBe(false);
+    expect(final("audio", "en")).toBe(false);
+    expect(final("text", null)).toBe(false);
+  });
+
+  it("splits a run into final outputs and intermediate files by stage in run order", () => {
+    const run = makeRun({
+      artifacts: [
+        makeArtifact({ id: "clip", stage_id: "motion", language: null, variant: "episode" }),
+        makeArtifact({ id: "final", stage_id: "render", language: "en", variant: "episode" }),
+        makeArtifact({ id: "scene", kind: "image", stage_id: "images", language: null }),
+        makeArtifact({ id: "odd", kind: "text", stage_id: "extra", language: null }),
+        makeArtifact({ id: "story", kind: "text", stage_id: "story", language: null }),
+        makeArtifact({ id: "scene2", kind: "image", stage_id: "images", language: null }),
+        makeArtifact({ id: "odd2", kind: "text", stage_id: "alpha", language: null }),
+      ],
+    });
+
+    expect(finalOutputs(run).map((a) => a.id)).toEqual(["final"]);
+    expect(
+      intermediateByStage(run).map((s) => [s.stageId, s.title, s.artifacts.map((a) => a.id)]),
+    ).toEqual([
+      ["story", "Write story", ["story"]],
+      ["images", "Illustrate scenes", ["scene", "scene2"]],
+      ["motion", "Animate", ["clip"]],
+      ["extra", "extra", ["odd"]],
+      ["alpha", "alpha", ["odd2"]],
+    ]);
   });
 
   it("decides tall previews from the variant aspect, then the frame size", () => {

@@ -1,11 +1,8 @@
+import { isKidsPipeline } from "@/api/capabilities";
 import { needsReconnect } from "@/api/channelHealth";
 import { CHANNEL_STATUSES, PRIVACY_LABELS, PRIVACY_OPTIONS } from "@/api/labels";
 import type { Channel, PipelineDescriptor } from "@/api/types";
-import {
-  type AutomationDraft,
-  isKidsPipeline,
-  type TargetDraft,
-} from "@/features/automation-editor/model/draft";
+import type { AutomationDraft, TargetDraft } from "@/features/automation-editor/model/draft";
 import type { CheckboxOption, SelectOption } from "@/shared/ui";
 
 export interface TargetOptions {

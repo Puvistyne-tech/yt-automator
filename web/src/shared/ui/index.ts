@@ -25,6 +25,6 @@ export {
 } from "@/shared/ui/surfaces";
 export { ACTIONS_COLUMN, Table, type TableColumn } from "@/shared/ui/Table";
 export { type TabItem, Tabs } from "@/shared/ui/Tabs";
-export { ToastProvider, useToast } from "@/shared/ui/Toast";
+export { type ToastAction, ToastProvider, useToast } from "@/shared/ui/Toast";
 export { UnsavedChangesPrompt } from "@/shared/ui/UnsavedChangesPrompt";
 export { type ConfirmTarget, useConfirmTarget } from "@/shared/ui/useConfirmTarget";

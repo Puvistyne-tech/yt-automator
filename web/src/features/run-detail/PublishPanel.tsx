@@ -4,7 +4,7 @@ import { UPLOAD_STATUSES } from "@/api/labels";
 import { usePublishRun } from "@/api/runs";
 import type { Run, Upload } from "@/api/types";
 import { useMutationNotifier } from "@/api/useMutationNotifier";
-import { publishDescription, uploadNote } from "@/features/run-detail/model";
+import { publishDescription, uploadAudience, uploadNote } from "@/features/run-detail/model";
 import { formatNumber } from "@/shared/format/numbers";
 import { humanizeId } from "@/shared/format/text";
 import { Button, Card, ConfirmDialog, Icon, StatusBadge, Table } from "@/shared/ui";
@@ -13,6 +13,8 @@ const UPLOAD_COLUMNS = [
   "Channel",
   "Language",
   "Output",
+  "Privacy",
+  "Made for kids",
   "Status",
   "Quota",
   { label: "Link", hidden: true },
@@ -31,19 +33,29 @@ function UploadStatus({ upload }: { upload: Upload }) {
 }
 
 function UploadRow({ upload, channelTitle }: { upload: Upload; channelTitle: string }) {
+  const audience = uploadAudience(upload);
   return (
     <tr>
       <td>{channelTitle}</td>
       <td className="mono">{upload.language.toUpperCase()}</td>
       <td>{humanizeId(upload.variant)}</td>
+      <td>{audience.privacy}</td>
+      <td>{audience.madeForKids}</td>
       <td className="cell-wrap">
         <UploadStatus upload={upload} />
       </td>
       <td>{formatNumber(upload.quota_units)}</td>
       <td className="cell-actions">
         {upload.url && (
-          <a href={upload.url} target="_blank" rel="noreferrer" className="row">
-            Watch on YouTube <Icon name="external" />
+          <a
+            href={upload.url}
+            target="_blank"
+            rel="noreferrer"
+            className="row"
+            aria-label="Watch on YouTube"
+            title="Watch on YouTube"
+          >
+            Watch <Icon name="external" />
           </a>
         )}
       </td>

@@ -28,6 +28,41 @@ describe("mock publish outcome", () => {
     expect(run.uploads.map((upload) => upload.status)).toEqual(["done", "skipped", "skipped"]);
   });
 
+  it("records the effective privacy and made-for-kids flag on every upload", () => {
+    const run = publishRun(approved());
+
+    expect(run.uploads.map((u) => [u.privacy, u.made_for_kids])).toEqual([
+      ["private", true],
+      ["private", true],
+      ["unlisted", true],
+    ]);
+  });
+
+  it("uses the target, then the channel default, outside kids pipelines", () => {
+    db.state.pipelines = db.state.pipelines.map((p) => ({ ...p, capabilities: [] }));
+    db.state.automations = db.state.automations.map((a) => ({
+      ...a,
+      targets: [
+        makeTarget({ made_for_kids: false, privacy: "public", variants: ["episode"] }),
+        makeTarget({ id: "t-default", made_for_kids: null, variants: ["episode"] }),
+        makeTarget({
+          id: "t-gone",
+          channel_id: "gone",
+          made_for_kids: null,
+          variants: ["episode"],
+        }),
+      ],
+    }));
+
+    const run = publishRun(approved());
+
+    expect(run.uploads.map((u) => [u.privacy, u.made_for_kids])).toEqual([
+      ["public", false],
+      ["private", true],
+      ["private", false],
+    ]);
+  });
+
   it("returns to approved when no upload succeeded", () => {
     const run = publishRun(approved([STORY_ARTIFACT]));
 

@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { db } from "@/api/mocks/db";
 import { renderApp } from "../helpers/renderApp";
-import { openRun } from "../helpers/runs";
+import { audienceOf, openRun, uploadRows } from "../helpers/runs";
 
 describe("Runs list", () => {
   it("lists runs and filters by status and automation through the url", async () => {
@@ -57,6 +57,26 @@ describe("Run detail", () => {
     expect(within(uploads).getByText("Skipped")).toBeInTheDocument();
     expect(within(uploads).getByText("Language ta is not in this run.")).toBeInTheDocument();
     expect(screen.getByText("1 uploaded · 1 failed · 0 pending · 1 skipped")).toBeInTheDocument();
+  });
+
+  it("shows the privacy and made-for-kids flag of each upload", async () => {
+    await openRun("run-published");
+
+    const rows = uploadRows(await screen.findByRole("table", { name: "Uploads" }));
+    expect(audienceOf(rows, "Kutty Stories", "Episode")).toEqual(["Private", "Yes"]);
+    expect(audienceOf(rows, "Kutty Stories", "Short")).toEqual(["Private", "Yes"]);
+    expect(audienceOf(rows, "Kutty Kathaigal", "Episode")).toEqual(["Unlisted", "Yes"]);
+  });
+
+  it("shows a dash for uploads stored before privacy was recorded", async () => {
+    db.state.runs = db.state.runs.map((r) => ({
+      ...r,
+      uploads: r.uploads.map((u) => ({ ...u, privacy: null, made_for_kids: null })),
+    }));
+    await openRun("run-published");
+
+    const rows = uploadRows(await screen.findByRole("table", { name: "Uploads" }));
+    expect(audienceOf(rows, "Kutty Kathaigal", "Episode")).toEqual(["—", "—"]);
   });
 
   it("shows an empty log for a run without log lines", async () => {

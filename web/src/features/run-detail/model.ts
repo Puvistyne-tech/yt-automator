@@ -1,3 +1,5 @@
+import { PRIVACY_LABELS } from "@/api/labels";
+import { canCancel, canDelete, canRetry } from "@/api/runRules";
 import type { ReviewPolicy, Run, RunStatus, ScoreItem, Upload } from "@/api/types";
 
 export interface RunActions {
@@ -11,21 +13,26 @@ export interface RunActions {
 
 export type Decision = "approved" | "rejected";
 
-const CANCELLABLE: RunStatus[] = ["queued", "running", "awaiting_review", "approved"];
-const RETRYABLE: RunStatus[] = ["failed", "cancelled", "awaiting_review", "approved", "rejected"];
-const UNDELETABLE: RunStatus[] = ["queued", "running", "publishing"];
-
 export const GOOD_SCORE = 85;
 export const FAIR_SCORE = 60;
+
+export function cancelMessage(status: RunStatus): string {
+  if (status === "queued") {
+    return "The run stops before it starts and is marked cancelled.";
+  }
+  return status === "running"
+    ? "The current stage stops and the run is marked cancelled."
+    : "The finished run is marked cancelled and will not be published.";
+}
 
 export function availableActions(run: Run): RunActions {
   const canPublish = run.status === "approved";
   return {
-    canCancel: CANCELLABLE.includes(run.status),
-    canRetry: RETRYABLE.includes(run.status),
+    canCancel: canCancel(run.status),
+    canRetry: canRetry(run.status),
     canReview: run.status === "awaiting_review",
     canPublish,
-    canDelete: !UNDELETABLE.includes(run.status),
+    canDelete: canDelete(run.status),
     showPublish: canPublish || run.status === "publishing" || run.uploads.length > 0,
   };
 }
@@ -103,6 +110,22 @@ export function uploadNote(upload: Upload): { text: string; tone: "error" | "mut
     return null;
   }
   return { text: upload.error, tone: upload.status === "failed" ? "error" : "muted" };
+}
+
+const UNKNOWN = "—";
+
+function yesNo(value: boolean | null): string {
+  if (value === null) {
+    return UNKNOWN;
+  }
+  return value ? "Yes" : "No";
+}
+
+export function uploadAudience(upload: Upload): { privacy: string; madeForKids: string } {
+  return {
+    privacy: upload.privacy === null ? UNKNOWN : PRIVACY_LABELS[upload.privacy],
+    madeForKids: yesNo(upload.made_for_kids),
+  };
 }
 
 export function stageProgress(run: Run): { done: number; total: number } {

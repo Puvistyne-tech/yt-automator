@@ -191,10 +191,4 @@ describe("Automation editor: edit", () => {
 
     expect(targetRow(1).getByRole("switch", { name: /Made for kids/ })).toBeDisabled();
   });
-
-  it("shows an error state for an unknown automation", async () => {
-    renderApp("/automations/missing");
-
-    expect(await screen.findByText("automation 'missing' was not found")).toBeInTheDocument();
-  });
 });

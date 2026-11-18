@@ -1,5 +1,6 @@
 import type { RJSFSchema, RJSFValidationError } from "@rjsf/utils";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
+import { offersNotSet } from "@/shared/schema-form/choices";
 import {
   messageFor,
   propertyToPath,
@@ -8,6 +9,19 @@ import {
   validateSchemaData,
 } from "@/shared/schema-form/errors";
 import { groupIntoSections, readSections } from "@/shared/schema-form/sections";
+
+describe("schema form choices", () => {
+  it.each([
+    [true, {}, false],
+    [true, { default: "auto" }, false],
+    [false, { default: "auto" }, false],
+    [undefined, { default: "auto" }, false],
+    [false, {}, true],
+    [undefined, { default: null }, true],
+  ])("offers Not set when required is %s and the schema is %j: %s", (required, schema, offered) => {
+    expect(offersNotSet(required, schema)).toBe(offered);
+  });
+});
 
 const schema: RJSFSchema = {
   type: "object",

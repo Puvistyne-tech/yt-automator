@@ -11,6 +11,7 @@ from automator.pipelines.kids_story.settings.base import (
     color,
     localized_list,
 )
+from automator.pipelines.kids_story.settings.choices import EDGE_CHOICES
 
 LATIN_FONTS = [
     "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
@@ -83,6 +84,7 @@ class ThumbnailSettings(SettingsSection):
     )
     text_position: Edge = Field(
         default=Placement.BOTTOM,
+        json_schema_extra=EDGE_CHOICES,
         title="Title position",
         description="Draw the title along the top or the bottom of the thumbnail.",
     )

@@ -20,6 +20,7 @@ from automator.domain.providers import (
     ProviderConfig,
     provider_config_errors,
 )
+from automator.domain.run_parts import Upload
 from automator.domain.settings import AppSettings, AppSettingsInput, app_settings_errors
 from automator.domain.validation import ROOT_FIELD, field_errors, validated_settings
 from automator.shared.errors import ValidationFailed
@@ -137,6 +138,15 @@ def test_connect_state_rejections(key: str, now: datetime, reason: str) -> None:
     with pytest.raises(ValidationFailed) as raised:
         verify_state(token, STATE, key, now, POLICY)
     assert raised.value.fields == {"state": reason}
+
+
+def test_an_upload_stored_before_audience_fields_loads_them_as_null() -> None:
+    legacy = {"target_id": "t", "channel_id": "c", "language": "en", "variant": "v"}
+
+    upload = Upload.model_validate(legacy)
+
+    assert (upload.privacy, upload.made_for_kids) == (None, None)
+    assert upload.model_dump(mode="json")["privacy"] is None
 
 
 @pytest.mark.parametrize("token", ["garbage", "e30.sig", "eyJhIjoiYiJ9.sig"])

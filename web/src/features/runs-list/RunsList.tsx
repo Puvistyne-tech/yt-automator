@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from "react-router";
 import { useAutomations } from "@/api/automations";
 import { RUN_STATUS_ORDER, RUN_STATUSES } from "@/api/labels";
+import { runPath } from "@/api/paths";
 import { useRuns } from "@/api/runs";
 import type { Run } from "@/api/types";
 import { hasActiveFilters, readFilters, withFilter } from "@/features/runs-list/filters";
@@ -39,7 +40,7 @@ function RunsTable({ runs }: { runs: Run[] }) {
       {runs.map((run) => (
         <tr key={run.id}>
           <td>
-            <Link to={`/runs/${run.id}`} className="cell-title">
+            <Link to={runPath(run)} className="cell-title">
               {run.automation_name}
             </Link>
           </td>

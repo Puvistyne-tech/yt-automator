@@ -7,6 +7,7 @@ import {
   type WidgetProps,
 } from "@rjsf/utils";
 import type { ChangeEvent } from "react";
+import { offersNotSet } from "@/shared/schema-form/choices";
 import { Switch } from "@/shared/ui/Switch";
 
 function common(props: WidgetProps) {
@@ -106,7 +107,7 @@ function SelectWidget(props: WidgetProps) {
         props.onChange(optionFor(options, event.target.value)?.value ?? props.options.emptyValue)
       }
     >
-      {!props.required && <option value="">Not set</option>}
+      {offersNotSet(props.required, props.schema) && <option value="">Not set</option>}
       {options.map((option) => (
         <option key={String(option.value)} value={String(option.value)}>
           {option.label}

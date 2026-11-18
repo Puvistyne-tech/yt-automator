@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pydantic import AwareDatetime, Field
 
+from automator.domain.channels import Privacy
 from automator.domain.model_base import DomainModel, JsonObject
 from automator.domain.run_enums import (
     ArtifactKind,
@@ -50,6 +51,8 @@ class Upload(DomainModel):
     url: str | None = None
     error: str | None = None
     quota_units: int = Field(default=0, ge=0)
+    privacy: Privacy | None = None
+    made_for_kids: bool | None = None
 
 
 class RunLog(DomainModel):

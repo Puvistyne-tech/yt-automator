@@ -152,6 +152,8 @@ export function makeUpload(overrides: Partial<Upload> = {}): Upload {
     url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     error: null,
     quota_units: 2050,
+    privacy: "private",
+    made_for_kids: true,
     ...overrides,
   };
 }

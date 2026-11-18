@@ -4,6 +4,7 @@ import { usePipeline } from "@/api/catalog";
 import { RUN_STATUSES } from "@/api/labels";
 import type { Run } from "@/api/types";
 import { ArtifactsView } from "@/features/run-detail/ArtifactsView";
+import { AutomationLink } from "@/features/run-detail/AutomationLink";
 import { LogView } from "@/features/run-detail/LogView";
 import { availableActions, reviewRuleText } from "@/features/run-detail/model";
 import { PublishPanel } from "@/features/run-detail/PublishPanel";
@@ -92,7 +93,7 @@ export function RunDetail({ run }: { run: Run }) {
             <StatusBadge {...RUN_STATUSES[run.status]} />
           </span>
         }
-        description={<Link to={`/automations/${run.automation_id}`}>Open automation</Link>}
+        description={<AutomationLink automationId={run.automation_id} />}
         actions={<RunActionsBar run={run} />}
       />
       <div className="run-layout">

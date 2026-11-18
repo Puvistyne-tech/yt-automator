@@ -11,6 +11,15 @@ const schema = {
   properties: {
     title: { type: "string", title: "Title", description: "Shown on the video." },
     mood: { type: "string", title: "Mood", enum: ["calm", "funny"] },
+    scenes: {
+      type: "string",
+      title: "Scenes",
+      default: "auto",
+      oneOf: [
+        { const: "auto", title: "Best scenes, picked automatically" },
+        { const: "first_n", title: "First scenes, in story order" },
+      ],
+    },
     minutes: { type: "integer", title: "Minutes", minimum: 1, maximum: 10 },
     music: { type: "boolean", title: "Background music" },
     tags: {
@@ -98,6 +107,33 @@ describe("SchemaForm", () => {
     await user.click(screen.getByRole("switch", { name: "Background music" }));
 
     expect(last()).toMatchObject({ title: "Sun", mood: "funny", minutes: 4, music: true });
+  });
+
+  it("shows choice titles and offers Not set only for optional choices without a default", async () => {
+    const { user, last } = setup();
+    const optionTexts = (label: string) =>
+      within(screen.getByLabelText(label))
+        .getAllByRole("option")
+        .map((option) => option.textContent);
+
+    expect(optionTexts("Scenes")).toEqual([
+      "Best scenes, picked automatically",
+      "First scenes, in story order",
+    ]);
+    expect(optionTexts("Mood")).toEqual(["Not set", "calm", "funny"]);
+    await user.selectOptions(screen.getByLabelText("Scenes"), "First scenes, in story order");
+
+    expect(last()?.scenes).toBe("first_n");
+  });
+
+  it("clears an optional choice when Not set is chosen", async () => {
+    const { user, last } = setup();
+    await user.selectOptions(screen.getByLabelText("Mood"), "funny");
+    expect(last()?.mood).toBe("funny");
+
+    await user.selectOptions(screen.getByLabelText("Mood"), "Not set");
+
+    expect(last()?.mood).toBeUndefined();
   });
 
   it("renders multi select arrays as checkboxes in enum order", async () => {

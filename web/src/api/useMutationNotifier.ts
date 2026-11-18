@@ -1,8 +1,9 @@
 import { errorMessage } from "@/api/errors";
-import { useToast } from "@/shared/ui";
+import { type ToastAction, useToast } from "@/shared/ui";
 
 export interface NotifyOptions<T> {
   success: string | ((data: T) => string);
+  action?: (data: T) => ToastAction;
   onSuccess?: (data: T) => void;
   onError?: (error: unknown) => void;
   onDone?: () => void;
@@ -24,12 +25,13 @@ export interface MutationNotifier {
 
 function handlersFor<T>(
   options: NotifyOptions<T>,
-  toast: { success: (message: string) => void },
+  toast: { success: (message: string, action?: ToastAction) => void },
   fail: (error: unknown) => void,
 ): MutationHandlers<T> {
   return {
     onSuccess: (data: T) => {
-      toast.success(typeof options.success === "string" ? options.success : options.success(data));
+      const message = typeof options.success === "string" ? options.success : options.success(data);
+      toast.success(message, options.action?.(data));
       options.onSuccess?.(data);
     },
     onError: (error: unknown) => {

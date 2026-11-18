@@ -151,6 +151,29 @@ def test_kids_pipeline_plans_are_made_for_kids() -> None:
     assert (regular[0].made_for_kids, kids[0].made_for_kids) == (False, True)
 
 
+def test_initial_upload_records_the_effective_privacy_and_made_for_kids() -> None:
+    inherited, overridden = plans(
+        target(), target(id="t2", privacy=Privacy.UNLISTED, made_for_kids=True)
+    )
+    first, second = inherited.initial_upload(), overridden.initial_upload()
+    assert (first.privacy, first.made_for_kids) == (Privacy.PUBLIC, False)
+    assert (second.privacy, second.made_for_kids) == (Privacy.UNLISTED, True)
+
+
+def test_a_skipped_upload_still_records_its_effective_audience() -> None:
+    (plan,) = plans(target(language="ta", privacy=Privacy.UNLISTED), languages=("en",))
+    upload = plan.initial_upload()
+    assert upload.status is UploadStatus.SKIPPED
+    assert (upload.privacy, upload.made_for_kids) == (Privacy.UNLISTED, False)
+
+
+def test_kids_pipeline_uploads_are_recorded_as_made_for_kids() -> None:
+    (plan,) = plan_uploads(
+        make_run(), [target(made_for_kids=False)], {"c1": CHANNEL}, kids_pipeline().descriptor, NOW
+    )
+    assert plan.initial_upload().made_for_kids is True
+
+
 def test_metadata_falls_back_to_automation_name() -> None:
     assert video_metadata(ARTIFACTS, "ta", "landscape", "Bedtime").title == "Bedtime"
 

@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { RUN_STATUSES } from "@/api/labels";
+import { runPath } from "@/api/paths";
 import type { Automation, Channel, PipelineDescriptor } from "@/api/types";
 import {
   languagesLabel,
@@ -26,7 +27,7 @@ function LastRun({ automation }: { automation: Automation }) {
     return <span className="subtle">Never run</span>;
   }
   return (
-    <Link to={`/runs/${last.id}`} className="cell-stack cell-link">
+    <Link to={runPath(last)} className="cell-stack cell-link">
       <StatusBadge {...RUN_STATUSES[last.status]} />
       <span className="subtle">{formatRelative(last.created_at)}</span>
     </Link>

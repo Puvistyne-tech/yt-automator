@@ -1,12 +1,13 @@
-import { useDuplicateAutomation, useRunAutomation, useToggleAutomation } from "@/api/automations";
+import { useDuplicateAutomation, useToggleAutomation } from "@/api/automations";
 import type { Automation } from "@/api/types";
 import { useMutationNotifier } from "@/api/useMutationNotifier";
+import { useRunNow } from "@/api/useRunNow";
 import { useDeleteFlow } from "@/features/automation-list/useDeleteFlow";
 
 export function useListActions() {
   const notifier = useMutationNotifier();
   const toggle = useToggleAutomation();
-  const run = useRunAutomation();
+  const runNow = useRunNow();
   const duplicate = useDuplicateAutomation();
   const deleteFlow = useDeleteFlow();
   return {
@@ -17,11 +18,7 @@ export function useListActions() {
         { id: automation.id, enabled },
         notifier.handlers({ success: `${automation.name} ${enabled ? "enabled" : "paused"}.` }),
       ),
-    runNow: (automation: Automation) =>
-      run.mutate(
-        automation.id,
-        notifier.handlers({ success: `Run queued for ${automation.name}.` }),
-      ),
+    runNow: runNow.start,
     duplicate: (automation: Automation) =>
       duplicate.mutate(
         automation.id,

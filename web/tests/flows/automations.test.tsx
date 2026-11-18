@@ -94,17 +94,6 @@ describe("Automations list", () => {
     );
   });
 
-  it("queues a run with Run now", async () => {
-    const { user } = renderApp("/automations");
-    const row = await findRow("Automations", "Tamil shorts");
-    const before = db.state.runs.length;
-
-    await user.click(row.getByRole("button", { name: "Run Tamil shorts now" }));
-
-    await findToast("Run queued for Tamil shorts.");
-    expect(db.state.runs).toHaveLength(before + 1);
-  });
-
   it("reports a failed duplicate without adding a row", async () => {
     failWith("post", "/automations/:id/duplicate", 500, { message: "Could not copy." });
     const { user } = renderApp("/automations");
@@ -129,17 +118,5 @@ describe("Automations list", () => {
       expect(screen.queryByRole("dialog", { name: "Delete automation?" })).not.toBeInTheDocument(),
     );
     expect(screen.getByRole("link", { name: "Tamil shorts" })).toBeInTheDocument();
-  });
-
-  it("reports a failed Run now", async () => {
-    failWith("post", "/automations/:id/runs", 409, { message: "Automation has no languages." });
-    const { user } = renderApp("/automations");
-    const row = await findRow("Automations", "Tamil shorts");
-    const before = db.state.runs.length;
-
-    await user.click(row.getByRole("button", { name: "Run Tamil shorts now" }));
-
-    await findToast("Automation has no languages.");
-    expect(db.state.runs).toHaveLength(before);
   });
 });

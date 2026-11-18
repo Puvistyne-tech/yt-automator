@@ -4,6 +4,6 @@ const RETRYABLE: RunStatus[] = ["failed", "cancelled", "awaiting_review", "appro
 const CANCELLABLE: RunStatus[] = ["queued", "running", "awaiting_review", "approved"];
 const UNDELETABLE: RunStatus[] = ["queued", "running", "publishing"];
 
-export const canRetry = (status: RunStatus) => RETRYABLE.includes(status);
-export const canCancel = (status: RunStatus) => CANCELLABLE.includes(status);
-export const canDelete = (status: RunStatus) => !UNDELETABLE.includes(status);
+export const canRetry = (status: RunStatus): boolean => RETRYABLE.includes(status);
+export const canCancel = (status: RunStatus): boolean => CANCELLABLE.includes(status);
+export const canDelete = (status: RunStatus): boolean => !UNDELETABLE.includes(status);

@@ -55,6 +55,10 @@ export function errorMessage(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
+}
+
 export function fieldErrorsOf(error: unknown): FieldErrors {
   return error instanceof ApiError ? error.fields : {};
 }

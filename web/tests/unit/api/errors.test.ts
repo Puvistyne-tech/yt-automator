@@ -5,6 +5,7 @@ import {
   errorMessage,
   fieldErrorsOf,
   hasErrors,
+  isNotFound,
   normalizeFieldErrors,
   normalizeFieldPath,
 } from "@/api/errors";
@@ -56,6 +57,13 @@ describe("error helpers", () => {
     expect(errorMessage(new Error("Boom"))).toBe("Boom");
     expect(errorMessage(new Error(""))).toBe("Something went wrong. Please try again.");
     expect(errorMessage("string")).toBe("Something went wrong. Please try again.");
+  });
+
+  it("recognizes only a 404 API error as not found", () => {
+    expect(isNotFound(new ApiError(404, "automation_not_found", "gone"))).toBe(true);
+    expect(isNotFound(new ApiError(409, "conflict", "busy"))).toBe(false);
+    expect(isNotFound(new Error("offline"))).toBe(false);
+    expect(isNotFound(null)).toBe(false);
   });
 
   it("returns field errors only for API errors", () => {

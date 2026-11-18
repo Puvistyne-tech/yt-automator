@@ -11,6 +11,7 @@ from automator.pipelines.kids_story.settings.base import (
     localized_list,
     localized_text,
 )
+from automator.pipelines.kids_story.settings.choices import CATEGORY_CHOICES
 
 DESCRIPTION_EN = (
     "{title}\n\n"
@@ -92,6 +93,7 @@ class MetadataSettings(SettingsSection):
     )
     category: YouTubeCategory = Field(
         default=YouTubeCategory.FILM_AND_ANIMATION,
+        json_schema_extra=CATEGORY_CHOICES,
         title="Category",
         description="The YouTube category of every upload.",
     )

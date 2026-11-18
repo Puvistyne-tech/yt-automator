@@ -1,5 +1,6 @@
 import type { PipelineDescriptor } from "@/api/types";
 import { applyPipeline } from "@/features/automation-editor/model/draft";
+import { enabledSwitchLabel } from "@/features/automation-editor/model/general";
 import {
   EditorSection,
   type SectionProps,
@@ -97,7 +98,7 @@ export function GeneralSection(props: GeneralSectionProps) {
         <Switch
           checked={draft.enabled}
           onChange={(enabled) => onChange({ ...draft, enabled })}
-          label="Enabled: run on schedule"
+          label={enabledSwitchLabel(draft.schedule.kind)}
         />
       </div>
     </EditorSection>

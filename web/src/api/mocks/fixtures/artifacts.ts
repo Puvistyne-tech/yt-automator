@@ -95,8 +95,56 @@ export const STORY_ARTIFACT = makeArtifact({
   meta: {},
 });
 
+function workingFile(overrides: Partial<Artifact> & Pick<Artifact, "id" | "kind">): Artifact {
+  return makeArtifact({
+    language: null,
+    variant: null,
+    meta: {},
+    size_bytes: 240_000,
+    ...overrides,
+  });
+}
+
+const sceneImage = (scene: number) =>
+  workingFile({
+    id: `art-scene-${scene}`,
+    kind: "image",
+    stage_id: "images",
+    filename: `scene-${scene}.svg`,
+    media_type: "image/svg+xml",
+    meta: { width: 1280, height: 720 },
+  });
+
+const narration = (language: string) =>
+  workingFile({
+    id: `art-voice-${language}`,
+    kind: "audio",
+    stage_id: "voice",
+    language,
+    filename: `narration-${language}.wav`,
+    media_type: "audio/wav",
+  });
+
+export const WORKING_ARTIFACTS: Artifact[] = [
+  sceneImage(1),
+  sceneImage(2),
+  sceneImage(3),
+  workingFile({
+    id: "art-clip-1",
+    kind: "video",
+    stage_id: "motion",
+    variant: "episode",
+    filename: "clip-scene-1.mp4",
+    media_type: "video/mp4",
+    meta: { width: 1280, height: 720 },
+  }),
+  narration("en"),
+  narration("ta"),
+];
+
 export const FULL_ARTIFACTS: Artifact[] = [
   STORY_ARTIFACT,
+  ...WORKING_ARTIFACTS,
   ...artifactsFor("en", "episode"),
   ...artifactsFor("en", "short"),
   ...artifactsFor("ta", "episode"),

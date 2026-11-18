@@ -1,42 +1,40 @@
 import type { PipelineDescriptor, Run } from "@/api/types";
-import { ArtifactPreview } from "@/features/run-detail/ArtifactPreview";
+import { ArtifactGrid } from "@/features/run-detail/ArtifactGrid";
 import {
   type ArtifactGroup,
+  finalOutputs,
   groupArtifacts,
-  isTallArtifact,
-  splitGroup,
+  intermediateByStage,
 } from "@/features/run-detail/artifacts";
+import { IntermediateFiles } from "@/features/run-detail/IntermediateFiles";
 import { EmptyState } from "@/shared/ui";
+import "@/features/run-detail/artifacts.css";
 
-interface GroupProps {
+interface ViewProps {
   run: Run;
-  group: ArtifactGroup;
   pipeline: PipelineDescriptor | undefined;
 }
 
-function Group({ run, group, pipeline }: GroupProps) {
-  const { media, documents, captions, poster } = splitGroup(group);
+function Group({ run, group, pipeline }: ViewProps & { group: ArtifactGroup }) {
   return (
     <section className="artifact-group" aria-label={group.title}>
-      <h3 className="artifact-group-title">{group.title}</h3>
-      {media.length > 0 && (
-        <div className="artifact-media-grid">
-          {media.map((artifact) => (
-            <ArtifactPreview
-              key={artifact.id}
-              runId={run.id}
-              artifact={artifact}
-              tall={isTallArtifact(artifact, pipeline)}
-              poster={artifact.kind === "video" ? poster : undefined}
-              captions={captions}
-            />
-          ))}
-        </div>
-      )}
-      {documents.length > 0 && (
-        <div className="artifact-doc-grid">
-          {documents.map((artifact) => (
-            <ArtifactPreview key={artifact.id} runId={run.id} artifact={artifact} />
+      <h4 className="artifact-group-title">{group.title}</h4>
+      <ArtifactGrid runId={run.id} artifacts={group.artifacts} pipeline={pipeline} />
+    </section>
+  );
+}
+
+function FinalOutputs({ run, pipeline }: ViewProps) {
+  const groups = groupArtifacts(run, pipeline, finalOutputs(run));
+  return (
+    <section className="artifact-section" aria-label="Final outputs">
+      <h3 className="artifact-section-title">Final outputs</h3>
+      {groups.length === 0 ? (
+        <p className="subtle">No videos, thumbnails, captions or metadata yet.</p>
+      ) : (
+        <div className="stack artifact-groups divided-list">
+          {groups.map((group) => (
+            <Group key={group.key} run={run} group={group} pipeline={pipeline} />
           ))}
         </div>
       )}
@@ -44,15 +42,8 @@ function Group({ run, group, pipeline }: GroupProps) {
   );
 }
 
-export function ArtifactsView({
-  run,
-  pipeline,
-}: {
-  run: Run;
-  pipeline: PipelineDescriptor | undefined;
-}) {
-  const groups = groupArtifacts(run, pipeline);
-  if (groups.length === 0) {
+export function ArtifactsView({ run, pipeline }: ViewProps) {
+  if (run.artifacts.length === 0) {
     return (
       <EmptyState
         icon="film"
@@ -61,11 +52,13 @@ export function ArtifactsView({
       />
     );
   }
+  const stages = intermediateByStage(run);
   return (
-    <div className="stack artifact-groups divided-list">
-      {groups.map((group) => (
-        <Group key={group.key} run={run} group={group} pipeline={pipeline} />
-      ))}
+    <div className="stack artifact-sections">
+      <FinalOutputs run={run} pipeline={pipeline} />
+      {stages.length > 0 && (
+        <IntermediateFiles runId={run.id} stages={stages} pipeline={pipeline} />
+      )}
     </div>
   );
 }
