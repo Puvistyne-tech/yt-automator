@@ -43,3 +43,12 @@ def test_shutdown_warns_when_workers_outlive_the_timeout(
     with caplog.at_level(logging.WARNING, logger="automator"):
         runtime.stop()
     assert "still working at shutdown" in caplog.text
+
+
+def test_the_run_log_cap_comes_from_the_runtime_config(
+    config: RuntimeConfig, overrides: Overrides
+) -> None:
+    app = create_app(config.model_copy(update={"max_run_log_entries": 7}), overrides)
+    runtime: Runtime = app.state.runtime
+    assert runtime.ports.run_logs.max_entries == 7
+    assert runtime.use_cases.runs.execute.recorder.log_policy.max_entries == 7

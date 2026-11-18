@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from automator.domain.model_base import JsonObject
 from automator.domain.ports import Clock, RunEvents, RunRepository
 from automator.domain.run_enums import LogLevel, RunEventKind
-from automator.domain.run_parts import Artifact, RunLog, StageRun, Upload
+from automator.domain.run_parts import Artifact, RunLog, RunLogPolicy, StageRun, Upload
 from automator.domain.runs import Run, RunEvent
 
 
@@ -15,6 +15,7 @@ class RunRecorder:
     runs: RunRepository
     events: RunEvents
     clock: Clock
+    log_policy: RunLogPolicy = field(default_factory=RunLogPolicy)
 
     def emit(self, run_id: str, kind: RunEventKind, payload: JsonObject) -> None:
         self.events.publish(
@@ -62,5 +63,6 @@ class RunRecorder:
         entry = RunLog(at=self.clock.now(), level=level, stage_id=stage_id, message=message)
         stored = self.runs.get(run_id)
         if stored is not None:
-            self.runs.save(stored.model_copy(update={"logs": (*stored.logs, entry)}))
+            logs = self.log_policy.appended(stored.logs, entry)
+            self.runs.save(stored.model_copy(update={"logs": logs}))
         self.emit(run_id, RunEventKind.LOG, entry.model_dump(mode="json", exclude={"at"}))

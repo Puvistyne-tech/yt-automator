@@ -25,6 +25,7 @@ from automator.domain.ports import (
     SecretStore,
     YouTubeGateway,
 )
+from automator.domain.run_parts import RunLogPolicy
 from automator.infrastructure.config import RuntimeConfig, load_config
 from automator.infrastructure.db.database import Database
 from automator.infrastructure.db.entity_repositories import (
@@ -128,6 +129,7 @@ def build_ports(
         pipelines=overrides.pipelines or build_pipeline_registry(),
         catalog=overrides.catalog or build_provider_catalog(secrets, config.data_dir),
         youtube=overrides.youtube or youtube_gateway(config),
+        run_logs=RunLogPolicy(max_entries=config.max_run_log_entries),
     )
 
 

@@ -30,6 +30,7 @@ from automator.domain.ports import (
     YouTubeGateway,
 )
 from automator.domain.quota import QuotaPolicy
+from automator.domain.run_parts import RunLogPolicy
 
 
 @dataclass(frozen=True)
@@ -52,6 +53,7 @@ class Ports:
     catalog: ProviderCatalog
     youtube: YouTubeGateway
     quota: QuotaPolicy = field(default_factory=QuotaPolicy)
+    run_logs: RunLogPolicy = field(default_factory=RunLogPolicy)
 
 
 @dataclass(frozen=True)
@@ -67,7 +69,7 @@ class Collaborators:
 
 
 def collaborators(p: Ports) -> Collaborators:
-    recorder = RunRecorder(p.runs, p.events, p.clock)
+    recorder = RunRecorder(p.runs, p.events, p.clock, p.run_logs)
     quota_report = QuotaReport(p.ledger, p.clock, p.quota)
     return Collaborators(
         authorizer=ChannelAuthorizer(p.credentials, p.secrets),

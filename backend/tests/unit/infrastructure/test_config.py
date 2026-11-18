@@ -34,6 +34,7 @@ OVERRIDES: list[tuple[str, str, Any]] = [
     ("database_busy_timeout_ms", "250", 250),
     ("youtube_caption_track_name", "English", "English"),
     ("youtube_playlist_page_size", "10", 10),
+    ("max_run_log_entries", "50", 50),
     ("log_level", "debug", "debug"),
 ]
 DEFAULTS: dict[str, Any] = {
@@ -57,6 +58,7 @@ DEFAULTS: dict[str, Any] = {
     "database_busy_timeout_ms": 5000,
     "youtube_caption_track_name": "",
     "youtube_playlist_page_size": 50,
+    "max_run_log_entries": 2000,
     "log_level": "info",
 }
 
@@ -106,6 +108,7 @@ def test_empty_cors_origins_allow_none() -> None:
         ("reload", "maybe"),
         ("database_busy_timeout_ms", "-1"),
         ("youtube_playlist_page_size", "51"),
+        ("max_run_log_entries", "0"),
     ],
 )
 def test_invalid_values_are_rejected(field: str, raw: str) -> None:

@@ -89,6 +89,8 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
   If the run was retried or deleted meanwhile, the result is dropped and its unreferenced files are discarded.
   A retry that arrives while the old worker is still busy runs once that worker returns.
 - Every `context.log(message, level)` call is stored on the run as a RunLog and published as a `log` event.
+  A run keeps only its newest `max_run_log_entries` entries (runtime setting, default 2000, the same
+  number the UI keeps); older entries are dropped. Every entry is still published as an event.
 - Deleting a `queued`, `running` or `publishing` run is refused; cancel it first.
 - After the last stage the run is scored, then becomes `awaiting_review`, or `approved` directly when the policy is `auto_when_score_at_least` and the score reaches `min_score`.
 - Only an `approved` run can publish. Publishing creates one upload per target and variant. A target whose language is not in the run, whose channel no longer exists, or that has no matching video yields a `skipped` upload with the reason in `error`. A failed upload fails only itself; the run is `published` when at least one upload is done and none is pending.

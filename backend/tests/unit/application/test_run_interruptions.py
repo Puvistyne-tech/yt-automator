@@ -7,6 +7,7 @@ import pytest
 
 from automator.domain.pipeline import StageContext
 from automator.domain.run_enums import LogLevel, RunEventKind, RunStatus, StageStatus
+from automator.domain.run_parts import RunLogPolicy
 from automator.domain.run_state import transition
 from tests.fixtures.builders import execute_run, finished_run, started_run
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry
@@ -136,3 +137,14 @@ def test_logging_for_a_missing_run_only_emits_the_event(harness: Harness) -> Non
         "stage_id": "script",
         "message": "hello",
     }
+
+
+def test_stored_logs_keep_only_the_newest_entries(harness: Harness) -> None:
+    run = started_run(harness)
+    recorder = replace(harness.recorder, log_policy=RunLogPolicy(max_entries=2))
+    for message in ("one", "two", "three"):
+        recorder.log(run.id, message)
+    stored = harness.runs.get(run.id)
+    assert stored is not None
+    assert [log.message for log in stored.logs] == ["two", "three"]
+    assert len([e for e in harness.events.published if e.kind is RunEventKind.LOG]) == 3

@@ -7,6 +7,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from automator.domain.run_parts import DEFAULT_MAX_RUN_LOGS
+
 ENV_PREFIX = "AUTOMATOR_"
 OAUTH_CALLBACK_PATH = "/api/oauth/callback"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -73,6 +75,9 @@ class RuntimeConfig(BaseModel):
     )
     youtube_playlist_page_size: int = Field(
         default=50, ge=1, le=50, description="Playlists fetched per YouTube API page"
+    )
+    max_run_log_entries: int = Field(
+        default=DEFAULT_MAX_RUN_LOGS, ge=1, description="Newest log entries kept on each run"
     )
     log_level: str = Field(default="info", description="Server log level")
 
