@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 from automator.domain.capabilities import Capability, TextRequest
 from automator.domain.pipeline import NewArtifact, Pipeline, Stage, StageContext, StageOutcome
@@ -21,6 +21,7 @@ from automator.domain.pipeline_descriptors import (
 from automator.domain.quality import ScoreItem
 from automator.domain.run_enums import ArtifactKind, LogLevel
 
+SRT = "application/x-subrip"
 LANGUAGES = (LanguageOption(code="en", name="English"), LanguageOption(code="ta", name="Tamil"))
 VARIANTS = (
     VariantOption(id="landscape", name="Landscape", aspect=Aspect.LANDSCAPE),
@@ -35,6 +36,7 @@ class FakeSettings(BaseModel):
     fail_stage: str = ""
     score: float = Field(default=90.0, ge=0, le=100)
     with_thumbnail: bool = True
+    extra_meta: dict[str, JsonValue] = Field(default_factory=dict)
 
 
 def settings_of(context: StageContext) -> FakeSettings:
@@ -116,19 +118,18 @@ class FakeStage:
     def package(self, context: StageContext, language: str) -> tuple[NewArtifact, ...]:
         captions = write(context, f"{language}.srt", "1\n00:00:00,000 --> 00:00:01,000\nhi\n")
         metadata = write(context, f"{language}.json", "{}")
+        meta: dict[str, JsonValue] = {"title": f"Story in {language}", "description": "A story"}
+        meta |= {"tags": ["kids"], **settings_of(context).extra_meta}
         return (
             NewArtifact(
-                kind=ArtifactKind.SUBTITLE,
-                path=captions,
-                language=language,
-                media_type="application/x-subrip",
+                kind=ArtifactKind.SUBTITLE, path=captions, language=language, media_type=SRT
             ),
             NewArtifact(
                 kind=ArtifactKind.METADATA,
                 path=metadata,
                 language=language,
                 media_type="application/json",
-                meta={"title": f"Story in {language}", "description": "A story", "tags": ["kids"]},
+                meta=meta,
             ),
         )
 

@@ -1,0 +1,1 @@
+$style. Character sheet of $name, $descriptor. Signature colours: $palette. Full body, front view and three-quarter view, friendly expression, plain soft cream background. No text, no letters.

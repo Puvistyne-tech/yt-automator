@@ -1,0 +1,14 @@
+Translate this story from $source_language into $language.
+
+Rules:
+- Keep exactly $scene_count narrations, in the same order, one translated narration per original narration.
+- Keep exactly $question_count questions.
+- The moral must appear word for word, as you translate it, inside the last narration.
+- The last narration must end with this exact refrain: "$refrain"
+- Character names in $language: $names
+
+Story:
+$story
+
+Answer with JSON in exactly this shape:
+{"title": "...", "moral": "...", "narrations": ["..."], "questions": ["..."], "hook_line": "..."}

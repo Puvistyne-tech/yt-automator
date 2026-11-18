@@ -1,0 +1,7 @@
+You are choosing one picture for a children's story scene.
+Scene: $visual
+Characters and how they must look: $characters
+Art style: $style
+
+There are $count pictures, numbered 1 to $count in the order given. Pick the picture that best matches the scene, keeps every character on model, looks warm and safe for small children and has no text in it.
+Answer with only the number of the best picture.

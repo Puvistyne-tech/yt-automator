@@ -34,6 +34,7 @@ FORBIDDEN_FRAMEWORKS = frozenset(
     }
 )
 MAX_FILE_LINES = 200
+PIPELINE_INDEX = PACKAGE_ROOT / "pipelines" / "registry.py"
 
 
 def layer_files(layer: str) -> list[Path]:
@@ -96,16 +97,34 @@ def test_inner_layers_are_framework_free(layer: str) -> None:
     assert violations == {}
 
 
-def test_pipelines_do_not_import_each_other() -> None:
-    violations = []
-    for file in layer_files("pipelines"):
-        own_plugin = file.relative_to(PACKAGE_ROOT / "pipelines").parts[0]
-        for module in imported_modules(file):
-            parts = module.split(".")
-            is_pipeline_import = parts[:2] == [PACKAGE, "pipelines"] and len(parts) > 2
-            if is_pipeline_import and parts[2] not in {own_plugin, "registry"}:
-                violations.append(f"{display(file)} -> {module}")
-    assert violations == []
+def plugin_files() -> list[Path]:
+    return [file for file in layer_files("pipelines") if file != PIPELINE_INDEX]
+
+
+def foreign_pipeline_imports(file: Path) -> list[str]:
+    own_plugin = file.relative_to(PACKAGE_ROOT / "pipelines").parts[0]
+    return [
+        f"{display(file)} -> {module}"
+        for module in imported_modules(file)
+        if (parts := module.split("."))[:2] == [PACKAGE, "pipelines"]
+        and len(parts) > 2
+        and parts[2] != own_plugin
+    ]
+
+
+def test_pipelines_do_not_import_each_other_or_the_index() -> None:
+    assert [line for file in plugin_files() for line in foreign_pipeline_imports(file)] == []
+
+
+def test_pipeline_index_imports_only_plugins_and_domain() -> None:
+    pipeline_imports = {
+        module.split(".")[2]
+        for module in imported_modules(PIPELINE_INDEX)
+        if module.startswith(f"{PACKAGE}.pipelines.")
+    }
+    plugins = {path.name for path in (PACKAGE_ROOT / "pipelines").iterdir() if path.is_dir()}
+    assert pipeline_imports <= plugins - {"__pycache__"}
+    assert imported_layers(PIPELINE_INDEX) <= {"pipelines", "domain", "shared"}
 
 
 def test_every_top_level_package_is_a_known_layer() -> None:

@@ -102,6 +102,9 @@ class SubtitleStyle(DomainModel):
     outline_color: str = "#000000"
     highlight_color: str = "#FFD54A"
     margin_bottom: int = Field(default=90, ge=0)
+    margin_sides: int = Field(default=40, ge=0)
+    font_file: Path | None = None
+    wrap_lines: bool = False
 
 
 class VideoComposition(DomainModel):

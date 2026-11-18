@@ -22,6 +22,7 @@ Dependencies flow in one direction. A layer may import only from the layers list
 - `infrastructure` implements ports. Nothing imports `infrastructure` except `main.py`.
 - A class that implements a port lives in `infrastructure`, even when it only delegates to a pure `domain` function.
 - `pipelines` receive providers through ports. A pipeline never imports a concrete adapter or another pipeline.
+- `pipelines/registry.py` is the plugin index: it may import each plugin, and no plugin imports it.
 - `api` translates HTTP to use-case calls. No business rules, no database queries, no provider calls.
 - Only `main.py` constructs adapters and wires them to ports. `composition` binds ports to use cases,
   constructs no adapter, and is imported only by `main.py`. `api` never imports `composition`.

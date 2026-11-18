@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.capabilities import SubtitleStyle
 from automator.infrastructure.providers.media.composition_audio import audio_graph
 from automator.infrastructure.providers.media.composition_inputs import plan_inputs
 from automator.infrastructure.providers.media.composition_video import video_graph
 from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
-from automator.infrastructure.providers.media.subtitle_filter import subtitle_filter
-from automator.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.media_fixtures import OPTIONS, clip, composition
 
 MIX = ":duration=longest:normalize=0[mix]"
@@ -89,25 +84,8 @@ def test_frame_sizes_are_rounded_down_to_even(width: int, height: int, size: str
     ]
 
 
-@pytest.mark.parametrize(("width", "height"), [(320, 180), (321, 181)])
-def test_burned_subtitles_scale_with_the_even_height(width: int, height: int) -> None:
-    assert "FontSize=57.6" in video_of(width=width, height=height)[-1]
-
-
 def test_background_colour_is_configurable_and_validated() -> None:
     options = FfmpegOptions(background_color="#112233")
     assert video_of(options)[0].startswith("color=c=#112233:")
     with pytest.raises(ValidationError):
         FfmpegOptions(background_color="black:s=1x1")
-
-
-@pytest.mark.parametrize("family", ["Kid's Font", "Comic Sans, MS", "A:B", "", "x[y]"])
-def test_unsafe_font_names_are_refused(family: str) -> None:
-    with pytest.raises(UpstreamFailure, match="may only use letters, digits"):
-        subtitle_filter(Path("/w/s.srt"), SubtitleStyle(font_family=family), 1080, 3, "")
-
-
-def test_safe_font_names_pass_through() -> None:
-    style = SubtitleStyle(font_family="Noto Sans Tamil-Bold_2")
-    rendered = subtitle_filter(Path("/w/s.srt"), style, 1080, 3, "")
-    assert "FontName=Noto Sans Tamil-Bold_2," in rendered

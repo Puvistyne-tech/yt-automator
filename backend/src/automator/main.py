@@ -42,6 +42,7 @@ from automator.infrastructure.db.settings_repositories import (
 )
 from automator.infrastructure.diagnostics.setup_defaults import setup_defaults as setup_defaults
 from automator.infrastructure.diagnostics.system_inspector import build_system_inspector
+from automator.infrastructure.pipelines.static_registry import StaticPipelineRegistry
 from automator.infrastructure.providers.catalog import build_provider_catalog
 from automator.infrastructure.runtime.events import InProcessRunEvents
 from automator.infrastructure.runtime.scheduler import SchedulerTicker
@@ -52,7 +53,7 @@ from automator.infrastructure.secrets.selection import build_secret_store
 from automator.infrastructure.storage.artifact_store import FileArtifactStore
 from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
 from automator.infrastructure.youtube.settings import youtube_settings
-from automator.pipelines.registry import build_pipeline_registry
+from automator.pipelines.registry import installed_pipelines
 
 logger = logging.getLogger("automator")
 
@@ -126,7 +127,7 @@ def build_ports(
         store=FileArtifactStore(config.data_dir),
         queue=queue,
         events=overrides.events or InProcessRunEvents(config.event_queue_size),
-        pipelines=overrides.pipelines or build_pipeline_registry(),
+        pipelines=overrides.pipelines or StaticPipelineRegistry(installed_pipelines()),
         catalog=overrides.catalog or build_provider_catalog(secrets, config.data_dir),
         youtube=overrides.youtube or youtube_gateway(config),
         inspector=overrides.inspector or build_system_inspector(config),

@@ -46,13 +46,7 @@ def finishing_steps(composition: VideoComposition, total: float, options: Ffmpeg
     steps = []
     if composition.subtitles is not None and composition.subtitle_style.burn_in:
         steps.append(
-            subtitle_filter(
-                composition.subtitles,
-                composition.subtitle_style,
-                frame_size(composition)[1],
-                options.outline_width,
-                options.fonts_dir,
-            )
+            subtitle_filter(composition.subtitles, composition.subtitle_style, options.fonts_dir)
         )
     steps.extend(fade_steps(composition.fade_seconds, total))
     steps.append("format=yuv420p")

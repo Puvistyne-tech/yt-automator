@@ -1,0 +1,46 @@
+Write a new $language story for "$series" about the theme: $theme.
+
+Cast (use only these characters, refer to them in "characters" by their id; $lead leads the story):
+$cast
+
+Choose one moral from this list, or a close gentle variation of one:
+$morals
+
+Requirements:
+- Between $scene_min and $scene_max scenes.
+- Each scene's narration has between $words_min and $words_max words, written in $language.
+- The whole narration reads aloud in about $target_seconds seconds at $words_per_minute words per minute.
+- Short sentences, simple everyday words, warm and calm tone.
+- The last scene says the moral word for word, then ends with this exact refrain: "$refrain"
+- "visual" describes what the picture shows in English, with no words, letters or signs in the picture.
+- "camera" is one of: $cameras.
+- Mark exactly $hero_count of the most beautiful scenes with "hero": true.
+- "sound_effects" lists zero to two gentle sound cues per scene, in English, like "birds chirping".
+- "speaker" is "narrator", or a character id if that character says the whole scene.
+- "questions" holds exactly $question_count "What happens next?" style questions for children, in $language.
+- "short_scenes" lists the zero-based indexes of up to $short_scenes scenes that make the best vertical Short.
+- "hook_line" is one gentle, curious sentence in $language that opens the Short. No clickbait.
+- "thumbnail" describes, in English, one warm picture for the thumbnail with no text in it.
+
+Answer with JSON in exactly this shape:
+{
+  "title": "...",
+  "moral": "...",
+  "scenes": [
+    {
+      "narration": "...",
+      "visual": "...",
+      "characters": ["$lead"],
+      "setting": "...",
+      "mood": "...",
+      "camera": "push_in",
+      "hero": false,
+      "sound_effects": [],
+      "speaker": "narrator"
+    }
+  ],
+  "questions": ["..."],
+  "short_scenes": [0, 1, 2],
+  "hook_line": "...",
+  "thumbnail": "..."
+}

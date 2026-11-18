@@ -98,8 +98,10 @@ class Api:
         )
         return started
 
-    def wait_for(self, run_id: str, *statuses: str) -> dict[str, Any]:
-        deadline = time.monotonic() + WAIT_SECONDS
+    def wait_for(
+        self, run_id: str, *statuses: str, seconds: float = WAIT_SECONDS
+    ) -> dict[str, Any]:
+        deadline = time.monotonic() + seconds
         while time.monotonic() < deadline:
             run: dict[str, Any] = ok(self.client.get(f"/api/runs/{run_id}"))
             if run["status"] in statuses:

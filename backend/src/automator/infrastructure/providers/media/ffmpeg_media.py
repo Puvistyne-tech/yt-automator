@@ -5,7 +5,9 @@ from pathlib import Path
 from automator.domain.capabilities import Capability, VideoComposition
 from automator.infrastructure.providers.context import ProviderContext
 from automator.infrastructure.providers.host import first_reason
+from automator.infrastructure.providers.media.ass_subtitles import with_ass_subtitles
 from automator.infrastructure.providers.media.composition_audio import LoudnessMeasurement
+from automator.infrastructure.providers.media.composition_video import frame_size
 from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 from automator.infrastructure.providers.media.loudness import parse_integrated, parse_loudnorm
 from automator.infrastructure.providers.media.media_commands import (
@@ -63,6 +65,8 @@ class FfmpegMedia:
             measurement = self.measured(composition)
             normalise = measurement is not None
         ensure_parent(output)
+        size = frame_size(composition)
+        composition = with_ass_subtitles(composition, size, output, self.options.outline_width)
         command = compose_command(composition, self.options, output, measurement, normalise)
         self.run(command, self.options.timeout_seconds)
         return output

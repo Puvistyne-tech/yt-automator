@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 
 from automator.domain.model_base import DomainModel
@@ -9,12 +10,17 @@ from automator.domain.run_parts import Artifact
 EXACT = 2
 GENERIC = 1
 MISMATCH = 0
+LANGUAGE_CODE = re.compile(r"[a-z]{2,3}(-[A-Za-z0-9]{2,8})*")
 
 
 class VideoMetadata(DomainModel):
     title: str
     description: str = ""
     tags: tuple[str, ...] = ()
+    category_id: str | None = None
+    default_language: str | None = None
+    hashtags: tuple[str, ...] = ()
+    playlist_title: str | None = None
 
 
 def match_rank(value: str | None, wanted: str) -> int:
@@ -70,15 +76,27 @@ def text_list(value: object) -> tuple[str, ...]:
     return ()
 
 
+def optional_text(value: object) -> str | None:
+    return value if isinstance(value, str) and value else None
+
+
+def language_code(value: object) -> str | None:
+    text = optional_text(value)
+    return text if text is not None and LANGUAGE_CODE.fullmatch(text) else None
+
+
 def video_metadata(
     artifacts: Sequence[Artifact], language: str, variant: str, fallback_title: str
 ) -> VideoMetadata:
     found = best_artifact(artifacts, ArtifactKind.METADATA, language, variant)
     meta = found.meta if found is not None else {}
-    title = meta.get("title")
-    description = meta.get("description")
+    title = optional_text(meta.get("title"))
     return VideoMetadata(
-        title=title if isinstance(title, str) and title else fallback_title,
-        description=description if isinstance(description, str) else "",
+        title=title or fallback_title,
+        description=optional_text(meta.get("description")) or "",
         tags=text_list(meta.get("tags")),
+        category_id=optional_text(meta.get("category_id")),
+        default_language=language_code(meta.get("default_language")),
+        hashtags=text_list(meta.get("hashtags")),
+        playlist_title=optional_text(meta.get("playlist_title")),
     )

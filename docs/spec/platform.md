@@ -111,6 +111,15 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   "interrupted, check YouTube before publishing again", then becomes `published` if any upload is done, else
   `approved` with "no upload succeeded". `queued` runs are queued again, oldest first.
 - A thumbnail, caption or playlist failure leaves the upload `done` and records the problem in its `error`.
+- Upload details come from the run's best `metadata` artifact for the language and variant: `title`, `description`,
+  `tags`, and optionally `category_id`, `default_language`, `hashtags` and `playlist_title`. A metadata `category_id`
+  wins over the channel default; `default_language` (sent as `defaultLanguage` and `defaultAudioLanguage`) must look
+  like a language code (`^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$`) and otherwise falls back to the target language.
+  Hashtags must be one token matching `#\S+`; others are ignored. A hashtag is already present when a whitespace
+  token of the description equals it, compared with casefold. Missing ones are appended after a blank line, one by
+  one, deduplicated with casefold, only while the description stays within 5000 UTF-8 bytes and holds at most 60
+  hashtags in total. The playlist is always the target's `playlist_id`;
+  `playlist_title` is informational and no playlist is ever created.
 - `publish_delay_minutes` applies only when the effective privacy is `public`: the video is uploaded private with `publish_at` set to now plus the delay, and YouTube makes it public then.
 - Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track, 50 per playlist insertion).
 - The quota day resets at midnight Pacific time (`America/Los_Angeles`), as YouTube's does.
@@ -190,6 +199,10 @@ NewArtifact     kind, path (inside workspace), language, variant, media_type, me
 ProviderResolver.resolve(capability) -> a provider for the capability (see Provider resolution)
 ```
 
+`pipelines/registry.py` is the index of installed plugins: `installed_pipelines() -> tuple[Pipeline, ...]`.
+`infrastructure/pipelines/static_registry.py` holds `StaticPipelineRegistry(pipelines)`, the `PipelineRegistry` adapter
+that the composition root builds from that index. It refuses two pipelines with the same `type_id`.
+
 ### Provider resolution
 
 - The chain is the saved `ProviderConfig` for the capability. With no config, or a config whose chain
@@ -226,6 +239,22 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   the last narration clip.
 - `extract_frame` fails with an upstream failure when no frame was written, for example past the end.
 - Speech synthesizers refuse blank text with an upstream failure.
+- `SubtitleStyle`: burn_in, font_family, font_file (nullable), font_size, primary, outline and highlight
+  colours, margin_bottom, margin_sides, wrap_lines (default false).
+- Burned-in subtitles (`subtitles` set and `SubtitleStyle.burn_in`): an SRT file is converted to an ASS
+  document whose canvas is the frame size, so `font_size`, `margin_bottom` and `margin_sides` are frame
+  pixels. Each SRT line is drawn as one line: the renderer does not re-wrap unless `wrap_lines` is true,
+  so the producer wraps to fit. An `.ass` file is drawn as authored. Text is shaped with complex
+  shaping (needed for Tamil and other Indic scripts). When `font_file` is set its folder is the font
+  folder, otherwise the provider's configured fonts folder, otherwise the system fonts.
+- `domain/srt.py` parses SRT into entries (start, end, lines); producers and the media toolkit share it.
+- Kutty Stories wraps each cue line to the measured frame width and splits a cue that needs more than
+  `max_lines` lines into consecutive screens, each shown for at least `min_cue_seconds`, using free time
+  before the next cue. Text is never dropped: when there is no time to show the parts, they join into
+  one screen that may exceed `max_lines`, and sentences that start in the last `min_cue_seconds` of a
+  narration join into one cue. A font whose name is unsafe, or none loading, means the configured
+  fallback name with the letter width estimate; a script Pillow cannot shape keeps the font file for
+  drawing and is measured by the estimate.
 
 ## HTTP API
 

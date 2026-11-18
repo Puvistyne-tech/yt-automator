@@ -61,6 +61,21 @@ def test_upload_request_uses_metadata_and_safe_defaults(harness: Harness) -> Non
     assert video.publish_at is None and video.default_language == "en"
 
 
+def test_pipeline_category_language_and_hashtags_reach_the_upload(harness: Harness) -> None:
+    extras = {"category_id": "27", "default_language": "ta", "hashtags": ["#A"]}
+    run = approved_run(harness, settings={"extra_meta": extras})
+    publish_run(harness).execute(run.id)
+    video = harness.youtube.uploads[0]
+    assert (video.category_id, video.default_language) == ("27", "ta")
+    assert video.description == "A story\n\n#A"
+
+
+def test_channel_defaults_fill_what_the_metadata_leaves_out(harness: Harness) -> None:
+    publish_run(harness).execute(approved_run(harness).id)
+    video = harness.youtube.uploads[0]
+    assert (video.category_id, video.description) == ("22", "A story")
+
+
 def test_kids_pipeline_uploads_are_made_for_kids(harness: Harness) -> None:
     publish_run(harness).execute(approved_run(harness, pipeline_type="fake_kids").id)
     assert harness.youtube.uploads[0].made_for_kids is True
