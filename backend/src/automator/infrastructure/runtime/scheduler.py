@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime
 
 from automator.domain.ports import Clock
@@ -13,18 +13,20 @@ Tick = Callable[[datetime], object]
 
 
 class SchedulerTicker:
-    def __init__(self, tick: Tick, clock: Clock, interval_seconds: float) -> None:
-        self.tick = tick
+    def __init__(self, ticks: Sequence[Tick], clock: Clock, interval_seconds: float) -> None:
+        self.ticks = tuple(ticks)
         self.clock = clock
         self.interval_seconds = interval_seconds
         self.stopped = threading.Event()
         self.thread: threading.Thread | None = None
 
     def tick_once(self) -> None:
-        try:
-            self.tick(self.clock.now())
-        except Exception:
-            logger.exception("scheduler tick failed")
+        now = self.clock.now()
+        for tick in self.ticks:
+            try:
+                tick(now)
+            except Exception:
+                logger.exception("scheduler tick failed")
 
     def loop(self) -> None:
         while not self.stopped.wait(self.interval_seconds):

@@ -15,11 +15,12 @@ from automator.api.routers import (
     credentials,
     events,
     runs,
+    storage,
     system,
 )
 
 API_PREFIX = "/api"
-ROUTERS = (system, credentials, channels, automations, runs, events, configuration)
+ROUTERS = (system, credentials, channels, automations, runs, events, configuration, storage)
 Lifespan = Callable[[FastAPI], AbstractAsyncContextManager[None]]
 
 

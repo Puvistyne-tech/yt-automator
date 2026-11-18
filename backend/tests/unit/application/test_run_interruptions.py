@@ -140,7 +140,7 @@ def test_recording_for_a_missing_run_emits_nothing(harness: Harness) -> None:
 
 def test_stored_logs_keep_only_the_newest_entries(harness: Harness) -> None:
     run = started_run(harness)
-    recorder = replace(harness.recorder, log_policy=RunLogPolicy(max_entries=2))
+    recorder = replace(harness.recorder, log_policy=lambda: RunLogPolicy(max_entries=2))
     for message in ("one", "two", "three"):
         recorder.log(run.id, message)
     stored = harness.runs.get(run.id)

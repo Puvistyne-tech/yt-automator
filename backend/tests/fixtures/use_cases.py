@@ -3,12 +3,16 @@ from __future__ import annotations
 from typing import Any
 
 from automator.application.cancel_run import CancelRun
+from automator.application.clean_up_storage import CleanUpStorage
+from automator.application.cleanup_planner import CleanupPlanner
 from automator.application.complete_channel_connect import CompleteChannelConnect
 from automator.application.delete_channel import DeleteChannel
 from automator.application.delete_credential import DeleteCredential
 from automator.application.delete_run import DeleteRun
 from automator.application.get_dashboard import GetDashboard
+from automator.application.get_storage import GetStorage
 from automator.application.list_channel_playlists import ListChannelPlaylists
+from automator.application.preview_cleanup import PreviewCleanup
 from automator.application.publish_run import PublishRun
 from automator.application.recover_interrupted_runs import RecoverInterruptedRuns
 from automator.application.retry_run import RetryRun
@@ -100,3 +104,19 @@ def approved_run(h: Harness, **overrides: Any) -> Run:
 
 def failed_at_render(h: Harness) -> Run:
     return finished_run(h, settings={"fail_stage": "render"})
+
+
+def cleanup_planner(h: Harness) -> CleanupPlanner:
+    return CleanupPlanner(h.runs, h.files, h.app_settings, h.clock)
+
+
+def clean_up(h: Harness) -> CleanUpStorage:
+    return CleanUpStorage(cleanup_planner(h), h.runs, h.files, h.recorder)
+
+
+def preview_cleanup(h: Harness) -> PreviewCleanup:
+    return PreviewCleanup(cleanup_planner(h))
+
+
+def get_storage(h: Harness) -> GetStorage:
+    return GetStorage(cleanup_planner(h), h.files)

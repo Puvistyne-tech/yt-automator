@@ -7,14 +7,15 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from automator.domain.diagnostics import DoctorPolicy
+from automator.domain.diagnostics import DEFAULT_MIN_FREE_GB, DoctorPolicy
 from automator.domain.run_parts import DEFAULT_MAX_RUN_LOGS
+from automator.domain.settings import AppSettingsInput, ServerLogLevel
 from automator.infrastructure.runtime.python_requirement import required_python
 
 ENV_PREFIX = "AUTOMATOR_"
 LOOPBACK_HOST = "127.0.0.1"
 WILDCARD_HOSTS = frozenset({"", "0.0.0.0", "::"})
-DEFAULT_MIN_FREE_GB: float = DoctorPolicy.model_fields["min_free_gb"].default
+DEFAULT_CLEANUP_HOURS: int = AppSettingsInput.model_fields["cleanup_interval_hours"].default
 OAUTH_CALLBACK_PATH = "/api/oauth/callback"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 
@@ -90,11 +91,14 @@ class RuntimeConfig(BaseModel):
     max_run_log_entries: int = Field(
         default=DEFAULT_MAX_RUN_LOGS, ge=1, description="Newest log entries kept on each run"
     )
-    log_level: str = Field(default="info", description="Server log level")
+    log_level: ServerLogLevel = Field(default=ServerLogLevel.INFO, description="Server log level")
     doctor_min_free_gb: float = Field(
         default=DEFAULT_MIN_FREE_GB,
         ge=0,
         description="Free disk space below which the doctor warns, in GB",
+    )
+    cleanup_interval_hours: int = Field(
+        default=DEFAULT_CLEANUP_HOURS, ge=0, description="Hours between automatic cleanups"
     )
     doctor_tool_timeout_seconds: float = Field(
         default=5.0, gt=0, description="Seconds the doctor waits for ffmpeg -version"

@@ -8,6 +8,7 @@ from automator.domain.port_repositories import (
     CredentialRepository,
     ProviderConfigRepository,
     RunChange,
+    RunCheck,
     RunRepository,
 )
 from automator.domain.port_runtime import (
@@ -16,6 +17,7 @@ from automator.domain.port_runtime import (
     IdGenerator,
     QuotaLedger,
     RunEvents,
+    RunFileStore,
     RunQueue,
     ScheduleCalculator,
     SecretStore,
@@ -36,7 +38,9 @@ __all__ = [
     "ProviderConfigRepository",
     "QuotaLedger",
     "RunChange",
+    "RunCheck",
     "RunEvents",
+    "RunFileStore",
     "RunQueue",
     "RunRepository",
     "ScheduleCalculator",

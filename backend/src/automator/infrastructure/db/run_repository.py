@@ -4,7 +4,7 @@ from typing import Any
 
 from sqlmodel import col, select
 
-from automator.domain.ports import RunChange
+from automator.domain.ports import RunChange, RunCheck
 from automator.domain.runs import Run, RunQuery
 from automator.infrastructure.db.codec import sortable_time, to_payload
 from automator.infrastructure.db.database import Database
@@ -53,3 +53,12 @@ class SqlRunRepository(RowStore[Run, RunRow]):
             if changed is not None:
                 session.merge(run_row(changed))
             return changed
+
+    def delete_if(self, run_id: str, check: RunCheck) -> Run | None:
+        with self.db.immediate_session() as session:
+            row = session.get(RunRow, run_id)
+            found = self.decode(row) if row is not None else None
+            if found is None or not check(found):
+                return None
+            session.delete(row)
+            return found

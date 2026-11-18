@@ -8,6 +8,8 @@ from automator.domain.capabilities import Capability
 from automator.domain.model_base import DomainModel
 from automator.domain.secrets import SecretDefinition
 
+DEFAULT_MIN_FREE_GB = 10.0
+
 
 class CheckStatus(StrEnum):
     OK = "ok"
@@ -47,7 +49,7 @@ class SystemFacts(DomainModel):
 
 class DoctorPolicy(DomainModel):
     min_python: tuple[int, int] = (3, 12)
-    min_free_gb: float = Field(default=10.0, ge=0)
+    min_free_gb: float = Field(default=DEFAULT_MIN_FREE_GB, ge=0)
 
 
 class DoctorReport(DomainModel):

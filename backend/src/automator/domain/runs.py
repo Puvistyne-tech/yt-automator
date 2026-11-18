@@ -37,6 +37,7 @@ class Run(DomainModel):
     created_at: AwareDatetime
     started_at: AwareDatetime | None = None
     finished_at: AwareDatetime | None = None
+    intermediate_removed_at: AwareDatetime | None = None
 
     def summary(self) -> RunSummary:
         return RunSummary(

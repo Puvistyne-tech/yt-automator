@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from automator.application.list_secrets import ListSecrets
@@ -33,7 +34,7 @@ class RunDoctor:
     catalog: ProviderCatalog
     secrets: SecretStore
     inspector: SystemInspector
-    policy: DoctorPolicy
+    policy: Callable[[], DoctorPolicy]
 
     def provider_findings(self) -> ProviderFindings:
         try:
@@ -50,7 +51,7 @@ class RunDoctor:
 
     def execute(self) -> DoctorReport:
         findings = self.provider_findings()
-        checks = [*system_checks(self.inspector.facts(), self.policy), *findings.problems]
+        checks = [*system_checks(self.inspector.facts(), self.policy()), *findings.problems]
         return DoctorReport(
             can_start=is_startable(checks),
             checks=tuple(checks),

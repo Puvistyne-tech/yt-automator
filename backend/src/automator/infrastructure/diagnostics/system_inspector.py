@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import platform
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +10,7 @@ from automator.infrastructure.config import RuntimeConfig
 from automator.infrastructure.db.migration_state import migration_state
 from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 from automator.infrastructure.providers.process import ProcessRunner, SubprocessRunner
+from automator.infrastructure.storage.disk_usage import free_space, nearest_existing
 from automator.shared.errors import UpstreamFailure
 
 COPYRIGHT_MARKER = " Copyright"
@@ -24,20 +24,9 @@ def tool_version(runner: ProcessRunner, binary: str, timeout_seconds: float) -> 
     return lines[0].split(COPYRIGHT_MARKER)[0].strip() if lines else ""
 
 
-def nearest_existing(path: Path) -> Path:
-    return next(candidate for candidate in (path, *path.parents) if candidate.exists())
-
-
 def writable_dir(path: Path) -> bool:
     existing = nearest_existing(path)
     return existing.is_dir() and os.access(existing, os.W_OK | os.X_OK)
-
-
-def free_space(path: Path) -> int | None:
-    try:
-        return shutil.disk_usage(nearest_existing(path)).free
-    except OSError:
-        return None
 
 
 @dataclass(frozen=True)

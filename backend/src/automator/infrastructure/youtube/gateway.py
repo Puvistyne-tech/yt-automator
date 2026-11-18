@@ -34,6 +34,7 @@ from automator.shared.errors import UpstreamFailure
 
 ServiceFactory = Callable[[Credentials], Any]
 MediaFactory = Callable[..., Any]
+CaptionName = Callable[[], str]
 CAPTION_MEDIA_TYPE = "application/octet-stream"
 
 
@@ -49,8 +50,10 @@ class GoogleYouTubeGateway:
         media: MediaFactory = MediaFileUpload,
         oauth: GoogleOAuth | None = None,
         refresher: Refresher = refresh_with_google,
+        caption_name: CaptionName | None = None,
     ) -> None:
         self.settings = settings
+        self.caption_name = caption_name or (lambda: settings.caption_track_name)
         self.services = services
         self.media = media
         self.oauth = oauth or GoogleOAuth(settings)
@@ -106,7 +109,7 @@ class GoogleYouTubeGateway:
     def upload_captions(
         self, auth: ChannelAuth, video_id: str, language: str, captions: Path
     ) -> None:
-        body = caption_body(video_id, language, self.settings.caption_track_name)
+        body = caption_body(video_id, language, self.caption_name())
         media = self.media(str(captions), mimetype=CAPTION_MEDIA_TYPE)
         with google_errors():
             self.service(auth).captions().insert(

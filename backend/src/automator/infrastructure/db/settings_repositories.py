@@ -5,10 +5,16 @@ from datetime import date
 
 from sqlalchemy import delete
 from sqlalchemy.dialects.sqlite import insert
-from sqlmodel import col, select
+from sqlmodel import Session, col, select
 
 from automator.domain.providers import ProviderConfig
-from automator.domain.settings import AppSettings
+from automator.domain.settings import AppSettings, AppSettingsInput
+from automator.domain.settings_overrides import (
+    Overrides,
+    effective_settings,
+    storable_settings,
+    stored_settings,
+)
 from automator.infrastructure.db.codec import from_payload, to_payload
 from automator.infrastructure.db.database import Database
 from automator.infrastructure.db.tables import AppSettingsRow, ProviderConfigRow, QuotaEntryRow
@@ -39,20 +45,24 @@ class SqlProviderConfigRepository:
 
 
 class SqlAppSettingsRepository:
-    def __init__(self, db: Database, data_dir: str) -> None:
+    def __init__(self, db: Database, data_dir: str, overrides: Overrides = ()) -> None:
         self.db = db
         self.data_dir = data_dir
+        self.overrides = tuple(overrides)
+
+    def stored(self, session: Session) -> AppSettingsInput:
+        row = session.get(AppSettingsRow, APP_SETTINGS_ID)
+        return stored_settings(row.payload if row is not None else None)
 
     def get(self) -> AppSettings:
         with self.db.session() as session:
-            row = session.get(AppSettingsRow, APP_SETTINGS_ID)
-            stored = from_payload(AppSettings, row.payload) if row is not None else AppSettings()
-        return stored.model_copy(update={"data_dir": self.data_dir})
+            stored = self.stored(session)
+        return effective_settings(stored, self.overrides, self.data_dir)
 
     def save(self, settings: AppSettings) -> None:
-        payload = to_payload(settings.model_copy(update={"data_dir": ""}))
-        with self.db.session() as session:
-            session.merge(AppSettingsRow(id=APP_SETTINGS_ID, payload=payload))
+        with self.db.immediate_session() as session:
+            kept = storable_settings(settings.input(), self.stored(session), list(settings.locked))
+            session.merge(AppSettingsRow(id=APP_SETTINGS_ID, payload=to_payload(kept)))
 
 
 class SqlQuotaLedger:

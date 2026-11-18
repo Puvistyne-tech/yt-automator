@@ -34,6 +34,7 @@ from tests.fixtures.fake_runtime import (
     SequentialIds,
     TmpArtifactStore,
 )
+from tests.fixtures.fake_storage import InMemoryRunFiles
 from tests.fixtures.fake_youtube import FakeYouTube
 
 
@@ -57,6 +58,7 @@ class Harness:
     pipeline: FakePipeline = field(default_factory=FakePipeline)
     kids: FakePipeline = field(default_factory=kids_pipeline)
     schedules: PureScheduleCalculator = field(default_factory=PureScheduleCalculator)
+    files: InMemoryRunFiles = field(default_factory=InMemoryRunFiles)
 
     def __post_init__(self) -> None:
         self.store = TmpArtifactStore(self.root)
