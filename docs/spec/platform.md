@@ -562,6 +562,18 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   the last narration clip.
 - `extract_frame` fails with an upstream failure when no frame was written, for example past the end.
 - Speech synthesizers refuse blank text with an upstream failure.
+- The `mlx_audio` TTS provider (registered after `edge_tts`, before `kokoro`) speaks with named voice presets
+  (`presets`: id -> name, model folder under `models_root`, languages, generation kwargs, sentence_split,
+  pause_ms). `SpeechRequest.voice` names a preset; empty means `default_voice` for the request language
+  (en `warm_storyteller`, ta `kayal`). No default for the language is an upstream failure
+  `language_unsupported`, an unknown preset `voice_unknown`, and a preset that does not list the language
+  `language_unsupported`. mlx-audio is not an app dependency: the provider runs
+  `<python> -I mlx_audio_worker.py` from a separate venv with `HF_HOME=<hf_home>` and `HF_HUB_OFFLINE=1`,
+  passing a JSON job `{model_dir, text, kwargs, sentence_split, pause_ms, output}` on stdin. The worker writes
+  mono 16-bit PCM WAV at the model's rate; with sentence_split it speaks each sentence (split after `.`, `!`,
+  `?`, `।`, `॥`) and joins them with pause_ms of silence. Word timings are estimated, then refined with
+  Whisper alignment. It is unavailable when `python` or `models_root` does not exist, so hosts without
+  them fall through to the next TTS provider.
 - `SubtitleStyle` (`domain/video_look.py`): burn_in, font_family, font_file (nullable), font_size, primary,
   outline and highlight colours, margin_bottom, margin_sides, wrap_lines (default false), karaoke (default
   false), position (bottom|middle|top, ASS alignment 2, 5, 8; margin_bottom is the vertical margin from that

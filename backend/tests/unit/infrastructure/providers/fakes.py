@@ -57,12 +57,14 @@ class RecordingRunner:
 def host(
     binaries: frozenset[str] = frozenset(),
     modules: frozenset[str] = frozenset(),
+    paths: frozenset[str] = frozenset(),
     system: str = "Linux",
     machine: str = "x86_64",
 ) -> HostProbe:
     return HostProbe(
         which=lambda name: f"/usr/bin/{name}" if name in binaries else None,
         has_module=lambda name: name in modules,
+        has_path=lambda path: path in paths,
         system=system,
         machine=machine,
     )

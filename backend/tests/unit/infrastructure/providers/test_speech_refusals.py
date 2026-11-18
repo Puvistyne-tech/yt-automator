@@ -14,6 +14,7 @@ from autotube.infrastructure.providers.tts.edge_voice import (
 )
 from autotube.infrastructure.providers.tts.espeak import EspeakOptions, EspeakSpeech
 from autotube.infrastructure.providers.tts.kokoro_voice import KokoroOptions, KokoroSpeech
+from autotube.infrastructure.providers.tts.mlx_audio_voice import MlxAudioOptions, MlxAudioSpeech
 from autotube.infrastructure.providers.tts.offline_speech import (
     OfflineSpeech,
     OfflineSpeechOptions,
@@ -32,6 +33,7 @@ SYNTHESIZERS: dict[str, SpeechFactory] = {
     "offline_speech": lambda context: OfflineSpeech(OfflineSpeechOptions(), context),
     "kokoro": lambda context: KokoroSpeech(KokoroOptions(), context, engine=FakeKokoro()),
     "edge_tts": lambda context: EdgeTtsSpeech(EdgeTtsOptions(), context, stream=FakeStream([])),
+    "mlx_audio": lambda context: MlxAudioSpeech(MlxAudioOptions(), context),
 }
 
 
@@ -78,3 +80,23 @@ def test_edge_reports_its_missing_package(tmp_path: Path) -> None:
 @pytest.mark.parametrize(("speed", "rate"), [(1.25, "+25%"), (1.0, "+0%"), (0.9, "-10%")])
 def test_edge_rate_is_a_signed_percentage(speed: float, rate: str) -> None:
     assert edge_rate(speed) == rate
+
+
+@pytest.mark.parametrize(
+    ("language", "voice", "message", "code"),
+    [
+        ("fr", "", "mlx_audio has no voice for 'fr'", "language_unsupported"),
+        ("en", "af_heart", "mlx_audio has no voice preset 'af_heart'", "voice_unknown"),
+        ("en", "kayal", "mlx_audio voice 'kayal' does not speak 'en'", "language_unsupported"),
+    ],
+)
+def test_mlx_audio_refuses_voices_it_cannot_speak(
+    tmp_path: Path, language: str, voice: str, message: str, code: str
+) -> None:
+    runner = RecordingRunner()
+    adapter = MlxAudioSpeech(MlxAudioOptions(), make_context(tmp_path, runner=runner))
+    request = SpeechRequest(text="hi", language=language, voice=voice)
+    with pytest.raises(UpstreamFailure, match=f"^{message}$") as raised:
+        adapter.synthesize(request, tmp_path / "v.wav")
+    assert raised.value.code == code
+    assert runner.calls == []

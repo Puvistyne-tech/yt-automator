@@ -11,7 +11,7 @@ from autotube.domain.capabilities import Speech, SpeechRequest, TimingSource, Wo
 from autotube.infrastructure.providers.host import HostProbe
 from autotube.infrastructure.providers.spec import ProviderOptions
 from autotube.infrastructure.providers.tts.word_alignment import align_words
-from autotube.infrastructure.providers.tts.word_timing import spoken_words
+from autotube.infrastructure.providers.tts.word_timing import estimate_timings, spoken_words
 
 
 class AlignmentOptions(ProviderOptions):
@@ -108,3 +108,15 @@ def refine(
     if aligned is None:
         return speech
     return speech.model_copy(update={"words": aligned, "timing_source": TimingSource.ALIGNMENT})
+
+
+def estimated_speech(
+    output: Path,
+    duration: float,
+    request: SpeechRequest,
+    aligner: WordAligner,
+    options: AlignmentOptions,
+) -> Speech:
+    words = estimate_timings(spoken_words(request.text), 0.0, duration)
+    speech = Speech(path=output, duration_seconds=duration, words=words)
+    return refine(speech, request, aligner, options)

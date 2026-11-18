@@ -9,7 +9,13 @@ from autotube.infrastructure.providers.media import ffmpeg_media
 from autotube.infrastructure.providers.motion import depthflow, ffmpeg_pan_zoom
 from autotube.infrastructure.providers.music import ace_step, library_music, synth_music
 from autotube.infrastructure.providers.spec import ProviderSpec
-from autotube.infrastructure.providers.tts import edge_voice, espeak, kokoro_voice, offline_speech
+from autotube.infrastructure.providers.tts import (
+    edge_voice,
+    espeak,
+    kokoro_voice,
+    mlx_audio_voice,
+    offline_speech,
+)
 
 AnySpec = ProviderSpec[Any, Any]
 
@@ -23,6 +29,7 @@ ALL_SPECS: tuple[AnySpec, ...] = (
     depthflow.SPEC,
     ffmpeg_pan_zoom.SPEC,
     edge_voice.SPEC,
+    mlx_audio_voice.SPEC,
     kokoro_voice.SPEC,
     espeak.SPEC,
     offline_speech.SPEC,
