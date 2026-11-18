@@ -4,13 +4,15 @@ from automator.domain.capabilities import Capability, MusicGenerator, MusicReque
 from automator.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from automator.domain.pipeline_descriptors import StageDescriptor
 from automator.domain.run_enums import ArtifactKind
-from automator.pipelines.kids_story.artifacts import VARIANTS, Role, artifact, folder
+from automator.pipelines.kids_story.artifacts import Role, artifact, folder
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.stages.common import WAV, kids_settings, load_stories
+from automator.pipelines.kids_story.stages.media_types import WAV
+from automator.pipelines.kids_story.stages.run_settings import kids_settings
+from automator.pipelines.kids_story.stages.story_loading import load_stories
 from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.text.templates import render_template
+from automator.pipelines.kids_story.timeline.cuts import Cut, planned_cuts
 from automator.pipelines.kids_story.timeline.plan import total_seconds
-from automator.pipelines.kids_story.timeline.variants import planned
-from automator.pipelines.kids_story.timeline.voices import voice_lines
 
 
 def effect_cues(stories: dict[str, Story]) -> list[str]:
@@ -22,7 +24,7 @@ def effect_cues(stories: dict[str, Story]) -> list[str]:
 
 
 def effect_prompt(settings: KidsStorySettings, cue: str) -> str:
-    return settings.sound_effects.prompt_template.replace("{cue}", cue)
+    return render_template(settings.sound_effects.prompt_template, {"cue": cue})
 
 
 def effect_name(index: int) -> str:
@@ -62,29 +64,25 @@ class MusicStage:
         settings: KidsStorySettings,
         stories: dict[str, Story],
     ) -> list[NewArtifact]:
-        made = []
-        for language, story in stories.items():
-            voices = voice_lines(context.artifacts, language)
-            for variant in VARIANTS:
-                seconds = total_seconds(planned(story, voices, settings, variant))
-                if seconds <= 0:
-                    continue
-                context.log(f"composing {seconds:.0f} s of music for {language} {variant}")
-                request = MusicRequest(prompt=settings.music.mood_prompt, duration_seconds=seconds)
-                output = folder(context, "music") / f"music-{language}-{variant}.wav"
-                path = composer.compose(request, output)
-                made.append(
-                    artifact(
-                        ArtifactKind.AUDIO,
-                        path,
-                        WAV,
-                        Role.MUSIC,
-                        language=language,
-                        variant=variant,
-                        duration_seconds=seconds,
-                    )
-                )
-        return made
+        cuts = planned_cuts(stories, context.artifacts, settings)
+        return [self.bed(context, composer, settings, cut) for cut in cuts]
+
+    def bed(
+        self, context: StageContext, composer: MusicGenerator, settings: KidsStorySettings, cut: Cut
+    ) -> NewArtifact:
+        seconds = total_seconds(cut.segments)
+        context.log(f"composing {seconds:.0f} s of music for {cut.language} {cut.variant}")
+        request = MusicRequest(prompt=settings.music.mood_prompt, duration_seconds=seconds)
+        path = composer.compose(request, folder(context, "music") / f"music-{cut.name}.wav")
+        return artifact(
+            ArtifactKind.AUDIO,
+            path,
+            WAV,
+            Role.MUSIC,
+            language=cut.language,
+            variant=cut.variant,
+            duration_seconds=seconds,
+        )
 
     def effects(
         self,

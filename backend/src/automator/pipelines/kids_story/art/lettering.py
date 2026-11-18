@@ -2,26 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from enum import StrEnum
 from functools import cache
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont, features
 
 from automator.pipelines.kids_story.art.imaging import ImageFailure
+from automator.pipelines.kids_story.settings.base import Placement
 
 SHAPED_LANGUAGES = frozenset({"ta"})
 Font = ImageFont.FreeTypeFont
-
-
-class Placement(StrEnum):
-    TOP = "top"
-    BOTTOM = "bottom"
-    CENTER = "center"
-    TOP_LEFT = "top_left"
-    TOP_RIGHT = "top_right"
-    BOTTOM_LEFT = "bottom_left"
-    BOTTOM_RIGHT = "bottom_right"
 
 
 @dataclass(frozen=True)

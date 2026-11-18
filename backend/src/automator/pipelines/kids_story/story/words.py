@@ -41,8 +41,15 @@ def contains_phrase(text: str, phrase: str) -> bool:
     return bool(wanted) and f" {wanted} " in f" {comparable(text)} "
 
 
+def trailing_punctuation(token: str) -> str:
+    end = len(token)
+    while end > 0 and is_punctuation(token[end - 1]):
+        end -= 1
+    return token[end:]
+
+
 def ends_sentence(word: str) -> bool:
-    return bool(SENTENCE_END.search(word[-1:])) if word else False
+    return bool(SENTENCE_END.search(trailing_punctuation(word)))
 
 
 def collapse_spaces(text: str) -> str:

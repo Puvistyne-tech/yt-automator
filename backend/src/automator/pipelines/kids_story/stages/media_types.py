@@ -1,0 +1,6 @@
+PNG = "image/png"
+JPEG = "image/jpeg"
+JSON = "application/json"
+WAV = "audio/wav"
+MP4 = "video/mp4"
+SRT = "application/x-subrip"

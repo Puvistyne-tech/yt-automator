@@ -7,13 +7,13 @@ from pathlib import Path
 from automator.domain.pipeline import NewArtifact, StageContext
 from automator.domain.run_enums import ArtifactKind
 from automator.pipelines.kids_story.art.cards import (
+    badged_copy,
     card_lines,
     lettered_or_plain,
     lettering_for,
     resized_or_copied,
 )
 from automator.pipelines.kids_story.art.imaging import covered_copy
-from automator.pipelines.kids_story.art.lettering import Placement
 from automator.pipelines.kids_story.art.prompts import scene_prompt, thumbnail_prompt
 from automator.pipelines.kids_story.art.scene_art import Drawing, ScenePainter
 from automator.pipelines.kids_story.artifacts import (
@@ -21,11 +21,12 @@ from automator.pipelines.kids_story.artifacts import (
     SHORT,
     Role,
     artifact,
-    scene_key,
-    visual_key,
+    scene_visual_key,
 )
+from automator.pipelines.kids_story.settings.base import Placement
 from automator.pipelines.kids_story.settings.media import ShortArtMode
-from automator.pipelines.kids_story.stages.common import PNG, episode_size, load_story, short_size
+from automator.pipelines.kids_story.stages.media_types import PNG
+from automator.pipelines.kids_story.stages.story_loading import load_story
 from automator.pipelines.kids_story.story.model import Story
 from automator.pipelines.kids_story.timeline.selection import short_scene_indexes
 from automator.pipelines.kids_story.timeline.variants import INTRO, OUTRO, card_key
@@ -68,16 +69,17 @@ class ExtraArt:
         settings = self.painter.settings
         scene = self.story.scenes[index]
         name = f"scene-{index}-short"
-        size = short_size(settings)
+        size = settings.video_size(SHORT)
         drawing = Drawing(scene_prompt(settings, scene), size, self.painter.seed(index), name)
-        path = self.portrait(self.episode_visuals[index], name, size, drawing)
+        base = self.portrait(self.episode_visuals[index], name, size, drawing)
+        path = badged_copy(base, self.painter.out / f"{name}-badge.png", settings)
         return artifact(
             ArtifactKind.IMAGE,
             path,
             PNG,
             Role.VISUAL,
             variant=SHORT,
-            visual_key=visual_key(scene_key(index), SHORT),
+            visual_key=scene_visual_key(index, SHORT),
             scene=index,
             prompt=drawing.prompt,
             characters=list(scene.characters),
@@ -117,7 +119,7 @@ class ExtraArt:
     def card(self, story: Story, card: str, background: Path) -> NewArtifact:
         settings = self.painter.settings
         base = resized_or_copied(
-            background, self.painter.out / f"card-{card}-base.png", episode_size(settings)
+            background, self.painter.out / f"card-{card}-base.png", settings.video_size(EPISODE)
         )
         output = self.painter.out / f"card-{card}-{story.language}.png"
         lettering = lettering_for(
@@ -125,7 +127,7 @@ class ExtraArt:
             card_lines(settings, story, card),
             story.language,
             Placement.CENTER,
-            settings.thumbnail.text_size_ratio,
+            settings.episode.card_text_size_ratio,
         )
         has_text = lettered_or_plain(base, output, lettering)
         return artifact(

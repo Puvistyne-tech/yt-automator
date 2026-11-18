@@ -10,7 +10,8 @@ from automator.pipelines.kids_story.artifacts import Role, artifact, folder, wri
 from automator.pipelines.kids_story.languages import ordered_languages, primary_language
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.settings.story import StorySource
-from automator.pipelines.kids_story.stages.common import JSON, kids_settings
+from automator.pipelines.kids_story.stages.media_types import JSON
+from automator.pipelines.kids_story.stages.run_settings import kids_settings
 from automator.pipelines.kids_story.story.authoring import StoryAuthor, WriterUnavailableError
 from automator.pipelines.kids_story.story.bundled import BundledChoice, pick_bundled
 from automator.pipelines.kids_story.story.model import Story

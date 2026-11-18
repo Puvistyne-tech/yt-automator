@@ -53,15 +53,30 @@ def outside_bounds(entries: Sequence[SrtEntry], seconds: float) -> int:
     )
 
 
+class SubtitleRules(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    min_coverage: float
+    overlap_penalty: float
+    out_of_bounds_penalty: float
+
+
+def penalty_factor(count: int, factor: float) -> float:
+    return factor if count else 1.0
+
+
 def subtitle_track(
-    entries: Sequence[SrtEntry], video_seconds: float, narrated_words: int, min_coverage: float
+    entries: Sequence[SrtEntry], video_seconds: float, narrated_words: int, rules: SubtitleRules
 ) -> Measured:
     shown = sum(word_count(entry.text) for entry in entries)
     coverage = shown / narrated_words if narrated_words else 1.0
     overlap_count = overlaps(entries)
     outside_count = outside_bounds(entries, video_seconds)
-    coverage_part = min(coverage / min_coverage, 1.0) if min_coverage > 0 else 1.0
-    penalty = (0.5 if overlap_count else 1.0) * (0.5 if outside_count else 1.0)
+    minimum = rules.min_coverage
+    coverage_part = min(coverage / minimum, 1.0) if minimum > 0 else 1.0
+    penalty = penalty_factor(overlap_count, rules.overlap_penalty) * penalty_factor(
+        outside_count, rules.out_of_bounds_penalty
+    )
     return Measured(
         score=clamp(FULL * coverage_part * penalty),
         detail=f"coverage {coverage:.0%}, {overlap_count} overlaps, {outside_count} out of bounds",

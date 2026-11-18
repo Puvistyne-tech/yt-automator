@@ -12,7 +12,6 @@ from automator.pipelines.kids_story.story.reading import (
 from automator.pipelines.kids_story.story.words import contains_phrase, word_count
 
 Gate = Callable[[Story, KidsStorySettings], list[str]]
-ENDING_SCENES = 2
 
 
 def scene_count_problems(story: Story, settings: KidsStorySettings) -> list[str]:
@@ -42,18 +41,23 @@ def duration_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     return [f"the story reads in about {seconds:.0f} s; aim for {target} s (within {tolerance} s)"]
 
 
-def ending_text(story: Story) -> str:
-    return " ".join(scene.narration for scene in story.scenes[-ENDING_SCENES:])
+def ending_text(story: Story, scenes: int) -> str:
+    return " ".join(scene.narration for scene in story.scenes[-scenes:])
+
+
+def closing_scenes(count: int) -> str:
+    return "the last scene" if count == 1 else f"the last {count} scenes"
 
 
 def ending_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     problems = []
-    ending = ending_text(story)
+    count = settings.story.ending_scenes
+    ending = ending_text(story, count)
     if not contains_phrase(ending, story.moral):
-        problems.append("say the moral, word for word, in the last scene")
+        problems.append(f"say the moral, word for word, in {closing_scenes(count)}")
     refrain = settings.series.refrain.for_language(story.language)
     if refrain and not contains_phrase(ending, refrain):
-        problems.append(f'end the last scene with the refrain "{refrain}"')
+        problems.append(f'say the refrain "{refrain}" in {closing_scenes(count)}')
     return problems
 
 
@@ -92,7 +96,7 @@ def reading_level_problems(story: Story, settings: KidsStorySettings) -> list[st
 
 def cast_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     known = {member.id for member in settings.cast}
-    unknown = sorted({name for scene in story.scenes for name in scene.characters} - known)
+    unknown = sorted(set(story.character_ids) - known)
     return [f"only use cast ids; unknown: {', '.join(unknown)}"] if unknown else []
 
 
@@ -108,5 +112,16 @@ GATES: tuple[Gate, ...] = (
 )
 
 
+TRANSLATION_GATES: tuple[Gate, ...] = (ending_problems, banned_word_problems, brand_problems)
+
+
+def problems_of(gates: tuple[Gate, ...], story: Story, settings: KidsStorySettings) -> list[str]:
+    return [problem for gate in gates for problem in gate(story, settings)]
+
+
 def story_problems(story: Story, settings: KidsStorySettings) -> list[str]:
-    return [problem for gate in GATES for problem in gate(story, settings)]
+    return problems_of(GATES, story, settings)
+
+
+def translation_problems(story: Story, settings: KidsStorySettings) -> list[str]:
+    return problems_of(TRANSLATION_GATES, story, settings)

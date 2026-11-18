@@ -6,7 +6,6 @@ from automator.domain.pipeline_descriptors import StageDescriptor
 from automator.domain.run_enums import ArtifactKind
 from automator.pipelines.kids_story.art.prompts import motion_prompt
 from automator.pipelines.kids_story.artifacts import (
-    SHORT,
     Role,
     artifact,
     folder,
@@ -14,16 +13,12 @@ from automator.pipelines.kids_story.artifacts import (
     required,
 )
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.stages.common import (
-    MP4,
-    episode_size,
-    kids_settings,
-    load_stories,
-    short_size,
-)
+from automator.pipelines.kids_story.stages.media_types import MP4
+from automator.pipelines.kids_story.stages.run_settings import kids_settings
+from automator.pipelines.kids_story.stages.story_loading import load_stories
 from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.timeline.cuts import planned_cuts
 from automator.pipelines.kids_story.timeline.needs import ClipNeed, clip_needs
-from automator.pipelines.kids_story.timeline.voices import voice_lines
 
 
 def motion_request(
@@ -33,7 +28,7 @@ def motion_request(
     scene = story.scenes[need.scene] if need.scene is not None else None
     visuals = settings.visuals
     intensity = visuals.hero_motion_intensity if scene and scene.hero else visuals.motion_intensity
-    width, height = short_size(settings) if need.variant == SHORT else episode_size(settings)
+    width, height = settings.video_size(need.variant)
     return MotionRequest(
         image=path_of(context, image),
         prompt=motion_prompt(scene),
@@ -62,8 +57,7 @@ class MotionStage:
     def run(self, context: StageContext) -> StageOutcome:
         settings = kids_settings(context)
         stories = load_stories(context)
-        plans = [(story, voice_lines(context.artifacts, code)) for code, story in stories.items()]
-        needs = clip_needs(plans, settings)
+        needs = clip_needs(planned_cuts(stories, context.artifacts, settings))
         motion = context.providers.resolve(Capability.MOTION)
         story = next(iter(stories.values()))
         made = [self.animated(context, motion, settings, story, need) for need in needs.values()]

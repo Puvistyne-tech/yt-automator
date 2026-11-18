@@ -14,17 +14,13 @@ ART_LANGUAGE = "en"
 FIRST_NUMBER = re.compile(r"\d+")
 
 
-def cast_members(settings: KidsStorySettings, ids: Sequence[str]) -> list[Character]:
-    return [member for name in ids if (member := settings.character(name)) is not None]
-
-
 def descriptor_line(member: Character) -> str:
     name = member.name.for_language(ART_LANGUAGE)
     return f"{name} the {member.species}: {member.visual_descriptor}."
 
 
 def characters_text(settings: KidsStorySettings, ids: Sequence[str]) -> str:
-    return " ".join(descriptor_line(member) for member in cast_members(settings, ids))
+    return " ".join(descriptor_line(member) for member in settings.characters(ids))
 
 
 def scene_prompt(settings: KidsStorySettings, scene: StoryScene) -> str:
@@ -49,7 +45,7 @@ def character_prompt(settings: KidsStorySettings, member: Character) -> str:
 
 
 def thumbnail_prompt(settings: KidsStorySettings, story: Story) -> str:
-    present = sorted({name for scene in story.scenes for name in scene.characters})
+    present = sorted(story.character_ids)
     return render_prompt(
         "image_thumbnail.txt",
         style=settings.series.art_style,

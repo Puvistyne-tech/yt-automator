@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import shutil
+from pathlib import Path
 
 from automator.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from automator.domain.pipeline_descriptors import StageDescriptor
 from automator.domain.run_enums import ArtifactKind
 from automator.pipelines.kids_story.art.cards import lettered_or_plain, lettering_for
-from automator.pipelines.kids_story.art.lettering import Placement
+from automator.pipelines.kids_story.art.imaging import JpegBudget, saved_jpeg
 from automator.pipelines.kids_story.artifacts import (
     VARIANTS,
     Role,
@@ -19,8 +20,26 @@ from automator.pipelines.kids_story.artifacts import (
 )
 from automator.pipelines.kids_story.publishing.metadata import upload_metadata
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.stages.common import JSON, PNG, SRT, kids_settings, load_story
+from automator.pipelines.kids_story.settings.thumbnail import ThumbnailSettings
+from automator.pipelines.kids_story.stages.media_types import JPEG, JSON, SRT
+from automator.pipelines.kids_story.stages.run_settings import kids_settings
+from automator.pipelines.kids_story.stages.story_loading import load_story
 from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.subtitles.srt import parse_srt
+
+LOCAL_PROVIDER = "local"
+
+
+def jpeg_budget(thumbnail: ThumbnailSettings) -> JpegBudget:
+    return JpegBudget(
+        max_bytes=thumbnail.max_bytes,
+        quality=thumbnail.jpeg_quality,
+        min_quality=thumbnail.min_jpeg_quality,
+    )
+
+
+def has_cues(srt: Path) -> bool:
+    return bool(parse_srt(srt.read_text(encoding="utf-8")))
 
 
 class PackageStage:
@@ -43,32 +62,39 @@ class PackageStage:
                 made.append(self.thumbnail(context, settings, story, variant))
                 made.append(self.metadata(context, settings, story, variant))
                 made.extend(self.captions(context, settings, language, variant))
-        return StageOutcome(artifacts=tuple(made), provider="pillow", message=f"{len(made)} files")
+        return StageOutcome(
+            artifacts=tuple(made), provider=LOCAL_PROVIDER, message=f"{len(made)} files"
+        )
 
     def thumbnail(
         self, context: StageContext, settings: KidsStorySettings, story: Story, variant: str
     ) -> NewArtifact:
         art = required(context.artifacts, Role.THUMBNAIL_ART, variant=variant)
-        output = folder(context, "package") / f"thumbnail-{story.language}-{variant}.png"
+        name = f"thumbnail-{story.language}-{variant}"
+        lettered = folder(context, "package") / f"{name}-lettered.png"
         lines = [story.title] if settings.thumbnail.title_text else []
         lettering = lettering_for(
             settings,
             lines,
             story.language,
-            Placement(settings.thumbnail.text_position.value),
+            settings.thumbnail.text_position,
             settings.thumbnail.text_size_ratio,
         )
-        has_title = lettered_or_plain(path_of(context, art), output, lettering)
+        has_title = lettered_or_plain(path_of(context, art), lettered, lettering)
         if lines and not has_title:
             context.log(f"thumbnail for {story.language} {variant} has no title: no usable font")
+        output = lettered.with_name(f"{name}.jpg")
+        quality = saved_jpeg(lettered, output, jpeg_budget(settings.thumbnail))
+        lettered.unlink()
         return artifact(
             ArtifactKind.THUMBNAIL,
             output,
-            PNG,
+            JPEG,
             Role.THUMBNAIL,
             language=story.language,
             variant=variant,
             title_drawn=has_title,
+            jpeg_quality=quality,
         )
 
     def metadata(
@@ -90,12 +116,14 @@ class PackageStage:
     def captions(
         self, context: StageContext, settings: KidsStorySettings, language: str, variant: str
     ) -> list[NewArtifact]:
-        subtitles = settings.subtitles
-        if not (subtitles.enabled and subtitles.upload_captions):
+        if not settings.subtitles.captions_uploaded:
             return []
-        source = required(context.artifacts, Role.CAPTIONS, language, variant)
+        source = path_of(context, required(context.artifacts, Role.CAPTIONS, language, variant))
+        if not has_cues(source):
+            context.log(f"no caption track for {language} {variant}: the subtitles are empty")
+            return []
         output = folder(context, "package") / f"captions-{language}-{variant}.srt"
-        shutil.copyfile(path_of(context, source), output)
+        shutil.copyfile(source, output)
         return [
             artifact(
                 ArtifactKind.SUBTITLE,

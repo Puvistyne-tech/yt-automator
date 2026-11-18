@@ -4,15 +4,17 @@ from pydantic import BaseModel, ConfigDict
 
 from automator.pipelines.kids_story.artifacts import SHORT
 from automator.pipelines.kids_story.publishing.limits import (
-    DESCRIPTION_MAX,
+    DESCRIPTION_MAX_BYTES,
     TITLE_MAX,
     cleaned,
     tags_within,
     truncated,
+    truncated_bytes,
 )
-from automator.pipelines.kids_story.publishing.templates import render_template, template_values
+from automator.pipelines.kids_story.publishing.templates import template_values
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.text.templates import render_template
 
 
 class UploadMetadata(BaseModel):
@@ -37,7 +39,7 @@ def upload_metadata(story: Story, settings: KidsStorySettings, variant: str) -> 
     description = render_template(metadata.description_template.for_language(language), values)
     return UploadMetadata(
         title=truncated(cleaned(title), TITLE_MAX),
-        description=truncated(cleaned(description), DESCRIPTION_MAX),
+        description=truncated_bytes(cleaned(description), DESCRIPTION_MAX_BYTES),
         tags=tags_within(metadata.tags.for_language(language)),
         hashtags=metadata.hashtags.for_language(language),
         category_id=metadata.category.value,

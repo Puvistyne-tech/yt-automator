@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from automator.domain.capabilities import WordTiming
 from automator.pipelines.kids_story.story.words import ends_sentence
-from automator.pipelines.kids_story.subtitles.graphemes import grapheme_length, split_clusters
+from automator.pipelines.kids_story.text.graphemes import grapheme_length, split_clusters
 
 
 class CueRules(BaseModel):

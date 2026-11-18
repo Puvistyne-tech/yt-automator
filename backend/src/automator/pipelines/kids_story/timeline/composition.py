@@ -7,8 +7,7 @@ from pathlib import Path
 from pydantic import JsonValue
 
 from automator.domain.capabilities import SubtitleStyle, TimedClip, VideoComposition
-from automator.pipelines.kids_story.artifacts import SHORT
-from automator.pipelines.kids_story.settings.output import size_of
+from automator.pipelines.kids_story.artifacts import SHORT, is_scene_key
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import Story
 from automator.pipelines.kids_story.timeline.plan import Segment
@@ -62,7 +61,7 @@ def effect_clips(
             volume=effects.volume,
         )
         for item in segments
-        if item.scene is not None and item.key.startswith("scene-")
+        if item.scene is not None and is_scene_key(item.key)
         for cue in story.scenes[item.scene].sound_effects
         if cue in sources.effects
     )
@@ -89,8 +88,7 @@ def composition(
     settings: KidsStorySettings,
     variant: str,
 ) -> VideoComposition:
-    resolution = settings.short.resolution if variant == SHORT else settings.episode.resolution
-    width, height = size_of(resolution)
+    width, height = settings.video_size(variant)
     return VideoComposition(
         width=width,
         height=height,

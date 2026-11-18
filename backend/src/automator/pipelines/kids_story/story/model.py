@@ -37,6 +37,10 @@ class StoryDraft(BaseModel):
     hook_line: str = ""
     thumbnail: str = ""
 
+    @property
+    def character_ids(self) -> list[str]:
+        return list(dict.fromkeys(name for scene in self.scenes for name in scene.characters))
+
 
 class Story(StoryDraft):
     language: str

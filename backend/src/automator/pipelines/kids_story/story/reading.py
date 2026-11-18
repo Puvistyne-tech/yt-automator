@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from automator.pipelines.kids_story.story.model import StoryDraft
 from automator.pipelines.kids_story.story.words import sentences_of, word_count, words_of
-from automator.pipelines.kids_story.subtitles.graphemes import grapheme_length
+from automator.pipelines.kids_story.text.graphemes import grapheme_length
 
 
 @dataclass(frozen=True)

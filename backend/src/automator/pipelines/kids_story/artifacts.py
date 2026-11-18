@@ -16,6 +16,7 @@ ROLE = "role"
 EPISODE = "episode"
 SHORT = "short"
 VARIANTS = (EPISODE, SHORT)
+SCENE_PREFIX = "scene-"
 
 
 class Role(StrEnum):
@@ -131,7 +132,19 @@ def visual_key(segment: str, variant: str) -> str:
 
 
 def scene_key(index: int) -> str:
-    return f"scene-{index}"
+    return f"{SCENE_PREFIX}{index}"
+
+
+def is_scene_key(key: str) -> bool:
+    return key.startswith(SCENE_PREFIX)
+
+
+def scene_visual_key(index: int, variant: str) -> str:
+    return visual_key(scene_key(index), variant)
+
+
+def active_variants(short_enabled: bool) -> tuple[str, ...]:
+    return VARIANTS if short_enabled else (EPISODE,)
 
 
 def number(value: JsonValue, default: float = 0.0) -> float:

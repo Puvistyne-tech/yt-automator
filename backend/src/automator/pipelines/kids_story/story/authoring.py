@@ -6,7 +6,7 @@ from functools import partial
 
 from automator.domain.capabilities import TextGenerator
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.story.gates import ending_problems, story_problems
+from automator.pipelines.kids_story.story.gates import story_problems, translation_problems
 from automator.pipelines.kids_story.story.model import Story, StoryDraft, StoryText, with_text
 from automator.pipelines.kids_story.story.parsing import StoryFormatError, parse_model
 from automator.pipelines.kids_story.story.prompts import story_request, translation_request
@@ -56,7 +56,7 @@ class StoryAuthor:
             except (StoryFormatError, ValueError) as error:
                 problems = [str(error)]
             else:
-                problems = ending_problems(result, self.settings)
+                problems = translation_problems(result, self.settings)
                 if not problems:
                     return result
             self.log(f"translation to {target} attempt {attempt} failed: {'; '.join(problems)}")

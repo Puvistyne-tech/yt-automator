@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 from pydantic import BaseModel, ConfigDict
 
-from automator.pipelines.kids_story.artifacts import VARIANTS
-from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.timeline.cuts import Cut
 from automator.pipelines.kids_story.timeline.plan import Segment
-from automator.pipelines.kids_story.timeline.variants import planned
-from automator.pipelines.kids_story.timeline.voices import VoiceLine
 
 
 class ClipNeed(BaseModel):
@@ -41,12 +37,9 @@ def merged(current: ClipNeed | None, segment: Segment) -> ClipNeed:
     )
 
 
-def clip_needs(
-    plans: Sequence[tuple[Story, Mapping[str, VoiceLine]]], settings: KidsStorySettings
-) -> dict[str, ClipNeed]:
+def clip_needs(cuts: Sequence[Cut]) -> dict[str, ClipNeed]:
     needs: dict[str, ClipNeed] = {}
-    for story, voices in plans:
-        for variant in VARIANTS:
-            for segment in planned(story, voices, settings, variant):
-                needs[segment.visual_key] = merged(needs.get(segment.visual_key), segment)
+    for cut in cuts:
+        for segment in cut.segments:
+            needs[segment.visual_key] = merged(needs.get(segment.visual_key), segment)
     return needs

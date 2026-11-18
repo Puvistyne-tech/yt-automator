@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from automator.pipelines.kids_story.artifacts import EPISODE, SHORT, scene_key, visual_key
+from automator.pipelines.kids_story.artifacts import (
+    EPISODE,
+    SHORT,
+    scene_key,
+    scene_visual_key,
+    visual_key,
+)
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import Story
 from automator.pipelines.kids_story.timeline.plan import (
@@ -56,7 +62,7 @@ def card_spec(
     if card not in voices:
         return None
     fallback = 0 if card == INTRO else len(story.scenes) - 1
-    visual = visual_key(scene_key(fallback), EPISODE)
+    visual = scene_visual_key(fallback, EPISODE)
     return spec(card, visual, voices, settings.episode.min_scene_seconds, None)
 
 
@@ -65,7 +71,7 @@ def episode_specs(
 ) -> list[SegmentSpec]:
     minimum = settings.episode.min_scene_seconds
     scenes = [
-        spec(scene_key(index), visual_key(scene_key(index), EPISODE), voices, minimum, index)
+        spec(scene_key(index), scene_visual_key(index, EPISODE), voices, minimum, index)
         for index in range(len(story.scenes))
     ]
     intro = card_spec(INTRO, story, voices, settings)
@@ -79,12 +85,12 @@ def short_specs(
     indexes = short_scene_indexes(story, settings.short)
     minimum = settings.episode.min_scene_seconds
     scenes = [
-        spec(scene_key(index), visual_key(scene_key(index), SHORT), voices, minimum, index)
+        spec(scene_key(index), scene_visual_key(index, SHORT), voices, minimum, index)
         for index in indexes
     ]
     hook: list[SegmentSpec] = []
     if settings.short.hook_line and HOOK in voices and indexes:
-        first = visual_key(scene_key(indexes[0]), SHORT)
+        first = scene_visual_key(indexes[0], SHORT)
         hook = [spec(HOOK, first, voices, minimum, None)]
     padding = padding_of(settings)
     return fit_within([*hook, *scenes], padding, settings.short.max_duration_seconds)

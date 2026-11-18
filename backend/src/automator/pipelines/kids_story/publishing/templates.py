@@ -1,21 +1,11 @@
 from __future__ import annotations
 
-import re
-from collections.abc import Mapping
-
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import Story
 
-PLACEHOLDER = re.compile(r"\{([a-z_]+)\}")
-
-
-def render_template(template: str, values: Mapping[str, str]) -> str:
-    return PLACEHOLDER.sub(lambda match: values.get(match.group(1), match.group(0)), template)
-
 
 def character_names(story: Story, settings: KidsStorySettings) -> str:
-    ids = list(dict.fromkeys(name for scene in story.scenes for name in scene.characters))
-    members = [member for name in ids if (member := settings.character(name)) is not None]
+    members = settings.characters(story.character_ids)
     return ", ".join(member.name.for_language(story.language) for member in members)
 
 

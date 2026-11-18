@@ -1,13 +1,21 @@
 from __future__ import annotations
 
+from automator.domain.artifact_selection import text_list
 from automator.domain.quality import ScoreItem
 from automator.domain.run_parts import Artifact
-from automator.pipelines.kids_story.artifacts import EPISODE, SHORT, Role, latest, text, with_role
+from automator.pipelines.kids_story.artifacts import (
+    Role,
+    active_variants,
+    latest,
+    text,
+    with_role,
+)
 from automator.pipelines.kids_story.publishing.limits import (
-    DESCRIPTION_MAX,
+    DESCRIPTION_MAX_BYTES,
     TAGS_MAX,
     TITLE_MAX,
     tags_length,
+    utf8_length,
 )
 from automator.pipelines.kids_story.scoring.inputs import ScoreInputs
 from automator.pipelines.kids_story.scoring.measures import FULL, average, clamp, distance_outside
@@ -16,12 +24,10 @@ from automator.pipelines.kids_story.scoring.measures import FULL, average, clamp
 def within_limits(found: Artifact) -> bool:
     title = text(found.meta.get("title"))
     description = text(found.meta.get("description"))
-    raw_tags = found.meta.get("tags")
-    tags = [str(tag) for tag in raw_tags] if isinstance(raw_tags, list) else []
     return (
         0 < len(title) <= TITLE_MAX
-        and len(description) <= DESCRIPTION_MAX
-        and tags_length(tags) <= TAGS_MAX
+        and utf8_length(description) <= DESCRIPTION_MAX_BYTES
+        and tags_length(text_list(found.meta.get("tags"))) <= TAGS_MAX
         and found.meta.get("made_for_kids") is True
     )
 
@@ -70,14 +76,13 @@ def loudness(inputs: ScoreInputs) -> ScoreItem | None:
 
 def expected_roles(inputs: ScoreInputs) -> list[Role]:
     roles = [Role.FINAL_VIDEO, Role.THUMBNAIL, Role.UPLOAD_METADATA]
-    subtitles = inputs.settings.subtitles
-    if subtitles.enabled and subtitles.upload_captions:
+    if inputs.settings.subtitles.captions_uploaded:
         roles.append(Role.CAPTION_TRACK)
     return roles
 
 
 def completeness(inputs: ScoreInputs) -> ScoreItem:
-    variants = [EPISODE, SHORT] if inputs.settings.short.enabled else [EPISODE]
+    variants = active_variants(inputs.settings.short.enabled)
     wanted = [
         (language, variant, role)
         for language in inputs.languages

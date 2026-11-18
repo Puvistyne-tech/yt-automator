@@ -8,7 +8,9 @@ from automator.domain.pipeline_descriptors import StageDescriptor
 from automator.domain.run_enums import ArtifactKind
 from automator.pipelines.kids_story.artifacts import Role, artifact, folder, scene_key
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.stages.common import WAV, kids_settings, load_story
+from automator.pipelines.kids_story.stages.media_types import WAV
+from automator.pipelines.kids_story.stages.run_settings import kids_settings
+from automator.pipelines.kids_story.stages.story_loading import load_story
 from automator.pipelines.kids_story.story.model import Story
 from automator.pipelines.kids_story.story.normalise import speakable
 from automator.pipelines.kids_story.timeline.variants import HOOK, INTRO, OUTRO

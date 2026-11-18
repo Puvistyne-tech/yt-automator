@@ -15,8 +15,10 @@ from automator.pipelines.kids_story.story.model import (
     with_text,
 )
 from automator.pipelines.kids_story.story.themes import fresh_items, stable_index
+from automator.pipelines.kids_story.text.templates import render_template
 
 FOLDER = "bundled"
+REFRAIN = "refrain"
 REFRAIN_SLOT = "{refrain}"
 
 
@@ -69,7 +71,8 @@ class BundledStory(BaseModel):
 
 
 def filled_text(text: StoryText, refrain: str) -> StoryText:
-    narrations = [line.replace(REFRAIN_SLOT, refrain).strip() for line in text.narrations]
+    slots = {REFRAIN: refrain}
+    narrations = [render_template(line, slots).strip() for line in text.narrations]
     return text.model_copy(update={"narrations": narrations})
 
 
