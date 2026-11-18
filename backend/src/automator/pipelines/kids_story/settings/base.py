@@ -5,8 +5,9 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-HEX_COLOR = r"^#[0-9A-Fa-f]{6}$"
-HexColor = Annotated[str, Field(pattern=HEX_COLOR, json_schema_extra={"format": "color"})]
+from automator.domain.image_style import HEX_COLOUR_PATTERN
+
+HexColor = Annotated[str, Field(pattern=HEX_COLOUR_PATTERN, json_schema_extra={"format": "color"})]
 
 
 class StoryLanguage(StrEnum):

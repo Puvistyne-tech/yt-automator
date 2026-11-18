@@ -7,9 +7,15 @@ from pathlib import Path
 from automator.domain.capabilities import ImageGenerator, ImageRequest, TextGenerator
 from automator.domain.pipeline import StageLog
 from automator.domain.run_enums import LogLevel
-from automator.pipelines.kids_story.art.prompts import judge_request, parse_choice, scene_prompt
+from automator.pipelines.kids_story.art.prompts import (
+    judge_request,
+    parse_choice,
+    scene_prompt,
+    scene_subject,
+)
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import StoryScene
+from automator.pipelines.kids_story.styles.resolve import resolve_style
 
 SEED_STRIDE = 100
 
@@ -21,6 +27,7 @@ class Drawing:
     seed: int
     name: str
     references: tuple[Path, ...] = ()
+    subject: str = ""
 
 
 @dataclass(frozen=True)
@@ -32,9 +39,11 @@ class ScenePainter:
     log: StageLog
 
     def draw(self, drawing: Drawing) -> Path:
+        style = resolve_style(self.settings)
         request = ImageRequest(
             prompt=drawing.prompt,
-            negative_prompt=self.settings.series.negative_prompt,
+            negative_prompt=style.negative_prompt,
+            style=style.hints(drawing.subject),
             width=drawing.size[0],
             height=drawing.size[1],
             seed=drawing.seed,
@@ -56,7 +65,12 @@ class ScenePainter:
         return [
             self.draw(
                 Drawing(
-                    prompt, size, self.seed(index, number), f"scene-{index}-c{number}", references
+                    prompt,
+                    size,
+                    self.seed(index, number),
+                    f"scene-{index}-c{number}",
+                    references,
+                    scene_subject(scene),
                 )
             )
             for number in range(self.candidate_count(scene))
