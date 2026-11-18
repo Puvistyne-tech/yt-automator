@@ -1,6 +1,6 @@
 # Architecture
 
-YouTube Automator is a local web app: a Python backend (`backend/src/automator`) and a React UI (`web/src`).
+AutoTube is a local web app: a Python backend (`backend/src/autotube`) and a React UI (`web/src`).
 Dependencies flow in one direction. A layer may import only from the layers listed for it.
 
 ## Backend layers

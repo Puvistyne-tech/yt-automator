@@ -1,10 +1,10 @@
-# YouTube Automator
+# AutoTube
 
 A local web app that connects any number of YouTube channels and runs any number of configurable
 automations against them. Each automation is a pipeline type plus settings, target channels, languages,
 a schedule and a review rule. Kids story videos (`kids_story`) is the first pipeline type.
 
-- `backend/` Python 3.12, FastAPI, SQLite. Package `automator` under `backend/src`.
+- `backend/` Python 3.12, FastAPI, SQLite. Package `autotube` under `backend/src`.
 - `web/` React, Vite, TypeScript. Forms are generated from each pipeline's settings schema.
 - Everything must run at zero cost on an Apple-silicon Mac, with offline fakes for tests and CI.
 
