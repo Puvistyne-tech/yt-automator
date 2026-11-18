@@ -77,7 +77,7 @@ Every change, however small, goes through all six steps.
 Configured in `.claude/settings.json`, implemented as standard-library Python in `.claude/hooks/`.
 
 - After `Edit` or `Write`: formats and lints the edited file and reports comments the edit added.
-- Before `Bash`: blocks pushes and commits to `main`, force pushes, `rm -rf`, `git reset --hard`,
+- Before `Bash`: blocks pushes and commits to `main`, force pushes, `rm -rf`, `git reset --hard`, `-X ours`/`-s ours` merges,
   and `gh pr merge` unless `/ship` has verified the current commit.
 - After compaction: prints both rule files back into context.
 

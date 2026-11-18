@@ -20,6 +20,8 @@ The orchestrator gives you the path of a diff file and the list of changed files
    - separate test cases that walk the identical branch with different but equivalent inputs
    - setup boilerplate copied between tests instead of a fixture, factory, or parametrisation
    - tests that assert on mocks rather than behaviour
+   - tests that depend on host fonts, optional ffmpeg filters, an installed virtualenv, the network or wall-clock timing
+     instead of supplying their own fixture or skipping with a reason when the capability is absent (`blocking`)
    - changed production branches with no test: error paths, empty inputs, boundaries, fallbacks, and every status transition
 4. For each changed production function, list its branches and mark which tests cover each.
 

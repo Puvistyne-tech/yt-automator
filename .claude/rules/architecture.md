@@ -41,6 +41,8 @@ Dependencies flow in one direction. A layer may import only from the layers list
 - A feature never imports another feature. Shared needs move down into `shared`.
 - Components render and delegate. Data fetching lives in `api` hooks, decisions in plain functions.
 - No `fetch` call outside `web/src/api`.
+- A mock handler under `web/src/api/mocks` returns the backend's status code and error code for the same request,
+  and a change to a backend error path updates its mock in the same pull request.
 
 ## Configurability
 
@@ -52,6 +54,7 @@ Dependencies flow in one direction. A layer may import only from the layers list
 
 - One responsibility per module. Soft limit of 200 lines per file and 40 lines per function.
 - No circular imports. No `utils.py` or `helpers.py` grab-bags: name a module after what it does.
+- State with more than one writer changes through a single atomic repository update, never a read-modify-write across calls.
 - Secrets never enter the repository, logs, or API responses.
 - Every external tool sits behind a port with a fake implementation for tests.
 - `docs/spec/platform.md` is the contract. Code and spec change in the same pull request and never disagree.
