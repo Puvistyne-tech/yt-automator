@@ -42,8 +42,11 @@ def test_healthy_facts_pass_every_check() -> None:
     assert is_startable(checks)
 
 
-@pytest.mark.parametrize(("version", "status"), [("3.11.9", "error"), ("3.13.0", "ok")])
-def test_python_below_minimum_is_an_error(version: str, status: str) -> None:
+@pytest.mark.parametrize(
+    ("version", "status"),
+    [("3.11.9", "error"), ("3.12", "ok"), ("3.12.0", "ok"), ("3.13.0", "ok")],
+)
+def test_python_is_compared_with_the_minimum(version: str, status: str) -> None:
     assert python_check(version, POLICY).status == status
 
 
@@ -62,6 +65,8 @@ def test_unwritable_data_dir_stops_the_app() -> None:
     [
         (50 * GIB, CheckStatus.OK, "50.0 GB free"),
         (1 * GIB, CheckStatus.WARNING, "at least 5 GB"),
+        (5 * GIB, CheckStatus.OK, "5.0 GB free"),
+        (5 * GIB - 1, CheckStatus.WARNING, "at least 5 GB"),
         (None, CheckStatus.WARNING, "unknown"),
     ],
 )
@@ -79,6 +84,14 @@ def test_missing_tool_is_a_warning_with_a_hint() -> None:
 
 def test_present_tool_reports_its_version() -> None:
     assert tool_check("ffprobe", "ffprobe version 7.1").detail == "ffprobe version 7.1"
+
+
+@pytest.mark.parametrize("tool", ["ffmpeg", "ffprobe"])
+def test_each_missing_tool_warns_on_its_own(tool: str) -> None:
+    checks = system_checks(facts(**{f"{tool}_version": ""}), POLICY)
+    warned = {name for name, status in statuses(checks).items() if status is CheckStatus.WARNING}
+    assert warned == {tool}
+    assert is_startable(checks)
 
 
 @pytest.mark.parametrize(
@@ -117,6 +130,7 @@ def test_capability_checks_cover_every_capability() -> None:
     providers = provider_health(
         [
             descriptor("groq", Capability.LLM, "set the Groq API key secret"),
+            descriptor("ollama", Capability.LLM),
             descriptor("offline", Capability.LLM),
             descriptor("mflux", Capability.IMAGE, "needs an Apple-silicon Mac"),
         ]
@@ -125,7 +139,7 @@ def test_capability_checks_cover_every_capability() -> None:
     assert [check.name for check in checks] == [capability.value for capability in Capability]
     by_name = {check.name: check for check in checks}
     assert by_name["llm"].status is CheckStatus.OK
-    assert by_name["llm"].detail == "offline"
+    assert by_name["llm"].detail == "ollama, offline"
     assert by_name["image"].status is CheckStatus.WARNING
     assert "mflux: needs an Apple-silicon Mac" in by_name["image"].detail
     assert by_name["music"].detail == "no provider is registered"

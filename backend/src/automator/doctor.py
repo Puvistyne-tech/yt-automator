@@ -6,8 +6,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import TextIO
 
 from automator.domain.diagnostics import DoctorReport, HealthCheck, ProviderHealth
-from automator.main import build_doctor
+from automator.main import build_doctor, setup_defaults
 
+PRINT_DEFAULTS = "--print-defaults"
 CAN_START = "The app can start."
 CANNOT_START = "The app cannot start: fix the errors above."
 
@@ -67,11 +68,20 @@ def exit_code(report: DoctorReport) -> int:
     return 0 if report.can_start else 1
 
 
-def main(environ: Mapping[str, str] = os.environ, out: TextIO = sys.stdout) -> int:
+def defaults_text(values: Mapping[str, str]) -> str:
+    return "".join(f"{key}={value}\n" for key, value in values.items())
+
+
+def main(
+    argv: Sequence[str] = (), environ: Mapping[str, str] = os.environ, out: TextIO = sys.stdout
+) -> int:
     try:
+        if PRINT_DEFAULTS in argv:
+            out.write(defaults_text(setup_defaults(environ)))
+            return 0
         doctor = build_doctor(environ)
-    except OSError as failure:
-        out.write(f"Cannot open the data directory: {failure}\n{CANNOT_START}\n")
+    except ValueError as failure:
+        out.write(f"Invalid configuration: {failure}\n{CANNOT_START}\n")
         return 1
     report = doctor.execute()
     out.write(render(report))
@@ -79,4 +89,4 @@ def main(environ: Mapping[str, str] = os.environ, out: TextIO = sys.stdout) -> i
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

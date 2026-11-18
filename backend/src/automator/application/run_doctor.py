@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from automator.application.list_secrets import ListSecrets
 from automator.domain.diagnostic_rules import (
     capability_checks,
     is_startable,
@@ -37,10 +38,15 @@ class RunDoctor:
     def provider_findings(self) -> ProviderFindings:
         try:
             providers = provider_health(self.catalog.descriptors())
-            missing = [s for s in self.catalog.secrets() if not self.secrets.has(s.name)]
+            statuses = ListSecrets(self.catalog, self.secrets).execute()
         except AppError as failure:
             return ProviderFindings(problems=(warning("secrets", failure.message),))
-        return ProviderFindings(tuple(providers), tuple(missing))
+        missing = tuple(
+            SecretDefinition(name=status.name, title=status.title, description=status.description)
+            for status in statuses
+            if not status.is_set
+        )
+        return ProviderFindings(tuple(providers), missing)
 
     def execute(self) -> DoctorReport:
         findings = self.provider_findings()

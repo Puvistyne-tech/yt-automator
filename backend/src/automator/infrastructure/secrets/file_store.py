@@ -8,18 +8,9 @@ from pathlib import Path
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from automator.shared.errors import RuleConflict
+from automator.infrastructure.secrets.unreadable import SecretsUnreadable, file_unreadable
 
 PRIVATE_FILE_MODE = 0o600
-
-
-class SecretsUnreadable(RuleConflict):
-    def __init__(self, path: Path, key_path: Path) -> None:
-        super().__init__(
-            "secrets_unreadable",
-            f"the secrets file {path} cannot be decrypted with its key {key_path}; remove both "
-            "files, then reconnect your channels and enter your credentials and API keys again",
-        )
 
 
 def write_private(path: Path, data: bytes) -> None:
@@ -37,15 +28,11 @@ def tighten(path: Path) -> None:
         path.chmod(PRIVATE_FILE_MODE)
 
 
-def load_key(key_path: Path, secrets_path: Path) -> bytes | None:
-    if key_path.exists():
-        tighten(key_path)
-        return key_path.read_bytes().strip()
-    if secrets_path.exists():
+def load_key(key_path: Path) -> bytes | None:
+    if not key_path.exists():
         return None
-    key = Fernet.generate_key()
-    write_private(key_path, key)
-    return key
+    tighten(key_path)
+    return key_path.read_bytes().strip()
 
 
 def fernet_for(key: bytes | None) -> Fernet | None:
@@ -59,11 +46,11 @@ class EncryptedFileSecretStore:
     def __init__(self, path: Path, key_path: Path) -> None:
         self.path = path
         self.key_path = key_path
-        self.fernet = fernet_for(load_key(key_path, path))
+        self.fernet = fernet_for(load_key(key_path))
         self.lock = threading.Lock()
 
     def unreadable(self) -> SecretsUnreadable:
-        return SecretsUnreadable(self.path, self.key_path)
+        return file_unreadable(self.path, self.key_path)
 
     def decrypted(self) -> bytes:
         if self.fernet is None:

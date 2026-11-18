@@ -2,9 +2,18 @@ from __future__ import annotations
 
 from typing import Any
 
+from alembic.script import ScriptDirectory
+
+from automator.application.run_doctor import RunDoctor
 from automator.domain.diagnostic_rules import GIB
-from automator.domain.diagnostics import SystemFacts
+from automator.domain.diagnostics import DoctorPolicy, SystemFacts
+from automator.domain.ports import SecretStore
+from automator.infrastructure.db.database import MIGRATIONS_DIR
 from automator.shared.errors import RuleConflict
+from tests.fixtures.fake_providers import FakeProviderCatalog
+from tests.fixtures.fake_runtime import InMemorySecrets
+
+MIGRATION_HEAD = ScriptDirectory(str(MIGRATIONS_DIR)).get_current_head()
 
 HEALTHY_FACTS: dict[str, Any] = {
     "python_version": "3.12.4",
@@ -45,3 +54,12 @@ class UnreadableSecrets:
 
     def has(self, name: str) -> bool:
         raise RuleConflict("secrets_unreadable", f"cannot read {name}")
+
+
+def run_doctor(facts: SystemFacts | None = None, secrets: SecretStore | None = None) -> RunDoctor:
+    return RunDoctor(
+        catalog=FakeProviderCatalog(),
+        secrets=secrets or InMemorySecrets(),
+        inspector=FakeInspector(facts),
+        policy=DoctorPolicy(),
+    )

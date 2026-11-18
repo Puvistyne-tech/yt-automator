@@ -135,7 +135,12 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   registry order, or a warning listing every provider's reason (offline fallbacks exist, so a
   capability without a provider never stops the app). `can_start` is false only when a check is an error.
 - `python -m automator.doctor` (`just doctor`) prints the report and exits 1 when `can_start` is false
-  or the data directory cannot be opened, else 0. It does not migrate or create the database.
+  or an `AUTOMATOR_*` setting is invalid, else 0. It writes nothing: it does not migrate or create the
+  database, and the file secret store creates its key only on the first write.
+  `python -m automator.doctor --print-defaults` prints `KEY=value` lines (`DATA_DIR`, `APP_HOST`,
+  `APP_PORT`, `OLLAMA_MODEL`, `OLLAMA_URL`, `ACE_STEP_DIR`, `MUSIC_DIR`) that `scripts/setup.sh` reads.
+- A keychain that cannot be used (locked, or access denied) raises the same 409 `secrets_unreadable`
+  as an unreadable secrets file; the message names the keychain error type, never a value.
 - Made-for-kids on a target can only be forced on by a pipeline that declares the capability `kids_content`; such a pipeline's targets are always made for kids.
 
 ## Ports (`domain/ports.py`)

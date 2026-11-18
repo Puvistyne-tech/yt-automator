@@ -23,6 +23,7 @@ from automator.domain.ports import (
     ProviderCatalog,
     RunEvents,
     SecretStore,
+    SystemInspector,
     YouTubeGateway,
 )
 from automator.domain.run_parts import RunLogPolicy
@@ -39,6 +40,7 @@ from automator.infrastructure.db.settings_repositories import (
     SqlProviderConfigRepository,
     SqlQuotaLedger,
 )
+from automator.infrastructure.diagnostics.setup_defaults import setup_defaults as setup_defaults
 from automator.infrastructure.diagnostics.system_inspector import build_system_inspector
 from automator.infrastructure.providers.catalog import build_provider_catalog
 from automator.infrastructure.runtime.events import InProcessRunEvents
@@ -64,6 +66,7 @@ class Overrides:
     clock: Clock | None = None
     ids: IdGenerator | None = None
     events: RunEvents | None = None
+    inspector: SystemInspector | None = None
 
 
 @dataclass(frozen=True)
@@ -126,7 +129,7 @@ def build_ports(
         pipelines=overrides.pipelines or build_pipeline_registry(),
         catalog=overrides.catalog or build_provider_catalog(secrets, config.data_dir),
         youtube=overrides.youtube or youtube_gateway(config),
-        inspector=build_system_inspector(config),
+        inspector=overrides.inspector or build_system_inspector(config),
         run_logs=RunLogPolicy(max_entries=config.max_run_log_entries),
         doctor_policy=config.doctor_policy,
     )

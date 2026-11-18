@@ -5,6 +5,8 @@ from typing import Any
 
 import pytest
 
+from automator.domain.diagnostics import DoctorPolicy
+from automator.infrastructure import config as config_module
 from automator.infrastructure.config import (
     REPOSITORY_ROOT,
     RuntimeConfig,
@@ -96,6 +98,14 @@ def test_defaults_and_derived_paths(tmp_path: Path) -> None:
 def test_doctor_policy_follows_the_config() -> None:
     policy = load_config({env("doctor_min_free_gb"): "3"}).doctor_policy
     assert policy.min_free_gb == 3.0
+    assert policy.min_python == (3, 12)
+
+
+def test_doctor_policy_keeps_its_default_without_package_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(config_module, "required_python", lambda: None)
+    assert RuntimeConfig().doctor_policy == DoctorPolicy()
 
 
 def test_empty_cors_origins_allow_none() -> None:

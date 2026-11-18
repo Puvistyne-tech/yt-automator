@@ -1,8 +1,21 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import keyring
 from keyring.backend import KeyringBackend
-from keyring.errors import PasswordDeleteError
+from keyring.errors import KeyringError, PasswordDeleteError
+
+from automator.infrastructure.secrets.unreadable import keychain_unreadable
+
+
+def guarded[T](call: Callable[[], T]) -> T:
+    try:
+        return call()
+    except PasswordDeleteError:
+        raise
+    except KeyringError as failure:
+        raise keychain_unreadable(failure) from failure
 
 
 class KeyringSecretStore:
@@ -11,14 +24,14 @@ class KeyringSecretStore:
         self.backend = backend or keyring.get_keyring()
 
     def get(self, name: str) -> str | None:
-        return self.backend.get_password(self.service, name)
+        return guarded(lambda: self.backend.get_password(self.service, name))
 
     def set(self, name: str, value: str) -> None:
-        self.backend.set_password(self.service, name, value)
+        guarded(lambda: self.backend.set_password(self.service, name, value))
 
     def delete(self, name: str) -> None:
         try:
-            self.backend.delete_password(self.service, name)
+            guarded(lambda: self.backend.delete_password(self.service, name))
         except PasswordDeleteError:
             return
 

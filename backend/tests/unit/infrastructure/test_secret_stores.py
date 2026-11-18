@@ -12,9 +12,10 @@ from keyring.errors import PasswordDeleteError
 
 from automator.domain.ports import SecretStore
 from automator.infrastructure.config import SecretBackend
-from automator.infrastructure.secrets.file_store import EncryptedFileSecretStore, SecretsUnreadable
+from automator.infrastructure.secrets.file_store import EncryptedFileSecretStore
 from automator.infrastructure.secrets.keyring_store import KeyringSecretStore
 from automator.infrastructure.secrets.selection import build_secret_store
+from automator.infrastructure.secrets.unreadable import SecretsUnreadable
 
 SERVICE = "automator-test"
 
@@ -180,4 +181,10 @@ def test_selection_prefers_a_working_keychain(
     assert isinstance(selected, expected)
     if isinstance(selected, EncryptedFileSecretStore):
         assert selected.path == tmp_path / "secrets.enc"
-        assert (tmp_path / "secrets.key").is_file()
+        assert not (tmp_path / "secrets.key").exists()
+
+
+def test_reading_a_fresh_file_store_writes_nothing(tmp_path: Path) -> None:
+    store = file_store(tmp_path / "data")
+    assert not store.has("api")
+    assert not (tmp_path / "data").exists()

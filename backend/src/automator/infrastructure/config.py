@@ -9,8 +9,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from automator.domain.diagnostics import DoctorPolicy
 from automator.domain.run_parts import DEFAULT_MAX_RUN_LOGS
+from automator.infrastructure.runtime.python_requirement import required_python
 
 ENV_PREFIX = "AUTOMATOR_"
+DEFAULT_MIN_FREE_GB: float = DoctorPolicy.model_fields["min_free_gb"].default
 OAUTH_CALLBACK_PATH = "/api/oauth/callback"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 
@@ -82,7 +84,9 @@ class RuntimeConfig(BaseModel):
     )
     log_level: str = Field(default="info", description="Server log level")
     doctor_min_free_gb: float = Field(
-        default=10.0, ge=0, description="Free disk space below which the doctor warns, in GB"
+        default=DEFAULT_MIN_FREE_GB,
+        ge=0,
+        description="Free disk space below which the doctor warns, in GB",
     )
     doctor_tool_timeout_seconds: float = Field(
         default=5.0, gt=0, description="Seconds the doctor waits for ffmpeg -version"
@@ -98,7 +102,9 @@ class RuntimeConfig(BaseModel):
 
     @property
     def doctor_policy(self) -> DoctorPolicy:
-        return DoctorPolicy(min_free_gb=self.doctor_min_free_gb)
+        policy = DoctorPolicy(min_free_gb=self.doctor_min_free_gb)
+        minimum = required_python()
+        return policy.model_copy(update={"min_python": minimum}) if minimum else policy
 
 
 def env_value(name: str, raw: str) -> Any:

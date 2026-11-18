@@ -7,13 +7,18 @@ from automator.infrastructure.config import RuntimeConfig
 UPLOAD_SCOPE = "https://www.googleapis.com/auth/youtube.upload"
 READONLY_SCOPE = "https://www.googleapis.com/auth/youtube.readonly"
 FORCE_SSL_SCOPE = "https://www.googleapis.com/auth/youtube.force-ssl"
-DEFAULT_REDIRECT_URI = "http://127.0.0.1:8000/api/oauth/callback"
+
+
+def default_redirect_uri() -> str:
+    return RuntimeConfig().oauth_redirect_uri
 
 
 class YouTubeSettings(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    redirect_uri: str = Field(default=DEFAULT_REDIRECT_URI, description="OAuth redirect URI")
+    redirect_uri: str = Field(
+        default_factory=default_redirect_uri, description="OAuth redirect URI"
+    )
     scopes: tuple[str, ...] = Field(
         default=(UPLOAD_SCOPE, READONLY_SCOPE, FORCE_SSL_SCOPE), description="OAuth scopes"
     )

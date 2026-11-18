@@ -47,6 +47,10 @@ class AceStepOptions(AudioFitOptions):
     )
 
 
+def ace_step_venv(data_dir: Path) -> Path:
+    return data_dir / "tools" / "ace-step"
+
+
 def ace_step_job(request: MusicRequest, options: AceStepOptions, raw: Path) -> str:
     job = {
         "checkpoint_dir": options.checkpoint_dir,
@@ -71,7 +75,7 @@ class AceStepMusic:
     def python(self) -> Path:
         if self.options.python_executable:
             return Path(self.options.python_executable)
-        return self.context.data_dir / "tools" / "ace-step" / "bin" / "python"
+        return ace_step_venv(self.context.data_dir) / "bin" / "python"
 
     def available(self) -> str | None:
         python = self.python()

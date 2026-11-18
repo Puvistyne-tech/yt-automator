@@ -3,8 +3,6 @@ from __future__ import annotations
 import os
 import platform
 import shutil
-import subprocess
-from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,27 +10,18 @@ from automator.domain.diagnostics import SystemFacts
 from automator.infrastructure.config import RuntimeConfig
 from automator.infrastructure.db.migration_state import migration_state
 from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
+from automator.infrastructure.providers.process import ProcessRunner, SubprocessRunner
+from automator.shared.errors import UpstreamFailure
 
-VersionReader = Callable[[str, float], str]
 COPYRIGHT_MARKER = " Copyright"
 
 
-def tool_version(binary: str, timeout_seconds: float) -> str:
+def tool_version(runner: ProcessRunner, binary: str, timeout_seconds: float) -> str:
     try:
-        completed = subprocess.run(
-            [binary, "-version"],
-            capture_output=True,
-            text=True,
-            errors="replace",
-            timeout=timeout_seconds,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired):
+        lines = runner.run([binary, "-version"], timeout_seconds).stdout.strip().splitlines()
+    except UpstreamFailure:
         return ""
-    lines = completed.stdout.strip().splitlines()
-    if completed.returncode != 0 or not lines:
-        return ""
-    return lines[0].split(COPYRIGHT_MARKER)[0].strip()
+    return lines[0].split(COPYRIGHT_MARKER)[0].strip() if lines else ""
 
 
 def nearest_existing(path: Path) -> Path:
@@ -65,15 +54,15 @@ class LocalSystemInspector:
     def __init__(
         self,
         settings: InspectorSettings,
-        read_version: VersionReader = tool_version,
+        runner: ProcessRunner | None = None,
         python_version: str = platform.python_version(),
     ) -> None:
         self.settings = settings
-        self.read_version = read_version
+        self.runner = runner or SubprocessRunner()
         self.python_version = python_version
 
     def version_of(self, binary: str) -> str:
-        return self.read_version(binary, self.settings.tool_timeout_seconds)
+        return tool_version(self.runner, binary, self.settings.tool_timeout_seconds)
 
     def facts(self) -> SystemFacts:
         settings = self.settings
