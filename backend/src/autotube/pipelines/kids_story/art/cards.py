@@ -8,14 +8,17 @@ from autotube.domain.pipeline import StageLog
 from autotube.domain.run_enums import LogLevel
 from autotube.pipelines.kids_story.art.imaging import covered_copy
 from autotube.pipelines.kids_story.art.lettering import Lettering, lettered
-from autotube.pipelines.kids_story.settings.base import Placement
+from autotube.pipelines.kids_story.publishing.templates import template_values
+from autotube.pipelines.kids_story.settings.base import LocalizedText, Placement
 from autotube.pipelines.kids_story.settings.media import VisualSettings
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from autotube.pipelines.kids_story.story.model import Story
 from autotube.pipelines.kids_story.styles.resolve import resolve_style
 from autotube.pipelines.kids_story.text.scripts import script_language
+from autotube.pipelines.kids_story.text.templates import render_template
 
 CENTRED = 0.5
+INTRO_CARD = "intro"
 
 
 def lettering_for(
@@ -40,11 +43,29 @@ def lettering_for(
     )
 
 
+def template_lines(template: LocalizedText, settings: KidsStorySettings, story: Story) -> list[str]:
+    text = render_template(template.for_language(story.language), template_values(story, settings))
+    return [line.strip() for line in text.split("\n") if line.strip()]
+
+
 def card_lines(settings: KidsStorySettings, story: Story, card: str) -> list[str]:
-    series = settings.series.name.for_language(story.language)
-    if card == "intro":
-        return [series, story.title]
-    return [settings.series.refrain.for_language(story.language), series]
+    episode = settings.episode
+    template = episode.intro_card_text if card == INTRO_CARD else episode.outro_card_text
+    return template_lines(template, settings, story)
+
+
+def card_lettering(settings: KidsStorySettings, story: Story, card: str) -> Lettering:
+    episode = settings.episode
+    lines = card_lines(settings, story, card)
+    return lettering_for(
+        settings, lines, story.language, episode.card_text_position, episode.card_text_size_ratio
+    )
+
+
+def thumbnail_lines(settings: KidsStorySettings, story: Story) -> list[str]:
+    if not settings.thumbnail.title_text:
+        return []
+    return template_lines(settings.thumbnail.text_template, settings, story)
 
 
 def resized_or_copied(source: Path, output: Path, size: tuple[int, int]) -> Path:

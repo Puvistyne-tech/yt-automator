@@ -45,7 +45,10 @@ class FfmpegOptions(X264Options):
         default=500.0, ge=0.01, le=9000, title="Ducking release", description="Milliseconds."
     )
     outline_width: float = Field(
-        default=3.0, ge=0.0, title="Subtitle outline", description="Outline width in pixels."
+        default=3.0,
+        ge=0.0,
+        title="Subtitle outline",
+        description="Outline width in pixels, used unless the video sets its own.",
     )
     background_color: str = Field(
         default="#000000",

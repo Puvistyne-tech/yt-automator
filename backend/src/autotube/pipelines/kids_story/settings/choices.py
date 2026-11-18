@@ -5,6 +5,7 @@ from enum import StrEnum
 
 from pydantic.config import JsonDict
 
+from autotube.domain.video_look import SubtitlePosition, Transition, VideoQuality
 from autotube.pipelines.kids_story.languages import LANGUAGE_NAMES
 
 ChoiceSchema = Callable[[JsonDict], None]
@@ -63,6 +64,33 @@ CORNER_CHOICES = titled_choices(
     }
 )
 EDGE_CHOICES = titled_choices({"top": "Top", "bottom": "Bottom"})
+PLACEMENT_CHOICES = titled_choices(
+    {
+        "top": "Top",
+        "bottom": "Bottom",
+        "center": "Centre",
+        "top_left": "Top left",
+        "top_right": "Top right",
+        "bottom_left": "Bottom left",
+        "bottom_right": "Bottom right",
+    }
+)
+SUBTITLE_POSITION_CHOICES = enum_choices(
+    SubtitlePosition, {"bottom": "Bottom", "middle": "Middle", "top": "Top"}
+)
+TRANSITION_CHOICES = enum_choices(
+    Transition,
+    {"cut": "Cut", "crossfade": "Crossfade", "fade_through_black": "Fade through black"},
+)
+VIDEO_QUALITY_CHOICES = enum_choices(
+    VideoQuality,
+    {
+        "draft": "Draft: small files, softer picture",
+        "standard": "Standard: the media provider's quality",
+        "high": "High: sharper, larger files",
+        "best": "Best: sharpest, largest files",
+    },
+)
 CATEGORY_CHOICES = titled_choices(
     {"1": "Film & Animation", "24": "Entertainment", "27": "Education"}
 )

@@ -15,6 +15,7 @@ class InputPlan:
     narration: list[int] = field(default_factory=list)
     effects: list[int] = field(default_factory=list)
     music: int | None = None
+    watermark: int | None = None
     count: int = 0
 
     def add(self, *args: str) -> int:
@@ -53,4 +54,6 @@ def plan_inputs(composition: VideoComposition) -> InputPlan:
         plan.effects.append(plan.add("-i", str(clip.path)))
     if composition.music is not None:
         plan.music = plan.add("-stream_loop", "-1", "-i", str(composition.music))
+    if composition.watermark is not None:
+        plan.watermark = plan.add("-i", str(composition.watermark.image))
     return plan

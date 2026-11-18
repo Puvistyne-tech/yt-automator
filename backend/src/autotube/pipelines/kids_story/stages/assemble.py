@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from autotube.domain.capabilities import Capability, MediaToolkit, VideoComposition
+from autotube.domain.capabilities import Capability, MediaToolkit, VideoComposition, WordTiming
 from autotube.domain.pipeline import NewArtifact, StageContext, StageLog, StageOutcome
 from autotube.domain.pipeline_descriptors import StageDescriptor
 from autotube.domain.run_enums import ArtifactKind, LogLevel
@@ -19,12 +19,15 @@ from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from autotube.pipelines.kids_story.stages.media_types import JSON, MP4, SRT
 from autotube.pipelines.kids_story.stages.run_settings import kids_settings
 from autotube.pipelines.kids_story.stages.story_loading import load_stories
+from autotube.pipelines.kids_story.subtitles.karaoke import karaoke_words
 from autotube.pipelines.kids_story.subtitles.layout import subtitle_layout
 from autotube.pipelines.kids_story.subtitles.srt import render_srt
 from autotube.pipelines.kids_story.subtitles.timeline_cues import cue_rules, timeline_cues
 from autotube.pipelines.kids_story.timeline.composition import Sources, composition, timeline_meta
 from autotube.pipelines.kids_story.timeline.cuts import Cut, planned_cuts
 from autotube.pipelines.kids_story.timeline.plan import total_seconds
+
+Captions = tuple[Path | None, tuple[WordTiming, ...]]
 
 
 def keyed_paths(context: StageContext, role: Role, key: str) -> dict[str, Path]:
@@ -88,18 +91,16 @@ class AssembleStage:
             artifacts=tuple(made), provider=media.provider_id, message=f"{len(made)} files"
         )
 
-    def subtitles(
-        self, context: StageContext, settings: KidsStorySettings, cut: Cut
-    ) -> Path | None:
+    def subtitles(self, context: StageContext, settings: KidsStorySettings, cut: Cut) -> Captions:
         if not settings.subtitles.enabled:
-            return None
+            return None, ()
         layout = subtitle_layout(settings, cut.language, cut.variant)
         cues = timeline_cues(cut.segments, cut.voices, cue_rules(settings.subtitles, layout))
         path = folder(context, "subtitles") / f"{cut.name}.srt"
         path.write_text(render_srt(cues), encoding="utf-8")
-        return path
+        return path, karaoke_words(cues)
 
-    def sources(self, context: StageContext, cut: Cut, subtitles: Path | None) -> Sources:
+    def sources(self, context: StageContext, cut: Cut, captions: Captions) -> Sources:
         music = latest(context.artifacts, Role.MUSIC, cut.language, cut.variant)
         return Sources(
             workspace=context.workspace,
@@ -107,15 +108,17 @@ class AssembleStage:
             voices=cut.voices,
             effects=keyed_paths(context, Role.SOUND_EFFECT, "cue"),
             music=path_of(context, music) if music else None,
-            subtitles=subtitles,
+            subtitles=captions[0],
+            subtitle_words=captions[1],
         )
 
     def edited(
         self, context: StageContext, media: MediaToolkit, settings: KidsStorySettings, cut: Cut
     ) -> list[NewArtifact]:
-        srt = self.subtitles(context, settings, cut)
+        captions = self.subtitles(context, settings, cut)
+        srt = captions[0]
         plan = composition(
-            cut.segments, cut.story, self.sources(context, cut, srt), settings, cut.variant
+            cut.segments, cut.story, self.sources(context, cut, captions), settings, cut.variant
         )
         planned_seconds = total_seconds(cut.segments)
         context.log(f"editing the {cut.language} {cut.variant}: {planned_seconds:.1f} s")

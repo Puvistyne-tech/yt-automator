@@ -4,6 +4,7 @@ from collections.abc import Sequence
 
 from pydantic import Field, model_validator
 
+from autotube.domain.video_look import VideoQuality
 from autotube.pipelines.kids_story.artifacts import SHORT
 from autotube.pipelines.kids_story.settings.base import SettingsSection
 from autotube.pipelines.kids_story.settings.cast import Character, default_cast
@@ -26,6 +27,7 @@ from autotube.pipelines.kids_story.settings.sound_effects import SoundEffectSett
 from autotube.pipelines.kids_story.settings.story import StorySettings
 from autotube.pipelines.kids_story.settings.subtitles import SubtitleSettings
 from autotube.pipelines.kids_story.settings.thumbnail import ThumbnailSettings
+from autotube.pipelines.kids_story.settings.video_look import FOLLOW_EPISODE_FPS
 
 
 class KidsStorySettings(SettingsSection):
@@ -125,3 +127,11 @@ class KidsStorySettings(SettingsSection):
     def video_size(self, variant: str) -> tuple[int, int]:
         resolution = self.short.resolution if variant == SHORT else self.episode.resolution
         return size_of(resolution)
+
+    def video_fps(self, variant: str) -> int:
+        if variant == SHORT and self.short.fps != FOLLOW_EPISODE_FPS:
+            return self.short.fps
+        return self.episode.fps
+
+    def video_quality(self, variant: str) -> VideoQuality:
+        return self.short.video_quality if variant == SHORT else self.episode.video_quality

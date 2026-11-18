@@ -9,6 +9,8 @@ from autotube.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 from autotube.infrastructure.providers.media.media_commands import compose_command
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from autotube.pipelines.kids_story.story.model import Story
+from autotube.pipelines.kids_story.subtitles.cues import Cue
+from autotube.pipelines.kids_story.subtitles.karaoke import karaoke_words
 from autotube.pipelines.kids_story.subtitles.layout import subtitle_layout
 from autotube.pipelines.kids_story.subtitles.srt import render_srt
 from autotube.pipelines.kids_story.subtitles.timeline_cues import cue_rules, timeline_cues
@@ -53,7 +55,15 @@ def spoken_lines(draft: Story) -> dict[str, VoiceLine]:
     return lines
 
 
-def look_sources(segments: list[Segment], voices: dict[str, VoiceLine]) -> Sources:
+def look_cues(settings: KidsStorySettings, variant: str) -> list[Cue]:
+    draft = story()
+    voices = spoken_lines(draft)
+    segments = planned(draft, voices, settings, variant)
+    layout = subtitle_layout(settings, draft.language, variant)
+    return timeline_cues(segments, voices, cue_rules(settings.subtitles, layout))
+
+
+def look_sources(segments: list[Segment], voices: dict[str, VoiceLine], cues: list[Cue]) -> Sources:
     return Sources(
         workspace=WORKSPACE,
         clips={item.visual_key: WORKSPACE / f"{item.visual_key}.mp4" for item in segments},
@@ -61,6 +71,7 @@ def look_sources(segments: list[Segment], voices: dict[str, VoiceLine]) -> Sourc
         effects={},
         music=WORKSPACE / "music.wav",
         subtitles=WORKSPACE / "subs.srt",
+        subtitle_words=karaoke_words(cues),
     )
 
 
@@ -73,15 +84,12 @@ def look_composition(settings: KidsStorySettings, variant: str = "episode") -> V
     draft = story()
     voices = spoken_lines(draft)
     segments = planned(draft, voices, settings, variant)
-    return composition(segments, draft, look_sources(segments, voices), settings, variant)
+    sources = look_sources(segments, voices, look_cues(settings, variant))
+    return composition(segments, draft, sources, settings, variant)
 
 
 def look_srt(settings: KidsStorySettings, variant: str = "episode") -> str:
-    draft = story()
-    voices = spoken_lines(draft)
-    segments = planned(draft, voices, settings, variant)
-    layout = subtitle_layout(settings, draft.language, variant)
-    return render_srt(timeline_cues(segments, voices, cue_rules(settings.subtitles, layout)))
+    return render_srt(look_cues(settings, variant))
 
 
 def rendered_ass(settings: KidsStorySettings, folder: Path, variant: str = "episode") -> str:

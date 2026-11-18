@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from autotube.domain.capabilities import SubtitleStyle
+from autotube.domain.video_look import SubtitleStyle
 from autotube.shared.errors import UpstreamFailure
 
 OPTION_SPECIALS = ("\\", "'", ":")

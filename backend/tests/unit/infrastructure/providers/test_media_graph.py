@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from autotube.domain.capabilities import SubtitleStyle
-from autotube.infrastructure.providers.media.ass_document import ass_color
+from autotube.domain.video_look import SubtitleStyle
+from autotube.infrastructure.providers.media.ass_text import ass_color
 from autotube.infrastructure.providers.media.composition_audio import (
     LoudnessMeasurement,
     audio_graph,

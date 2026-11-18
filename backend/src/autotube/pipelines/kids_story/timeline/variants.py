@@ -28,7 +28,11 @@ HOOK = "hook"
 
 def padding_of(settings: KidsStorySettings) -> Padding:
     episode = settings.episode
-    return Padding(lead_in=episode.scene_lead_in_seconds, tail=episode.scene_tail_seconds)
+    return Padding(
+        lead_in=episode.scene_lead_in_seconds,
+        tail=episode.scene_tail_seconds,
+        overlap=episode.overlap_seconds(),
+    )
 
 
 def card_key(card: str, language: str) -> str:

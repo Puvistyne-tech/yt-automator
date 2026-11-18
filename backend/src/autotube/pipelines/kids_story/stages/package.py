@@ -7,7 +7,11 @@ from autotube.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from autotube.domain.pipeline_descriptors import StageDescriptor
 from autotube.domain.run_enums import ArtifactKind, LogLevel
 from autotube.domain.srt import parse_srt
-from autotube.pipelines.kids_story.art.cards import lettered_or_plain, lettering_for
+from autotube.pipelines.kids_story.art.cards import (
+    lettered_or_plain,
+    lettering_for,
+    thumbnail_lines,
+)
 from autotube.pipelines.kids_story.art.imaging import JpegBudget, saved_jpeg
 from autotube.pipelines.kids_story.artifacts import (
     VARIANTS,
@@ -74,7 +78,7 @@ class PackageStage:
         art = required(context.artifacts, Role.THUMBNAIL_ART, variant=variant)
         name = f"thumbnail-{story.language}-{variant}"
         lettered = folder(context, "package") / f"{name}-lettered.png"
-        lines = [story.title] if settings.thumbnail.title_text else []
+        lines = thumbnail_lines(settings, story)
         lettering = lettering_for(
             settings,
             lines,
@@ -85,7 +89,7 @@ class PackageStage:
         has_title = lettered_or_plain(path_of(context, art), lettered, lettering)
         if lines and not has_title:
             context.log(
-                f"thumbnail for {story.language} {variant} has no title: no usable font",
+                f"thumbnail for {story.language} {variant} has no text: no usable font",
                 LogLevel.WARNING,
             )
         output = lettered.with_name(f"{name}.jpg")

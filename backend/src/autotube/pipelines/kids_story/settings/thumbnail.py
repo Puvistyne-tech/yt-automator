@@ -1,17 +1,23 @@
 from __future__ import annotations
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from autotube.pipelines.kids_story.settings.base import (
     Edge,
     HexColor,
     LocalizedList,
+    LocalizedText,
     Placement,
     SettingsSection,
     color,
     localized_list,
+    localized_text,
 )
 from autotube.pipelines.kids_story.settings.choices import EDGE_CHOICES
+from autotube.pipelines.kids_story.settings.placeholders import (
+    THUMBNAIL_PLACEHOLDERS,
+    checked_template,
+)
 
 LATIN_FONTS = [
     "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
@@ -31,8 +37,24 @@ TAMIL_FONTS = [
 class ThumbnailSettings(SettingsSection):
     title_text: bool = Field(
         default=True,
-        title="Title on thumbnail",
-        description="Draw the story title on every thumbnail.",
+        title="Text on thumbnail",
+        description="Draw the thumbnail text on every thumbnail.",
+    )
+    text_template: LocalizedText = localized_text(
+        "{title}",
+        "{title}",
+        "Thumbnail text",
+        "Text drawn on the thumbnail per language, one line per row; {title} {series} {moral} "
+        "and {hook} are filled in.",
+    )
+    candidates: int = Field(
+        default=1,
+        ge=1,
+        le=8,
+        title="Thumbnail pictures to choose from",
+        description="How many thumbnail pictures are drawn; with more than one, the picture "
+        "judge keeps the best when Let the language model pick pictures is on, otherwise "
+        "the first.",
     )
     width: int = Field(
         default=1280,
@@ -126,6 +148,11 @@ class ThumbnailSettings(SettingsSection):
         "Font files",
         "Font files tried in order for every lettered picture; the first one found is used.",
     )
+
+    @field_validator("text_template")
+    @classmethod
+    def check_text_template(cls, value: LocalizedText) -> LocalizedText:
+        return checked_template("thumbnail.text_template", value, THUMBNAIL_PLACEHOLDERS)
 
     @model_validator(mode="after")
     def check_quality_range(self) -> ThumbnailSettings:

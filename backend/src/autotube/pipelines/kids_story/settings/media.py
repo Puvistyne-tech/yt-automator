@@ -17,6 +17,7 @@ from autotube.pipelines.kids_story.settings.choices import (
     CORNER_CHOICES,
     SHORT_ART_CHOICES,
 )
+from autotube.pipelines.kids_story.settings.logo import LogoSettings
 
 STYLE_MOTION_NOTE = "Used when Move the way the style suggests is off, or for a custom style."
 
@@ -26,7 +27,7 @@ class ShortArtMode(StrEnum):
     CROP = "crop"
 
 
-class VisualSettings(SettingsSection):
+class VisualSettings(LogoSettings):
     image_candidates: int = Field(
         default=2,
         ge=1,

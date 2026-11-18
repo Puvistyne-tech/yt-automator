@@ -4,10 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from autotube.domain.capabilities import SubtitleStyle
 from autotube.domain.srt import SrtEntry
-from autotube.infrastructure.providers.media.ass_document import ass_document, ass_text, ass_time
+from autotube.domain.video_look import SubtitleStyle
+from autotube.infrastructure.providers.media.ass_document import ass_document
 from autotube.infrastructure.providers.media.ass_subtitles import with_ass_subtitles
+from autotube.infrastructure.providers.media.ass_text import ass_text, ass_time
 from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.media_fixtures import composition
 

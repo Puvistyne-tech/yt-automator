@@ -58,7 +58,7 @@ def thumbnail_prompt(settings: KidsStorySettings, story: Story) -> str:
     return render_prompt(
         "image_thumbnail.txt",
         style=resolve_style(settings).prompt,
-        description=story.thumbnail or story.scenes[0].visual,
+        description=thumbnail_visual(story),
         characters=characters_text(settings, present),
     )
 
@@ -69,17 +69,30 @@ def motion_prompt(scene: StoryScene | None, feel: str = "") -> str:
     return f"{prompt} Camera: {feel}." if feel else prompt
 
 
-def judge_request(
-    settings: KidsStorySettings, scene: StoryScene, candidates: Sequence[Path]
+def picture_judge_request(
+    settings: KidsStorySettings,
+    visual: str,
+    character_ids: Sequence[str],
+    candidates: Sequence[Path],
 ) -> TextRequest:
     prompt = render_prompt(
         "judge.txt",
-        visual=scene.visual,
-        characters=characters_text(settings, scene.characters),
+        visual=visual,
+        characters=characters_text(settings, character_ids),
         style=resolve_style(settings).prompt,
         count=len(candidates),
     )
     return TextRequest(prompt=prompt, max_tokens=8, temperature=0.0, images=tuple(candidates))
+
+
+def judge_request(
+    settings: KidsStorySettings, scene: StoryScene, candidates: Sequence[Path]
+) -> TextRequest:
+    return picture_judge_request(settings, scene.visual, scene.characters, candidates)
+
+
+def thumbnail_visual(story: Story) -> str:
+    return story.thumbnail or story.scenes[0].visual
 
 
 def parse_choice(raw: str, count: int) -> int:

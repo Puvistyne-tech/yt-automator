@@ -14,6 +14,7 @@ from autotube.infrastructure.providers.media.composition_inputs import (
     timeline_seconds,
 )
 from autotube.infrastructure.providers.media.composition_video import video_graph
+from autotube.infrastructure.providers.media.encoder_quality import quality_crf
 from autotube.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 
 
@@ -37,18 +38,18 @@ def measure_command(composition: VideoComposition, options: FfmpegOptions) -> li
     )
 
 
-def encoding_args(fps: int, options: FfmpegOptions) -> list[str]:
+def encoding_args(composition: VideoComposition, options: FfmpegOptions) -> list[str]:
     return [
         "-c:v",
         "libx264",
         "-preset",
         options.preset,
         "-crf",
-        str(options.crf),
+        str(quality_crf(options.crf, composition.quality)),
         "-pix_fmt",
         "yuv420p",
         "-r",
-        str(fps),
+        str(composition.fps),
         "-c:a",
         "aac",
         "-b:a",
@@ -83,7 +84,7 @@ def compose_command(
         "[vout]",
         "-map",
         "[aout]",
-        *encoding_args(composition.fps, options),
+        *encoding_args(composition, options),
         "-t",
         f"{total:.3f}",
         str(output),

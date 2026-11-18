@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from autotube.domain.capabilities import WordTiming
 from autotube.pipelines.kids_story.subtitles.cues import Cue, CueRules, word_groups, wrapped
+from autotube.pipelines.kids_story.subtitles.karaoke import timed_pieces, with_words
 from autotube.pipelines.kids_story.text.graphemes import grapheme_length
 
 Screen = tuple[str, ...]
@@ -79,5 +80,6 @@ def segment_cues(
         room = max(following, start)
         end = min(max(start, min(offset + group[-1].end_seconds, limit)), room)
         window = Window(start=start, end=end, room=room, limit=limit)
-        cues.extend(screenfuls(window, wrapped([word.word for word in group], rules), rules))
+        screens = screenfuls(window, wrapped([word.word for word in group], rules), rules)
+        cues.extend(with_words(screens, timed_pieces(group, offset, rules)))
     return cues

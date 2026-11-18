@@ -6,13 +6,15 @@ from pathlib import Path
 
 from pydantic import JsonValue
 
-from autotube.domain.capabilities import SubtitleStyle, TimedClip, VideoComposition
+from autotube.domain.capabilities import TimedClip, VideoComposition, WordTiming
+from autotube.domain.video_look import SubtitleStyle
 from autotube.pipelines.kids_story.artifacts import SHORT, is_scene_key
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from autotube.pipelines.kids_story.story.model import Story
 from autotube.pipelines.kids_story.subtitles.layout import subtitle_layout
 from autotube.pipelines.kids_story.timeline.plan import Segment
 from autotube.pipelines.kids_story.timeline.voices import VoiceLine
+from autotube.pipelines.kids_story.timeline.watermark import video_watermark
 
 
 @dataclass(frozen=True)
@@ -23,6 +25,7 @@ class Sources:
     effects: Mapping[str, Path]
     music: Path | None
     subtitles: Path | None
+    subtitle_words: tuple[WordTiming, ...] = ()
 
 
 def visual_clips(segments: Sequence[Segment], sources: Sources) -> tuple[TimedClip, ...]:
@@ -81,7 +84,19 @@ def subtitle_style(settings: KidsStorySettings, language: str, variant: str) -> 
         highlight_color=subtitles.highlight_color,
         margin_bottom=layout.bottom_margin,
         margin_sides=layout.side_margin,
+        karaoke=subtitles.karaoke,
+        position=subtitles.position,
+        bold=subtitles.bold,
+        shadow=subtitles.shadow,
+        box=subtitles.box_background,
+        box_color=subtitles.box_color,
+        box_opacity=subtitles.box_opacity,
+        outline_width=subtitles.outline_override(),
     )
+
+
+def karaoke_words(settings: KidsStorySettings, sources: Sources) -> tuple[WordTiming, ...]:
+    return sources.subtitle_words if settings.subtitles.karaoke else ()
 
 
 def composition(
@@ -95,7 +110,7 @@ def composition(
     return VideoComposition(
         width=width,
         height=height,
-        fps=settings.episode.fps,
+        fps=settings.video_fps(variant),
         visuals=visual_clips(segments, sources),
         narration=narration_clips(segments, sources),
         music=sources.music,
@@ -104,8 +119,12 @@ def composition(
         sound_effects=effect_clips(segments, story, sources, settings),
         subtitles=sources.subtitles,
         subtitle_style=subtitle_style(settings, story.language, variant),
+        subtitle_words=karaoke_words(settings, sources),
         loudness_lufs=settings.episode.loudness_lufs,
         fade_seconds=settings.episode.fade_seconds,
+        transition=settings.episode.transition,
+        quality=settings.video_quality(variant),
+        watermark=video_watermark(settings.visuals, variant),
     )
 
 

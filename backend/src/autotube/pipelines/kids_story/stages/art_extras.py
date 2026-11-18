@@ -8,18 +8,12 @@ from autotube.domain.pipeline import NewArtifact, StageContext
 from autotube.domain.run_enums import ArtifactKind, LogLevel
 from autotube.pipelines.kids_story.art.cards import (
     badged_copy,
-    card_lines,
+    card_lettering,
     lettered_or_plain,
-    lettering_for,
     resized_or_copied,
 )
 from autotube.pipelines.kids_story.art.imaging import covered_copy
-from autotube.pipelines.kids_story.art.prompts import (
-    scene_prompt,
-    scene_subject,
-    thumbnail_prompt,
-    thumbnail_subject,
-)
+from autotube.pipelines.kids_story.art.prompts import scene_prompt, scene_subject
 from autotube.pipelines.kids_story.art.scene_art import Drawing, ScenePainter
 from autotube.pipelines.kids_story.artifacts import (
     EPISODE,
@@ -28,15 +22,14 @@ from autotube.pipelines.kids_story.artifacts import (
     artifact,
     scene_visual_key,
 )
-from autotube.pipelines.kids_story.settings.base import Placement
 from autotube.pipelines.kids_story.settings.media import ShortArtMode
 from autotube.pipelines.kids_story.stages.media_types import PNG
 from autotube.pipelines.kids_story.stages.story_loading import load_story
+from autotube.pipelines.kids_story.stages.thumbnail_art import picked_thumbnail
 from autotube.pipelines.kids_story.story.model import Story
 from autotube.pipelines.kids_story.timeline.selection import short_scene_indexes
 from autotube.pipelines.kids_story.timeline.variants import INTRO, OUTRO, card_key
 
-THUMBNAIL_SEED_OFFSET = 5000
 PORTRAIT = (9, 16)
 
 
@@ -96,22 +89,27 @@ class ExtraArt:
         )
 
     def thumbnails(self) -> list[NewArtifact]:
-        settings = self.painter.settings
-        prompt = thumbnail_prompt(settings, self.story)
-        size = (settings.thumbnail.width, settings.thumbnail.height)
-        seed = settings.visuals.base_seed + THUMBNAIL_SEED_OFFSET
-        subject = thumbnail_subject(self.story)
-        wide = self.painter.draw(Drawing(prompt, size, seed, "thumbnail-wide", subject=subject))
-        tall_size = (size[1] * PORTRAIT[0] // PORTRAIT[1], size[1])
-        tall_drawing = Drawing(prompt, tall_size, seed, "thumbnail-tall", subject=subject)
-        tall = self.portrait(wide, "thumbnail-tall", tall_size, tall_drawing)
+        pick = picked_thumbnail(self.painter, self.story, self.context.log)
+        height = self.painter.settings.thumbnail.height
+        tall_size = (height * PORTRAIT[0] // PORTRAIT[1], height)
+        tall_drawing = Drawing(
+            pick.prompt, tall_size, pick.seed, "thumbnail-tall", subject=pick.subject
+        )
+        tall = self.portrait(pick.path, "thumbnail-tall", tall_size, tall_drawing)
         return [
-            artifact(
-                ArtifactKind.IMAGE, wide, PNG, Role.THUMBNAIL_ART, variant=EPISODE, prompt=prompt
+            *(
+                artifact(
+                    ArtifactKind.IMAGE,
+                    path,
+                    PNG,
+                    Role.THUMBNAIL_ART,
+                    variant=variant,
+                    prompt=pick.prompt,
+                    candidate=pick.chosen,
+                )
+                for variant, path in ((EPISODE, pick.path), (SHORT, tall))
             ),
-            artifact(
-                ArtifactKind.IMAGE, tall, PNG, Role.THUMBNAIL_ART, variant=SHORT, prompt=prompt
-            ),
+            *pick.candidate_artifacts(),
         ]
 
     def cards(self, language: str, background: Path) -> list[NewArtifact]:
@@ -133,14 +131,7 @@ class ExtraArt:
             background, self.painter.out / f"card-{card}-base.png", settings.video_size(EPISODE)
         )
         output = self.painter.out / f"card-{card}-{story.language}.png"
-        lettering = lettering_for(
-            settings,
-            card_lines(settings, story, card),
-            story.language,
-            Placement.CENTER,
-            settings.episode.card_text_size_ratio,
-        )
-        has_text = lettered_or_plain(base, output, lettering)
+        has_text = lettered_or_plain(base, output, card_lettering(settings, story, card))
         return artifact(
             ArtifactKind.IMAGE,
             output,
