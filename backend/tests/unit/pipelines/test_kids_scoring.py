@@ -13,7 +13,11 @@ from automator.pipelines.kids_story.scoring.content_items import (
     reading_level,
 )
 from automator.pipelines.kids_story.scoring.inputs import ScoreInputs, gathered
-from automator.pipelines.kids_story.scoring.measures import range_score, subtitle_track
+from automator.pipelines.kids_story.scoring.measures import (
+    SubtitleRules,
+    range_score,
+    subtitle_track,
+)
 from automator.pipelines.kids_story.scoring.output_items import (
     completeness,
     loudness,
@@ -26,17 +30,16 @@ from automator.pipelines.kids_story.scoring.timing_items import (
     subtitle_timing,
 )
 from automator.pipelines.kids_story.subtitles.srt import SrtEntry
-from tests.unit.pipelines.kids_data import StageRig, quick_settings
-from tests.unit.pipelines.kids_fakes import FakeMedia, FakeProviders, FakeSpeech
+from tests.fixtures.kids_data import StageRig, quick_settings, run_chain
+from tests.fixtures.kids_fakes import FakeMedia, FakeProviders, FakeSpeech
+
+RULES = SubtitleRules(min_coverage=0.95, overlap_penalty=0.5, out_of_bounds_penalty=0.5)
 
 
 def finished(
     root: Path, providers: FakeProviders | None = None, languages: tuple[str, ...] = ("en", "ta")
 ) -> StageRig:
-    rig = StageRig(root, providers=providers or FakeProviders(), languages=languages)
-    for stage in KidsStoryPipeline().stages():
-        rig.run(stage)
-    return rig
+    return run_chain(StageRig(root, providers=providers or FakeProviders(), languages=languages))
 
 
 @pytest.fixture(scope="module")
@@ -52,15 +55,21 @@ def required(item: ScoreItem | None) -> ScoreItem:
 def test_range_score_and_subtitle_track_measures() -> None:
     assert range_score(5, 0, 10, 2) == 100 and range_score(13, 0, 10, 10) == 70
     good = [SrtEntry(start=0, end=1, text="one two"), SrtEntry(start=1, end=2, text="three")]
-    assert subtitle_track(good, 2.0, 3, 0.95).score == 100
+    assert subtitle_track(good, 2.0, 3, RULES).score == 100
     overlapping = [
         SrtEntry(start=0, end=1.5, text="one two"),
         SrtEntry(start=1, end=2, text="three"),
     ]
-    assert subtitle_track(overlapping, 2.0, 3, 0.95).score == 50
+    assert subtitle_track(overlapping, 2.0, 3, RULES).score == 50
     outside = [SrtEntry(start=0, end=5, text="one two three")]
-    assert subtitle_track(outside, 2.0, 3, 0.95).score == 50
-    assert subtitle_track(good, 2.0, 6, 1.0).score == 50
+    assert subtitle_track(outside, 2.0, 3, RULES).score == 50
+    strict = RULES.model_copy(update={"min_coverage": 1.0})
+    assert subtitle_track(good, 2.0, 6, strict).score == 50
+    gentle = RULES.model_copy(update={"overlap_penalty": 0.9, "out_of_bounds_penalty": 1.0})
+    assert subtitle_track(overlapping, 2.0, 3, gentle).score == 90
+    assert subtitle_track(outside, 2.0, 3, gentle).score == 100
+    assert subtitle_track([], 2.0, 0, RULES).score == 100
+    assert subtitle_track([], 2.0, 5, RULES).score == 0
 
 
 def test_a_clean_run_scores_well_on_every_item(inputs: ScoreInputs) -> None:
@@ -84,6 +93,8 @@ def test_a_clean_run_scores_well_on_every_item(inputs: ScoreInputs) -> None:
     }
     for item_id in (
         "subtitle_timing",
+        "episode_duration",
+        "speaking_rate",
         "short_duration",
         "moral_and_refrain",
         "character_consistency",
@@ -98,7 +109,13 @@ def test_a_clean_run_scores_well_on_every_item(inputs: ScoreInputs) -> None:
 
 def test_durations_and_speaking_rate_follow_settings(inputs: ScoreInputs) -> None:
     tight = quick_settings(story={"target_duration_seconds": 30, "duration_tolerance_seconds": 0})
-    assert required(episode_duration(replace(inputs, settings=tight))).score < 5
+    narration = {
+        code: sum(line.seconds for key, line in lines.items() if key.startswith("scene-"))
+        for code, lines in inputs.voices.items()
+    }
+    expected = sum(max(100 - 2 * (seconds - 30), 0) for seconds in narration.values()) / 2
+    item = required(episode_duration(replace(inputs, settings=tight)))
+    assert item.score == pytest.approx(expected) and "of narration" in item.detail
     short_limit = quick_settings(short={"max_duration_seconds": 10})
     assert required(short_duration(replace(inputs, settings=short_limit))).score < 100
     assert (
@@ -148,9 +165,10 @@ def test_missing_word_timings_lower_subtitle_coverage(tmp_path: Path) -> None:
     rig = finished(
         tmp_path, providers=FakeProviders(speech=FakeSpeech(with_words=False)), languages=("en",)
     )
-    item = required(subtitle_timing(gathered(rig.context())))
-    assert item.score == 100 and "coverage 100%" in item.detail
-    assert (tmp_path / "subtitles" / "en-episode.srt").read_text() == ""
+    inputs = gathered(rig.context())
+    item = required(subtitle_timing(inputs))
+    assert item.score == 0 and "coverage 0%" in item.detail
+    assert completeness(inputs).score < 100
 
 
 def test_scoring_without_artifacts_reports_only_completeness(tmp_path: Path) -> None:

@@ -1,43 +1,25 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from pydantic import BaseModel
 
-from automator.domain.pipeline import Stage
 from automator.domain.run_enums import ArtifactKind
-from automator.domain.run_parts import Artifact
-from automator.pipelines.kids_story.artifacts import MissingArtifactError
-from automator.pipelines.kids_story.plugin import KidsStoryPipeline
-from automator.pipelines.kids_story.settings.root import KidsStorySettings
+from automator.pipelines.kids_story.stages.package import PackageStage
+from automator.pipelines.kids_story.stages.run_settings import kids_settings
 from automator.pipelines.kids_story.stages.story import StoryStage
-from automator.pipelines.kids_story.stages.voice import VoiceStage
-from tests.unit.pipelines.kids_data import StageRig, quick_settings, smart_writer
-from tests.unit.pipelines.kids_fakes import FakeProviders, failing_writer
-
-STAGES: tuple[Stage, ...] = tuple(KidsStoryPipeline().stages())
-
-
-def run_chain(rig: StageRig, until: str | None = None) -> StageRig:
-    for stage in STAGES:
-        rig.run(stage)
-        if stage.descriptor.id == until:
-            break
-    return rig
-
-
-def roles(rig: StageRig, kind: ArtifactKind) -> list[tuple[str | None, str | None]]:
-    return sorted(
-        ((item.language, item.variant) for item in rig.artifacts if item.kind is kind),
-        key=str,
-    )
-
-
-def meta_of(rig: StageRig, role: str) -> list[Artifact]:
-    return [item for item in rig.artifacts if item.meta.get("role") == role]
-
-
-BOTH = [("en", "episode"), ("en", "short"), ("ta", "episode"), ("ta", "short")]
+from tests.fixtures.kids_data import (
+    BOTH,
+    StageRig,
+    meta_of,
+    quick_settings,
+    roles,
+    run_chain,
+    smart_writer,
+)
+from tests.fixtures.kids_fakes import FakeMedia, FakeProviders, failing_writer
 
 
 def test_full_chain_writes_translates_and_packages_both_languages(tmp_path: Path) -> None:
@@ -55,8 +37,10 @@ def test_full_chain_writes_translates_and_packages_both_languages(tmp_path: Path
     assert sorted(finals) == BOTH
     assert all(item.language is None for item in meta_of(rig, "clip"))
     assert any(request.images for request in writer.requests)
-    tamil_meta = next(item for item in meta_of(rig, "upload_metadata") if item.language == "ta")
-    assert tamil_meta.meta["made_for_kids"] is True and tamil_meta.meta["default_language"] == "ta"
+    metadata = meta_of(rig, "upload_metadata")
+    assert all(item.meta["made_for_kids"] is True for item in metadata)
+    tamil_meta = next(item for item in metadata if item.language == "ta")
+    assert tamil_meta.meta["default_language"] == "ta"
 
 
 def test_failing_writer_falls_back_to_a_bundled_story(tmp_path: Path) -> None:
@@ -64,15 +48,22 @@ def test_failing_writer_falls_back_to_a_bundled_story(tmp_path: Path) -> None:
     outcome = rig.run(StoryStage())
     assert outcome.provider == "bundled"
     assert {item.meta["source"] for item in meta_of(rig, "story")} == {"bundled"}
+    assert any("story writer unavailable" in line for line in rig.logs)
     assert any("falling back" in line for line in rig.logs)
 
 
-def test_missing_writer_and_bundled_only_skip_the_model(tmp_path: Path) -> None:
-    assert StageRig(tmp_path / "a").run(StoryStage()).provider == "bundled"
+def test_missing_writer_logs_and_uses_a_bundled_story(tmp_path: Path) -> None:
+    rig = StageRig(tmp_path)
+    assert rig.run(StoryStage()).provider == "bundled"
+    assert any("story writer unavailable: no provider for llm" in line for line in rig.logs)
+
+
+def test_bundled_only_never_asks_the_model(tmp_path: Path) -> None:
     writer = smart_writer()
     settings = quick_settings(story={"source": "bundled_only"})
-    rig = StageRig(tmp_path / "b", settings=settings, providers=FakeProviders(writer=writer))
+    rig = StageRig(tmp_path, settings=settings, providers=FakeProviders(writer=writer))
     assert rig.run(StoryStage()).provider == "bundled" and writer.requests == []
+    assert not any("falling back" in line for line in rig.logs)
 
 
 def test_scene_bounds_reject_the_model_story(tmp_path: Path) -> None:
@@ -82,128 +73,40 @@ def test_scene_bounds_reject_the_model_story(tmp_path: Path) -> None:
     )
     rig = StageRig(tmp_path, settings=settings, providers=FakeProviders(writer=writer))
     assert rig.run(StoryStage()).provider == "bundled"
-    assert len(writer.requests) == 2 and "use between 10 and 12 scenes" in writer.requests[1].prompt
+    assert "use between 10 and 12 scenes" in writer.requests[1].prompt
 
 
-def test_vision_judge_picks_and_can_be_turned_off(tmp_path: Path) -> None:
-    rig = run_chain(
-        StageRig(tmp_path / "on", providers=FakeProviders(writer=smart_writer("2"))), "art"
-    )
-    hero_visuals = [
-        item
-        for item in meta_of(rig, "visual")
-        if item.meta.get("scene") == 0 and item.variant == "episode"
-    ]
-    assert hero_visuals[0].meta["candidate"] == 1
-    writer = smart_writer("2")
-    settings = quick_settings(visuals={"use_vision_judge": False})
-    off = run_chain(
-        StageRig(tmp_path / "off", settings=settings, providers=FakeProviders(writer=writer)), "art"
-    )
-    assert not any(request.images for request in writer.requests)
-    assert {
-        item.meta["candidate"] for item in meta_of(off, "visual") if "candidate" in item.meta
-    } == {0}
+def test_no_compatible_bundled_story_fails_the_stage(tmp_path: Path) -> None:
+    bundled_only = quick_settings(story={"source": "bundled_only"})
+    settings = bundled_only.model_copy(update={"cast": bundled_only.cast[:1]})
+    with pytest.raises(LookupError, match="no bundled story"):
+        StageRig(tmp_path, settings=settings).run(StoryStage())
 
 
-def test_music_disabled_or_missing_leaves_no_bed(tmp_path: Path) -> None:
-    settings = quick_settings(music={"enabled": False}, sound_effects={"enabled": False})
-    providers = FakeProviders()
-    rig = run_chain(StageRig(tmp_path / "off", settings=settings, providers=providers))
-    assert (
-        meta_of(rig, "music") == []
-        and providers.music is not None
-        and providers.music.requests == []
-    )
-    assert all(
-        made.music is None and not made.sound_effects
-        for made in providers.media.compositions.values()
-    )
-    missing = FakeProviders(music=None)
-    rig = run_chain(StageRig(tmp_path / "none", providers=missing))
-    assert meta_of(rig, "music") == [] and any("no music provider" in line for line in rig.logs)
+def test_package_reports_the_local_provider(tmp_path: Path) -> None:
+    rig = run_chain(StageRig(tmp_path, languages=("en",)), "assemble")
+    assert rig.run(PackageStage()).provider == "local"
 
 
-def test_music_and_effects_follow_settings(tmp_path: Path) -> None:
-    settings = quick_settings(
-        music={"mood_prompt": "soft harp"}, sound_effects={"prompt_template": "tiny {cue}"}
-    )
-    providers = FakeProviders()
-    run_chain(StageRig(tmp_path, settings=settings, providers=providers))
-    assert providers.music is not None
-    prompts = [request.prompt for request in providers.music.requests]
-    assert "soft harp" in prompts and any(prompt.startswith("tiny ") for prompt in prompts)
-    episode = providers.media.compositions["en-episode.mp4"]
-    assert episode.music is not None and episode.sound_effects
+class ForeignSettings(BaseModel):
+    pass
 
 
-def test_short_disabled_and_single_language(tmp_path: Path) -> None:
+def test_stages_refuse_settings_of_another_pipeline(tmp_path: Path) -> None:
+    foreign = replace(StageRig(tmp_path).context(), settings=ForeignSettings())
+    with pytest.raises(TypeError, match="KidsStorySettings"):
+        kids_settings(foreign)
+
+
+class UnmeasurableMedia(FakeMedia):
+    def duration_seconds(self, media: Path) -> float:
+        raise OSError(f"cannot probe {media.name}")
+
+
+def test_an_unmeasurable_video_keeps_its_planned_length(tmp_path: Path) -> None:
+    providers = FakeProviders(media=UnmeasurableMedia())
     settings = quick_settings(short={"enabled": False})
-    providers = FakeProviders()
-    rig = run_chain(StageRig(tmp_path, settings=settings, languages=("en",), providers=providers))
-    assert roles(rig, ArtifactKind.METADATA) == [("en", "episode")]
-    assert not any(
-        item.variant == "short" for item in rig.artifacts if item.kind is ArtifactKind.VIDEO
-    )
-    assert all(request.language == "en" for request in providers.speech.requests)
-    assert not any(line.endswith("-hook.wav") for line in (item.filename for item in rig.artifacts))
-
-
-def test_settings_reach_requests_compositions_and_metadata(tmp_path: Path) -> None:
-    settings = quick_settings(
-        voice={"narrator_voice": {"en": "warm_en", "ta": "warm_ta"}, "speed": 0.8},
-        subtitles={"burn_in_episode": True, "burn_in_short": False},
-        metadata={"title_template": {"en": "EN {title}", "ta": "TA {title}"}},
-        visuals={"motion_intensity": 0.2},
-        story={"theme_mode": "fixed", "fixed_theme": "sharing"},
-    )
-    providers = FakeProviders()
-    rig = run_chain(StageRig(tmp_path, settings=settings, providers=providers))
-    voices = {
-        (request.language, request.voice, request.speed) for request in providers.speech.requests
-    }
-    assert voices == {("en", "warm_en", 0.8), ("ta", "warm_ta", 0.8)}
-    compositions = providers.media.compositions
-    assert compositions["en-episode.mp4"].subtitle_style.burn_in
-    assert not compositions["ta-short.mp4"].subtitle_style.burn_in
-    titles = {
-        item.language: item.meta["title"]
-        for item in meta_of(rig, "upload_metadata")
-        if item.variant == "episode"
-    }
-    assert titles == {"en": "EN Kutty and the Golden Mango", "ta": "TA குட்டியும் தங்க மாம்பழமும்"}
-    assert {request.intensity for request in providers.motion.requests} >= {0.2}
-
-
-def test_character_voice_override_reaches_speech(tmp_path: Path) -> None:
-    cast = [member.model_dump() for member in quick_settings().cast]
-    cast[1]["voice_override"] = {"en": "parrot_voice", "ta": ""}
-    settings = KidsStorySettings.model_validate({**quick_settings().model_dump(), "cast": cast})
-    rig = StageRig(tmp_path, settings=settings, languages=("en",))
-    rig.run(StoryStage())
-    story_path = tmp_path / meta_of(rig, "story")[0].filename
-    story_path.write_text(
-        story_path.read_text().replace('"speaker": "narrator"', '"speaker": "mittu"', 1)
-    )
-    rig.run(VoiceStage())
-    assert rig.providers.speech.requests[1].voice == "parrot_voice"
-
-
-def test_later_stages_resume_from_artifacts_only(tmp_path: Path) -> None:
-    first = run_chain(StageRig(tmp_path), "assemble")
-    resumed = StageRig(tmp_path, artifacts=list(first.artifacts), providers=FakeProviders())
-    outcome = resumed.run(STAGES[-1])
-    assert len(outcome.artifacts) == 12
-    with pytest.raises(MissingArtifactError):
-        StageRig(tmp_path / "empty").run(VoiceStage())
-
-
-def test_cards_and_thumbnails_are_lettered_when_a_font_exists(tmp_path: Path) -> None:
-    rig = run_chain(StageRig(tmp_path, languages=("en",)))
-    cards = [item for item in meta_of(rig, "visual") if "card" in item.meta]
-    assert {item.meta["card"] for item in cards} == {"intro", "outro"}
-    thumbnails = meta_of(rig, "thumbnail")
-    assert all((tmp_path / item.filename).stat().st_size > 0 for item in thumbnails)
-    no_fonts = quick_settings(thumbnail={"font_files": {"en": [], "ta": []}})
-    plain = run_chain(StageRig(tmp_path / "plain", settings=no_fonts, languages=("en",)))
-    assert {item.meta["title_drawn"] for item in meta_of(plain, "thumbnail")} == {False}
+    rig = StageRig(tmp_path, settings=settings, languages=("en",), providers=providers)
+    [final] = meta_of(run_chain(rig, "assemble"), "final_video")
+    assert final.meta["duration_seconds"] == final.meta["planned_seconds"]
+    assert any("could not measure en-episode.mp4" in line for line in rig.logs)

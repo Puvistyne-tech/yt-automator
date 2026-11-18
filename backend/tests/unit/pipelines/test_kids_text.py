@@ -15,7 +15,7 @@ from automator.pipelines.kids_story.story.words import (
     word_count,
     words_of,
 )
-from automator.pipelines.kids_story.subtitles.graphemes import (
+from automator.pipelines.kids_story.text.graphemes import (
     grapheme_clusters,
     grapheme_length,
     split_clusters,

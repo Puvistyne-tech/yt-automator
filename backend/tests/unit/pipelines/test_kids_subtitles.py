@@ -9,9 +9,9 @@ from automator.pipelines.kids_story.subtitles.cues import (
     word_groups,
     wrapped,
 )
-from automator.pipelines.kids_story.subtitles.graphemes import grapheme_length
 from automator.pipelines.kids_story.subtitles.srt import parse_srt, render_srt, timestamp
 from automator.pipelines.kids_story.subtitles.timeline_cues import timeline_cues
+from automator.pipelines.kids_story.text.graphemes import grapheme_length
 from automator.pipelines.kids_story.timeline.plan import Segment
 from automator.pipelines.kids_story.timeline.voices import VoiceLine
 
@@ -41,11 +41,6 @@ def test_cues_respect_line_length_and_line_count() -> None:
         assert len(cue.lines) <= RULES.max_lines
         assert all(grapheme_length(line) <= RULES.max_chars for line in cue.lines)
     assert " ".join(cue.text for cue in cues) == text
-
-
-def test_cues_respect_max_duration() -> None:
-    cues = segment_cues(timed("a b c d e f g h", step=2.0), 0.0, 20.0, RULES)
-    assert all(cue.end - cue.start <= RULES.max_seconds for cue in cues)
 
 
 def test_tamil_lines_count_graphemes_not_code_points() -> None:

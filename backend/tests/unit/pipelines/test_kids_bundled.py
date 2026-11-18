@@ -13,7 +13,7 @@ from automator.pipelines.kids_story.story.bundled import (
 )
 from automator.pipelines.kids_story.story.gates import story_problems
 from automator.pipelines.kids_story.story.words import contains_phrase
-from tests.unit.pipelines.kids_data import bundled_raw
+from tests.fixtures.kids_data import bundled_raw
 
 NAMES = ("golden_mango", "leaf_boat", "lost_song")
 CAST = {"kutty", "mittu", "chinnu", "aamai_thatha"}

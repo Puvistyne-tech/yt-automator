@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from PIL import Image
+from PIL import Image, ImageFont
 
 from automator.domain.capabilities import (
     Capability,
@@ -21,7 +21,7 @@ from automator.domain.capabilities import (
     WordTiming,
 )
 
-WORD_SECONDS = 0.3
+WORD_SECONDS = {"en": 0.5, "ta": 0.75}
 TAIL_SECONDS = 0.2
 
 
@@ -73,17 +73,14 @@ class FakeSpeech:
         self.requests.append(request)
         output.write_bytes(b"wav")
         words = request.text.split()
+        step = WORD_SECONDS.get(request.language, 0.5)
         timings = tuple(
-            WordTiming(
-                word=word,
-                start_seconds=index * WORD_SECONDS,
-                end_seconds=(index + 1) * WORD_SECONDS - 0.05,
-            )
+            WordTiming(word=word, start_seconds=index * step, end_seconds=(index + 1) * step - 0.05)
             for index, word in enumerate(words)
         )
         return Speech(
             path=output,
-            duration_seconds=len(words) * WORD_SECONDS + TAIL_SECONDS,
+            duration_seconds=len(words) * step + TAIL_SECONDS,
             words=timings if self.with_words else (),
             timing_source=TimingSource.SYNTHESIZER,
         )
@@ -170,3 +167,11 @@ def scripted_writer(answers: list[str]) -> FakeWriter:
 
 def as_json(value: object) -> str:
     return json.dumps(value, ensure_ascii=False)
+
+
+def embedded_font(folder: Path) -> Path:
+    font = ImageFont.load_default(12)
+    assert isinstance(font, ImageFont.FreeTypeFont)
+    path = folder / "embedded.ttf"
+    path.write_bytes(font.font_bytes)
+    return path

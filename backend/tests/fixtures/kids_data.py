@@ -6,12 +6,18 @@ from typing import Any
 
 from automator.domain.capabilities import TextRequest
 from automator.domain.pipeline import Stage, StageContext, StageOutcome
+from automator.domain.run_enums import ArtifactKind
 from automator.domain.run_parts import Artifact
+from automator.pipelines.kids_story.plugin import KidsStoryPipeline
 from automator.pipelines.kids_story.resources import resource_json
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from tests.unit.pipelines.kids_fakes import FakeProviders, FakeWriter, as_json
+from automator.pipelines.kids_story.story.model import Story
+from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, as_json
 
 REFRAIN_EN = "Be kind, be brave, be you!"
+STAGES: tuple[Stage, ...] = tuple(KidsStoryPipeline().stages())
+NO_FONTS: dict[str, list[str]] = {"en": [], "ta": []}
+BOTH = [("en", "episode"), ("en", "short"), ("ta", "episode"), ("ta", "short")]
 
 
 def bundled_raw(name: str = "golden_mango") -> dict[str, Any]:
@@ -38,12 +44,35 @@ def draft_dict(name: str = "golden_mango", refrain: str = REFRAIN_EN) -> dict[st
     }
 
 
+def story(language: str = "en", **changes: Any) -> Story:
+    return Story.model_validate(
+        {**draft_dict(), "language": language, "theme": "sharing", **changes}
+    )
+
+
 def tamil_text(name: str = "golden_mango") -> dict[str, Any]:
     raw = bundled_raw(name)
     text = dict(raw["text"]["ta"])
     refrain = KidsStorySettings().series.refrain.ta
     text["narrations"] = [line.replace("{refrain}", refrain) for line in text["narrations"]]
     return text
+
+
+def tamil_draft() -> dict[str, Any]:
+    draft, text = draft_dict(), tamil_text()
+    scenes = [
+        {**scene, "narration": line}
+        for scene, line in zip(draft["scenes"], text["narrations"], strict=True)
+    ]
+    keys = ("title", "moral", "questions", "hook_line")
+    return {**draft, **{key: text[key] for key in keys}, "scenes": scenes}
+
+
+def english_text() -> dict[str, Any]:
+    draft = draft_dict()
+    keys = ("title", "moral", "questions", "hook_line")
+    narrations = [scene["narration"] for scene in draft["scenes"]]
+    return {**{key: draft[key] for key in keys}, "narrations": narrations}
 
 
 def is_translation(request: TextRequest) -> bool:
@@ -55,13 +84,19 @@ def is_judge(request: TextRequest) -> bool:
     return bool(request.images)
 
 
+def story_answer() -> str:
+    return as_json(draft_dict())
+
+
+def tamil_answer() -> str:
+    return as_json(tamil_text())
+
+
 def smart_writer(judge_answer: str = "2") -> FakeWriter:
     def respond(request: TextRequest) -> str:
         if is_judge(request):
             return judge_answer
-        if is_translation(request):
-            return as_json(tamil_text())
-        return as_json(draft_dict())
+        return tamil_answer() if is_translation(request) else story_answer()
 
     return FakeWriter(respond)
 
@@ -70,7 +105,7 @@ def quick_settings(**sections: dict[str, Any]) -> KidsStorySettings:
     base: dict[str, Any] = {
         "episode": {"resolution": "1280x720"},
         "short": {"resolution": "720x1280"},
-        "thumbnail": {"width": 640, "height": 360},
+        "thumbnail": {"width": 640, "height": 360, "font_files": NO_FONTS},
         "visuals": {"image_candidates": 1, "hero_candidates": 2, "sheet_size": 256},
     }
     for name, values in sections.items():
@@ -120,3 +155,32 @@ class StageRig:
 
     def produced_by(self, stage_id: str) -> list[Artifact]:
         return [item for item in self.artifacts if item.stage_id == stage_id]
+
+
+def with_font(font: Path, **sections: dict[str, Any]) -> KidsStorySettings:
+    fonts = {"en": [str(font)], "ta": [str(font)]}
+    thumbnail = {**sections.pop("thumbnail", {}), "font_files": fonts}
+    return quick_settings(thumbnail=thumbnail, **sections)
+
+
+def run_chain(rig: StageRig, until: str | None = None) -> StageRig:
+    for stage in STAGES:
+        rig.run(stage)
+        if stage.descriptor.id == until:
+            break
+    return rig
+
+
+def stage_named(stage_id: str) -> Stage:
+    return next(stage for stage in STAGES if stage.descriptor.id == stage_id)
+
+
+def meta_of(rig: StageRig, role: str) -> list[Artifact]:
+    return [item for item in rig.artifacts if item.meta.get("role") == role]
+
+
+def roles(rig: StageRig, kind: ArtifactKind) -> list[tuple[str | None, str | None]]:
+    return sorted(
+        ((item.language, item.variant) for item in rig.artifacts if item.kind is kind),
+        key=str,
+    )

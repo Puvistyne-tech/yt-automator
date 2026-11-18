@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from automator.pipelines.kids_story.settings.output import ShortSceneSelection, ShortSettings
 from automator.pipelines.kids_story.story.model import Story
 from automator.pipelines.kids_story.timeline.composition import Sources, composition, subtitle_style
+from automator.pipelines.kids_story.timeline.cuts import story_cuts
 from automator.pipelines.kids_story.timeline.needs import clip_needs
 from automator.pipelines.kids_story.timeline.plan import (
     Padding,
@@ -19,13 +19,9 @@ from automator.pipelines.kids_story.timeline.plan import (
 from automator.pipelines.kids_story.timeline.selection import short_scene_indexes
 from automator.pipelines.kids_story.timeline.variants import planned
 from automator.pipelines.kids_story.timeline.voices import VoiceLine
-from tests.unit.pipelines.kids_data import draft_dict, quick_settings
+from tests.fixtures.kids_data import quick_settings, story
 
 PADDING = Padding(lead_in=0.5, tail=1.0)
-
-
-def story(**changes: Any) -> Story:
-    return Story.model_validate({**draft_dict(), "language": "en", **changes})
 
 
 def voices(story_: Story, seconds: float = 10.0) -> dict[str, VoiceLine]:
@@ -122,11 +118,22 @@ def test_short_plan_opens_with_hook_and_respects_max_duration() -> None:
 def test_clip_needs_take_the_longest_use_of_each_visual() -> None:
     settings = quick_settings()
     english = story()
-    tamil = story(language="ta")
-    needs = clip_needs([(english, voices(english, 5.0)), (tamil, voices(tamil, 8.0))], settings)
+    tamil = story("ta")
+    cuts = [
+        *story_cuts(english, voices(english, 5.0), settings),
+        *story_cuts(tamil, voices(tamil, 8.0), settings),
+    ]
+    needs = clip_needs(cuts)
     assert needs["scene-0@episode"].seconds == pytest.approx(8.0 + 1.2)
-    assert needs["scene-0@short"].scene == 0 and needs["scene-0@short"].variant == "short"
-    assert "card-intro-ta@episode" in needs and "card-intro-en@episode" in needs
+    short_need = needs["scene-0@short"]
+    assert short_need.scene == 0 and short_need.variant == "short"
+    tamil_short = next(cut for cut in cuts if cut.name == "ta-short")
+    longest = max(
+        item.duration for item in tamil_short.segments if item.visual_key == "scene-0@short"
+    )
+    assert short_need.seconds == pytest.approx(longest)
+    for card in ("card-intro-ta", "card-intro-en", "card-outro-en", "card-outro-ta"):
+        assert f"{card}@episode" in needs
 
 
 def test_composition_carries_settings_and_offsets(tmp_path: Path) -> None:
