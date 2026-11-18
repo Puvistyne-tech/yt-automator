@@ -24,6 +24,7 @@ class TextRequest(DomainModel):
     max_tokens: int = Field(default=1024, ge=1)
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     json_schema: JsonObject | None = None
+    images: tuple[Path, ...] = ()
 
 
 class ImageRequest(DomainModel):
@@ -35,11 +36,24 @@ class ImageRequest(DomainModel):
     reference_images: tuple[Path, ...] = ()
 
 
+class CameraMove(StrEnum):
+    PUSH_IN = "push_in"
+    PULL_OUT = "pull_out"
+    PAN_LEFT = "pan_left"
+    PAN_RIGHT = "pan_right"
+    RISE = "rise"
+    STILL = "still"
+
+
 class MotionRequest(DomainModel):
     image: Path
     prompt: str = ""
     duration_seconds: float = Field(gt=0)
-    fps: int = Field(default=24, ge=1)
+    width: int = Field(ge=1)
+    height: int = Field(ge=1)
+    fps: int = Field(default=30, ge=1)
+    camera: CameraMove = CameraMove.PUSH_IN
+    intensity: float = Field(default=0.5, ge=0.0, le=1.0)
 
 
 class SpeechRequest(DomainModel):
@@ -47,6 +61,25 @@ class SpeechRequest(DomainModel):
     language: str
     voice: str = ""
     speed: float = Field(default=1.0, gt=0)
+
+
+class TimingSource(StrEnum):
+    SYNTHESIZER = "synthesizer"
+    ALIGNMENT = "alignment"
+    ESTIMATE = "estimate"
+
+
+class WordTiming(DomainModel):
+    word: str
+    start_seconds: float = Field(ge=0)
+    end_seconds: float = Field(ge=0)
+
+
+class Speech(DomainModel):
+    path: Path
+    duration_seconds: float = Field(gt=0)
+    words: tuple[WordTiming, ...] = ()
+    timing_source: TimingSource = TimingSource.ESTIMATE
 
 
 class MusicRequest(DomainModel):
@@ -58,6 +91,17 @@ class TimedClip(DomainModel):
     path: Path
     start_seconds: float = Field(ge=0)
     duration_seconds: float = Field(gt=0)
+    volume: float = Field(default=1.0, ge=0.0, le=2.0)
+
+
+class SubtitleStyle(DomainModel):
+    burn_in: bool = False
+    font_family: str = "Noto Sans"
+    font_size: int = Field(default=54, ge=8)
+    primary_color: str = "#FFFFFF"
+    outline_color: str = "#000000"
+    highlight_color: str = "#FFD54A"
+    margin_bottom: int = Field(default=90, ge=0)
 
 
 class VideoComposition(DomainModel):
@@ -68,7 +112,12 @@ class VideoComposition(DomainModel):
     narration: tuple[TimedClip, ...] = ()
     music: Path | None = None
     music_volume: float = Field(default=0.2, ge=0.0, le=1.0)
+    music_ducking: float = Field(default=0.5, ge=0.0, le=1.0)
+    sound_effects: tuple[TimedClip, ...] = ()
     subtitles: Path | None = None
+    subtitle_style: SubtitleStyle = Field(default_factory=SubtitleStyle)
+    loudness_lufs: float = Field(default=-16.0, le=0.0)
+    fade_seconds: float = Field(default=0.5, ge=0.0)
 
 
 class TextGenerator(Protocol):
@@ -96,7 +145,7 @@ class SpeechSynthesizer(Protocol):
     @property
     def provider_id(self) -> str: ...
 
-    def synthesize(self, request: SpeechRequest, output: Path) -> Path: ...
+    def synthesize(self, request: SpeechRequest, output: Path) -> Speech: ...
 
 
 class MusicGenerator(Protocol):
@@ -115,6 +164,8 @@ class MediaToolkit(Protocol):
     def compose_video(self, composition: VideoComposition, output: Path) -> Path: ...
 
     def extract_frame(self, video: Path, at_seconds: float, output: Path) -> Path: ...
+
+    def loudness_lufs(self, media: Path) -> float: ...
 
 
 CapabilityProvider = (
