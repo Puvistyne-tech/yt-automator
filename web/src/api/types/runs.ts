@@ -81,6 +81,7 @@ export interface Upload {
   quota_units: number;
   privacy: Privacy | null;
   made_for_kids: boolean | null;
+  publish_at: string | null;
 }
 
 export interface Run {
@@ -104,6 +105,7 @@ export interface Run {
   created_at: string;
   started_at: string | null;
   finished_at: string | null;
+  intermediate_removed_at: string | null;
 }
 
 export type RunEventKind = "status" | "stage" | "log" | "artifact" | "upload";

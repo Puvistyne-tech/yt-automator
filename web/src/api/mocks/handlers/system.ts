@@ -1,7 +1,9 @@
 import { HttpResponse, http } from "msw";
 import { db, EMPTY_VALUE_MESSAGE, noContent, notFound, validationFailed } from "@/api/mocks/db";
 import { providerConfigErrors } from "@/api/mocks/providerRules";
-import type { AppSettingsInput, Dashboard, ProviderConfig } from "@/api/types";
+import { settingsErrors } from "@/api/mocks/settingsRules";
+import { settingsInput } from "@/api/settingsFields";
+import type { AppSettings, Dashboard, ProviderConfig } from "@/api/types";
 
 function dashboard(): Dashboard {
   const { automations, channels, runs, credentials } = db.state;
@@ -73,8 +75,14 @@ export const systemHandlers = [
   }),
   http.get("/api/settings", () => HttpResponse.json(db.state.settings)),
   http.put("/api/settings", async ({ request }) => {
-    const input = (await request.json()) as AppSettingsInput;
-    db.state.settings = { ...db.state.settings, ...input };
+    const sent = (await request.json()) as Partial<AppSettings>;
+    const current = db.state.settings;
+    const merged = settingsInput({ ...current, ...sent });
+    const errors = settingsErrors(merged, current);
+    if (Object.keys(errors).length > 0) {
+      return validationFailed(errors);
+    }
+    db.state.settings = { ...current, ...merged };
     return HttpResponse.json(db.state.settings);
   }),
 ];

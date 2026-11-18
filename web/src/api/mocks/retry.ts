@@ -1,7 +1,7 @@
-import { validationFailed } from "@/api/mocks/db";
+import { ruleConflict, validationFailed } from "@/api/mocks/db";
 import type { Run, StageRun } from "@/api/types";
 
-function retryStart(run: Run, fromStage: string | undefined): number | Response {
+function requestedStart(run: Run, fromStage: string | undefined): number | Response {
   if (fromStage !== undefined) {
     const index = run.stages.findIndex((stage) => stage.stage_id === fromStage);
     return index === -1
@@ -10,6 +10,20 @@ function retryStart(run: Run, fromStage: string | undefined): number | Response 
   }
   const unfinished = run.stages.findIndex((stage) => stage.status !== "done");
   return Math.max(unfinished, 0);
+}
+
+function retryStart(run: Run, fromStage: string | undefined): number | Response {
+  if (run.intermediate_removed_at === null) {
+    return requestedStart(run, fromStage);
+  }
+  const requested = fromStage === undefined ? 0 : requestedStart(run, fromStage);
+  if (typeof requested === "number" && requested > 0) {
+    return ruleConflict(
+      "intermediate_files_removed",
+      `run ${run.id} had its working files removed; retry it from the first stage`,
+    );
+  }
+  return typeof requested === "number" ? 0 : requested;
 }
 
 function resetStage(stage: StageRun): StageRun {
@@ -38,6 +52,7 @@ function reset(run: Run, start: number): Run {
     uploads: [],
     started_at: null,
     finished_at: null,
+    intermediate_removed_at: null,
   };
 }
 

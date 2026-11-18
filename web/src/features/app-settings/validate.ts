@@ -1,27 +1,40 @@
 import type { FieldErrors } from "@/api/errors";
-import type { AppSettings, AppSettingsInput } from "@/api/types";
+import { settingsInput } from "@/api/settingsFields";
+import type { AppSettingName, AppSettings, AppSettingsInput } from "@/api/types";
 import { isIntegerAtLeast } from "@/shared/format/numbers";
 
-export function settingsInput(settings: AppSettings): AppSettingsInput {
-  return {
-    timezone: settings.timezone,
-    max_parallel_runs: settings.max_parallel_runs,
-    keep_runs_days: settings.keep_runs_days,
-  };
+export { settingsInput };
+
+const WHOLE_NUMBERS: [AppSettingName, number, string][] = [
+  ["max_parallel_runs", 1, "Use a whole number, at least 1."],
+  ["keep_runs_days", 0, "Use a whole number of days, 0 or more."],
+  ["keep_intermediate_days", 0, "Use a whole number of days, 0 or more."],
+  ["cleanup_interval_hours", 0, "Use a whole number of hours, 0 or more."],
+  ["max_run_log_entries", 1, "Use a whole number, at least 1."],
+];
+
+function numberValue(input: AppSettingsInput, name: AppSettingName): number | null {
+  const value = input[name];
+  return typeof value === "number" ? value : null;
 }
 
-export function validateSettings(input: AppSettingsInput): FieldErrors {
+export function validateSettings(
+  input: AppSettingsInput,
+  locked: AppSettings["locked"] = {},
+): FieldErrors {
   const errors: FieldErrors = {};
   if (input.timezone.trim() === "") {
     errors.timezone = "Choose a timezone.";
   }
-  if (!isIntegerAtLeast(input.max_parallel_runs, 1)) {
-    errors.max_parallel_runs = "Use a whole number, at least 1.";
+  for (const [name, minimum, message] of WHOLE_NUMBERS) {
+    if (!isIntegerAtLeast(numberValue(input, name), minimum)) {
+      errors[name] = message;
+    }
   }
-  if (!isIntegerAtLeast(input.keep_runs_days, 1)) {
-    errors.keep_runs_days = "Keep runs for at least 1 day.";
+  if (!(input.doctor_min_free_gb >= 0)) {
+    errors.doctor_min_free_gb = "Use a number, 0 or more.";
   }
-  return errors;
+  return Object.fromEntries(Object.entries(errors).filter(([name]) => !(name in locked)));
 }
 
 export function settingsChanged(input: AppSettingsInput, settings: AppSettings): boolean {

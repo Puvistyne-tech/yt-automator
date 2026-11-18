@@ -40,6 +40,13 @@ function effectiveAudience(run: Run, target: Target): Pick<Upload, "privacy" | "
   };
 }
 
+export function scheduledPublish(target: Target, privacy: Upload["privacy"]): string | null {
+  if (privacy !== "public" || target.publish_delay_minutes <= 0) {
+    return null;
+  }
+  return new Date(Date.now() + target.publish_delay_minutes * 60_000).toISOString();
+}
+
 function uploadFor(run: Run, target: Target, variant: string): Upload {
   const reason = skipReason(run, target, variant);
   return makeUpload({
@@ -49,7 +56,10 @@ function uploadFor(run: Run, target: Target, variant: string): Upload {
     variant,
     ...effectiveAudience(run, target),
     ...(reason === null
-      ? { youtube_video_id: `vid${Math.random().toString(36).slice(2, 10)}` }
+      ? {
+          youtube_video_id: `vid${Math.random().toString(36).slice(2, 10)}`,
+          publish_at: scheduledPublish(target, effectiveAudience(run, target).privacy),
+        }
       : { status: "skipped", youtube_video_id: null, url: null, error: reason, quota_units: 0 }),
   });
 }

@@ -8,6 +8,7 @@ import {
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import { providerConfig, providerDescriptors, secrets } from "@/api/mocks/fixtures/providers";
 import { seedRuns } from "@/api/mocks/fixtures/runs";
+import { type MockStorage, SETTINGS, STORAGE } from "@/api/mocks/fixtures/settings";
 import type {
   AppSettings,
   Automation,
@@ -32,6 +33,7 @@ export interface MockState {
   providerConfig: ProviderConfig[];
   secrets: SecretInfo[];
   settings: AppSettings;
+  storage: MockStorage;
 }
 
 const BEDTIME = makeAutomation({
@@ -126,13 +128,6 @@ const PLAYLISTS: Record<string, Playlist[]> = {
   "chan-ta": [{ id: "pl-ta-shorts", title: "Tamil shorts" }],
 };
 
-const SETTINGS: AppSettings = {
-  timezone: "Asia/Kolkata",
-  max_parallel_runs: 1,
-  keep_runs_days: 30,
-  data_dir: "~/Library/Application Support/YouTube Automator",
-};
-
 const SEED: Omit<MockState, "runs"> = {
   pipelines: [kidsStoryPipeline],
   credentials: CREDENTIALS,
@@ -143,6 +138,7 @@ const SEED: Omit<MockState, "runs"> = {
   providerConfig,
   secrets,
   settings: SETTINGS,
+  storage: STORAGE,
 };
 
 export function seedState(): MockState {

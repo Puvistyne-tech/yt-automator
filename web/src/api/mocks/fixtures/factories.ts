@@ -137,6 +137,7 @@ export function makeRun(overrides: Partial<Run> = {}): Run {
     created_at: hoursAgo(2),
     started_at: hoursAgo(2),
     finished_at: hoursAgo(1),
+    intermediate_removed_at: null,
     ...overrides,
   };
 }
@@ -154,6 +155,7 @@ export function makeUpload(overrides: Partial<Upload> = {}): Upload {
     quota_units: 2050,
     privacy: "private",
     made_for_kids: true,
+    publish_at: null,
     ...overrides,
   };
 }
