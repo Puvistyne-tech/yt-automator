@@ -1,8 +1,13 @@
 import { db } from "@/api/mocks/db";
-import type { JsonObject, Run, RunEventKind, RunStatus, StageRun } from "@/api/types";
+import type { JsonObject, Run, RunEventKind, RunLog, RunStatus, StageRun } from "@/api/types";
 
 function emit(run: Run, kind: RunEventKind, payload: JsonObject) {
   db.emit({ run_id: run.id, kind, at: db.now(), payload });
+}
+
+function logged(run: Run, entry: Omit<RunLog, "at">): Run {
+  emit(run, "log", { ...entry });
+  return { ...run, logs: [...run.logs, { ...entry, at: db.now() }] };
 }
 
 function replaceRun(run: Run) {
@@ -43,13 +48,10 @@ function advanceStages(run: Run): Run {
   }
   const updated = stageUpdate(current, current.status === "running" ? "done" : "running");
   emit(run, "stage", updated as unknown as JsonObject);
-  emit(run, "log", {
-    stage_id: updated.stage_id,
-    level: "info",
-    message:
-      updated.status === "running" ? `Starting ${updated.title}` : `${updated.title} complete`,
-  });
-  return { ...run, stages: run.stages.map((s, i) => (i === nextIndex ? updated : s)) };
+  const message =
+    updated.status === "running" ? `Starting ${updated.title}` : `${updated.title} complete`;
+  const stages = run.stages.map((s, i) => (i === nextIndex ? updated : s));
+  return logged({ ...run, stages }, { level: "info", stage_id: updated.stage_id, message });
 }
 
 export function tick() {

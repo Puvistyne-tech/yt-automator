@@ -1,20 +1,20 @@
 import { HttpResponse, http } from "msw";
-import { apiError, db, noContent, notFound } from "@/api/mocks/db";
+import { db, noContent, notFound, validationFailed } from "@/api/mocks/db";
 import { makeRun, stagesWith } from "@/api/mocks/fixtures/factories";
 import type { Automation, AutomationInput } from "@/api/types";
 
 function inputErrors(input: AutomationInput): Record<string, string> {
   const errors: Record<string, string> = {};
   const pipeline = db.state.pipelines.find((p) => p.type_id === input.pipeline_type);
-  if (input.name.trim() === "") {
-    errors.name = "Name is required.";
+  if (input.name === "") {
+    errors.name = "String should have at least 1 character";
   }
   if (pipeline === undefined) {
-    errors.pipeline_type = "Unknown pipeline type.";
+    errors.pipeline_type = `unknown pipeline type '${input.pipeline_type}'`;
   }
   input.targets.forEach((target, index) => {
     if (!db.state.channels.some((channel) => channel.id === target.channel_id)) {
-      errors[`targets.${index}.channel_id`] = "Channel does not exist.";
+      errors[`targets.${index}.channel_id`] = `channel '${target.channel_id}' does not exist`;
     }
   });
   return errors;
@@ -44,7 +44,7 @@ function build(input: AutomationInput, existing: Automation | undefined): Automa
 function save(input: AutomationInput, existing?: Automation) {
   const errors = inputErrors(input);
   if (Object.keys(errors).length > 0) {
-    return apiError(400, "validation_error", "The automation is not valid.", errors);
+    return validationFailed(errors);
   }
   const automation = build(input, existing);
   db.state.automations = existing
@@ -62,18 +62,18 @@ export const automationHandlers = [
   ),
   http.get("/api/automations/:id", ({ params }) => {
     const automation = find(params.id);
-    return automation ? HttpResponse.json(automation) : notFound("Automation");
+    return automation ? HttpResponse.json(automation) : notFound("automation", params.id);
   }),
   http.put("/api/automations/:id", async ({ params, request }) => {
     const automation = find(params.id);
     return automation
       ? save((await request.json()) as AutomationInput, automation)
-      : notFound("Automation");
+      : notFound("automation", params.id);
   }),
   http.patch("/api/automations/:id", async ({ params, request }) => {
     const automation = find(params.id);
     if (automation === undefined) {
-      return notFound("Automation");
+      return notFound("automation", params.id);
     }
     const { enabled } = (await request.json()) as { enabled: boolean };
     const updated = { ...automation, enabled, next_run_at: nextRunAt({ ...automation, enabled }) };
@@ -81,13 +81,16 @@ export const automationHandlers = [
     return HttpResponse.json(updated);
   }),
   http.delete("/api/automations/:id", ({ params }) => {
+    if (find(params.id) === undefined) {
+      return notFound("automation", params.id);
+    }
     db.state.automations = db.state.automations.filter((a) => a.id !== params.id);
     return noContent();
   }),
   http.post("/api/automations/:id/duplicate", ({ params }) => {
     const automation = find(params.id);
     if (automation === undefined) {
-      return notFound("Automation");
+      return notFound("automation", params.id);
     }
     const copy = build(
       { ...automation, name: `${automation.name} (copy)`, enabled: false },
@@ -99,7 +102,7 @@ export const automationHandlers = [
   http.post("/api/automations/:id/runs", ({ params }) => {
     const automation = find(params.id);
     if (automation === undefined) {
-      return notFound("Automation");
+      return notFound("automation", params.id);
     }
     const run = makeRun({
       id: db.id("run"),

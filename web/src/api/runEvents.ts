@@ -1,13 +1,18 @@
 import type {
   Artifact,
   JsonObject,
-  LogLine,
+  LogLevel,
   Run,
   RunEvent,
+  RunLog,
   RunStatus,
   StageRun,
   Upload,
 } from "@/api/types";
+
+export const MAX_RUN_LOGS = 2000;
+
+const LOG_LEVELS: readonly LogLevel[] = ["info", "warning", "error"];
 
 function isObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -48,6 +53,11 @@ function applyUpload(run: Run, upload: Upload): Run {
   return { ...run, uploads: replaceBy(run.uploads, upload, same) };
 }
 
+function applyLog(run: Run, event: RunEvent): Run {
+  const entry = runLogFromEvent(event);
+  return entry === null ? run : { ...run, logs: [...run.logs, entry].slice(-MAX_RUN_LOGS) };
+}
+
 export function applyRunEvent(run: Run, event: RunEvent): Run {
   if (event.run_id !== run.id) {
     return run;
@@ -61,20 +71,26 @@ export function applyRunEvent(run: Run, event: RunEvent): Run {
       return applyArtifact(run, event.payload as unknown as Artifact);
     case "upload":
       return applyUpload(run, event.payload as unknown as Upload);
+    case "log":
+      return applyLog(run, event);
     default:
       return run;
   }
 }
 
-export function logLineFromEvent(event: RunEvent): LogLine | null {
+function logLevelOf(value: unknown): LogLevel {
+  return LOG_LEVELS.find((level) => level === value) ?? "info";
+}
+
+export function runLogFromEvent(event: RunEvent): RunLog | null {
   if (event.kind !== "log" || typeof event.payload.message !== "string") {
     return null;
   }
   return {
     at: event.at,
-    message: event.payload.message,
-    level: typeof event.payload.level === "string" ? event.payload.level : "info",
+    level: logLevelOf(event.payload.level),
     stage_id: typeof event.payload.stage_id === "string" ? event.payload.stage_id : null,
+    message: event.payload.message,
   };
 }
 

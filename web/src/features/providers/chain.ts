@@ -1,9 +1,12 @@
+import type { FieldErrors } from "@/api/errors";
 import type {
   ProviderChoice,
   ProviderConfig,
   ProviderDescriptor,
   ProvidersResponse,
 } from "@/api/types";
+import { scopedErrors } from "@/shared/schema-form/errors";
+
 export function capabilitiesOf(response: ProvidersResponse): string[] {
   const ordered = response.config.map((c) => c.capability);
   const extra = response.descriptors.map((d) => d.capability).filter((c) => !ordered.includes(c));
@@ -92,4 +95,47 @@ export function chainChanged(config: ProviderConfig[], saved: ProviderConfig[]):
 
 export function newChoice(providerId: string): ProviderChoice {
   return { provider_id: providerId, enabled: true, options: {} };
+}
+
+export function defaultOrderDescription(
+  descriptors: ProviderDescriptor[],
+  capability: string,
+): string {
+  const names = descriptors.filter((d) => d.capability === capability).map((d) => d.name);
+  return names.length === 0
+    ? "No installed provider offers this capability."
+    : `No order saved: runs try ${names.join(", ")} in turn.`;
+}
+
+export interface ChoiceErrors {
+  message: string | undefined;
+  options: FieldErrors;
+}
+
+const CHAIN_PREFIX = "chain.";
+const OPTIONS_PREFIX = "options.";
+
+function firstErrorOutside(errors: FieldErrors, prefix: string): string | undefined {
+  return Object.entries(errors).find(([path]) => !path.startsWith(prefix))?.[1];
+}
+
+export function configErrors(
+  errors: FieldErrors,
+  config: ProviderConfig[],
+  capability: string,
+): FieldErrors {
+  const index = config.findIndex((c) => c.capability === capability);
+  return index === -1 ? {} : scopedErrors(errors, String(index));
+}
+
+export function cardError(errors: FieldErrors): string | undefined {
+  return firstErrorOutside(errors, CHAIN_PREFIX);
+}
+
+export function choiceErrors(errors: FieldErrors, position: number): ChoiceErrors {
+  const scoped = scopedErrors(errors, `${CHAIN_PREFIX}${position}`);
+  return {
+    message: firstErrorOutside(scoped, OPTIONS_PREFIX),
+    options: scopedErrors(scoped, "options"),
+  };
 }

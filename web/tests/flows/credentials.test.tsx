@@ -82,7 +82,9 @@ describe("Credentials", () => {
     await user.click(main.getByRole("button", { name: "Delete Main Google project" }));
     await confirmDialog(user, "Delete credential?", "Delete credential");
 
-    await findToast("Disconnect the channels using this credential first.");
+    await findToast(
+      "credential is used by channels: Kutty Classics, Kutty Kathaigal, Kutty Stories",
+    );
     expect(db.state.credentials).toHaveLength(2);
   });
 

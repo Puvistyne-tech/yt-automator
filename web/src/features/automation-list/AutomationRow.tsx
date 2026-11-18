@@ -5,12 +5,13 @@ import {
   languagesLabel,
   nextRunLabel,
   pipelineName,
+  reconnectWarning,
   targetsLabel,
 } from "@/features/automation-list/summary";
 import type { ListActions } from "@/features/automation-list/useListActions";
 import { formatRelative } from "@/shared/format/dates";
 import { describeSchedule } from "@/shared/format/schedule";
-import { ButtonLink, IconButton, StatusBadge, Switch } from "@/shared/ui";
+import { ButtonLink, Icon, IconButton, StatusBadge, Switch } from "@/shared/ui";
 
 interface AutomationRowProps {
   automation: Automation;
@@ -40,6 +41,25 @@ function NameCell({ automation }: { automation: Automation }) {
           {automation.name}
         </Link>
         {automation.description && <span className="subtle clamp-1">{automation.description}</span>}
+      </div>
+    </td>
+  );
+}
+
+function TargetsCell({
+  automation,
+  channels,
+}: Pick<AutomationRowProps, "automation" | "channels">) {
+  const warning = reconnectWarning(automation, channels);
+  return (
+    <td className="cell-wrap cell-narrow">
+      <div className="cell-stack">
+        <span>{targetsLabel(automation, channels)}</span>
+        {warning && (
+          <Link to="/channels" className="cell-warning">
+            <Icon name="alert" size={14} /> {warning}
+          </Link>
+        )}
       </div>
     </td>
   );
@@ -99,7 +119,7 @@ export function AutomationRow({ automation, pipelines, channels, actions }: Auto
           <span className="subtle">{languagesLabel(automation.languages, pipeline)}</span>
         </div>
       </td>
-      <td className="cell-wrap cell-narrow">{targetsLabel(automation, channels)}</td>
+      <TargetsCell automation={automation} channels={channels} />
       <ScheduleCell automation={automation} />
       <td>
         <LastRun automation={automation} />

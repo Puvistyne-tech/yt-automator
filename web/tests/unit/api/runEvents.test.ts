@@ -1,5 +1,11 @@
 import { makeArtifact, makeRun, stagesWith } from "@/api/mocks/fixtures/factories";
-import { applyRunEvent, logLineFromEvent, parseRunEvent, reconnectDelayMs } from "@/api/runEvents";
+import {
+  applyRunEvent,
+  MAX_RUN_LOGS,
+  parseRunEvent,
+  reconnectDelayMs,
+  runLogFromEvent,
+} from "@/api/runEvents";
 import type { JsonObject, RunEvent } from "@/api/types";
 
 const AT = "2026-03-01T12:00:00Z";
@@ -84,29 +90,64 @@ describe("applyRunEvent", () => {
     expect(other.uploads).toHaveLength(2);
   });
 
-  it("ignores log events", () => {
+  it("appends a log event to the run's stored logs", () => {
+    const stored = {
+      at: "2026-03-01T11:00:00Z",
+      level: "info" as const,
+      stage_id: null,
+      message: "a",
+    };
+    const run = makeRun({ logs: [stored] });
+    const next = applyRunEvent(
+      run,
+      event("log", { message: "b", level: "warning", stage_id: "story" }),
+    );
+    expect(next.logs).toEqual([
+      stored,
+      { at: AT, level: "warning", stage_id: "story", message: "b" },
+    ]);
+  });
+
+  it("keeps the run when a log event has no message", () => {
     const run = makeRun();
-    expect(applyRunEvent(run, event("log", { message: "hi" }))).toBe(run);
+    expect(applyRunEvent(run, event("log", { message: 3 }))).toBe(run);
+  });
+
+  it("keeps only the newest log entries", () => {
+    const logs = Array.from({ length: MAX_RUN_LOGS }, (_, index) => ({
+      at: AT,
+      level: "info" as const,
+      stage_id: null,
+      message: `line ${index}`,
+    }));
+    const next = applyRunEvent(makeRun({ logs }), event("log", { message: "newest" }));
+    expect(next.logs).toHaveLength(MAX_RUN_LOGS);
+    expect(next.logs[0]?.message).toBe("line 1");
+    expect(next.logs.at(-1)?.message).toBe("newest");
   });
 });
 
-describe("logLineFromEvent", () => {
-  it("builds a log line with defaults", () => {
-    expect(logLineFromEvent(event("log", { message: "Rendering" }))).toEqual({
+describe("runLogFromEvent", () => {
+  it("builds a run log with defaults", () => {
+    expect(runLogFromEvent(event("log", { message: "Rendering" }))).toEqual({
       at: AT,
       message: "Rendering",
       level: "info",
       stage_id: null,
     });
     expect(
-      logLineFromEvent(event("log", { message: "Oops", level: "error", stage_id: "render" })),
+      runLogFromEvent(event("log", { message: "Oops", level: "error", stage_id: "render" })),
     ).toMatchObject({ level: "error", stage_id: "render" });
+  });
+
+  it("treats an unknown level as info", () => {
+    expect(runLogFromEvent(event("log", { message: "x", level: "debug" }))?.level).toBe("info");
   });
 
   it.each([event("status", { message: "x" }), event("log", { message: 3 })])(
     "returns null for %j",
     (input) => {
-      expect(logLineFromEvent(input)).toBeNull();
+      expect(runLogFromEvent(input)).toBeNull();
     },
   );
 });

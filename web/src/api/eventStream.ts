@@ -2,23 +2,15 @@ import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/api/client";
 import { invalidateWithDashboard, keys } from "@/api/keys";
-import { applyRunEvent, logLineFromEvent, parseRunEvent, reconnectDelayMs } from "@/api/runEvents";
-import type { LogLine, Run, RunEvent } from "@/api/types";
+import { applyRunEvent, parseRunEvent, reconnectDelayMs } from "@/api/runEvents";
+import type { Run, RunEvent } from "@/api/types";
 
 export type StreamState = "connecting" | "live" | "reconnecting" | "unsupported";
-
-const MAX_LOG_LINES = 2000;
 
 function handleRunEvent(client: QueryClient, event: RunEvent) {
   client.setQueryData<Run>(keys.run(event.run_id), (run) =>
     run === undefined ? run : applyRunEvent(run, event),
   );
-  const line = logLineFromEvent(event);
-  if (line !== null) {
-    client.setQueryData<LogLine[]>(keys.runLogs(event.run_id), (lines = []) =>
-      [...lines, line].slice(-MAX_LOG_LINES),
-    );
-  }
   if (event.kind === "status") {
     void invalidateWithDashboard(client, keys.runLists, keys.automations);
   }

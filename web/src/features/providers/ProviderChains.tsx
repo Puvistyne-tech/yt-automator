@@ -1,110 +1,34 @@
 import { useState } from "react";
 import { useProviders, useSaveProviders } from "@/api/system";
-import type {
-  ProviderChoice,
-  ProviderConfig,
-  ProviderDescriptor,
-  ProvidersResponse,
-} from "@/api/types";
+import type { ProviderConfig, ProvidersResponse } from "@/api/types";
+import { useFieldErrors } from "@/api/useFieldErrors";
 import { useMutationNotifier } from "@/api/useMutationNotifier";
-import { ChainRow } from "@/features/providers/ChainRow";
+import { CapabilityCard } from "@/features/providers/CapabilityCard";
 import {
-  activeProvider,
-  addableProviders,
   capabilitiesOf,
   chainChanged,
-  chainDescription,
   chainFor,
-  moveChoice,
-  newChoice,
-  patchChoice,
-  removeChoice,
+  configErrors,
   withChain,
 } from "@/features/providers/chain";
-import { humanizeId } from "@/shared/format/text";
-import { Card, EmptyState, QueryState, SaveBar, Select } from "@/shared/ui";
+import { QueryState, SaveBar } from "@/shared/ui";
 import "@/features/providers/providers.css";
-
-interface ChainProps {
-  chain: ProviderChoice[];
-  descriptors: ProviderDescriptor[];
-  onChange: (chain: ProviderChoice[]) => void;
-}
-
-function AddProviderSelect({
-  title,
-  addable,
-  onAdd,
-}: {
-  title: string;
-  addable: ProviderDescriptor[];
-  onAdd: (providerId: string) => void;
-}) {
-  return (
-    <Select
-      aria-label={`Add a ${title} provider`}
-      value=""
-      placeholder="Add provider…"
-      options={addable.map((d) => ({ value: d.provider_id, label: d.name }))}
-      onChange={(e) => e.target.value && onAdd(e.target.value)}
-    />
-  );
-}
-
-function ChainList({ chain, descriptors, onChange }: ChainProps) {
-  if (chain.length === 0) {
-    return (
-      <EmptyState
-        icon="providers"
-        title="No providers in this chain"
-        description="Add one from the menu above."
-      />
-    );
-  }
-  return (
-    <ol className="list-stack list-stack-sm">
-      {chain.map((choice, index) => (
-        <ChainRow
-          key={choice.provider_id}
-          index={index}
-          total={chain.length}
-          choice={choice}
-          descriptor={descriptors.find((d) => d.provider_id === choice.provider_id)}
-          onChange={(patch) => onChange(patchChoice(chain, index, patch))}
-          onMove={(delta) => onChange(moveChoice(chain, index, delta))}
-          onRemove={() => onChange(removeChoice(chain, index))}
-        />
-      ))}
-    </ol>
-  );
-}
-
-function CapabilityCard({ capability, ...props }: ChainProps & { capability: string }) {
-  const addable = addableProviders(props.descriptors, capability, props.chain);
-  const title = humanizeId(capability);
-  const add = (providerId: string) => props.onChange([...props.chain, newChoice(providerId)]);
-  return (
-    <Card
-      title={title}
-      description={chainDescription(activeProvider(props.chain, props.descriptors))}
-      actions={
-        addable.length > 0 ? (
-          <AddProviderSelect title={title} addable={addable} onAdd={add} />
-        ) : undefined
-      }
-    >
-      <ChainList {...props} />
-    </Card>
-  );
-}
 
 function ChainsEditor({ data }: { data: ProvidersResponse }) {
   const [config, setConfig] = useState<ProviderConfig[]>(data.config);
+  const serverErrors = useFieldErrors();
   const save = useSaveProviders();
   const notifier = useMutationNotifier();
   const dirty = chainChanged(config, data.config);
+  const edit = (next: ProviderConfig[]) => {
+    setConfig(next);
+    serverErrors.clear();
+  };
   const submit = () =>
-    notifier.track(save.mutateAsync(config), { success: "Provider chains saved." });
+    notifier.track(save.mutateAsync(config), {
+      success: "Provider chains saved.",
+      onError: serverErrors.setFromServer,
+    });
   return (
     <div className="stack">
       {capabilitiesOf(data).map((capability) => (
@@ -113,7 +37,8 @@ function ChainsEditor({ data }: { data: ProvidersResponse }) {
           capability={capability}
           chain={chainFor(config, capability)}
           descriptors={data.descriptors}
-          onChange={(chain) => setConfig(withChain(config, capability, chain))}
+          errors={configErrors(serverErrors.errors, config, capability)}
+          onChange={(chain) => edit(withChain(config, capability, chain))}
         />
       ))}
       <SaveBar
@@ -121,7 +46,7 @@ function ChainsEditor({ data }: { data: ProvidersResponse }) {
         saving={save.isPending}
         saveLabel="Save chains"
         onSave={submit}
-        onReset={() => setConfig(data.config)}
+        onReset={() => edit(data.config)}
       />
     </div>
   );

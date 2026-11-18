@@ -238,13 +238,23 @@
 
 .log-line {
   display: grid;
-  grid-template-columns: 70px 70px minmax(0, 1fr);
+  grid-template-columns: 70px 120px minmax(0, 1fr);
   gap: var(--space-3);
 }
 
 .log-line time,
 .log-stage {
   color: #7d8596;
+}
+
+.log-stage {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-warning .log-message {
+  color: #ffd27a;
 }
 
 .log-error .log-message {

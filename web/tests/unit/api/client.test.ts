@@ -31,6 +31,19 @@ describe("api client", () => {
     await expect(request<string>("GET", "/x")).resolves.toBe("plain words");
   });
 
+  it("names the request id of an unexpected server error", async () => {
+    const body = {
+      error: { code: "internal_error", message: "Unexpected server error", fields: {} },
+    };
+    stubFetch(
+      new Response(JSON.stringify(body), { status: 500, headers: { "X-Request-Id": "ab12" } }),
+    );
+    await expect(api.get("/x")).rejects.toMatchObject({
+      code: "internal_error",
+      message: "Unexpected server error (request id ab12)",
+    });
+  });
+
   it("falls back to a generic message for an html error page", async () => {
     stubFetch(new Response("<html>bad gateway</html>", { status: 502 }));
     await expect(api.get("/x")).rejects.toMatchObject({

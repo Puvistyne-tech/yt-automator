@@ -62,6 +62,6 @@ describe("Run detail", () => {
   it("shows an error state for an unknown run", async () => {
     renderApp("/runs/nope");
 
-    expect(await screen.findByText("Run was not found.")).toBeInTheDocument();
+    expect(await screen.findByText("run 'nope' was not found")).toBeInTheDocument();
   });
 });

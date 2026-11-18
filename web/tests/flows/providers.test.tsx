@@ -56,7 +56,8 @@ describe("Providers page", () => {
   it("adds and removes providers, and resets unsaved edits", async () => {
     const { user } = renderApp("/providers");
     const music = await findCard("Music");
-    expect(music.getByText("No providers in this chain")).toBeInTheDocument();
+    expect(music.getByText("Using the default order")).toBeInTheDocument();
+    expect(music.getByText("No order saved: runs try MusicGen in turn.")).toBeInTheDocument();
 
     await user.selectOptions(music.getByLabelText("Add a Music provider"), "musicgen");
     expect(music.getByRole("listitem", { name: "MusicGen" })).toBeInTheDocument();
@@ -64,8 +65,47 @@ describe("Providers page", () => {
     await user.selectOptions(music.getByLabelText("Add a Music provider"), "musicgen");
     await user.click(screen.getByRole("button", { name: "Reset" }));
 
-    expect(music.getByText("No providers in this chain")).toBeInTheDocument();
+    expect(music.getByText("Using the default order")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save chains" })).toBeDisabled();
+  });
+
+  it("places option errors on the provider's form and clears them on edit", async () => {
+    const { user } = renderApp("/providers");
+    const text = await findCard("LLM");
+    const ollama = within(text.getByRole("listitem", { name: "Ollama" }));
+    await user.click(ollama.getByRole("button", { name: "Options" }));
+    const temperature = ollama.getByLabelText("Temperature");
+    await user.clear(temperature);
+    await user.type(temperature, "9");
+    await user.click(screen.getByRole("button", { name: "Save chains" }));
+
+    await findToast("Validation failed");
+    expect(await ollama.findByText("Must be <= 2.")).toBeInTheDocument();
+    await user.type(temperature, "0");
+    expect(ollama.queryByText("Must be <= 2.")).not.toBeInTheDocument();
+  });
+
+  it("places provider and capability errors on the matching row and card", async () => {
+    failWith("put", "/providers", 400, {
+      code: "validation_failed",
+      message: "Validation failed",
+      fields: {
+        "0.capability": "capability is configured twice",
+        "0.chain.1.provider_id": "unknown provider 'gemini'",
+      },
+    });
+    const { user } = renderApp("/providers");
+    const text = await findCard("LLM");
+    await user.click(text.getByRole("button", { name: "Move Google Gemini up" }));
+    await user.click(text.getByRole("button", { name: "Move Google Gemini down" }));
+    await user.click(text.getByRole("switch", { name: "Use Ollama" }));
+    await user.click(screen.getByRole("button", { name: "Save chains" }));
+
+    expect(await text.findByText("capability is configured twice")).toBeInTheDocument();
+    const gemini = within(text.getByRole("listitem", { name: "Google Gemini" }));
+    expect(gemini.getByText("unknown provider 'gemini'")).toBeInTheDocument();
+    const image = await findCard("Image");
+    expect(image.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("reports a failed save", async () => {

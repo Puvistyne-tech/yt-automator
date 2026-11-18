@@ -7,7 +7,11 @@ import {
   validateCredential,
 } from "@/features/channels/credentialForm";
 import { channelDefaultsPayload, validateChannelDefaults } from "@/features/channels/defaultsForm";
-import { oauthReturnMessage, withoutOAuthParams } from "@/features/channels/oauthReturn";
+import {
+  oauthErrorMessage,
+  oauthReturnMessage,
+  withoutOAuthParams,
+} from "@/features/channels/oauthReturn";
 import { validateSecretValue } from "@/features/secrets/secretForm";
 
 const values = { name: " Main ", client_id: " id ", client_secret: "", daily_quota_units: 500 };
@@ -82,12 +86,38 @@ describe("oauthReturnMessage", () => {
     ["connected=other", { tone: "success", message: "Channel connected." }],
     [
       "error=access_denied",
-      { tone: "error", message: "Connecting the channel failed: access denied." },
+      { tone: "error", message: "Google sign-in was cancelled, so no channel was connected." },
+    ],
+    [
+      "error=youtube_scope_denied",
+      {
+        tone: "error",
+        message:
+          "Google granted fewer permissions than needed. Connect again and allow every permission.",
+      },
+    ],
+    [
+      "error=some_new_code",
+      { tone: "error", message: "Connecting the channel failed: some new code." },
     ],
     ["connected=chan-en&error=x", { tone: "success", message: "Connected Kutty Stories." }],
     ["", null],
   ])("reads ?%s", (query, expected) => {
     expect(oauthReturnMessage(new URLSearchParams(query), title)).toEqual(expected);
+  });
+
+  it.each([
+    "missing_code",
+    "validation_failed",
+    "youtube_no_channel",
+    "youtube_oauth_failed",
+    "youtube_invalid_grant",
+    "youtube_unreachable",
+    "credential_secret_missing",
+    "credential_not_found",
+    "secrets_unreadable",
+  ])("explains the %s return code in plain words", (code) => {
+    expect(oauthErrorMessage(code)).not.toContain(code.replace(/_/g, " "));
   });
 
   it("strips only the oauth parameters from the url", () => {

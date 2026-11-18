@@ -1,6 +1,10 @@
+import { errorAt } from "@/api/errors";
 import type { Channel, PipelineDescriptor } from "@/api/types";
 import type { TargetDraft } from "@/features/automation-editor/model/draft";
-import type { TargetOptions } from "@/features/automation-editor/model/targets";
+import {
+  type TargetOptions,
+  targetChannelWarning,
+} from "@/features/automation-editor/model/targets";
 import {
   ChannelField,
   DelayField,
@@ -9,7 +13,7 @@ import {
   PlaylistField,
   PrivacyField,
 } from "@/features/automation-editor/sections/TargetFields";
-import { CheckboxGroup, IconButton } from "@/shared/ui";
+import { Callout, CheckboxGroup, Icon, IconButton } from "@/shared/ui";
 
 interface TargetRowProps {
   index: number;
@@ -38,18 +42,25 @@ function TargetHead({ index, onRemove }: Pick<TargetRowProps, "index" | "onRemov
 
 export function TargetRow(props: TargetRowProps) {
   const { index, target, options, pipeline, channels, errors, onChange } = props;
-  const error = (field: string) => errors[`targets.${index}.${field}`];
+  const error = (field: string) => errorAt(errors, `targets.${index}.${field}`);
   const field = { target, options, error, onChange };
   const channel = channels.find((c) => c.id === target.channel_id);
+  const warning = targetChannelWarning(channel);
   return (
     <li className="target-row panel-inset panel-inset-muted" aria-label={`Target ${index + 1}`}>
       <TargetHead index={index} onRemove={props.onRemove} />
+      {warning && (
+        <Callout tone="warning">
+          <Icon name="alert" />
+          <span>{warning}</span>
+        </Callout>
+      )}
       <div className="target-grid">
         <ChannelField {...field} />
         <LanguageField {...field} pipeline={pipeline} />
-        <PrivacyField target={target} onChange={onChange} channel={channel} />
-        <PlaylistField target={target} onChange={onChange} />
-        <KidsField target={target} options={options} onChange={onChange} />
+        <PrivacyField {...field} channel={channel} />
+        <PlaylistField {...field} />
+        <KidsField {...field} />
         <DelayField target={target} error={error} onChange={onChange} />
       </div>
       <CheckboxGroup

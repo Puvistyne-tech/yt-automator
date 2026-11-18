@@ -53,11 +53,12 @@ export function LanguageField({
 
 export function PrivacyField({
   target,
+  error,
   onChange,
   channel,
-}: Pick<TargetFieldProps, "target" | "onChange"> & { channel: Channel | undefined }) {
+}: Omit<TargetFieldProps, "options"> & { channel: Channel | undefined }) {
   return (
-    <FormField label="Privacy">
+    <FormField label="Privacy" error={error("privacy")}>
       <Select
         value={target.privacy ?? ""}
         options={privacyOptions(channel)}
@@ -67,12 +68,12 @@ export function PrivacyField({
   );
 }
 
-export function PlaylistField({ target, onChange }: Pick<TargetFieldProps, "target" | "onChange">) {
+export function PlaylistField({ target, error, onChange }: Omit<TargetFieldProps, "options">) {
   const playlists = usePlaylists(target.channel_id);
   const options = (playlists.data ?? []).map((p) => ({ value: p.id, label: p.title }));
   const hint = playlists.isError ? "Playlists could not be loaded." : undefined;
   return (
-    <FormField label="Playlist" hint={hint}>
+    <FormField label="Playlist" hint={hint} error={error("playlist_id")}>
       <Select
         value={target.playlist_id ?? ""}
         placeholder={playlists.isLoading ? "Loading playlists…" : "No playlist"}
@@ -84,16 +85,20 @@ export function PlaylistField({ target, onChange }: Pick<TargetFieldProps, "targ
   );
 }
 
-export function KidsField({ target, options, onChange }: Omit<TargetFieldProps, "error">) {
+export function KidsField({ target, options, error, onChange }: TargetFieldProps) {
   if (options.kidsLocked) {
     return (
-      <FormField label="Made for kids" hint="Always on for kids' content pipelines.">
+      <FormField
+        label="Made for kids"
+        hint="Always on for kids' content pipelines."
+        error={error("made_for_kids")}
+      >
         <Switch checked disabled onChange={() => undefined} ariaLabel="Made for kids" />
       </FormField>
     );
   }
   return (
-    <FormField label="Made for kids">
+    <FormField label="Made for kids" error={error("made_for_kids")}>
       <Select
         value={kidsValue(target.made_for_kids)}
         options={KIDS_CHOICES}

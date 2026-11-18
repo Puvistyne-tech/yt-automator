@@ -58,3 +58,19 @@ describe("mock simulator review policy", () => {
     expect(db.state.runs[0]?.status).toBe(status);
   });
 });
+
+describe("mock simulator logs", () => {
+  it("stores each stage log on the run and publishes it as an event", () => {
+    const events: string[] = [];
+    const unsubscribe = db.subscribe((event) => events.push(event.kind));
+    db.state.runs = [makeRun({ status: "running", stages: stagesWith(["pending"]), logs: [] })];
+
+    tick();
+    unsubscribe();
+
+    expect(db.state.runs[0]?.logs).toMatchObject([
+      { level: "info", stage_id: "story", message: "Starting Write story" },
+    ]);
+    expect(events).toEqual(["stage", "log"]);
+  });
+});
