@@ -14,7 +14,12 @@ from automator.pipelines.kids_story.art.cards import (
     resized_or_copied,
 )
 from automator.pipelines.kids_story.art.imaging import covered_copy
-from automator.pipelines.kids_story.art.prompts import scene_prompt, thumbnail_prompt
+from automator.pipelines.kids_story.art.prompts import (
+    scene_prompt,
+    scene_subject,
+    thumbnail_prompt,
+    thumbnail_subject,
+)
 from automator.pipelines.kids_story.art.scene_art import Drawing, ScenePainter
 from automator.pipelines.kids_story.artifacts import (
     EPISODE,
@@ -72,7 +77,10 @@ class ExtraArt:
         scene = self.story.scenes[index]
         name = f"scene-{index}-short"
         size = settings.video_size(SHORT)
-        drawing = Drawing(scene_prompt(settings, scene), size, self.painter.seed(index), name)
+        prompt = scene_prompt(settings, scene)
+        drawing = Drawing(
+            prompt, size, self.painter.seed(index), name, subject=scene_subject(scene)
+        )
         base = self.portrait(self.episode_visuals[index], name, size, drawing)
         path = badged_copy(base, self.painter.out / f"{name}-badge.png", settings, self.context.log)
         return artifact(
@@ -92,9 +100,10 @@ class ExtraArt:
         prompt = thumbnail_prompt(settings, self.story)
         size = (settings.thumbnail.width, settings.thumbnail.height)
         seed = settings.visuals.base_seed + THUMBNAIL_SEED_OFFSET
-        wide = self.painter.draw(Drawing(prompt, size, seed, "thumbnail-wide"))
+        subject = thumbnail_subject(self.story)
+        wide = self.painter.draw(Drawing(prompt, size, seed, "thumbnail-wide", subject=subject))
         tall_size = (size[1] * PORTRAIT[0] // PORTRAIT[1], size[1])
-        tall_drawing = Drawing(prompt, tall_size, seed, "thumbnail-tall")
+        tall_drawing = Drawing(prompt, tall_size, seed, "thumbnail-tall", subject=subject)
         tall = self.portrait(wide, "thumbnail-tall", tall_size, tall_drawing)
         return [
             artifact(

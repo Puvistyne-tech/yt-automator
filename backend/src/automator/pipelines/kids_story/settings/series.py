@@ -9,13 +9,9 @@ from automator.pipelines.kids_story.settings.base import (
     text_list_field,
 )
 
-ART_STYLE = (
-    "soft watercolor picture-book illustration for young children, warm pastel colours, "
-    "rounded friendly shapes, gentle golden light, clean uncluttered composition"
-)
-NEGATIVE_PROMPT = (
-    "text, letters, words, captions, watermark, logo, signature, scary, dark, gloomy, "
-    "violence, weapons, sharp teeth, realistic photo, distorted faces, extra limbs"
+PICTURE_EXCLUSIONS = (
+    "text, letters, words, captions, watermark, logo, signature, scary, gloomy, "
+    "violence, weapons, sharp teeth, distorted faces, extra limbs"
 )
 EDITORIAL_RULES = [
     "Every story is gentle, warm and safe for children aged three to seven.",
@@ -73,17 +69,6 @@ class SeriesSettings(SettingsSection):
         "Tagline",
         "A short line describing the series, used in descriptions and cards.",
     )
-    art_style: str = Field(
-        default=ART_STYLE,
-        min_length=1,
-        title="Art style prompt",
-        description="Describes the look of every picture so the series stays consistent.",
-    )
-    negative_prompt: str = Field(
-        default=NEGATIVE_PROMPT,
-        title="Things to keep out of pictures",
-        description="Sent to the image model as the negative prompt for every picture.",
-    )
     refrain: LocalizedText = localized_text(
         "Be kind, be brave, be you!",
         "அன்பாக இரு, துணிவாக இரு, நீயாகவே இரு!",
@@ -129,4 +114,11 @@ class SafetySettings(SettingsSection):
         BRAND_NAMES,
         "Brand names",
         "A story mentioning any of these names is rejected and rewritten.",
+    )
+    picture_exclusions: str = Field(
+        default=PICTURE_EXCLUSIONS,
+        max_length=800,
+        title="Never draw",
+        description="Sent to the image model as the negative prompt for every picture, "
+        "whatever the visual style.",
     )

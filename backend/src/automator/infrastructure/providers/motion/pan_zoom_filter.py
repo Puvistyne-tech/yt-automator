@@ -54,9 +54,17 @@ def pan_zoom_filter(request: MotionRequest, tuning: PanZoomTuning) -> str:
             f"scale={wide}:{tall}:force_original_aspect_ratio=increase:flags=lanczos",
             f"crop={wide}:{tall}",
             f"zoompan=z='{zoom}':x='{x}':y='{y}':d={frames}:s={width}x{height}:fps={request.fps}",
+            *held_frames(request),
             "format=yuv420p",
         ]
     )
+
+
+def held_frames(request: MotionRequest) -> list[str]:
+    held = request.held_frame_rate
+    if held is None or held >= request.fps:
+        return []
+    return [f"fps={held}", f"fps={request.fps}"]
 
 
 def pan_zoom_command(

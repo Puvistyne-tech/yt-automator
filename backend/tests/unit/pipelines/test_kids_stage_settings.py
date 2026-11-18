@@ -82,7 +82,8 @@ def test_an_unknown_speaker_uses_the_narrator_voice(tmp_path: Path) -> None:
 
 def motion_rig(root: Path) -> StageRig:
     settings = quick_settings(
-        visuals={"motion_intensity": 0.2, "hero_motion_intensity": 0.9, "card_camera": "rise"}
+        visuals={"motion_intensity": 0.2, "hero_motion_intensity": 0.9, "card_camera": "rise"},
+        look={"use_style_motion": False},
     )
     providers = FakeProviders(writer=smart_writer())
     return run_chain(StageRig(root, settings=settings, providers=providers), "motion")
