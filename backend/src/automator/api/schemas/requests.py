@@ -45,5 +45,5 @@ class SettingsRequest(AppSettingsInput):
         default=None, description="Read-only, ignored when sent"
     )
 
-    def changes(self) -> AppSettingsInput:
-        return AppSettingsInput(**self.model_dump(exclude=set(READ_ONLY_SETTINGS)))
+    def sent_fields(self) -> dict[str, object]:
+        return self.model_dump(exclude_unset=True, exclude=set(READ_ONLY_SETTINGS))

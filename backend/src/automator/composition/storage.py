@@ -10,7 +10,7 @@ from automator.composition.ports import Collaborators, Ports
 
 
 def storage_use_cases(p: Ports, c: Collaborators) -> StorageUseCases:
-    planner = CleanupPlanner(p.runs, p.files, p.app_settings, p.clock)
+    planner = CleanupPlanner(p.runs, p.files, p.app_settings, p.clock, p.automations)
     clean_up = CleanUpStorage(planner, p.runs, p.files, c.recorder)
     return StorageUseCases(
         get_storage=GetStorage(planner, p.files),

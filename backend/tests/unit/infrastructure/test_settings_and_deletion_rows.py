@@ -12,14 +12,9 @@ from automator.infrastructure.db.settings_repositories import (
 )
 from automator.infrastructure.db.tables import AppSettingsRow
 from automator.infrastructure.settings_env import settings_overrides
+from tests.fixtures.retention_data import LEGACY_PAYLOAD
 from tests.unit.infrastructure.records import run
 
-LEGACY_PAYLOAD = {
-    "timezone": "Asia/Kolkata",
-    "max_parallel_runs": 2,
-    "keep_runs_days": 7,
-    "data_dir": "",
-}
 LOCKED = SettingOverride(field="log_level", value="debug", reason="Set by env")
 
 

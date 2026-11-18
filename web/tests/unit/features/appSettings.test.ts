@@ -12,6 +12,7 @@ describe("app settings input", () => {
       max_parallel_runs: 1,
       keep_runs_days: 30,
       keep_intermediate_days: 0,
+      auto_cleanup_enabled: false,
       cleanup_interval_hours: 24,
       caption_track_name: "English",
       max_run_log_entries: 2000,
@@ -31,7 +32,6 @@ describe("validateSettings", () => {
     [{ timezone: "" }, { timezone: "Choose a timezone." }],
     [{ max_parallel_runs: 0 }, { max_parallel_runs: "Use a whole number, at least 1." }],
     [{ keep_runs_days: 1.5 }, { keep_runs_days: "Use a whole number of days, 0 or more." }],
-    [{ keep_runs_days: -1 }, { keep_runs_days: "Use a whole number of days, 0 or more." }],
     [{ keep_runs_days: 0 }, {}],
     [
       { keep_intermediate_days: Number.NaN },

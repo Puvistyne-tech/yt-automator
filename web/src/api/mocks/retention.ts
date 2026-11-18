@@ -1,4 +1,5 @@
 import type { MockStorage } from "@/api/mocks/fixtures/settings";
+import { holdsRun, type PublishDelays } from "@/api/mocks/uploadHold";
 import type {
   AppSettingsInput,
   Artifact,
@@ -8,9 +9,9 @@ import type {
   Run,
   RunStatus,
 } from "@/api/types";
+import { isFinalOutput } from "@/shared/artifacts";
 
 const DAY_MS = 86_400_000;
-const FINAL_KINDS = new Set(["video", "thumbnail", "subtitle", "metadata"]);
 const PROTECTED = new Set<RunStatus>([
   "queued",
   "running",
@@ -19,37 +20,46 @@ const PROTECTED = new Set<RunStatus>([
   "publishing",
 ]);
 
-export type RetentionPolicy = Pick<AppSettingsInput, "keep_runs_days" | "keep_intermediate_days">;
+export type RetentionPolicy = Pick<
+  AppSettingsInput,
+  "keep_runs_days" | "keep_intermediate_days"
+> & {
+  publish_delays: PublishDelays;
+};
 
-export function isFinalOutput(artifact: Artifact): boolean {
-  return FINAL_KINDS.has(artifact.kind) && artifact.language !== null;
+export interface RunUsage {
+  final_bytes: number;
+  intermediate_bytes: number;
 }
 
 function bytesOf(artifacts: Artifact[]): number {
   return artifacts.reduce((total, artifact) => total + artifact.size_bytes, 0);
 }
 
-export function runUsage(run: Run): { final_bytes: number; intermediate_bytes: number } {
+export function runUsage(run: Run, workspaceBytes = 0): RunUsage {
   const finals = run.artifacts.filter(isFinalOutput);
   return {
     final_bytes: bytesOf(finals),
-    intermediate_bytes: bytesOf(run.artifacts) - bytesOf(finals),
+    intermediate_bytes: bytesOf(run.artifacts) - bytesOf(finals) + workspaceBytes,
   };
 }
 
-function isProtected(run: Run, now: number): boolean {
-  const waiting = run.uploads.some(
-    (upload) =>
-      upload.status === "pending" ||
-      upload.status === "uploading" ||
-      (upload.publish_at !== null && Date.parse(upload.publish_at) > now),
-  );
-  return PROTECTED.has(run.status) || waiting;
+export function hasIntermediateWork(run: Run, workspaceBytes: number): boolean {
+  return run.artifacts.some((artifact) => !isFinalOutput(artifact)) || workspaceBytes > 0;
+}
+
+function finishedTime(run: Run): number {
+  return Date.parse(run.finished_at ?? run.created_at);
+}
+
+function isProtected(run: Run, now: number, policy: RetentionPolicy): boolean {
+  const finished = finishedTime(run);
+  const held = run.uploads.some((upload) => holdsRun(upload, finished, now, policy.publish_delays));
+  return PROTECTED.has(run.status) || held;
 }
 
 function isOlderThan(run: Run, now: number, days: number): boolean {
-  const finished = Date.parse(run.finished_at ?? run.created_at);
-  return days > 0 && now - finished >= days * DAY_MS;
+  return days > 0 && now - finishedTime(run) >= days * DAY_MS;
 }
 
 export function cleanupAction(
@@ -57,20 +67,16 @@ export function cleanupAction(
   now: number,
   policy: RetentionPolicy,
 ): CleanupAction | null {
-  if (isProtected(run, now)) {
+  if (isProtected(run, now, policy)) {
     return null;
   }
   if (isOlderThan(run, now, policy.keep_runs_days)) {
     return "delete_run";
   }
-  const working = runUsage(run).intermediate_bytes > 0;
-  return working && isOlderThan(run, now, policy.keep_intermediate_days)
-    ? "remove_intermediate"
-    : null;
+  return isOlderThan(run, now, policy.keep_intermediate_days) ? "remove_intermediate" : null;
 }
 
-function runItem(run: Run, action: CleanupAction): CleanupItem {
-  const usage = runUsage(run);
+function runItem(run: Run, action: CleanupAction, usage: RunUsage): CleanupItem {
   return {
     run_id: run.id,
     action,
@@ -85,16 +91,26 @@ function runItem(run: Run, action: CleanupAction): CleanupItem {
   };
 }
 
+function plannedItem(run: Run, workspace: number, now: number, policy: RetentionPolicy) {
+  const action = cleanupAction(run, now, policy);
+  if (action === null) {
+    return [];
+  }
+  if (action === "remove_intermediate" && !hasIntermediateWork(run, workspace)) {
+    return [];
+  }
+  return [runItem(run, action, runUsage(run, workspace))];
+}
+
 export function cleanupItems(
   runs: Run[],
   storage: MockStorage,
   now: number,
   policy: RetentionPolicy,
 ): CleanupItem[] {
-  const found = runs.flatMap((run) => {
-    const action = cleanupAction(run, now, policy);
-    return action === null ? [] : [runItem(run, action)];
-  });
+  const found = runs.flatMap((run) =>
+    plannedItem(run, storage.workspace[run.id] ?? 0, now, policy),
+  );
   const strays = storage.strays.map(
     (stray): CleanupItem => ({
       run_id: stray.run_id,

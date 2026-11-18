@@ -15,7 +15,7 @@ class ScheduledCleanup:
     last_ran: datetime | None = None
 
     def execute(self, now: datetime) -> CleanupReport | None:
-        if not cleanup_due(self.last_ran, now, self.settings.get().cleanup_interval_hours):
+        if not cleanup_due(self.last_ran, now, self.settings.get()):
             return None
         self.last_ran = now
         return self.cleanup.execute()

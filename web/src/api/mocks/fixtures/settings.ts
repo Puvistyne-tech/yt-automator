@@ -7,6 +7,7 @@ export interface StrayFolder {
 
 export interface MockStorage {
   strays: StrayFolder[];
+  workspace: Record<string, number>;
   other_bytes: number;
   free_bytes: number | null;
   disk_bytes: number | null;
@@ -17,6 +18,7 @@ export const SETTINGS: AppSettings = {
   max_parallel_runs: 1,
   keep_runs_days: 30,
   keep_intermediate_days: 0,
+  auto_cleanup_enabled: false,
   cleanup_interval_hours: 24,
   caption_track_name: "English",
   max_run_log_entries: 2000,
@@ -32,6 +34,7 @@ export const SETTINGS: AppSettings = {
 
 export const STORAGE: MockStorage = {
   strays: [{ run_id: "run-3f9a2c", bytes: 312_000_000 }],
+  workspace: {},
   other_bytes: 41_000_000,
   free_bytes: 182_000_000_000,
   disk_bytes: 494_000_000_000,

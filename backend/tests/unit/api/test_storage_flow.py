@@ -111,9 +111,12 @@ def test_the_preview_echoes_the_retention_settings(timed: Api) -> None:
     }
 
 
-def test_the_scheduler_runs_the_cleanup_job(timed: Api, clock: FakeClock) -> None:
+def test_the_scheduler_cleans_up_only_once_switched_on(timed: Api, clock: FakeClock) -> None:
     ok(timed.client.put("/api/settings", json={"keep_runs_days": 1}))
     run = reviewed(timed, "rejected")
     clock.advance(days=2)
+    timed.runtime.scheduler.tick_once()
+    ok(timed.client.get(f"/api/runs/{run['id']}"))
+    ok(timed.client.put("/api/settings", json={"auto_cleanup_enabled": True}))
     timed.runtime.scheduler.tick_once()
     assert error_of(timed.client.get(f"/api/runs/{run['id']}"), 404)["code"] == "run_not_found"

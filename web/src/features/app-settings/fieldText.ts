@@ -1,4 +1,5 @@
-import type { AppSettingName, AppSettings, ServerLogLevel } from "@/api/types";
+import type { AppSettingName, AppSettings } from "@/api/types";
+import { SERVER_LOG_LEVELS } from "@/api/types/system";
 import type { SelectOption } from "@/shared/ui";
 
 export interface SettingText {
@@ -27,8 +28,12 @@ export const SETTING_TEXT: Record<AppSettingName, SettingText> = {
     label: "Keep working files (days)",
     hint: "Pictures, clips and other working files are removed earlier; videos, thumbnails, captions and metadata stay. 0 keeps them.",
   },
+  auto_cleanup_enabled: {
+    label: "Clean up automatically",
+    hint: "Off until you turn it on. When on, the cleanup deletes what the settings above allow on its own; when off, nothing is deleted until you choose Clean up now.",
+  },
   cleanup_interval_hours: {
-    label: "Clean up automatically every (hours)",
+    label: "Automatic cleanup every (hours)",
     hint: "Runs waiting for review, approved or still uploading are never touched. 0 cleans up only when you ask.",
   },
   max_run_log_entries: {
@@ -45,9 +50,7 @@ export const SETTING_TEXT: Record<AppSettingName, SettingText> = {
   },
 };
 
-const LOG_LEVELS: ServerLogLevel[] = ["debug", "info", "warning", "error", "critical"];
-
-export const LOG_LEVEL_OPTIONS: SelectOption[] = LOG_LEVELS.map((level) => ({
+export const LOG_LEVEL_OPTIONS: SelectOption[] = SERVER_LOG_LEVELS.map((level) => ({
   value: level,
   label: level[0]?.toUpperCase() + level.slice(1),
 }));

@@ -29,9 +29,21 @@ from tests.unit.application.cleanup_support import (
 )
 
 
-def scheduled(harness: Harness, interval: int) -> ScheduledCleanup:
-    harness.app_settings.stored = AppSettingsInput(cleanup_interval_hours=interval)
+def scheduled(harness: Harness, interval: int, enabled: bool = True) -> ScheduledCleanup:
+    harness.app_settings.stored = AppSettingsInput(
+        keep_runs_days=30, auto_cleanup_enabled=enabled, cleanup_interval_hours=interval
+    )
     return ScheduledCleanup(clean_up(harness), harness.app_settings)
+
+
+def test_the_scheduled_cleanup_deletes_nothing_until_it_is_switched_on(harness: Harness) -> None:
+    stored_run(harness, "old")
+    orphan(harness)
+    harness.clock.advance(days=400)
+    job = scheduled(harness, interval=1, enabled=False)
+    assert job.execute(harness.clock.now()) is None and job.last_ran is None
+    assert "old" in harness.runs.items and "orphan-1" in harness.files.run_ids()
+    assert [i.run_id for i in clean_up(harness).execute().items] == ["old", "orphan-1"]
 
 
 def test_the_scheduled_cleanup_runs_once_per_interval(harness: Harness) -> None:

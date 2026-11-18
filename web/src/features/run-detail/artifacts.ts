@@ -1,4 +1,5 @@
 import type { Artifact, PipelineDescriptor, Run } from "@/api/types";
+import { isFinalOutput } from "@/shared/artifacts";
 
 export interface ArtifactGroup {
   key: string;
@@ -22,7 +23,6 @@ export interface StageFiles {
 }
 
 const MEDIA_KINDS = new Set<Artifact["kind"]>(["video", "thumbnail", "image", "audio"]);
-const FINAL_KINDS = new Set<Artifact["kind"]>(["video", "thumbnail", "subtitle", "metadata"]);
 
 function languageTitle(language: string | null, pipeline?: PipelineDescriptor): string {
   if (language === null) {
@@ -95,10 +95,6 @@ export function splitArtifacts(artifacts: Artifact[]): GroupParts {
     captions: artifacts.find((a) => a.kind === "subtitle"),
     poster: artifacts.find((a) => a.kind === "thumbnail"),
   };
-}
-
-export function isFinalOutput(artifact: Artifact): boolean {
-  return FINAL_KINDS.has(artifact.kind) && artifact.language !== null;
 }
 
 export function finalOutputs(run: Run): Artifact[] {

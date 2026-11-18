@@ -77,7 +77,8 @@ ProviderChoice  provider_id, enabled, options (object)
 ProviderDescriptor  provider_id, capability, name, description, options_schema, required_secrets: [name],
                     offline: bool, available: bool, unavailable_reason
 AppSettings     timezone = "UTC", max_parallel_runs = 1 (>= 1), keep_runs_days = 30 (>= 0),
-                keep_intermediate_days = 0 (>= 0), cleanup_interval_hours = 24 (>= 0, whole hours),
+                keep_intermediate_days = 0 (>= 0), auto_cleanup_enabled = false,
+                cleanup_interval_hours = 24 (>= 0, whole hours),
                 caption_track_name = "", max_run_log_entries = 2000 (>= 1),
                 log_level: debug | info | warning | error | critical = info,
                 doctor_min_free_gb = 10 (>= 0),
@@ -211,7 +212,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
 - App settings come from three places, strongest first: an `AUTOMATOR_*` environment variable that is set
   (`AUTOMATOR_YOUTUBE_CAPTION_TRACK_NAME`, `AUTOMATOR_MAX_RUN_LOG_ENTRIES`, `AUTOMATOR_LOG_LEVEL`,
   `AUTOMATOR_DOCTOR_MIN_FREE_GB`, `AUTOMATOR_CLEANUP_INTERVAL_HOURS`), the stored value, the default.
-  A field set by the environment is listed in `locked` with the reason naming the variable. Saving a locked
+  A field set by the environment is listed in `locked` with the reason naming the variable. `PUT /settings`
+  changes only the fields it sends; a field left out keeps its current value. Saving a locked
   field with a value other than the environment's is a 400 naming the field; saving it unchanged keeps the
   stored value underneath, which applies again once the variable is unset. Settings stored before a field
   existed load with that field's default, and unknown stored keys (such as an old `data_dir`) are ignored.
@@ -226,22 +228,32 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   - The cleanup never touches a run that is `queued`, `running`, `awaiting_review`, `approved` or
     `publishing`, nor a run with a `pending` or `uploading` upload, nor one with an upload whose
     `publish_at` is still in the future.
+  - Uploads stored before `publish_at` existed do not say whether they were scheduled. A `done` upload
+    without `publish_at` whose privacy is `public` or unknown holds its run until `finished_at` plus its
+    target's current `publish_delay_minutes`; when the target no longer exists the delay cannot be known
+    and the run is kept until it is deleted by hand. Private and unlisted uploads never hold a run.
   - Any other run that is at least `keep_runs_days` days old is deleted together with its folder.
   - Any other run that is at least `keep_intermediate_days` days old (and younger than `keep_runs_days`)
     loses its working files: the run, its logs and its final outputs stay, its other artifacts leave
     `artifacts`, `intermediate_removed_at` is set once, and a log entry says how much was freed.
-  - A folder under `runs/` with no run is a stray folder and is removed.
+  - A folder under `runs/` with no run is a stray folder and is removed. Only real folders directly under
+    `runs/` with an opaque id as their name count: a symbolic link is never a run folder, an `artifacts`
+    link inside a run is not followed, and a link inside a run folder is removed without following it, so
+    nothing outside `runs/` is measured or removed.
+  - A run folder that is still there after its removal is a failure, not bytes freed.
   - 0 days keeps runs, or working files, forever.
   - Each removal re-checks the stored run in the same transaction as its database change, so a run that was
-    retried, reviewed or published since the plan is left alone.
+    retried, reviewed or published since the plan is left alone. Working files are removed only after the
+    run is read again and is still pruned and finished, so a run retried in between keeps its files.
   - Database first, then disk: a deleted run's row goes before its folder, and pruned artifacts leave the
     row before their files. A crash in between leaves only files that the next cleanup finds (a stray
     folder, or working files of a pruned run) and removes, so there is never a row pointing at missing
     files. Folders are listed before rows, so a folder of a run created during the cleanup is never stray.
   - Running the cleanup twice removes nothing the second time. Every removal is logged with its size; a
     removal that fails is logged and skipped, and the rest continue.
-  - The scheduler runs the cleanup on its first tick and then every `cleanup_interval_hours`; 0 turns the
-    automatic cleanup off. `POST /storage/cleanup` runs it at once; `GET /storage/cleanup` is a dry run that
+  - The automatic cleanup is off until `auto_cleanup_enabled` is switched on, so an upgrade never deletes a
+    run on its own. While it is on, the scheduler runs the cleanup on its next tick and then every
+    `cleanup_interval_hours`; 0 also keeps it off. `POST /storage/cleanup` runs it at once; `GET /storage/cleanup` is a dry run that
     reports the same items and sizes and removes nothing.
 - Storage. `GET /storage` measures the data folder on disk: its total size, final outputs and working files
   per automation (runs grouped by `automation_id`, largest first), stray folders, everything else
@@ -399,7 +411,7 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | PUT `/secrets/{name}` | `{value}` | 204 |
 | DELETE `/secrets/{name}` | | 204 |
 | GET `/settings` | | AppSettings |
-| PUT `/settings` | AppSettings; `data_dir`, `locked` and `restart_required` are ignored | AppSettings, 400 with field errors |
+| PUT `/settings` | any AppSettings fields; fields left out keep their value; `data_dir`, `locked` and `restart_required` are ignored | AppSettings, 400 with field errors |
 | GET `/storage` | | StorageReport |
 | GET `/storage/cleanup` | | CleanupReport with `dry_run: true`; removes nothing |
 | POST `/storage/cleanup` | | CleanupReport with `dry_run: false` and what was removed |
@@ -432,7 +444,8 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   automation was deleted, the header says so instead of linking to it.
 - Settings: three groups. General (timezone, parallel runs, caption track name), Storage and cleanup (the
   storage card with disk use per automation, final outputs versus working files and free space; keep runs,
-  keep working files, cleanup interval; "Clean up now"), Logging and diagnostics (log entries per run, log
+  keep working files, the "Clean up automatically" switch (off by default) with its interval; "Clean up
+  now", which works whether or not the switch is on), Logging and diagnostics (log entries per run, log
   level, free disk space warning, data folder). Every field has help text; a field in `restart_required`
   says "Applies after restart"; a locked field is read-only and shows its reason. Client-side checks mirror
   the schema and server field errors show on their fields. "Clean up now" opens a confirmation listing the

@@ -1,13 +1,8 @@
-import type { AppSettingName, AppSettings, AppSettingsInput, ServerLogLevel } from "@/api/types";
+import { SETTING_MINIMUMS } from "@/api/settingsFields";
+import type { AppSettingName, AppSettings, AppSettingsInput } from "@/api/types";
+import { SERVER_LOG_LEVELS } from "@/api/types/system";
 
-const LOG_LEVELS: ServerLogLevel[] = ["debug", "info", "warning", "error", "critical"];
-const WHOLE_NUMBER_MINIMUMS: Partial<Record<AppSettingName, number>> = {
-  max_parallel_runs: 1,
-  keep_runs_days: 0,
-  keep_intermediate_days: 0,
-  cleanup_interval_hours: 0,
-  max_run_log_entries: 1,
-};
+const LOG_LEVELS: readonly string[] = SERVER_LOG_LEVELS;
 
 function isKnownZone(zone: string): boolean {
   try {
@@ -19,7 +14,7 @@ function isKnownZone(zone: string): boolean {
 
 function numberErrors(input: AppSettingsInput): Record<string, string> {
   const errors: Record<string, string> = {};
-  for (const [name, minimum] of Object.entries(WHOLE_NUMBER_MINIMUMS)) {
+  for (const [name, minimum] of Object.entries(SETTING_MINIMUMS)) {
     const value = input[name as AppSettingName];
     if (typeof value !== "number" || !Number.isInteger(value)) {
       errors[name] = "Input should be a valid integer";

@@ -1,12 +1,12 @@
 import { api } from "@/api/client";
 import { db } from "@/api/mocks/db";
 import { makeArtifact, makeRun, makeUpload } from "@/api/mocks/fixtures/factories";
-import { cleanupAction } from "@/api/mocks/retention";
+import { cleanupAction, cleanupItems, hasIntermediateWork } from "@/api/mocks/retention";
 import type { AppSettings, CleanupReport, Run, StorageReport } from "@/api/types";
 
 const DAY_MS = 86_400_000;
 const NOW = Date.parse("2026-03-01T00:00:00Z");
-const POLICY = { keep_runs_days: 30, keep_intermediate_days: 7 };
+const POLICY = { keep_runs_days: 30, keep_intermediate_days: 7, publish_delays: {} };
 
 const failure = (call: Promise<unknown>) =>
   call.then(
@@ -41,10 +41,35 @@ describe("mock retention rules", () => {
     expect(cleanupAction(finishedRun(30), NOW, POLICY)).toBe("delete_run");
   });
 
-  it("keeps everything with zero days and skips runs without working files", () => {
-    const forever = { keep_runs_days: 0, keep_intermediate_days: 0 };
+  it("keeps everything with zero days", () => {
+    const forever = { ...POLICY, keep_runs_days: 0, keep_intermediate_days: 0 };
     expect(cleanupAction(finishedRun(4000), NOW, forever)).toBeNull();
-    expect(cleanupAction(finishedRun(10, { artifacts: [makeArtifact()] }), NOW, POLICY)).toBeNull();
+  });
+
+  it("counts listed working files of any size and workspace bytes as work", () => {
+    const finalOnly = finishedRun(10, { artifacts: [makeArtifact()] });
+    const empty = finishedRun(10, { artifacts: [makeArtifact(), { ...WORKING, size_bytes: 0 }] });
+    expect(hasIntermediateWork(finalOnly, 0)).toBe(false);
+    expect(hasIntermediateWork(finalOnly, 5)).toBe(true);
+    expect(hasIntermediateWork(empty, 0)).toBe(true);
+    const storage = { ...db.state.storage, strays: [], workspace: { "run-10": 5 } };
+    const items = cleanupItems([finalOnly], storage, NOW, POLICY);
+    expect(items.map((item) => [item.action, item.bytes])).toEqual([["remove_intermediate", 5]]);
+    expect(cleanupItems([finalOnly], { ...storage, workspace: {} }, NOW, POLICY)).toEqual([]);
+  });
+
+  it("holds an older public upload without a publish time for its target delay", () => {
+    const legacy = makeUpload({ privacy: "public", target_id: "target-late" });
+    const run = finishedRun(40, { uploads: [legacy] });
+    expect(cleanupAction(run, NOW, POLICY)).toBeNull();
+    const delays = { "target-late": 50 * 24 * 60 };
+    expect(cleanupAction(run, NOW, { ...POLICY, publish_delays: delays })).toBeNull();
+    expect(cleanupAction(run, NOW + 10 * DAY_MS, { ...POLICY, publish_delays: delays })).toBe(
+      "delete_run",
+    );
+    expect(cleanupAction(finishedRun(40, { uploads: [makeUpload()] }), NOW, POLICY)).toBe(
+      "delete_run",
+    );
   });
 
   it("protects pending and scheduled uploads", () => {
@@ -131,6 +156,12 @@ describe("mock settings handler", () => {
   ])("rejects %j", async (patch, field, message) => {
     const error = await failure(api.put("/settings", { ...current(), ...patch }));
     expect(error).toMatchObject({ status: 400, fields: { [field]: message } });
+  });
+
+  it("changes only the sent fields, like the backend", async () => {
+    const saved = await api.put<AppSettings>("/settings", { auto_cleanup_enabled: true });
+    expect(saved).toMatchObject({ auto_cleanup_enabled: true, caption_track_name: "English" });
+    expect(saved.keep_runs_days).toBe(30);
   });
 
   it("refuses to change a locked field but accepts it unchanged", async () => {

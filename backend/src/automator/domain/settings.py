@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 
 from pydantic import Field
@@ -40,6 +41,12 @@ class AppSettingsInput(DomainModel):
         title="Keep working files (days)",
         description="Working files that are not final outputs are removed this many days "
         "after a run finishes; 0 keeps them",
+    )
+    auto_cleanup_enabled: bool = Field(
+        default=False,
+        title="Clean up automatically",
+        description="When on, the cleanup runs on its own every interval and deletes what the "
+        "retention settings allow; when off, nothing is deleted until you choose Clean up now",
     )
     cleanup_interval_hours: int = Field(
         default=24,
@@ -88,6 +95,10 @@ class AppSettings(AppSettingsInput):
 
 def input_fields() -> set[str]:
     return set(AppSettingsInput.model_fields)
+
+
+def with_sent_fields(current: AppSettingsInput, sent: Mapping[str, object]) -> AppSettingsInput:
+    return AppSettingsInput.model_validate(current.model_dump() | dict(sent))
 
 
 def app_settings_errors(settings: AppSettingsInput) -> dict[str, str]:

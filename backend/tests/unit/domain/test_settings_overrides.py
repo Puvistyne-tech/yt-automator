@@ -15,14 +15,9 @@ from automator.domain.settings_overrides import (
     storable_settings,
     stored_settings,
 )
+from tests.fixtures.retention_data import LEGACY_PAYLOAD
 
 LOCKED_LEVEL = SettingOverride(field="log_level", value="debug", reason="Set by AUTOMATOR_X")
-LEGACY_PAYLOAD = {
-    "timezone": "Asia/Kolkata",
-    "max_parallel_runs": 2,
-    "keep_runs_days": 7,
-    "data_dir": "",
-}
 
 
 def test_settings_stored_before_retention_load_unchanged_with_new_defaults() -> None:

@@ -3,7 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from automator.domain.ports import AppSettingsRepository, Clock, RunFileStore, RunRepository
+from automator.domain.ports import (
+    AppSettingsRepository,
+    AutomationRepository,
+    Clock,
+    RunFileStore,
+    RunRepository,
+)
 from automator.domain.retention import (
     CleanupAction,
     CleanupItem,
@@ -15,6 +21,7 @@ from automator.domain.retention import (
     run_item,
 )
 from automator.domain.runs import Run, RunQuery
+from automator.domain.upload_hold import publish_delays
 
 NO_FINALS: frozenset[str] = frozenset()
 
@@ -38,6 +45,7 @@ class CleanupPlanner:
     files: RunFileStore
     settings: AppSettingsRepository
     clock: Clock
+    automations: AutomationRepository
 
     def snapshot(self) -> RunSnapshot:
         on_disk = self.files.run_ids()
@@ -45,8 +53,12 @@ class CleanupPlanner:
         known = {run.id for run in runs}
         return RunSnapshot(runs, tuple(sorted(on_disk - known)))
 
+    def policy(self) -> RetentionPolicy:
+        delays = publish_delays(self.automations.list())
+        return retention_policy(self.settings.get(), delays)
+
     def plan(self) -> CleanupPlan:
-        now, policy = self.clock.now(), retention_policy(self.settings.get())
+        now, policy = self.clock.now(), self.policy()
         snapshot = self.snapshot()
         found = (self.run_item(run, now, policy) for run in snapshot.runs)
         orphans = (self.orphan_item(run_id) for run_id in snapshot.orphan_ids)

@@ -1,14 +1,25 @@
 import { HttpResponse, http } from "msw";
 import { db } from "@/api/mocks/db";
-import { cleanupItems, cleanupReport, runUsage, withoutIntermediate } from "@/api/mocks/retention";
+import {
+  cleanupItems,
+  cleanupReport,
+  type RetentionPolicy,
+  runUsage,
+  withoutIntermediate,
+} from "@/api/mocks/retention";
+import { publishDelays } from "@/api/mocks/uploadHold";
 import type { AutomationUsage, CleanupItem, CleanupReport, Run, StorageReport } from "@/api/types";
 
 const MEGABYTE = 1_000_000;
 
+function workspaceOf(run: Run): number {
+  return db.state.storage.workspace[run.id] ?? 0;
+}
+
 function automationUsage(runs: Run[]): AutomationUsage[] {
   const grouped = new Map<string, AutomationUsage>();
   for (const run of runs) {
-    const usage = runUsage(run);
+    const usage = runUsage(run, workspaceOf(run));
     const entry = grouped.get(run.automation_id) ?? {
       automation_id: run.automation_id,
       automation_name: run.automation_name,
@@ -46,19 +57,29 @@ export function storageReport(): StorageReport {
   };
 }
 
+function policy(): RetentionPolicy {
+  const { settings, automations } = db.state;
+  return { ...settings, publish_delays: publishDelays(automations) };
+}
+
 function preview(): CleanupItem[] {
-  return cleanupItems(db.state.runs, db.state.storage, Date.now(), db.state.settings);
+  return cleanupItems(db.state.runs, db.state.storage, Date.now(), policy());
+}
+
+function withoutWorkspace(runId: string): Record<string, number> {
+  const { [runId]: _removed, ...rest } = db.state.storage.workspace;
+  return rest;
 }
 
 function apply(item: CleanupItem): void {
   const state = db.state;
+  const workspace = withoutWorkspace(item.run_id);
   if (item.action === "remove_orphan") {
-    state.storage = {
-      ...state.storage,
-      strays: state.storage.strays.filter((s) => s.run_id !== item.run_id),
-    };
+    const strays = state.storage.strays.filter((s) => s.run_id !== item.run_id);
+    state.storage = { ...state.storage, strays };
     return;
   }
+  state.storage = { ...state.storage, workspace };
   if (item.action === "delete_run") {
     state.runs = state.runs.filter((run) => run.id !== item.run_id);
     return;
@@ -72,13 +93,13 @@ function apply(item: CleanupItem): void {
 export function cleanUp(): CleanupReport {
   const items = preview();
   items.forEach(apply);
-  return cleanupReport(items, db.state.settings, false);
+  return cleanupReport(items, policy(), false);
 }
 
 export const storageHandlers = [
   http.get("/api/storage", () => HttpResponse.json(storageReport())),
   http.get("/api/storage/cleanup", () =>
-    HttpResponse.json(cleanupReport(preview(), db.state.settings, true)),
+    HttpResponse.json(cleanupReport(preview(), policy(), true)),
   ),
   http.post("/api/storage/cleanup", () => HttpResponse.json(cleanUp())),
 ];

@@ -1,23 +1,24 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
 from enum import StrEnum
 
 from pydantic import AwareDatetime, Field
 
 from automator.domain.model_base import DomainModel
-from automator.domain.publish_outcome import is_unfinished
 from automator.domain.run_enums import ArtifactKind, RunStatus
-from automator.domain.run_parts import Artifact, Upload
+from automator.domain.run_parts import Artifact
 from automator.domain.runs import Run
 from automator.domain.settings import AppSettingsInput
+from automator.domain.upload_hold import holds_run
 
 S = RunStatus
 FINAL_OUTPUT_KINDS = frozenset(
     {ArtifactKind.VIDEO, ArtifactKind.THUMBNAIL, ArtifactKind.SUBTITLE, ArtifactKind.METADATA}
 )
 PROTECTED_STATUSES = frozenset({S.QUEUED, S.RUNNING, S.AWAITING_REVIEW, S.APPROVED, S.PUBLISHING})
+MEGABYTE = 1_000_000
 
 
 class CleanupAction(StrEnum):
@@ -29,6 +30,7 @@ class CleanupAction(StrEnum):
 class RetentionPolicy(DomainModel):
     keep_runs_days: int = Field(default=0, ge=0)
     keep_intermediate_days: int = Field(default=0, ge=0)
+    publish_delays: dict[str, int] = Field(default_factory=dict)
 
 
 class CleanupItem(DomainModel):
@@ -49,10 +51,11 @@ class CleanupReport(DomainModel):
     total_bytes: int = 0
 
 
-def retention_policy(settings: AppSettingsInput) -> RetentionPolicy:
+def retention_policy(settings: AppSettingsInput, delays: Mapping[str, int]) -> RetentionPolicy:
     return RetentionPolicy(
         keep_runs_days=settings.keep_runs_days,
         keep_intermediate_days=settings.keep_intermediate_days,
+        publish_delays=dict(delays),
     )
 
 
@@ -64,25 +67,25 @@ def final_artifact_ids(run: Run) -> frozenset[str]:
     return frozenset(artifact.id for artifact in run.artifacts if is_final_output(artifact))
 
 
-def is_scheduled(upload: Upload, now: datetime) -> bool:
-    return upload.publish_at is not None and upload.publish_at > now
+def finished_time(run: Run) -> datetime:
+    return run.finished_at or run.created_at
 
 
-def has_unpublished_upload(run: Run, now: datetime) -> bool:
-    return any(is_unfinished(upload) or is_scheduled(upload, now) for upload in run.uploads)
+def has_unpublished_upload(run: Run, now: datetime, policy: RetentionPolicy) -> bool:
+    finished, delays = finished_time(run), policy.publish_delays
+    return any(holds_run(upload, finished, now, delays) for upload in run.uploads)
 
 
-def is_protected(run: Run, now: datetime) -> bool:
-    return run.status in PROTECTED_STATUSES or has_unpublished_upload(run, now)
+def is_protected(run: Run, now: datetime, policy: RetentionPolicy) -> bool:
+    return run.status in PROTECTED_STATUSES or has_unpublished_upload(run, now, policy)
 
 
 def is_older_than(run: Run, now: datetime, days: int) -> bool:
-    finished = run.finished_at or run.created_at
-    return days > 0 and now - finished >= timedelta(days=days)
+    return days > 0 and now - finished_time(run) >= timedelta(days=days)
 
 
 def cleanup_action(run: Run, now: datetime, policy: RetentionPolicy) -> CleanupAction | None:
-    if is_protected(run, now):
+    if is_protected(run, now, policy):
         return None
     if is_older_than(run, now, policy.keep_runs_days):
         return CleanupAction.DELETE_RUN
@@ -126,7 +129,16 @@ def cleanup_report(
     )
 
 
-def cleanup_due(last_ran: datetime | None, now: datetime, interval_hours: int) -> bool:
-    if interval_hours <= 0:
+def cleanup_due(last_ran: datetime | None, now: datetime, settings: AppSettingsInput) -> bool:
+    interval = settings.cleanup_interval_hours
+    if not settings.auto_cleanup_enabled or interval <= 0:
         return False
-    return last_ran is None or now - last_ran >= timedelta(hours=interval_hours)
+    return last_ran is None or now - last_ran >= timedelta(hours=interval)
+
+
+def megabytes(size: int) -> str:
+    return f"{size / MEGABYTE:.1f} MB"
+
+
+def working_files_removed_message(freed: int) -> str:
+    return f"Cleanup removed working files ({megabytes(freed)})"

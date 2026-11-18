@@ -107,7 +107,7 @@ def failed_at_render(h: Harness) -> Run:
 
 
 def cleanup_planner(h: Harness) -> CleanupPlanner:
-    return CleanupPlanner(h.runs, h.files, h.app_settings, h.clock)
+    return CleanupPlanner(h.runs, h.files, h.app_settings, h.clock, h.automations)
 
 
 def clean_up(h: Harness) -> CleanUpStorage:

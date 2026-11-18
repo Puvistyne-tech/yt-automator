@@ -1,7 +1,7 @@
 import type { FieldErrors } from "@/api/errors";
 import type { AppSettings, AppSettingsInput } from "@/api/types";
 import { SettingField } from "@/features/app-settings/SettingField";
-import { Input, NumberInput } from "@/shared/ui";
+import { Input, NumberInput, Switch } from "@/shared/ui";
 
 type NumberName = {
   [K in keyof AppSettingsInput]: AppSettingsInput[K] extends number ? K : never;
@@ -30,6 +30,20 @@ export function NumberSetting({ name, min, step = 1, ...card }: NumberSettingPro
           disabled={locked}
           value={card.input[name]}
           onValueChange={(value) => card.onChange({ [name]: value })}
+        />
+      )}
+    </SettingField>
+  );
+}
+
+export function AutoCleanupSetting(card: SettingsCardProps) {
+  return (
+    <SettingField name="auto_cleanup_enabled" settings={card.settings} errors={card.errors}>
+      {(locked) => (
+        <Switch
+          checked={card.input.auto_cleanup_enabled}
+          disabled={locked}
+          onChange={(checked) => card.onChange({ auto_cleanup_enabled: checked })}
         />
       )}
     </SettingField>

@@ -4,10 +4,14 @@ import logging
 
 import pytest
 
+from automator.application.clean_up_storage import CleanUpStorage
+from automator.domain.port_repositories import RunChange
 from automator.domain.retention import CleanupAction
 from automator.domain.run_enums import RunStatus
+from automator.domain.runs import Run
+from tests.fixtures.fake_repositories import InMemoryRuns
 from tests.fixtures.harness import Harness
-from tests.fixtures.use_cases import clean_up, preview_cleanup
+from tests.fixtures.use_cases import clean_up, cleanup_planner, preview_cleanup
 from tests.unit.application.cleanup_support import (
     IMAGE_BYTES,
     VIDEO_BYTES,
@@ -118,6 +122,41 @@ def test_a_run_retried_after_the_plan_is_left_alone(harness: Harness) -> None:
     assert [cleaner.attempt(plan, item) for item in plan.items] == [None, None]
     assert set(harness.runs.items) == {"old", "aged"}
     assert harness.files.usage("old", frozenset()).total_bytes == RUN_BYTES
+
+
+def test_a_failing_item_does_not_stop_the_rest(
+    harness: Harness, caplog: pytest.LogCaptureFixture
+) -> None:
+    three_ages(harness)
+    harness.files.fail_for("old")
+    with caplog.at_level(logging.WARNING, logger="automator"):
+        report = clean_up(harness).execute()
+    assert sorted(item.run_id for item in report.items) == ["middle", "orphan-1"]
+    assert harness.runs.items["middle"].intermediate_removed_at is not None
+    assert "orphan-1" not in harness.files.run_ids()
+    assert "cleanup of old failed" in caplog.text
+
+
+class RetriedDuringCleanup(InMemoryRuns):
+    def update(self, run_id: str, change: RunChange) -> Run | None:
+        pruned = super().update(run_id, change)
+        requeued = {"status": RunStatus.QUEUED, "intermediate_removed_at": None}
+        self.save(self.items[run_id].model_copy(update=requeued))
+        return pruned
+
+
+def test_working_files_stay_when_a_retry_requeues_the_run_after_marking(
+    harness: Harness,
+) -> None:
+    keep(harness)
+    stored_run(harness, "aged")
+    after_days(harness, 8)
+    retried = RetriedDuringCleanup()
+    retried.items = harness.runs.items
+    racing = CleanUpStorage(cleanup_planner(harness), retried, harness.files, harness.recorder)
+    assert racing.execute().items == ()
+    assert harness.files.usage("aged", frozenset({"aged-v"})).intermediate_bytes == WORKING_BYTES
+    assert harness.runs.items["aged"].status is RunStatus.QUEUED
 
 
 def test_a_folder_whose_run_appears_after_the_plan_is_kept(harness: Harness) -> None:

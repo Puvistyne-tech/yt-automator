@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any
 
 from automator.domain.run_enums import ArtifactKind, RunStatus
-from automator.domain.run_parts import Artifact
 from automator.domain.runs import Run
 from automator.domain.settings import AppSettingsInput
 from tests.fixtures.fake_runtime import START
 from tests.fixtures.fake_storage import artifact_path, workspace_path
 from tests.fixtures.harness import Harness
+from tests.fixtures.retention_data import artifact
 from tests.unit.infrastructure.records import run
 
 VIDEO_BYTES = 100
@@ -19,18 +19,6 @@ WORKSPACE_BYTES = 20
 def keep(harness: Harness, runs: int = 30, intermediate: int = 7) -> None:
     harness.app_settings.stored = AppSettingsInput(
         keep_runs_days=runs, keep_intermediate_days=intermediate
-    )
-
-
-def artifact(artifact_id: str, kind: ArtifactKind, language: str | None) -> Artifact:
-    return Artifact(
-        id=artifact_id,
-        kind=kind,
-        stage_id="script",
-        language=language,
-        filename=f"{artifact_id}.bin",
-        media_type="application/octet-stream",
-        size_bytes=1,
     )
 
 

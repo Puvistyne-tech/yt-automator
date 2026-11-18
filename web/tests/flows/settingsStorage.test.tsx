@@ -39,13 +39,24 @@ describe("Settings groups", () => {
     expect(db.state.settings).toMatchObject({ keep_runs_days: 0, log_level: "debug" });
   });
 
+  it("keeps automatic cleanup off until it is switched on and saved", async () => {
+    const { user } = renderApp("/settings");
+    const auto = await screen.findByRole("switch", { name: /^Clean up automatically/ });
+    expect(auto).toHaveAttribute("aria-checked", "false");
+    expect(auto.closest(".field")).toHaveTextContent("Off until you turn it on.");
+    await user.click(auto);
+    await user.click(screen.getByRole("button", { name: "Save settings" }));
+    await findToast("Settings saved.");
+    expect(db.state.settings.auto_cleanup_enabled).toBe(true);
+  });
+
   it("routes a server error to the new field", async () => {
     failWith("put", "/settings", 400, {
       message: "Validation failed",
       fields: { "body.cleanup_interval_hours": "Input should be a valid integer" },
     });
     const { user } = renderApp("/settings");
-    const interval = await screen.findByLabelText(/^Clean up automatically/);
+    const interval = await screen.findByLabelText(/^Automatic cleanup every/);
     await user.clear(interval);
     await user.type(interval, "6");
     await user.click(screen.getByRole("button", { name: "Save settings" }));

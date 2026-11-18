@@ -57,13 +57,16 @@ export interface SecretInfo {
   is_set: boolean;
 }
 
-export type ServerLogLevel = "debug" | "info" | "warning" | "error" | "critical";
+export const SERVER_LOG_LEVELS = ["debug", "info", "warning", "error", "critical"] as const;
+
+export type ServerLogLevel = (typeof SERVER_LOG_LEVELS)[number];
 
 export interface AppSettingsInput {
   timezone: string;
   max_parallel_runs: number;
   keep_runs_days: number;
   keep_intermediate_days: number;
+  auto_cleanup_enabled: boolean;
   cleanup_interval_hours: number;
   caption_track_name: string;
   max_run_log_entries: number;

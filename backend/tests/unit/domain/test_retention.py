@@ -5,12 +5,12 @@ from typing import Any
 
 import pytest
 
+from automator.domain.channels import Privacy
 from automator.domain.retention import (
     CleanupAction,
     CleanupItem,
     RetentionPolicy,
     cleanup_action,
-    cleanup_due,
     cleanup_report,
     final_artifact_ids,
     has_intermediate_work,
@@ -19,26 +19,16 @@ from automator.domain.retention import (
     without_intermediate,
 )
 from automator.domain.run_enums import ArtifactKind, RunStatus, UploadStatus
-from automator.domain.run_parts import Artifact, Upload
+from automator.domain.run_parts import Upload
 from automator.domain.runs import Run
 from automator.domain.settings import AppSettingsInput
 from tests.fixtures.fake_runtime import START
+from tests.fixtures.retention_data import artifact
 from tests.unit.infrastructure.records import run
 
 FINISHED = START
-POLICY = RetentionPolicy(keep_runs_days=30, keep_intermediate_days=7)
-
-
-def artifact(artifact_id: str, kind: ArtifactKind, language: str | None = "en") -> Artifact:
-    return Artifact(
-        id=artifact_id,
-        kind=kind,
-        stage_id="script",
-        language=language,
-        filename=f"{artifact_id}.bin",
-        media_type="application/octet-stream",
-        size_bytes=1,
-    )
+DAY_MINUTES = 24 * 60
+POLICY = RetentionPolicy(keep_runs_days=30, keep_intermediate_days=7, publish_delays={"t": 0})
 
 
 def upload(**changes: Any) -> Upload:
@@ -122,6 +112,29 @@ def test_done_failed_and_skipped_uploads_do_not_protect() -> None:
     )
 
 
+def legacy_upload(privacy: Privacy | None) -> Upload:
+    return upload(status=UploadStatus.DONE, privacy=privacy, target_id="t-delay")
+
+
+@pytest.mark.parametrize("privacy", [Privacy.PUBLIC, None])
+def test_an_older_upload_is_held_for_its_target_publish_delay(privacy: Privacy | None) -> None:
+    policy = POLICY.model_copy(update={"publish_delays": {"t-delay": 60 * DAY_MINUTES}})
+    held = finished(uploads=(legacy_upload(privacy),))
+    assert cleanup_action(held, days_later(60) - timedelta(seconds=1), policy) is None
+    assert cleanup_action(held, days_later(60), policy) is CleanupAction.DELETE_RUN
+
+
+def test_an_older_upload_whose_target_is_gone_is_held() -> None:
+    held = finished(uploads=(legacy_upload(Privacy.PUBLIC),))
+    assert cleanup_action(held, days_later(4000), POLICY) is None
+
+
+@pytest.mark.parametrize("privacy", [Privacy.PRIVATE, Privacy.UNLISTED])
+def test_an_upload_that_never_goes_public_does_not_hold(privacy: Privacy) -> None:
+    kept_private = finished(uploads=(legacy_upload(privacy),))
+    assert cleanup_action(kept_private, days_later(30), POLICY) is CleanupAction.DELETE_RUN
+
+
 def test_final_outputs_are_videos_thumbnails_captions_and_metadata_with_a_language() -> None:
     finals = [artifact(k.value, k) for k in ArtifactKind]
     assert [a.id for a in finals if is_final_output(a)] == [
@@ -151,8 +164,8 @@ def test_working_files_are_pending_while_listed_or_on_disk() -> None:
 
 def test_the_policy_comes_from_the_app_settings() -> None:
     settings = AppSettingsInput(keep_runs_days=10, keep_intermediate_days=2)
-    assert retention_policy(settings) == RetentionPolicy(
-        keep_runs_days=10, keep_intermediate_days=2
+    assert retention_policy(settings, {"t": 5}) == RetentionPolicy(
+        keep_runs_days=10, keep_intermediate_days=2, publish_delays={"t": 5}
     )
 
 
@@ -163,20 +176,3 @@ def test_a_report_totals_its_items() -> None:
     ]
     report = cleanup_report(items, POLICY, dry_run=True)
     assert (report.total_bytes, report.dry_run, report.keep_runs_days) == (12, True, 30)
-
-
-@pytest.mark.parametrize(
-    ("last_hours", "now_hours", "interval", "due"),
-    [
-        (None, 0, 24, True),
-        (0, 23.99, 24, False),
-        (0, 24, 24, True),
-        (None, 0, 0, False),
-        (0, 1000, 0, False),
-    ],
-)
-def test_the_cleanup_is_due_once_per_interval(
-    last_hours: float | None, now_hours: float, interval: int, due: bool
-) -> None:
-    last = None if last_hours is None else START + timedelta(hours=last_hours)
-    assert cleanup_due(last, START + timedelta(hours=now_hours), interval) is due

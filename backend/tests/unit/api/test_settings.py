@@ -15,6 +15,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "max_parallel_runs": 1,
     "keep_runs_days": 30,
     "keep_intermediate_days": 0,
+    "auto_cleanup_enabled": False,
     "cleanup_interval_hours": 24,
     "caption_track_name": "",
     "max_run_log_entries": 2000,
@@ -73,6 +74,16 @@ def test_environment_values_win_and_lock_their_fields(
         assert saved["timezone"] == "Asia/Kolkata" and saved["max_run_log_entries"] == 7
         refused = error_of(client.put("/api/settings", json=current | {"log_level": "error"}), 400)
         assert set(refused["fields"]) == {"log_level"}
+
+
+def test_a_partial_save_changes_only_the_sent_fields(
+    config: RuntimeConfig, overrides: Overrides
+) -> None:
+    with locked_app(config, overrides) as client:
+        ok(client.put("/api/settings", json={"keep_runs_days": 9, "timezone": "Asia/Kolkata"}))
+        saved = ok(client.put("/api/settings", json={"auto_cleanup_enabled": True}))
+    assert (saved["keep_runs_days"], saved["timezone"]) == (9, "Asia/Kolkata")
+    assert saved["auto_cleanup_enabled"] and saved["max_run_log_entries"] == 7
 
 
 def test_a_locked_field_keeps_its_stored_value_underneath(
