@@ -10,7 +10,7 @@ from automator.domain.publish_plan import plan_uploads
 from automator.domain.run_enums import ArtifactKind, ReviewDecision, RunStatus, StageStatus
 from automator.domain.runs import Run
 from automator.domain.secrets import SecretDefinition
-from automator.pipelines.registry import build_pipeline_registry
+from automator.pipelines.registry import installed_pipelines
 from tests.fixtures.builders import add_automation, target_input
 from tests.fixtures.fake_pipeline import FakePipelineRegistry
 from tests.fixtures.harness import Harness
@@ -40,7 +40,7 @@ class KidsCatalog:
 
 
 def executed(harness: Harness) -> Run:
-    harness.pipelines = FakePipelineRegistry(build_pipeline_registry().list())
+    harness.pipelines = FakePipelineRegistry(installed_pipelines())
     automation = add_automation(
         harness,
         name="Kutty Stories",

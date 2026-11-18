@@ -124,6 +124,10 @@ NewArtifact     kind, path (inside workspace), language, variant, media_type, me
 ProviderResolver.resolve(capability) -> the first available provider in the configured chain
 ```
 
+`pipelines/registry.py` is the index of installed plugins: `installed_pipelines() -> tuple[Pipeline, ...]`.
+`infrastructure/pipelines/static_registry.py` holds `StaticPipelineRegistry(pipelines)`, the `PipelineRegistry` adapter
+that the composition root builds from that index.
+
 Capability interfaces live in `domain/capabilities.py`. There are six capabilities; pipelines depend on these only.
 
 ```

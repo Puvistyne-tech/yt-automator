@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from automator.domain.pipeline_descriptors import Aspect
 from automator.pipelines.kids_story.plugin import KidsStoryPipeline
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.registry import build_pipeline_registry
+from automator.pipelines.registry import installed_pipelines
 
 
 def untitled_fields(schema: dict[str, Any]) -> list[str]:
@@ -89,7 +89,5 @@ def test_duplicate_character_ids_are_rejected() -> None:
         KidsStorySettings.model_validate({"cast": [member, member]})
 
 
-def test_registry_builds_kids_story() -> None:
-    registry = build_pipeline_registry()
-    assert [pipeline.descriptor.type_id for pipeline in registry.list()] == ["kids_story"]
-    assert registry.get("kids_story") is not None and registry.get("missing") is None
+def test_installed_pipelines_include_kids_story() -> None:
+    assert [pipeline.descriptor.type_id for pipeline in installed_pipelines()] == ["kids_story"]
