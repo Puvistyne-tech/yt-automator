@@ -13,7 +13,7 @@ from tests.fixtures.kids_fakes import FakeProviders
 
 PRODUCED = {
     "voice": {"narration"},
-    "art": {"candidate", "character_sheet", "visual", "thumbnail_art"},
+    "art": {"style", "candidate", "character_sheet", "visual", "thumbnail_art"},
     "motion": {"clip"},
     "music": {"music", "sound_effect"},
     "assemble": {"final_video", "composition", "captions"},

@@ -12,6 +12,7 @@ from automator.pipelines.kids_story.settings.base import Placement
 from automator.pipelines.kids_story.settings.media import VisualSettings
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.styles.resolve import resolve_style
 from automator.pipelines.kids_story.text.scripts import script_language
 
 CENTRED = 0.5
@@ -25,12 +26,13 @@ def lettering_for(
     size_ratio: float,
 ) -> Lettering:
     thumbnail = settings.thumbnail
+    colours = resolve_style(settings).lettering
     return Lettering(
         lines=tuple(line for line in lines if line),
         language=language,
         font_files=tuple(thumbnail.font_files.for_language(language)),
-        color=thumbnail.text_color,
-        outline=thumbnail.outline_color,
+        color=colours.text,
+        outline=colours.outline,
         size_ratio=size_ratio,
         margin_ratio=thumbnail.margin_ratio,
         outline_ratio=thumbnail.outline_ratio,

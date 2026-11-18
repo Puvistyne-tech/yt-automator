@@ -4,10 +4,13 @@ from typing import Any
 
 from pydantic import JsonValue
 
-from automator.domain.json_schema import Schema, resolved
+from automator.domain.json_schema import Schema, resolve_ref, resolved
 from automator.domain.model_base import JsonObject
 
-UI_WIDGETS = frozenset({"textarea", "select", "radio", "checkboxes", "range", "color"})
+UI_WIDGETS = frozenset({"textarea", "select", "radio", "checkboxes", "range", "color", "cards"})
+CARDS_WIDGET = "cards"
+CHOICE_GROUP_KEY = "x-group"
+CHOICE_SWATCHES_KEY = "x-swatches"
 SECTIONS_KEY = "ui:sections"
 ORDER_KEY = "ui:order"
 WIDGET_KEY = "ui:widget"
@@ -88,15 +91,23 @@ def child_schema(key: str, node: Schema) -> dict[str, Any] | None:
     return dict(child) if isinstance(child, dict) else {}
 
 
-def widget_problems(value: JsonValue, path: str) -> list[str]:
-    if isinstance(value, str) and value in UI_WIDGETS:
-        return []
-    return [f"{path} names unknown widget {value}"]
+def offers_choices(node: Schema) -> bool:
+    return isinstance(node.get("oneOf"), list) or isinstance(node.get("enum"), list)
 
 
-def ui_key_problems(key: str, value: JsonValue, node: Schema, path: str) -> list[str]:
+def widget_problems(value: JsonValue, has_choices: bool, path: str) -> list[str]:
+    if not isinstance(value, str) or value not in UI_WIDGETS:
+        return [f"{path} names unknown widget {value}"]
+    if value == CARDS_WIDGET and not has_choices:
+        return [f"{path} uses the cards widget on a setting without choices"]
+    return []
+
+
+def ui_key_problems(
+    key: str, value: JsonValue, node: Schema, has_choices: bool, path: str
+) -> list[str]:
     if key == WIDGET_KEY:
-        return widget_problems(value, path)
+        return widget_problems(value, has_choices, path)
     if key == ORDER_KEY:
         return order_problems(value, node, path)
     if key == OPTIONS_KEY:
@@ -104,9 +115,12 @@ def ui_key_problems(key: str, value: JsonValue, node: Schema, path: str) -> list
     return [f"{path} is not a key the ui_schema contract lists"]
 
 
-def entry_problems(key: str, value: JsonValue, node: Schema, root: Schema, path: str) -> list[str]:
+def entry_problems(
+    key: str, value: JsonValue, schema: Schema, root: Schema, path: str
+) -> list[str]:
+    node = resolved(schema, root)
     if key.startswith(UI_PREFIX):
-        return ui_key_problems(key, value, node, path)
+        return ui_key_problems(key, value, node, offers_choices(resolve_ref(schema, root)), path)
     child = child_schema(key, node)
     if child is None:
         return [f"{path} is not a setting"]
@@ -116,11 +130,10 @@ def entry_problems(key: str, value: JsonValue, node: Schema, root: Schema, path:
 
 
 def node_problems(ui: JsonObject, schema: Schema, root: Schema, path: str) -> list[str]:
-    node = resolved(schema, root)
     return [
         problem
         for key, value in ui.items()
-        for problem in entry_problems(key, value, node, root, joined(path, key))
+        for problem in entry_problems(key, value, schema, root, joined(path, key))
     ]
 
 

@@ -22,7 +22,12 @@ SETTINGS: JsonObject = {
     "$defs": {
         "Series": {
             "type": "object",
-            "properties": {"name": {"$ref": "#/$defs/Text"}, "style": {"type": "string"}},
+            "properties": {
+                "name": {"$ref": "#/$defs/Text"},
+                "style": {"type": "string"},
+                "look": {"type": "string", "oneOf": [{"const": "a", "title": "A", "x-group": "G"}]},
+                "tone": {"type": "string", "enum": ["calm", "funny"]},
+            },
         },
         "Text": {"type": "object", "properties": {"en": {"type": "string"}}},
         "Member": {
@@ -47,6 +52,8 @@ VALID: JsonObject = {
         "ui:order": ["style", "*"],
         "style": {"ui:widget": "textarea", "ui:options": {"rows": 3}},
         "name": {"en": {"ui:widget": "textarea"}},
+        "look": {"ui:widget": "cards"},
+        "tone": {"ui:widget": "cards"},
     },
     "cast": {"items": {"palette": {"items": {"ui:widget": "color"}}}},
     "extra": {"en": {"ui:widget": "textarea"}},
@@ -121,6 +128,10 @@ def test_each_section_breach_is_named(ui: JsonObject, problems: list[str]) -> No
             ["series.style.ui:widget names unknown widget slider"],
         ),
         (
+            {"series": {"style": {"ui:widget": "cards"}}},
+            ["series.style.ui:widget uses the cards widget on a setting without choices"],
+        ),
+        (
             {"series": {"style": {"ui:widget": 3}}},
             ["series.style.ui:widget names unknown widget 3"],
         ),
@@ -136,8 +147,11 @@ def test_each_section_breach_is_named(ui: JsonObject, problems: list[str]) -> No
             {"series": {"ui:order": [1, "*"]}},
             ["series.ui:order names unknown field 1"],
         ),
-        ({"series": {"ui:order": ["style"]}}, ["series.ui:order leaves out name"]),
-        ({"series": {"ui:order": ["style", "name"]}}, []),
+        (
+            {"series": {"ui:order": ["style", "look", "tone"]}},
+            ["series.ui:order leaves out name"],
+        ),
+        ({"series": {"ui:order": ["style", "name", "look", "tone"]}}, []),
         ({"series": {"ui:order": "style"}}, ["series.ui:order must be a list"]),
         ({"series": {"ui:options": 3}}, ["series.ui:options must be an object"]),
         (

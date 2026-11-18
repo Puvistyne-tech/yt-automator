@@ -7,6 +7,8 @@ from pydantic import Field, model_validator
 from automator.pipelines.kids_story.artifacts import SHORT
 from automator.pipelines.kids_story.settings.base import SettingsSection
 from automator.pipelines.kids_story.settings.cast import Character, default_cast
+from automator.pipelines.kids_story.settings.legacy_look import migrated_look
+from automator.pipelines.kids_story.settings.look import LookSettings
 from automator.pipelines.kids_story.settings.media import (
     MusicSettings,
     VisualSettings,
@@ -30,7 +32,12 @@ class KidsStorySettings(SettingsSection):
     series: SeriesSettings = Field(
         default_factory=SeriesSettings,
         title="Series",
-        description="Name, look, refrain and rules shared by every story.",
+        description="Name, refrain and rules shared by every story.",
+    )
+    look: LookSettings = Field(
+        default_factory=LookSettings,
+        title="Visual style",
+        description="The look of every picture: style, colours, light and detail.",
     )
     cast: list[Character] = Field(
         default_factory=default_cast,
@@ -46,7 +53,7 @@ class KidsStorySettings(SettingsSection):
     safety: SafetySettings = Field(
         default_factory=SafetySettings,
         title="Safety",
-        description="Words and brand names a story must never contain.",
+        description="Words and brand names a story must never contain, and what is never drawn.",
     )
     visuals: VisualSettings = Field(
         default_factory=VisualSettings,
@@ -96,6 +103,11 @@ class KidsStorySettings(SettingsSection):
         title="Quality checks",
         description="How each run is scored before review.",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_look(cls, data: object) -> object:
+        return migrated_look(data)
 
     @model_validator(mode="after")
     def check_cast(self) -> KidsStorySettings:

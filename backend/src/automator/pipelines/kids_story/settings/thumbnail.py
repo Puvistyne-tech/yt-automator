@@ -19,6 +19,7 @@ LATIN_FONTS = [
     "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
 ]
+STYLE_LETTERING_NOTE = "Used when Letter in the style's colours is off, or for a custom style."
 TAMIL_FONTS = [
     "/System/Library/Fonts/Supplemental/Tamil Sangam MN.ttc",
     "/System/Library/Fonts/Supplemental/Tamil MN.ttc",
@@ -109,8 +110,16 @@ class ThumbnailSettings(SettingsSection):
         title="Outline thickness",
         description="Outline width as a share of the letter height.",
     )
-    text_color: HexColor = color("#FFFFFF", "Title colour", "Colour of the title letters.")
-    outline_color: HexColor = color("#3A2A1A", "Title outline", "Colour around the title letters.")
+    text_color: HexColor = color(
+        "#FFFFFF",
+        "Title colour",
+        f"Colour of the letters on thumbnails and cards. {STYLE_LETTERING_NOTE}",
+    )
+    outline_color: HexColor = color(
+        "#3A2A1A",
+        "Title outline",
+        f"Colour around the letters on thumbnails and cards. {STYLE_LETTERING_NOTE}",
+    )
     font_files: LocalizedList = localized_list(
         LATIN_FONTS,
         TAMIL_FONTS,

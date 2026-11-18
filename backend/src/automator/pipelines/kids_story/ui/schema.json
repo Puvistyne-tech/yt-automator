@@ -15,6 +15,12 @@
       ]
     },
     {
+      "title": "Visual style",
+      "fields": [
+        "look"
+      ]
+    },
+    {
       "title": "Pictures and motion",
       "fields": [
         "visuals"
@@ -59,25 +65,11 @@
     "ui:order": [
       "name",
       "tagline",
-      "art_style",
-      "negative_prompt",
       "refrain",
       "intro_line",
       "outro_line",
       "editorial_rules"
     ],
-    "art_style": {
-      "ui:widget": "textarea",
-      "ui:options": {
-        "rows": 3
-      }
-    },
-    "negative_prompt": {
-      "ui:widget": "textarea",
-      "ui:options": {
-        "rows": 3
-      }
-    },
     "intro_line": {
       "en": {
         "ui:widget": "textarea",
@@ -104,6 +96,89 @@
         "ui:options": {
           "rows": 2
         }
+      }
+    }
+  },
+  "look": {
+    "ui:order": [
+      "visual_style",
+      "colour_mood",
+      "mood_palette",
+      "lighting",
+      "detail_level",
+      "background",
+      "proportions",
+      "extra_prompt",
+      "extra_negative_prompt",
+      "use_style_motion",
+      "use_style_lettering",
+      "custom_style"
+    ],
+    "visual_style": {
+      "ui:widget": "cards"
+    },
+    "colour_mood": {
+      "ui:widget": "select"
+    },
+    "mood_palette": {
+      "items": {
+        "ui:widget": "color"
+      }
+    },
+    "lighting": {
+      "ui:widget": "select"
+    },
+    "detail_level": {
+      "ui:widget": "radio"
+    },
+    "background": {
+      "ui:widget": "select"
+    },
+    "proportions": {
+      "ui:widget": "radio"
+    },
+    "extra_prompt": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    },
+    "extra_negative_prompt": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    },
+    "custom_style": {
+      "ui:order": [
+        "prompt",
+        "negative_prompt",
+        "palette",
+        "outline",
+        "texture"
+      ],
+      "prompt": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 3
+        }
+      },
+      "negative_prompt": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 2
+        }
+      },
+      "palette": {
+        "items": {
+          "ui:widget": "color"
+        }
+      },
+      "outline": {
+        "ui:widget": "radio"
+      },
+      "texture": {
+        "ui:widget": "radio"
       }
     }
   },
@@ -367,6 +442,14 @@
       "ui:widget": "range",
       "ui:options": {
         "step": 0.05
+      }
+    }
+  },
+  "safety": {
+    "picture_exclusions": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 3
       }
     }
   }

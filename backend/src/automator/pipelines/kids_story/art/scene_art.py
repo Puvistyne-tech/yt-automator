@@ -10,6 +10,7 @@ from automator.domain.run_enums import LogLevel
 from automator.pipelines.kids_story.art.prompts import judge_request, parse_choice, scene_prompt
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import StoryScene
+from automator.pipelines.kids_story.styles.resolve import resolve_style
 
 SEED_STRIDE = 100
 
@@ -32,9 +33,11 @@ class ScenePainter:
     log: StageLog
 
     def draw(self, drawing: Drawing) -> Path:
+        style = resolve_style(self.settings)
         request = ImageRequest(
             prompt=drawing.prompt,
-            negative_prompt=self.settings.series.negative_prompt,
+            negative_prompt=style.negative_prompt,
+            style=style.hints(),
             width=drawing.size[0],
             height=drawing.size[1],
             seed=drawing.seed,

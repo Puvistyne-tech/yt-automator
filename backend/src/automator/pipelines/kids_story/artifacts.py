@@ -35,6 +35,7 @@ class Role(StrEnum):
     THUMBNAIL = "thumbnail"
     UPLOAD_METADATA = "upload_metadata"
     CAPTION_TRACK = "caption_track"
+    STYLE = "style"
 
 
 class MissingArtifactError(RuntimeError):

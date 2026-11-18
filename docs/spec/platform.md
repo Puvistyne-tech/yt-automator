@@ -91,7 +91,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
 - An automation's `settings` must validate against its pipeline's settings model. Unknown pipeline type is an error.
 - A settings choice field with human titles is published in `settings_schema` as `oneOf: [{const, title}]`
   (with `type: "string"`) instead of a bare `enum`; the form shows each `title` and stores the `const`. The kids
-  story pipeline titles every choice field this way through `titled_choices`.
+  story pipeline titles every choice field this way through `titled_choices`, or `card_choices` when the entries
+  also carry card keys (see `cards` below).
 - `ui_schema` is a react-jsonschema-form uiSchema restricted to these keys, and `domain/ui_schema.py`
   (`ui_schema_problems`) checks a pipeline's `ui_schema` against its `settings_schema`:
   - `ui:sections` (root only, optional): a list of `{title: string, fields: [string]}`. Each field is a
@@ -101,8 +102,15 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   - Any other key names a settings property and holds the hints for it; `items` holds the hints for the
     items of an array property. Nesting follows the settings schema, resolving local `$ref`s (`#/...`) and,
     for an optional property written as `anyOf`/`oneOf`, its first non-null branch (`domain/json_schema.py`).
-  - `ui:widget`: one of `textarea`, `select`, `radio`, `checkboxes`, `range`, `color` (`UI_WIDGETS`; this line is
-    the source both test suites read).
+  - `ui:widget`: one of `textarea`, `select`, `radio`, `checkboxes`, `range`, `color`, `cards` (`UI_WIDGETS`; this
+    line is the source both test suites read).
+  - `cards` renders a choice field (`oneOf` or `enum`; on any other setting it is a problem) as a radio group of
+    selectable cards. Each `oneOf` entry may carry, besides `const` and `title`: `description` (one plain sentence
+    shown under the title), `x-group` (a group label; cards with the same label are shown together under it, in
+    order of first appearance, and the group labels become a filter) and `x-swatches` (a list of `#RRGGBB`
+    colours drawn as swatches on the card). Non-colour swatch entries are ignored. With more than eight options
+    the widget also offers a text search over titles, descriptions and group labels. These keys are generic: any
+    pipeline may use them, and the web code knows no pipeline's options.
   - `ui:order`: a list of property names of that object. It either names every property or ends with `"*"`
     for the rest; leaving a property out without `"*"` is a problem.
   - `ui:options`: an object; the form honours `rows` on `textarea` and `step` on `range`. A `step` that is not a
@@ -117,6 +125,40 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   and unknown placeholders stay as written. The series name must not be blank in any language. When no bundled story
   fits the automation's cast ids and languages, the story stage fails naming both what the automation has
   and what the bundled stories need.
+- Kids story visual styles. The style library is data: `pipelines/kids_story/styles/library.json`, validated by
+  `styles/library.py`. Each entry has `id`, `title`, `family` (animated, illustrated, drawn, crafted, graphic,
+  realistic), `description` (one sentence), `prompt`, `negative_prompt`, `palette` (4 to 6 `#RRGGBB`, ordered
+  backdrop or sky first, then land from far to near, accent last), `outline` (none, thin, bold), `texture`
+  (smooth, paper, grain, clay, pixel), `motion` (`intensity`, `hero_intensity`, `card_camera`, nullable
+  `held_frame_rate`, `feel`) and `lettering` (`text`, `outline` colours). Ids are unique; adding a style is adding
+  one entry. No entry names a studio, brand, film, living artist or trademark.
+  - Settings section `look` ("Visual style"): `visual_style` (a library id or `custom`, default
+    `watercolour_storybook`, published as `oneOf` cards with `description`, `x-group` = family title and
+    `x-swatches` = palette); `custom_style` (`prompt`, required non-blank when the style is `custom`,
+    `negative_prompt`, `palette`, `outline`, `texture`); `colour_mood` (style, bright, pastel, warm, cool, night,
+    monochrome, custom) with `mood_palette` for custom; `lighting` (style, soft_daylight, golden_hour, moonlight,
+    studio, dramatic); `detail_level` (style, minimal, balanced, intricate); `background` (style, plain, simple,
+    moderate, rich); `proportions` (style, realistic, cute); `extra_prompt`; `extra_negative_prompt`;
+    `use_style_motion` and `use_style_lettering` (both default true). `safety.picture_exclusions` is the
+    child-safety negative prompt sent with every picture whatever the style.
+  - `styles/resolve.py::resolve_style(settings) -> ResolvedStyle` (style_id, title, prompt, negative_prompt,
+    palette, outline, texture, motion, lettering) is the one place the look is decided. Prompt: the style prompt
+    (for custom: its prompt plus "main colours" naming its palette), then the wording of every non-default
+    modifier, then `extra_prompt`. Negative: `picture_exclusions`, the style negative, `extra_negative_prompt`,
+    joined with repeated terms dropped. Palette: the style palette shifted by the colour mood, or `mood_palette`.
+    Motion and lettering come from the style when the matching switch is on and the style is not custom,
+    otherwise from `visuals` (`motion_intensity`, `hero_motion_intensity`, `card_camera`) and `thumbnail`
+    (`text_color`, `outline_color`).
+  - Every picture (character sheets, scenes, vertical pictures, thumbnails) and the picture judge use the
+    resolved prompt; every `ImageRequest` carries the resolved negative prompt and `style` hints. Motion
+    requests use the resolved intensities, card camera, a `held_frame_rate` only when below the episode fps, and
+    end the motion prompt with "Camera: <feel>." when the feel is set. Cards, thumbnails and the brand mark
+    letter in the resolved lettering colours. The art stage logs the resolved style once and saves it as
+    `art/style.json` (artifact kind `text`, meta role `style`, `style_id`, `title`).
+  - Stored settings that still hold `series.art_style` or `series.negative_prompt` are migrated before
+    validation: the keys are removed; when `look` is absent it is added with both switches off (so stored
+    motion and lettering are kept), and a non-default art style or negative prompt becomes
+    `visual_style: custom` with those texts as the custom prompt and negative prompt.
 - Every automation language must be one the pipeline offers. Every target language must be in the automation's languages. Every target variant must be one the pipeline offers. Every target channel must exist.
 - An automation with schedule `interval` needs `every_hours >= 1`. With `cron` it needs a valid 5-field expression.
 - A run snapshots the automation's settings, languages and review policy at creation. Editing or deleting the automation never changes a past or queued run.
@@ -267,6 +309,16 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
 
 - `VideoComposition` and `MotionRequest` width and height are rounded down to the nearest even number
   (minimum 2), as H.264 with 4:2:0 chroma needs even sizes.
+- `ImageRequest.style` (nullable `ImageStyleHints` in `domain/image_style.py`: `palette` of `#RRGGBB`, ordered
+  backdrop first and accent last, `outline` none|thin|bold, `texture` smooth|paper|grain|clay|pixel) is a
+  provider-neutral hint. Prompt-driven models may ignore it. The offline image provider paints with it: sky from
+  the first colour, three land layers from the middle colours, flowers and sun from the last; outlines in a
+  colour that contrasts with the sky (thin or bold); and a texture pass (paper wash, film grain, soft clay
+  relief, or pixels quantised to the palette). A night prompt darkens the hinted palette. The same seed gives
+  the same picture; hints without colours keep the prompt-derived palette.
+- `MotionRequest.held_frame_rate` (nullable, at least 1): when below `fps` the clip changes picture only that
+  many times a second (a held, stop-motion feel) while keeping `fps`. The ffmpeg pan-and-zoom provider honours
+  it; DepthFlow ignores it.
 - Ducking lowers the music only while narration plays; the music continues at its set volume after
   the last narration clip.
 - `extract_frame` fails with an upstream failure when no frame was written, for example past the end.

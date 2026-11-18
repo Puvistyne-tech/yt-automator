@@ -6,6 +6,7 @@ from typing import Protocol
 
 from pydantic import Field
 
+from automator.domain.image_style import ImageStyleHints
 from automator.domain.model_base import DomainModel, JsonObject
 
 
@@ -34,6 +35,7 @@ class ImageRequest(DomainModel):
     height: int = Field(ge=1)
     seed: int | None = None
     reference_images: tuple[Path, ...] = ()
+    style: ImageStyleHints | None = None
 
 
 class CameraMove(StrEnum):
@@ -54,6 +56,7 @@ class MotionRequest(DomainModel):
     fps: int = Field(default=30, ge=1)
     camera: CameraMove = CameraMove.PUSH_IN
     intensity: float = Field(default=0.5, ge=0.0, le=1.0)
+    held_frame_rate: int | None = Field(default=None, ge=1)
 
 
 class SpeechRequest(DomainModel):
