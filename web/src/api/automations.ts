@@ -1,7 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api/client";
 import { invalidateWithDashboard, keys } from "@/api/keys";
-import type { Automation, AutomationInput, Run } from "@/api/types";
+import type {
+  Automation,
+  AutomationDocument,
+  AutomationInput,
+  ImportPreview,
+  ImportRequest,
+  Run,
+} from "@/api/types";
+import { fileSlug, saveJsonFile } from "@/shared/download";
 
 const path = (id: string) => `/automations/${encodeURIComponent(id)}`;
 
@@ -66,6 +74,37 @@ export function useDuplicateAutomation() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.post<Automation>(`${path(id)}/duplicate`),
+    onSuccess: () => invalidateWithDashboard(client, keys.automations),
+  });
+}
+
+export const EXPORT_FILE_SUFFIX = ".autotube.json";
+
+export function exportFileName(automation: Pick<Automation, "name">): string {
+  return `${fileSlug(automation.name)}${EXPORT_FILE_SUFFIX}`;
+}
+
+export function useExportAutomation() {
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const document = await api.get<AutomationDocument>(`${path(id)}/export`);
+      saveJsonFile(exportFileName(document.automation), document);
+      return document;
+    },
+  });
+}
+
+export function usePreviewImport() {
+  return useMutation({
+    mutationFn: (request: ImportRequest) =>
+      api.post<ImportPreview>("/automations/import/preview", request),
+  });
+}
+
+export function useImportAutomation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (request: ImportRequest) => api.post<Automation>("/automations/import", request),
     onSuccess: () => invalidateWithDashboard(client, keys.automations),
   });
 }

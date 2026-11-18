@@ -19,12 +19,14 @@ from autotube.application.delete_run import DeleteRun
 from autotube.application.delete_secret import DeleteSecret
 from autotube.application.duplicate_automation import DuplicateAutomation
 from autotube.application.execute_run import ExecuteRun
+from autotube.application.export_automation import ExportAutomation
 from autotube.application.get_automation import GetAutomation
 from autotube.application.get_dashboard import GetDashboard
 from autotube.application.get_pipeline import GetPipeline
 from autotube.application.get_providers import GetProviders
 from autotube.application.get_run import GetRun
 from autotube.application.get_settings import GetSettings
+from autotube.application.import_automation import ImportAutomation
 from autotube.application.list_automations import ListAutomations
 from autotube.application.list_channel_playlists import ListChannelPlaylists
 from autotube.application.list_channels import ListChannels
@@ -90,14 +92,17 @@ def scheduler_tick(p: Ports, c: Collaborators, starter: StartRun) -> SchedulerTi
 
 def automation_use_cases(p: Ports, c: Collaborators) -> AutomationUseCases:
     starter = StartRun(p.automations, p.pipelines, c.recorder, p.queue, p.ids, p.clock)
+    create = CreateAutomation(p.automations, c.builder, c.presenter, p.ids, p.clock)
     return AutomationUseCases(
         list_automations=ListAutomations(p.automations, c.presenter),
-        create=CreateAutomation(p.automations, c.builder, c.presenter, p.ids, p.clock),
+        create=create,
         get=GetAutomation(p.automations, c.presenter),
         update=UpdateAutomation(p.automations, c.builder, c.presenter, p.clock),
         set_enabled=SetAutomationEnabled(p.automations, c.presenter, p.clock),
         delete=DeleteAutomation(p.automations),
         duplicate=DuplicateAutomation(p.automations, c.presenter, p.ids, p.clock),
+        export=ExportAutomation(p.automations, p.channels, p.pipelines, p.clock),
+        import_automation=ImportAutomation(p.channels, c.builder, create),
         start_run=starter,
         scheduler=scheduler_tick(p, c, starter),
     )

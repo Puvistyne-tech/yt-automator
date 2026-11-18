@@ -100,6 +100,11 @@ function RowActions({ automation, actions }: Pick<AutomationRowProps, "automatio
         onClick={() => actions.duplicate(automation)}
       />
       <IconButton
+        icon="file"
+        label={`Export ${name}`}
+        onClick={() => actions.exportFile(automation.id)}
+      />
+      <IconButton
         icon="trash"
         variant="danger"
         label={`Delete ${name}`}

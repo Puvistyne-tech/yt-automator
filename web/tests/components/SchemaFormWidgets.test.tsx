@@ -88,6 +88,27 @@ describe("contract widgets", () => {
   });
 
   it.each([
+    [0, "0"],
+    [7, "7"],
+    [undefined, ""],
+  ])("shows a number field holding %s as %j", (count, shown) => {
+    const numberSchema = {
+      type: "object",
+      properties: { count: { type: "integer", title: "Count" } },
+    };
+    render(
+      <SchemaForm
+        schema={numberSchema}
+        value={count === undefined ? {} : { count }}
+        idPrefix="number"
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Count")).toHaveDisplayValue(shown);
+  });
+
+  it.each([
     [0.25, "0.25"],
     [0, "0.1"],
     [-1, "0.1"],

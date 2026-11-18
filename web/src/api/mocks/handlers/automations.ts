@@ -4,7 +4,7 @@ import { db, EMPTY_VALUE_MESSAGE, noContent, notFound, validationFailed } from "
 import { makeRun, stagesWith } from "@/api/mocks/fixtures/factories";
 import type { Automation, AutomationInput } from "@/api/types";
 
-function inputErrors(input: AutomationInput): Record<string, string> {
+export function inputErrors(input: AutomationInput): Record<string, string> {
   const errors: Record<string, string> = {};
   const pipeline = db.state.pipelines.find((p) => p.type_id === input.pipeline_type);
   if (input.name === "") {
@@ -42,7 +42,7 @@ function build(input: AutomationInput, existing: Automation | undefined): Automa
   };
 }
 
-function save(input: AutomationInput, existing?: Automation) {
+export function save(input: AutomationInput, existing?: Automation) {
   const errors = inputErrors(input);
   if (Object.keys(errors).length > 0) {
     return validationFailed(errors);

@@ -73,6 +73,12 @@ Upload          target_id, channel_id, language, variant, status: pending|upload
                 privacy (nullable: private|unlisted|public), made_for_kids (nullable bool),
                 publish_at (nullable: when YouTube makes a scheduled video public)
 RunLog          at, level: info|warning|error = info, stage_id (nullable: null outside a stage), message
+AutomationDocument  app = "AutoTube", format_version: int >= 1 (current 1), exported_at (nullable),
+                    automation: Automation's name, description, pipeline_type, settings, languages,
+                    schedule, review_policy, retry_policy and targets (Target without id),
+                    channels: [ExportedChannel] (the target channels, each once)
+ExportedChannel     id, youtube_channel_id = "", title = ""
+ImportPreview       automation: AutomationInput (what the import would create), unknown_channels: [ExportedChannel]
 RunSummary      id, status, score, created_at, finished_at
 RunEvent        run_id, kind: status|stage|log|artifact|upload, at, payload (object)
                 payload by kind: status {status, error}; stage a StageRun; artifact an Artifact;
@@ -138,6 +144,12 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     finite number above zero is ignored and the schema's own step is used.
   - No other `ui:` key is allowed. Help text comes from each field's `description` in the settings schema.
     The web mock pipeline uses this same format.
+- A settings property whose schema carries `x-machine-local: true` (`MACHINE_LOCAL_KEY` in `domain/ui_schema.py`,
+  set with `json_schema_extra`) holds a value that only makes sense on this machine, such as a file or folder
+  path. `domain/machine_local.py` finds these properties through nested objects, local `$ref`s and optional
+  objects (not inside array items). An export writes the pipeline's default for each of them instead of the
+  stored value, and an import replaces each of them with the importing pipeline's default, so paths never move
+  between machines. A marked property whose parent object is missing stays missing.
 - `PipelineDescriptor` rejects a `ui_schema` with any problem, so a broken plugin fails when it is loaded.
 - The kids story pipeline (`kids_story`, shown as "Kids story videos") carries no channel identity in its
   defaults: the series name defaults to "Story Time", the brand mark text is empty (no mark is drawn), and
@@ -298,6 +310,22 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
 - Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track, 50 per playlist insertion).
 - The quota day resets at midnight Pacific time (`America/Los_Angeles`), as YouTube's does.
 - Duplicating an automation creates a disabled copy named with the suffix " (copy)" and new target ids.
+- Export and import (`domain/automation_export.py`). An export is an `AutomationDocument`: it never holds ids of
+  the automation or its targets, `enabled`, timestamps, run data, credentials, tokens or any secret. Import reads
+  the document before anything else: `app` other than "AutoTube" is refused on `app`, and a `format_version`
+  above the current one is refused on `format_version` with a message naming both formats and telling the user
+  to update AutoTube; both use the message "This file cannot be imported: <reason>.". Any other shape problem
+  is a field error at its document path (`automation.languages`). Fields missing from an older export take
+  their defaults, and settings are validated and filled like a create. Each target channel resolves, in order,
+  to the choice in `channel_map` (a channel id, or null to leave that channel's targets out), the same channel
+  id when it exists, or the connected channel with the same `youtube_channel_id`. A chosen channel that does
+  not exist is an error on `channel_map.<exported id>`. The automation is then validated exactly like a create,
+  with errors prefixed `automation.`, except that a missing target channel is never reported on the target:
+  the preview lists it in `unknown_channels`, and the import refuses it on `channel_map.<exported id>`
+  ("... choose a channel for its targets or leave them out"). The import creates the automation through the
+  create use case, named with the suffix " (imported)" (not added again when the name already ends with it),
+  disabled, with new target ids. Unknown keys anywhere in the document (a target `id` included) are field
+  errors "Extra inputs are not permitted" at their path.
 - A scheduled automation's next run is computed from the later of its last scheduled run, its `updated_at`, and
   the latest `skipped_start_at` among the runs created since its last scheduled run. Manual runs do not move the
   schedule. The schedule gives a candidate start; then, in the schedule's time zone:
@@ -552,6 +580,9 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | PATCH `/automations/{id}` | `{enabled}` | Automation |
 | DELETE `/automations/{id}` | | 204 |
 | POST `/automations/{id}/duplicate` | | Automation, 201 |
+| GET `/automations/{id}/export` | | AutomationDocument |
+| POST `/automations/import/preview` | `{document, channel_map?: {exported channel id: channel id or null}}` | ImportPreview; 400 with field errors (see Rules) |
+| POST `/automations/import` | same as preview | Automation, 201; 400 with field errors, including `channel_map.<id>` for every unknown channel without a choice |
 | POST `/automations/{id}/runs` | | Run, 201 |
 | GET `/runs?automation_id&status&limit` | | `[Run]` newest first |
 | GET `/runs/{id}` | | Run |
@@ -584,7 +615,19 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
 `/channels`, `/providers`, `/settings`.
 
 - Automations list: name, pipeline, languages, targets, schedule, next run, last run status, enabled switch,
-  actions (run now, edit, duplicate, delete with confirmation).
+  actions (run now, edit, duplicate, export, delete with confirmation). Export downloads
+  `<name slug>.autotube.json` (accents dropped, lower case, every other run of characters becomes "-",
+  trimmed, "untitled" when nothing is left). Import (list header and empty state) opens a dialog: choosing a
+  file runs the preview; a file that is not a JSON object, a refused format and field errors are shown in the
+  dialog, each unknown channel gets a "Channel for “<title>”" select (every channel, named like the target
+  channel select: its title, plus its status label in brackets when it is not connected; or "Leave its targets
+  out"), and "Import automation" stays disabled until the preview succeeds. Cancel creates nothing.
+- Settings forms with defaults (the editor's Content section passes the pipeline's `default_settings`): every
+  field whose value differs from its default shows a "Changed from default" dot and a "Reset" button (its title
+  names the default); changes are tracked on named fields, per-language values and other nested fields, whole
+  arrays and `cards` choices, never inside array items. A field without a default is never marked. Each
+  `ui:sections` section with changes shows "<n> changed" and "Reset section to defaults". Resetting moves focus
+  to the field, or to the section title, and space for the controls is reserved so nothing shifts.
 - Automation editor: sections General, Content (form generated from `settings_schema` and `ui_schema`),
   Languages (multi-select from the pipeline's languages), Targets (rows of channel, language, variants,
   privacy, playlist, made for kids, and when to go public: at once, after a delay, or at a time of day in a time
@@ -595,6 +638,7 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   at most 2 a day. Publishes privately after you approve.", built by a pure function. When a target goes public
   at a time of day, the summary names it ("Goes public at 18:00 (Asia/Kolkata).").
   A saved automation without unsaved changes offers Run now; with unsaved changes it is disabled with the reason.
+  A saved automation also offers Export, which always exports the saved version.
   A "Run queued" toast (list or editor) links to the new run; a toast with an action stays until it is
   used or dismissed, other toasts close after five seconds. An unknown automation id shows a not-found
   state with a link back to Automations.
