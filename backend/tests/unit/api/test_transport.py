@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -32,16 +33,22 @@ def test_wrong_method_uses_the_error_envelope(api: Api) -> None:
     assert error_of(api.client.delete("/api/health"), 405)["code"] == "method_not_allowed"
 
 
-def test_unexpected_errors_are_500_without_their_text(
-    config: RuntimeConfig, overrides: Overrides
+def test_unexpected_errors_are_500_with_cors_and_no_text_in_logs(
+    config: RuntimeConfig, overrides: Overrides, caplog: pytest.LogCaptureFixture
 ) -> None:
     changed = Overrides(**(vars(overrides) | {"secrets": ExplodingSecrets()}))
     body = {"name": "n", "client_id": "c", "client_secret": "s"}
-    with TestClient(create_app(config, changed), raise_server_exceptions=False) as client:
-        response = client.post("/api/credentials", json=body)
+    origin = {"Origin": "http://localhost:5173"}
+    with caplog.at_level(logging.DEBUG), TestClient(create_app(config, changed)) as client:
+        response = client.post("/api/credentials", json=body, headers=origin)
     error = error_of(response, 500)
     assert (error["code"], error["message"]) == ("internal_error", "Unexpected server error")
-    assert LEAKED not in response.text
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+    request_id = response.headers["x-request-id"]
+    assert LEAKED not in response.text and LEAKED not in caplog.text
+    [record] = [r for r in caplog.records if "unexpected" in r.getMessage()]
+    assert record.getMessage() == f"unexpected RuntimeError in request {request_id}"
+    assert record.exc_info is None
 
 
 @pytest.fixture

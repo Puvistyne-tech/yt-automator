@@ -4,6 +4,7 @@ import logging
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from automator.domain.run_enums import RunStatus
 from automator.infrastructure.config import RuntimeConfig
@@ -52,3 +53,13 @@ def test_the_run_log_cap_comes_from_the_runtime_config(
     runtime: Runtime = app.state.runtime
     assert runtime.ports.run_logs.max_entries == 7
     assert runtime.use_cases.runs.execute.recorder.log_policy.max_entries == 7
+
+
+def test_the_busy_timeout_comes_from_the_runtime_config(
+    config: RuntimeConfig, overrides: Overrides
+) -> None:
+    app = create_app(config.model_copy(update={"database_busy_timeout_ms": 250}), overrides)
+    runtime: Runtime = app.state.runtime
+    with runtime.database.engine.connect() as connection:
+        assert connection.execute(text("PRAGMA busy_timeout")).scalar() == 250
+    runtime.database.dispose()

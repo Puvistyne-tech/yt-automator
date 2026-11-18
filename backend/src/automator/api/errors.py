@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -17,8 +16,6 @@ from automator.shared.errors import (
     UpstreamFailure,
     ValidationFailed,
 )
-
-logger = logging.getLogger(__name__)
 
 LOCATION_KINDS = frozenset({"body", "query", "path", "header", "cookie"})
 ERROR_STATUS: tuple[tuple[type[AppError], int], ...] = (
@@ -71,14 +68,7 @@ async def http_error_handler(_: Request, error: Exception) -> JSONResponse:
     return JSONResponse(body, status_code=error.status_code, headers=error.headers)
 
 
-async def unexpected_error_handler(_: Request, error: Exception) -> JSONResponse:
-    logger.error("unexpected %s while serving a request", type(error).__name__)
-    body = error_body("internal_error", "Unexpected server error")
-    return JSONResponse(body, status_code=500)
-
-
 def install_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, app_error_handler)
     app.add_exception_handler(RequestValidationError, request_validation_handler)
     app.add_exception_handler(HTTPException, http_error_handler)
-    app.add_exception_handler(Exception, unexpected_error_handler)

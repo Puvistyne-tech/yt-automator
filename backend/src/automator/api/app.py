@@ -7,6 +7,7 @@ from fastapi import FastAPI
 
 from automator.api.container import ApiOptions, UseCases
 from automator.api.errors import install_error_handlers
+from automator.api.internal_errors import InternalErrorMiddleware
 from automator.api.routers import (
     automations,
     channels,
@@ -34,6 +35,7 @@ def build_api(
     app.state.use_cases = use_cases
     app.state.options = options
     install_error_handlers(app)
+    app.add_middleware(InternalErrorMiddleware)
     for module in ROUTERS:
         app.include_router(module.router, prefix=API_PREFIX)
     return app

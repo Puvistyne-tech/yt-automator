@@ -139,7 +139,7 @@ def test_root_only_layers_are_imported_only_by_main(layer: str) -> None:
         display(file)
         for file in all_files()
         if layer in imported_layers(file)
-        and file.name != "main.py"
+        and file != PACKAGE_ROOT / "main.py"
         and file.relative_to(PACKAGE_ROOT).parts[0] != layer
     )
     assert importers == []
