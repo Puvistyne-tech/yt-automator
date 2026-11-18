@@ -15,6 +15,7 @@ from automator.infrastructure.providers.media.media_commands import (
     measure_command,
     probe_duration_command,
 )
+from automator.infrastructure.providers.output_path import ensure_parent, require_written
 from automator.infrastructure.providers.spec import ProviderSpec
 from automator.shared.errors import UpstreamFailure
 
@@ -61,15 +62,14 @@ class FfmpegMedia:
         if normalise and self.options.two_pass_loudness:
             measurement = self.measured(composition)
             normalise = measurement is not None
-        output.parent.mkdir(parents=True, exist_ok=True)
+        ensure_parent(output)
         command = compose_command(composition, self.options, output, measurement, normalise)
         self.run(command, self.options.timeout_seconds)
         return output
 
     def extract_frame(self, video: Path, at_seconds: float, output: Path) -> Path:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        self.run(frame_command(video, at_seconds, output, self.options))
-        return output
+        self.run(frame_command(video, at_seconds, ensure_parent(output), self.options))
+        return require_written(output, f"ffmpeg frame at {at_seconds:g}s")
 
     def loudness_lufs(self, media: Path) -> float:
         return parse_integrated(self.run(loudness_command(media, self.options)))

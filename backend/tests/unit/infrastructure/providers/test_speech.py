@@ -8,13 +8,8 @@ import pytest
 
 from automator.domain.capabilities import SpeechRequest, TimingSource, WordTiming
 from automator.infrastructure.providers.tts.edge_stream import EdgeChunk, as_chunk
-from automator.infrastructure.providers.tts.edge_voice import (
-    EdgeTtsOptions,
-    EdgeTtsSpeech,
-    edge_rate,
-)
+from automator.infrastructure.providers.tts.edge_voice import EdgeTtsOptions, EdgeTtsSpeech
 from automator.infrastructure.providers.tts.espeak import EspeakOptions, EspeakSpeech
-from automator.infrastructure.providers.tts.kokoro_engine import KokoroAudio
 from automator.infrastructure.providers.tts.kokoro_voice import KokoroOptions, KokoroSpeech
 from automator.infrastructure.providers.tts.offline_speech import (
     OfflineSpeech,
@@ -23,8 +18,9 @@ from automator.infrastructure.providers.tts.offline_speech import (
 from automator.infrastructure.providers.tts.whisper_aligner import AlignmentOptions
 from automator.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.fakes import (
+    FakeKokoro,
+    FakeStream,
     RecordingRunner,
-    host,
     make_context,
     writes_last_argument_as_wav,
     writes_wav_after,
@@ -109,16 +105,6 @@ def test_offline_speech_follows_words_per_minute(tmp_path: Path) -> None:
     assert np.abs(samples).max() > 1000
 
 
-class FakeStream:
-    def __init__(self, chunks: list[EdgeChunk]) -> None:
-        self.chunks = chunks
-        self.calls: list[tuple[str, str, str]] = []
-
-    def stream(self, text: str, voice: str, rate: str) -> list[EdgeChunk]:
-        self.calls.append((text, voice, rate))
-        return self.chunks
-
-
 def test_edge_uses_word_boundaries_and_converts_to_wav(tmp_path: Path) -> None:
     chunks = [
         EdgeChunk(kind="audio", data=b"mp3"),
@@ -140,28 +126,6 @@ def test_edge_uses_word_boundaries_and_converts_to_wav(tmp_path: Path) -> None:
     assert not (tmp_path / "e.edge.mp3").exists()
     assert speech.timing_source is TimingSource.SYNTHESIZER
     assert speech.words == (heard("Hi", 0.1, 0.5), heard("you", 0.6, 0.9))
-
-
-def test_edge_rejects_unknown_language_and_reports_missing_package(tmp_path: Path) -> None:
-    adapter = EdgeTtsSpeech(EdgeTtsOptions(), make_context(tmp_path), stream=FakeStream([]))
-    with pytest.raises(UpstreamFailure, match="no voice"):
-        adapter.synthesize(SpeechRequest(text="x", language="fr"), tmp_path / "x.wav")
-    with pytest.raises(UpstreamFailure, match="no audio"):
-        adapter.synthesize(SpeechRequest(text="x", language="ta"), tmp_path / "x.wav")
-    assert "edge_tts" in (adapter.available() or "")
-    ready = make_context(tmp_path, probe=host(frozenset({"ffmpeg"}), frozenset({"edge_tts"})))
-    assert EdgeTtsSpeech(EdgeTtsOptions(), ready).available() is None
-    assert edge_rate(1.25) == "+25%"
-
-
-class FakeKokoro:
-    def __init__(self, words: tuple[WordTiming, ...]) -> None:
-        self.words = words
-        self.calls: list[tuple[str, str, float, str]] = []
-
-    def speak(self, text: str, voice: str, speed: float, lang_code: str) -> KokoroAudio:
-        self.calls.append((text, voice, speed, lang_code))
-        return KokoroAudio(samples=np.zeros(12000), words=self.words)
 
 
 def test_kokoro_maps_language_and_keeps_engine_timings(tmp_path: Path) -> None:

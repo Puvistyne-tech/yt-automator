@@ -7,8 +7,8 @@ from typing import Any, Protocol
 import numpy as np
 
 from automator.domain.capabilities import WordTiming
-from automator.infrastructure.providers.tts.word_alignment import normalised
 from automator.infrastructure.providers.wav_io import Samples
+from automator.infrastructure.providers.word_normalisation import normalised
 from automator.shared.errors import UpstreamFailure
 
 KOKORO_SAMPLE_RATE = 24000

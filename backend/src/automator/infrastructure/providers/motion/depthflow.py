@@ -6,6 +6,7 @@ from pydantic import Field
 
 from automator.domain.capabilities import CameraMove, Capability, MotionRequest
 from automator.infrastructure.providers.context import ProviderContext
+from automator.infrastructure.providers.output_path import ensure_parent
 from automator.infrastructure.providers.spec import ProviderOptions, ProviderSpec
 
 DEFAULT_PRESETS: dict[CameraMove, str] = {
@@ -96,7 +97,7 @@ class DepthflowMotion:
         return self.context.host.missing_binary(self.options.binary)
 
     def animate(self, request: MotionRequest, output: Path) -> Path:
-        output.parent.mkdir(parents=True, exist_ok=True)
+        ensure_parent(output)
         command = depthflow_command(request, self.options, output)
         self.context.runner.run(command, self.options.timeout_seconds)
         return output

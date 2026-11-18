@@ -7,12 +7,13 @@ from pydantic import Field
 
 from automator.domain.capabilities import Capability, TextRequest
 from automator.infrastructure.providers.context import ProviderContext
-from automator.infrastructure.providers.http_retry import HttpOptions, dig, post_json
+from automator.infrastructure.providers.http_retry import BaseUrlHttpOptions, post_provider_json
+from automator.infrastructure.providers.json_response import dig
 from automator.infrastructure.providers.llm.image_payload import image_base64
 from automator.infrastructure.providers.spec import ProviderSpec
 
 
-class OllamaOptions(HttpOptions):
+class OllamaOptions(BaseUrlHttpOptions):
     model: str = Field(
         default="gemma3:12b",
         min_length=1,
@@ -77,13 +78,12 @@ class OllamaText:
         return None
 
     def generate(self, request: TextRequest) -> str:
-        body = post_json(
-            self.context.http(self.options.timeout_seconds),
-            f"{self.options.base_url.rstrip('/')}/api/chat",
+        body = post_provider_json(
+            self.context,
+            self.options,
+            "api/chat",
             ollama_payload(request, self.options.model),
             {},
-            self.options,
-            self.context.sleep,
             "Ollama",
         )
         return str(dig(body, "Ollama", "message", "content"))

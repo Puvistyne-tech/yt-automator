@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from automator.domain.capabilities import TimedClip, VideoComposition
 from automator.infrastructure.providers.media.ffmpeg_media import FfmpegMedia
@@ -73,23 +75,51 @@ def test_composition_needs_a_visual(tmp_path: Path) -> None:
         media(tmp_path, RecordingRunner()).compose_video(empty, tmp_path / "x.mp4")
 
 
+def writes_frames(command: list[str]) -> None:
+    if "-frames:v" in command:
+        Path(command[-1]).write_bytes(b"png")
+
+
 def test_probe_frame_and_loudness(tmp_path: Path) -> None:
+    loudness = "t: 1 I: -30.0 LUFS\n  Integrated loudness:\n    I:         -16.2 LUFS\n"
     runner = RecordingRunner(
-        results=[
-            ProcessResult("12.48\n", ""),
-            ProcessResult("", ""),
-            ProcessResult(
-                "", "t: 1 I: -30.0 LUFS\n  Integrated loudness:\n    I:         -16.2 LUFS\n"
-            ),
-        ]
+        results=[ProcessResult("12.48\n", ""), ProcessResult("", ""), ProcessResult("", loudness)],
+        effect=writes_frames,
     )
-    adapter = media(tmp_path, runner)
+    adapter = media(tmp_path, runner, frame_quality=5)
     assert adapter.duration_seconds(Path("/w/v.mp4")) == 12.48
-    adapter.extract_frame(Path("/w/v.mp4"), 1.5, tmp_path / "f.png")
+    frame = adapter.extract_frame(Path("/w/v.mp4"), 1.5, tmp_path / "f" / "f.png")
+    assert frame.read_bytes() == b"png"
     assert adapter.loudness_lufs(Path("/w/v.mp4")) == -16.2
     assert runner.commands[0][0] == "ffprobe"
     assert runner.commands[1][5:8] == ["-ss", "1.500", "-i"]
+    assert runner.commands[1][-3:-1] == ["-q:v", "5"]
+    assert runner.commands[2][:3] == ["ffmpeg", "-hide_banner", "-nostats"]
     assert "ebur128=peak=true" in runner.commands[2]
+
+
+def writes_empty_frame(command: list[str]) -> None:
+    Path(command[-1]).write_bytes(b"")
+
+
+@pytest.mark.parametrize("effect", [None, writes_empty_frame], ids=["missing", "empty"])
+def test_frame_past_the_end_of_the_video_is_an_upstream_failure(
+    tmp_path: Path, effect: Callable[[list[str]], None] | None
+) -> None:
+    adapter = media(tmp_path, RecordingRunner(effect=effect))
+    with pytest.raises(UpstreamFailure, match="ffmpeg frame at 10s wrote nothing to f.png"):
+        adapter.extract_frame(Path("/w/v.mp4"), 10.0, tmp_path / "f.png")
+
+
+@pytest.mark.parametrize(
+    ("threshold", "valid"), [(0.0005, False), (0.000976563, True), (1.0, True), (1.5, False)]
+)
+def test_duck_threshold_matches_what_ffmpeg_accepts(threshold: float, valid: bool) -> None:
+    if valid:
+        assert FfmpegOptions(duck_threshold=threshold).duck_threshold == threshold
+    else:
+        with pytest.raises(ValidationError):
+            FfmpegOptions(duck_threshold=threshold)
 
 
 def test_unparseable_probe_output_is_an_upstream_failure(tmp_path: Path) -> None:
@@ -101,8 +131,16 @@ def test_unparseable_probe_output_is_an_upstream_failure(tmp_path: Path) -> None
         adapter.loudness_lufs(Path("/w/v.mp4"))
 
 
-def test_availability_needs_ffmpeg_and_ffprobe(tmp_path: Path) -> None:
-    only_ffmpeg = make_context(tmp_path, probe=host(binaries=frozenset({"ffmpeg"})))
-    assert "ffprobe" in (FfmpegMedia(FfmpegOptions(), only_ffmpeg).available() or "")
-    both = make_context(tmp_path, probe=host(binaries=frozenset({"ffmpeg", "ffprobe"})))
-    assert FfmpegMedia(FfmpegOptions(), both).available() is None
+@pytest.mark.parametrize(
+    ("binaries", "reason"),
+    [
+        ({"ffmpeg"}, "ffprobe is not installed or not on PATH"),
+        ({"ffprobe"}, "ffmpeg is not installed or not on PATH"),
+        ({"ffmpeg", "ffprobe"}, None),
+    ],
+)
+def test_availability_needs_ffmpeg_and_ffprobe(
+    tmp_path: Path, binaries: set[str], reason: str | None
+) -> None:
+    context = make_context(tmp_path, probe=host(binaries=frozenset(binaries)))
+    assert FfmpegMedia(FfmpegOptions(), context).available() == reason

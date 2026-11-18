@@ -8,6 +8,7 @@ from automator.domain.port_runtime import SecretStore
 from automator.domain.providers import ProviderConfig, ProviderDescriptor
 from automator.domain.secrets import SecretDefinition
 from automator.infrastructure.providers.context import ProviderContext
+from automator.infrastructure.providers.option_validation import config_option_errors
 from automator.infrastructure.providers.registry import ALL_SPECS, AnySpec
 from automator.infrastructure.providers.resolver import ChainResolver
 from automator.infrastructure.providers.secret_definitions import PROVIDER_SECRETS
@@ -31,6 +32,9 @@ class LocalProviderCatalog:
 
     def secrets(self) -> list[SecretDefinition]:
         return list(self.secret_definitions)
+
+    def option_errors(self, configs: Sequence[ProviderConfig]) -> dict[str, str]:
+        return config_option_errors(self.specs, configs)
 
     def resolver(self, configs: Sequence[ProviderConfig]) -> ChainResolver:
         return ChainResolver(self.specs, configs, self.context)

@@ -18,16 +18,9 @@ from automator.domain.capabilities import (
 from automator.domain.providers import ProviderChoice, ProviderConfig
 from automator.infrastructure.providers.context import ProviderContext
 from automator.infrastructure.providers.fallback import fallback_proxy
+from automator.infrastructure.providers.option_validation import invalid_options_reason
 from automator.infrastructure.providers.registry import AnySpec, default_order
-from automator.shared.errors import RuleConflict, ValidationFailed
-
-
-def option_errors(capability: Capability, position: int, error: ValidationError) -> dict[str, str]:
-    prefix = f"{capability.value}.chain.{position}.options"
-    return {
-        ".".join([prefix, *(str(part) for part in item["loc"])]): item["msg"]
-        for item in error.errors()
-    }
+from automator.shared.errors import RuleConflict
 
 
 class ChainResolver:
@@ -40,6 +33,7 @@ class ChainResolver:
         self.specs = dict(specs)
         self.configs = {config.capability: config for config in configs}
         self.context = context
+        self.skipped: dict[Capability, list[str]] = {}
 
     def choices(self, capability: Capability) -> tuple[ProviderChoice, ...]:
         config = self.configs.get(capability)
@@ -48,9 +42,7 @@ class ChainResolver:
         ordered = default_order(capability, tuple(self.specs.values()))
         return tuple(ProviderChoice(provider_id=provider_id) for provider_id in ordered)
 
-    def adapter(
-        self, capability: Capability, position: int, choice: ProviderChoice
-    ) -> tuple[Any, str | None]:
+    def adapter(self, capability: Capability, choice: ProviderChoice) -> tuple[Any, str | None]:
         spec = self.specs.get(choice.provider_id)
         if spec is None or spec.capability is not capability:
             return None, f"{choice.provider_id}: unknown {capability.value} provider"
@@ -59,7 +51,7 @@ class ChainResolver:
         try:
             adapter = spec.build(choice.options, self.context)
         except ValidationError as error:
-            raise ValidationFailed(option_errors(capability, position, error)) from error
+            return None, f"{choice.provider_id}: {invalid_options_reason(error)}"
         reason = adapter.available()
         return (None, f"{choice.provider_id}: {reason}") if reason else (adapter, None)
 
@@ -81,12 +73,13 @@ class ChainResolver:
     def resolve(self, capability: Capability) -> CapabilityProvider:
         ready: list[Any] = []
         reasons: list[str] = []
-        for position, choice in enumerate(self.choices(capability)):
-            adapter, reason = self.adapter(capability, position, choice)
+        for choice in self.choices(capability):
+            adapter, reason = self.adapter(capability, choice)
             if adapter is None:
                 reasons.append(reason or choice.provider_id)
             else:
                 ready.append(adapter)
+        self.skipped[capability] = reasons
         if not ready:
             detail = "; ".join(reasons) or "no provider is configured"
             message = f"No {capability.value} provider is available: {detail}"

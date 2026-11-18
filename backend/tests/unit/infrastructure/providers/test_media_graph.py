@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.capabilities import SubtitleStyle, TimedClip, VideoComposition
+from automator.domain.capabilities import SubtitleStyle
 from automator.infrastructure.providers.media.composition_audio import (
     LoudnessMeasurement,
     audio_graph,
@@ -14,7 +14,6 @@ from automator.infrastructure.providers.media.composition_inputs import (
     timeline_seconds,
 )
 from automator.infrastructure.providers.media.composition_video import video_graph
-from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 from automator.infrastructure.providers.media.media_commands import compose_command
 from automator.infrastructure.providers.media.subtitle_filter import (
     ass_color,
@@ -22,29 +21,7 @@ from automator.infrastructure.providers.media.subtitle_filter import (
     subtitle_filter,
 )
 from automator.shared.errors import UpstreamFailure
-
-OPTIONS = FfmpegOptions()
-
-
-def clip(name: str, start: float, seconds: float, volume: float = 1.0) -> TimedClip:
-    return TimedClip(
-        path=Path(f"/w/{name}"), start_seconds=start, duration_seconds=seconds, volume=volume
-    )
-
-
-def composition(**changes: object) -> VideoComposition:
-    base = VideoComposition(
-        width=320,
-        height=180,
-        fps=24,
-        visuals=(clip("a.png", 0, 2), clip("b.mp4", 2, 1.5)),
-        narration=(clip("n1.wav", 0.5, 1.0), clip("n2.wav", 2.0, 1.0, volume=0.8)),
-        music=Path("/w/music.wav"),
-        sound_effects=(clip("pop.wav", 1.0, 0.2),),
-        subtitles=Path("/w/subs.srt"),
-        subtitle_style=SubtitleStyle(burn_in=True, font_size=36, margin_bottom=40),
-    )
-    return base.model_copy(update=changes)
+from tests.unit.infrastructure.providers.media_fixtures import OPTIONS, composition
 
 
 def test_inputs_loop_stills_and_music() -> None:
@@ -77,7 +54,7 @@ def test_inputs_loop_stills_and_music() -> None:
 
 def test_video_graph_places_clips_on_a_timeline_with_subtitles_and_fades() -> None:
     graph = video_graph(composition(), plan_inputs(composition()), 3.5, OPTIONS)
-    assert graph[0] == "color=c=black:s=320x180:r=24:d=3.500,format=yuv420p[base]"
+    assert graph[0] == "color=c=#000000:s=320x180:r=24:d=3.500,format=yuv420p[base]"
     assert graph[3] == (
         "[1:v]scale=320:180:force_original_aspect_ratio=increase:flags=lanczos,crop=320:180,"
         "setsar=1,fps=24,format=yuv420p,tpad=stop_mode=clone:stop_duration=1.500,"
@@ -104,7 +81,7 @@ def test_audio_graph_mixes_narration_ducks_music_and_normalises() -> None:
         "aformat=sample_fmts=fltp:channel_layouts=stereo,volume=0.800,adelay=delays=2000:all=1[n1]"
     )
     assert "[n0][n1]amix=inputs=2:duration=longest:normalize=0[voice]" in graph
-    assert "[voice]asplit=2[voice_mix][voice_key]" in graph
+    assert "[voice]apad=whole_dur=3.500,asplit=2[voice_mix][voice_key]" in graph
     assert (
         "[music][voice_key]sidechaincompress=threshold=0.03:ratio=6.50:attack=40:release=500[bed]"
         in graph

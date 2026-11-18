@@ -15,7 +15,12 @@ from automator.infrastructure.providers.motion.pan_zoom_filter import (
     camera_expressions,
     pan_zoom_filter,
 )
-from tests.unit.infrastructure.providers.fakes import RecordingRunner, host, make_context
+from tests.unit.infrastructure.providers.fakes import (
+    FFMPEG_ONLY,
+    RecordingRunner,
+    host,
+    make_context,
+)
 
 MAC = host(binaries=frozenset({"mflux-generate"}), system="Darwin", machine="arm64")
 
@@ -115,7 +120,7 @@ def test_every_camera_move_has_distinct_expressions() -> None:
 
 def test_pan_zoom_command(tmp_path: Path) -> None:
     runner = RecordingRunner()
-    context = make_context(tmp_path, runner=runner, probe=host(binaries=frozenset({"ffmpeg"})))
+    context = make_context(tmp_path, runner=runner, probe=FFMPEG_ONLY)
     adapter = FfmpegPanZoom(PanZoomOptions(), context)
     output = adapter.animate(motion(), tmp_path / "clip.mp4")
     command = runner.commands[0]

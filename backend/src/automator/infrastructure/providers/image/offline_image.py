@@ -7,6 +7,7 @@ from pydantic import Field
 from automator.domain.capabilities import Capability, ImageRequest
 from automator.infrastructure.providers.context import ProviderContext
 from automator.infrastructure.providers.image.storybook_scene import paint_scene
+from automator.infrastructure.providers.output_path import ensure_parent
 from automator.infrastructure.providers.spec import ProviderOptions, ProviderSpec
 from automator.shared.errors import UpstreamFailure
 from automator.shared.hashing import sha256_hex
@@ -44,7 +45,7 @@ class OfflineImage:
             request.height,
             self.options.supersample,
         )
-        output.parent.mkdir(parents=True, exist_ok=True)
+        ensure_parent(output)
         try:
             image.save(output)
         except (OSError, ValueError) as error:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from functools import partial
 from pathlib import Path
 from typing import Any, Protocol, cast
 
@@ -21,6 +22,7 @@ from automator.domain.capabilities import (
     TextRequest,
     VideoComposition,
 )
+from automator.infrastructure.providers.upstream_errors import as_upstream
 from automator.shared.errors import UpstreamFailure
 
 
@@ -40,7 +42,7 @@ class FallbackChain[P: Identified]:
         failures: list[str] = []
         for provider in self.providers:
             try:
-                result = operation(provider)
+                result = as_upstream(provider.provider_id, partial(operation, provider))
             except UpstreamFailure as error:
                 failures.append(f"{provider.provider_id}: {error.message}")
                 continue

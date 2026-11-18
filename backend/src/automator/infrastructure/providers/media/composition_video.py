@@ -6,8 +6,17 @@ from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOption
 from automator.infrastructure.providers.media.subtitle_filter import subtitle_filter
 
 
+def even(size: int) -> int:
+    return max(2, size - size % 2)
+
+
+def frame_size(composition: VideoComposition) -> tuple[int, int]:
+    return even(composition.width), even(composition.height)
+
+
 def visual_chain(index: int, label: str, clip: TimedClip, composition: VideoComposition) -> str:
-    size = f"{composition.width}:{composition.height}"
+    width, height = frame_size(composition)
+    size = f"{width}:{height}"
     seconds = f"{clip.duration_seconds:.3f}"
     steps = [
         f"scale={size}:force_original_aspect_ratio=increase:flags=lanczos",
@@ -22,9 +31,11 @@ def visual_chain(index: int, label: str, clip: TimedClip, composition: VideoComp
     return f"[{index}:v]{','.join(steps)}[{label}]"
 
 
-def canvas_chain(composition: VideoComposition, total: float) -> str:
-    size = f"{composition.width}x{composition.height}"
-    return f"color=c=black:s={size}:r={composition.fps}:d={total:.3f},format=yuv420p[base]"
+def canvas_chain(composition: VideoComposition, total: float, options: FfmpegOptions) -> str:
+    width, height = frame_size(composition)
+    color = options.background_color
+    size = f"{width}x{height}"
+    return f"color=c={color}:s={size}:r={composition.fps}:d={total:.3f},format=yuv420p[base]"
 
 
 def fade_steps(fade: float, total: float) -> list[str]:
@@ -41,7 +52,7 @@ def finishing_steps(composition: VideoComposition, total: float, options: Ffmpeg
             subtitle_filter(
                 composition.subtitles,
                 composition.subtitle_style,
-                composition.height,
+                frame_size(composition)[1],
                 options.outline_width,
                 options.fonts_dir,
             )
@@ -54,7 +65,7 @@ def finishing_steps(composition: VideoComposition, total: float, options: Ffmpeg
 def video_graph(
     composition: VideoComposition, plan: InputPlan, total: float, options: FfmpegOptions
 ) -> list[str]:
-    chains = [canvas_chain(composition, total)]
+    chains = [canvas_chain(composition, total, options)]
     current = "base"
     pairs = zip(plan.visuals, composition.visuals, strict=True)
     for position, (index, clip) in enumerate(pairs):

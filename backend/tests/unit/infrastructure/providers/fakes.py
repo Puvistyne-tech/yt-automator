@@ -7,9 +7,14 @@ from pathlib import Path
 import httpx
 import numpy as np
 
+from automator.domain.capabilities import Capability, WordTiming
+from automator.domain.providers import ProviderChoice, ProviderConfig
+from automator.infrastructure.providers.catalog import LocalProviderCatalog
 from automator.infrastructure.providers.context import ProviderContext
 from automator.infrastructure.providers.host import HostProbe
 from automator.infrastructure.providers.process import ProcessResult
+from automator.infrastructure.providers.tts.edge_stream import EdgeChunk
+from automator.infrastructure.providers.tts.kokoro_engine import KokoroAudio
 from automator.infrastructure.providers.wav_io import write_wav
 from automator.shared.errors import UpstreamFailure
 from tests.fixtures.fake_runtime import InMemorySecrets
@@ -63,6 +68,10 @@ def host(
     )
 
 
+FFMPEG_ONLY = host(binaries=frozenset({"ffmpeg"}))
+LOCAL_TOOLS = host(binaries=frozenset({"ffmpeg", "ffprobe", "espeak-ng"}))
+
+
 def unreachable(request: httpx.Request) -> httpx.Response:
     raise httpx.ConnectError("no network in tests", request=request)
 
@@ -89,6 +98,14 @@ def make_context(
     )
 
 
+def local_catalog(tmp_path: Path, **secrets: str) -> LocalProviderCatalog:
+    return LocalProviderCatalog(make_context(tmp_path, probe=LOCAL_TOOLS, secrets=secrets))
+
+
+def chain_config(capability: Capability, *choices: ProviderChoice) -> ProviderConfig:
+    return ProviderConfig(capability=capability, chain=choices)
+
+
 def write_tone(path: Path, seconds: float, rate: int = 16000) -> None:
     clock = np.arange(round(seconds * rate)) / rate
     write_wav(path, 0.2 * np.sin(2 * np.pi * 220 * clock), rate)
@@ -106,3 +123,24 @@ def writes_wav_after(flag: str, seconds: float) -> Callable[[list[str]], None]:
         write_tone(Path(command[command.index(flag) + 1]), seconds)
 
     return effect
+
+
+class FakeKokoro:
+    def __init__(self, words: tuple[WordTiming, ...] = (), samples: int = 12000) -> None:
+        self.words = words
+        self.samples = samples
+        self.calls: list[tuple[str, str, float, str]] = []
+
+    def speak(self, text: str, voice: str, speed: float, lang_code: str) -> KokoroAudio:
+        self.calls.append((text, voice, speed, lang_code))
+        return KokoroAudio(samples=np.zeros(self.samples), words=self.words)
+
+
+class FakeStream:
+    def __init__(self, chunks: list[EdgeChunk]) -> None:
+        self.chunks = chunks
+        self.calls: list[tuple[str, str, str]] = []
+
+    def stream(self, text: str, voice: str, rate: str) -> list[EdgeChunk]:
+        self.calls.append((text, voice, rate))
+        return self.chunks

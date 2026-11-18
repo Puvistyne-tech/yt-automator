@@ -1,15 +1,10 @@
 from __future__ import annotations
 
 import difflib
-import unicodedata
 
 from automator.domain.capabilities import WordTiming
 from automator.infrastructure.providers.tts.word_timing import estimate_timings
-
-
-def normalised(word: str) -> str:
-    kept = [char for char in word.casefold() if unicodedata.category(char)[0] in "LMN"]
-    return "".join(kept)
+from automator.infrastructure.providers.word_normalisation import normalised
 
 
 def matched_times(

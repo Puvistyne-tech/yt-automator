@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from automator.domain.capabilities import CameraMove, MotionRequest
+from automator.infrastructure.providers.ffmpeg_args import ffmpeg_command
 
 CENTER_X = "(iw-iw/zoom)/2"
 CENTER_Y = "(ih-ih/zoom)/2"
@@ -60,12 +61,8 @@ def pan_zoom_filter(request: MotionRequest, tuning: PanZoomTuning) -> str:
 def pan_zoom_command(
     request: MotionRequest, tuning: PanZoomTuning, binary: str, output: Path
 ) -> list[str]:
-    return [
+    return ffmpeg_command(
         binary,
-        "-y",
-        "-hide_banner",
-        "-loglevel",
-        "error",
         "-i",
         str(request.image),
         "-vf",
@@ -85,4 +82,4 @@ def pan_zoom_command(
         "-movflags",
         "+faststart",
         str(output),
-    ]
+    )

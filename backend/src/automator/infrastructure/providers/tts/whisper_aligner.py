@@ -28,6 +28,12 @@ class AlignmentOptions(ProviderOptions):
     faster_whisper_model: str = Field(
         default="small", title="faster-whisper model", description="Model size or path."
     )
+    faster_whisper_compute_type: str = Field(
+        default="int8",
+        min_length=1,
+        title="faster-whisper compute type",
+        description="CTranslate2 compute type, for example int8, int8_float16 or float32.",
+    )
     min_match: float = Field(
         default=0.6,
         ge=0.0,
@@ -61,9 +67,11 @@ def mlx_words(audio: Path, language: str, model: str) -> list[WordTiming]:
     ]
 
 
-def faster_words(audio: Path, language: str, model_name: str) -> list[WordTiming]:
+def faster_words(audio: Path, language: str, options: AlignmentOptions) -> list[WordTiming]:
     module: Any = importlib.import_module("faster_whisper")
-    model = module.WhisperModel(model_name, compute_type="int8")
+    model = module.WhisperModel(
+        options.faster_whisper_model, compute_type=options.faster_whisper_compute_type
+    )
     segments, _ = model.transcribe(str(audio), word_timestamps=True, language=language)
     return [
         timing(word.word, word.start, word.end) for segment in segments for word in segment.words
@@ -81,7 +89,7 @@ class WhisperAligner:
             if self.host.has_module("mlx_whisper"):
                 return mlx_words(audio, code, self.options.mlx_model)
             if self.host.has_module("faster_whisper"):
-                return faster_words(audio, code, self.options.faster_whisper_model)
+                return faster_words(audio, code, self.options)
         except Exception:
             return None
         return None

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from automator.domain.capabilities import VideoComposition
+from automator.infrastructure.providers.ffmpeg_args import ffmpeg_command
 from automator.infrastructure.providers.media.composition_audio import (
     LoudnessMeasurement,
     audio_graph,
@@ -21,10 +22,8 @@ def measure_command(composition: VideoComposition, options: FfmpegOptions) -> li
     total = timeline_seconds(composition)
     level = f"{loudnorm(composition, options, None)}:print_format=json"
     graph = ";".join(audio_graph(composition, plan, total, options, level))
-    return [
+    return ffmpeg_command(
         options.ffmpeg_binary,
-        "-hide_banner",
-        "-nostats",
         *plan.args,
         "-filter_complex",
         graph,
@@ -34,7 +33,8 @@ def measure_command(composition: VideoComposition, options: FfmpegOptions) -> li
         "-f",
         "null",
         "-",
-    ]
+        quiet_errors=False,
+    )
 
 
 def encoding_args(fps: int, options: FfmpegOptions) -> list[str]:
@@ -74,12 +74,8 @@ def compose_command(
         *video_graph(composition, plan, total, options),
         *audio_graph(composition, plan, total, options, level),
     ]
-    return [
+    return ffmpeg_command(
         options.ffmpeg_binary,
-        "-y",
-        "-hide_banner",
-        "-loglevel",
-        "error",
         *plan.args,
         "-filter_complex",
         ";".join(chains),
@@ -91,7 +87,7 @@ def compose_command(
         "-t",
         f"{total:.3f}",
         str(output),
-    ]
+    )
 
 
 def probe_duration_command(media: Path, options: FfmpegOptions) -> list[str]:
@@ -110,12 +106,8 @@ def probe_duration_command(media: Path, options: FfmpegOptions) -> list[str]:
 def frame_command(
     video: Path, at_seconds: float, output: Path, options: FfmpegOptions
 ) -> list[str]:
-    return [
+    return ffmpeg_command(
         options.ffmpeg_binary,
-        "-y",
-        "-hide_banner",
-        "-loglevel",
-        "error",
         "-ss",
         f"{at_seconds:.3f}",
         "-i",
@@ -123,16 +115,14 @@ def frame_command(
         "-frames:v",
         "1",
         "-q:v",
-        "2",
+        str(options.frame_quality),
         str(output),
-    ]
+    )
 
 
 def loudness_command(media: Path, options: FfmpegOptions) -> list[str]:
-    return [
+    return ffmpeg_command(
         options.ffmpeg_binary,
-        "-hide_banner",
-        "-nostats",
         "-i",
         str(media),
         "-map",
@@ -142,4 +132,5 @@ def loudness_command(media: Path, options: FfmpegOptions) -> list[str]:
         "-f",
         "null",
         "-",
-    ]
+        quiet_errors=False,
+    )

@@ -12,8 +12,10 @@ from automator.domain.capabilities import (
     WordTiming,
 )
 from automator.infrastructure.providers.context import ProviderContext
+from automator.infrastructure.providers.ffmpeg_args import FfmpegBinaryOptions, ffmpeg_command
 from automator.infrastructure.providers.host import first_reason
-from automator.infrastructure.providers.spec import ProviderOptions, ProviderSpec
+from automator.infrastructure.providers.output_path import ensure_parent
+from automator.infrastructure.providers.spec import ProviderSpec
 from automator.infrastructure.providers.tts.edge_stream import EdgeChunk, EdgeStream, EdgeTtsLibrary
 from automator.infrastructure.providers.tts.voice_language import lookup_language
 from automator.infrastructure.providers.tts.word_timing import estimate_timings, spoken_words
@@ -21,14 +23,11 @@ from automator.infrastructure.providers.wav_io import wav_duration
 from automator.shared.errors import UpstreamFailure
 
 
-class EdgeTtsOptions(ProviderOptions):
+class EdgeTtsOptions(FfmpegBinaryOptions):
     voices: dict[str, str] = Field(
         default_factory=lambda: {"en": "en-IN-NeerjaNeural", "ta": "ta-IN-PallaviNeural"},
         title="Voices by language",
         description="Edge neural voice for each language code, unless the request names a voice.",
-    )
-    ffmpeg_binary: str = Field(
-        default="ffmpeg", title="ffmpeg command", description="Used to convert MP3 to WAV."
     )
     sample_rate: int = Field(
         default=24000, ge=8000, le=96000, title="Sample rate", description="WAV rate in Hz."
@@ -55,20 +54,9 @@ def boundary_timings(chunks: list[EdgeChunk]) -> tuple[WordTiming, ...]:
 
 
 def wav_command(binary: str, source: Path, output: Path, sample_rate: int) -> list[str]:
-    return [
-        binary,
-        "-y",
-        "-hide_banner",
-        "-loglevel",
-        "error",
-        "-i",
-        str(source),
-        "-ar",
-        str(sample_rate),
-        "-ac",
-        "1",
-        str(output),
-    ]
+    return ffmpeg_command(
+        binary, "-i", str(source), "-ar", str(sample_rate), "-ac", "1", str(output)
+    )
 
 
 class EdgeTtsSpeech:
@@ -98,7 +86,7 @@ class EdgeTtsSpeech:
         audio = b"".join(chunk.data for chunk in chunks if chunk.kind == "audio")
         if not audio:
             raise UpstreamFailure("edge_tts returned no audio")
-        output.parent.mkdir(parents=True, exist_ok=True)
+        ensure_parent(output)
         compressed = output.with_suffix(".edge.mp3")
         compressed.write_bytes(audio)
         command = wav_command(

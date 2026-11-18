@@ -2,16 +2,13 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from automator.infrastructure.providers.spec import ProviderOptions
+from automator.infrastructure.providers.ffmpeg_args import X264Options
+
+FFMPEG_MIN_DUCK_THRESHOLD = 0.000976563
 
 
-class FfmpegOptions(ProviderOptions):
-    ffmpeg_binary: str = Field(default="ffmpeg", title="ffmpeg command", description="Encoder.")
+class FfmpegOptions(X264Options):
     ffprobe_binary: str = Field(default="ffprobe", title="ffprobe command", description="Prober.")
-    crf: int = Field(default=20, ge=0, le=51, title="Quality (CRF)", description="Lower is better.")
-    preset: str = Field(
-        default="medium", title="x264 preset", description="Encoder speed versus compression."
-    )
     audio_bitrate: str = Field(default="192k", title="Audio bitrate", description="AAC bitrate.")
     sample_rate: int = Field(
         default=48000, ge=8000, le=96000, title="Audio rate", description="Mix rate in Hz."
@@ -29,7 +26,7 @@ class FfmpegOptions(ProviderOptions):
     )
     duck_threshold: float = Field(
         default=0.03,
-        gt=0.0,
+        ge=FFMPEG_MIN_DUCK_THRESHOLD,
         le=1.0,
         title="Ducking threshold",
         description="Narration level above which the music is turned down.",
@@ -49,6 +46,19 @@ class FfmpegOptions(ProviderOptions):
     )
     outline_width: float = Field(
         default=3.0, ge=0.0, title="Subtitle outline", description="Outline width in pixels."
+    )
+    background_color: str = Field(
+        default="#000000",
+        pattern=r"^#[0-9A-Fa-f]{6}$",
+        title="Background colour",
+        description="Canvas colour (#RRGGBB) shown wherever no visual covers the timeline.",
+    )
+    frame_quality: int = Field(
+        default=2,
+        ge=1,
+        le=31,
+        title="Frame quality",
+        description="JPEG-style quality for extracted frames; 1 is best, 31 is worst.",
     )
     fonts_dir: str = Field(
         default="", title="Fonts folder", description="Extra fonts for subtitles; empty is system."

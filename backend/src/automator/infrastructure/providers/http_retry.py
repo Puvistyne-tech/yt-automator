@@ -6,6 +6,8 @@ from typing import Any
 import httpx
 from pydantic import Field
 
+from automator.infrastructure.providers.context import ProviderContext
+from automator.infrastructure.providers.json_response import json_body
 from automator.infrastructure.providers.spec import ProviderOptions
 from automator.shared.errors import UpstreamFailure
 
@@ -27,6 +29,10 @@ class HttpOptions(ProviderOptions):
         title="Backoff",
         description="Wait before the first retry; doubles on every further retry.",
     )
+
+
+class BaseUrlHttpOptions(HttpOptions):
+    base_url: str = Field(min_length=1, title="Base URL", description="API root.")
 
 
 def is_retryable(status: int) -> bool:
@@ -94,21 +100,14 @@ def post_json(
         return json_body(response, label)
 
 
-def json_body(response: httpx.Response, label: str) -> dict[str, Any]:
-    try:
-        body = response.json()
-    except ValueError as error:
-        raise UpstreamFailure(f"{label} returned invalid JSON") from error
-    if not isinstance(body, dict):
-        raise UpstreamFailure(f"{label} returned an unexpected JSON shape")
-    return body
-
-
-def dig(body: Any, label: str, *path: str | int) -> Any:
-    current = body
-    try:
-        for key in path:
-            current = current[key]
-    except (KeyError, IndexError, TypeError) as error:
-        raise UpstreamFailure(f"{label} response is missing {path!r}") from error
-    return current
+def post_provider_json(
+    context: ProviderContext,
+    options: BaseUrlHttpOptions,
+    path: str,
+    payload: Mapping[str, Any],
+    headers: Mapping[str, str],
+    label: str,
+) -> dict[str, Any]:
+    url = f"{options.base_url.rstrip('/')}/{path.lstrip('/')}"
+    client = context.http(options.timeout_seconds)
+    return post_json(client, url, payload, headers, options, context.sleep, label)

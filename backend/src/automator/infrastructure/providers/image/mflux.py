@@ -9,6 +9,7 @@ from automator.domain.capabilities import Capability, ImageRequest
 from automator.infrastructure.providers.context import ProviderContext
 from automator.infrastructure.providers.host import first_reason
 from automator.infrastructure.providers.image.image_fit import fit_image, rounded_up
+from automator.infrastructure.providers.output_path import ensure_parent
 from automator.infrastructure.providers.seeds import prompt_seed
 from automator.infrastructure.providers.spec import ProviderOptions, ProviderSpec
 
@@ -88,7 +89,7 @@ class MfluxImage:
         return first_reason(host.not_apple_silicon(), host.missing_binary(self.options.binary))
 
     def generate(self, request: ImageRequest, output: Path) -> Path:
-        output.parent.mkdir(parents=True, exist_ok=True)
+        ensure_parent(output)
         token = self.context.secret(HF_SECRET)
         self.context.runner.run(
             mflux_command(request, self.options, output),

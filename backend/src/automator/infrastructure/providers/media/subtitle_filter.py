@@ -8,6 +8,7 @@ from automator.shared.errors import UpstreamFailure
 LIBASS_DEFAULT_PLAY_HEIGHT = 288
 OPTION_SPECIALS = ("\\", "'", ":")
 GRAPH_SPECIALS = ("\\", "'", "[", "]", ",", ";")
+FONT_NAME_EXTRAS = frozenset(" -_")
 
 
 def escaped(value: str, specials: tuple[str, ...]) -> str:
@@ -28,6 +29,14 @@ def ass_color(hex_color: str) -> str:
     return f"&H00{blue}{green}{red}".upper()
 
 
+def font_name(family: str) -> str:
+    if family and all(char.isalnum() or char in FONT_NAME_EXTRAS for char in family):
+        return family
+    raise UpstreamFailure(
+        f"subtitle font {family!r} may only use letters, digits, spaces, '-' and '_'"
+    )
+
+
 def style_scale(subtitles: Path, video_height: int) -> float:
     if subtitles.suffix.lower() == ".ass":
         return 1.0
@@ -36,7 +45,7 @@ def style_scale(subtitles: Path, video_height: int) -> float:
 
 def force_style(style: SubtitleStyle, scale: float, outline: float) -> str:
     fields = {
-        "FontName": style.font_family,
+        "FontName": font_name(style.font_family),
         "FontSize": f"{style.font_size * scale:.1f}",
         "PrimaryColour": ass_color(style.primary_color),
         "SecondaryColour": ass_color(style.highlight_color),

@@ -17,9 +17,7 @@ from automator.infrastructure.providers.music.library_music import (
 )
 from automator.infrastructure.providers.music.synth_music import SynthMusic, SynthMusicOptions
 from automator.shared.errors import UpstreamFailure
-from tests.unit.infrastructure.providers.fakes import RecordingRunner, host, make_context
-
-FFMPEG = host(binaries=frozenset({"ffmpeg"}))
+from tests.unit.infrastructure.providers.fakes import FFMPEG_ONLY, RecordingRunner, make_context
 
 
 def read_samples(path: Path) -> tuple[int, int, np.ndarray]:
@@ -55,7 +53,7 @@ def test_library_picks_matching_track_and_fits_it(tmp_path: Path) -> None:
         (folder / name).write_bytes(b"x")
     runner = RecordingRunner()
     adapter = LibraryMusic(
-        LibraryMusicOptions(), make_context(tmp_path, runner=runner, probe=FFMPEG)
+        LibraryMusicOptions(), make_context(tmp_path, runner=runner, probe=FFMPEG_ONLY)
     )
     assert adapter.available() is None
     adapter.compose(MusicRequest(prompt="A calm night", duration_seconds=10), tmp_path / "o.wav")
@@ -84,7 +82,7 @@ def test_library_picks_matching_track_and_fits_it(tmp_path: Path) -> None:
 
 
 def test_library_without_tracks_is_unavailable(tmp_path: Path) -> None:
-    adapter = LibraryMusic(LibraryMusicOptions(), make_context(tmp_path, probe=FFMPEG))
+    adapter = LibraryMusic(LibraryMusicOptions(), make_context(tmp_path, probe=FFMPEG_ONLY))
     assert "add CC0 music tracks" in (adapter.available() or "")
     with pytest.raises(UpstreamFailure):
         adapter.compose(MusicRequest(prompt="x", duration_seconds=1), tmp_path / "o.wav")
@@ -103,7 +101,9 @@ def test_fade_is_clamped_to_half_the_duration() -> None:
 def test_ace_step_runs_in_its_own_python_then_fits(tmp_path: Path) -> None:
     python = tmp_path / "tools" / "ace-step" / "bin" / "python"
     runner = RecordingRunner()
-    adapter = AceStepMusic(AceStepOptions(), make_context(tmp_path, runner=runner, probe=FFMPEG))
+    adapter = AceStepMusic(
+        AceStepOptions(), make_context(tmp_path, runner=runner, probe=FFMPEG_ONLY)
+    )
     assert "no ACE-Step venv" in (adapter.available() or "")
     python.parent.mkdir(parents=True)
     python.write_text("")

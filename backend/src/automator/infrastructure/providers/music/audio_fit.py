@@ -4,13 +4,10 @@ from pathlib import Path
 
 from pydantic import Field
 
-from automator.infrastructure.providers.spec import ProviderOptions
+from automator.infrastructure.providers.ffmpeg_args import FfmpegBinaryOptions, ffmpeg_command
 
 
-class AudioFitOptions(ProviderOptions):
-    ffmpeg_binary: str = Field(
-        default="ffmpeg", title="ffmpeg command", description="Loops, trims and fades the track."
-    )
+class AudioFitOptions(FfmpegBinaryOptions):
     fade_seconds: float = Field(
         default=1.5, ge=0.0, title="Fade", description="Fade in and fade out length in seconds."
     )
@@ -33,12 +30,8 @@ def fade_filter(duration: float, fade_seconds: float) -> str:
 def fit_audio_command(
     source: Path, output: Path, duration: float, options: AudioFitOptions
 ) -> list[str]:
-    return [
+    return ffmpeg_command(
         options.ffmpeg_binary,
-        "-y",
-        "-hide_banner",
-        "-loglevel",
-        "error",
         "-stream_loop",
         "-1",
         "-i",
@@ -54,4 +47,4 @@ def fit_audio_command(
         "-c:a",
         "pcm_s16le",
         str(output),
-    ]
+    )

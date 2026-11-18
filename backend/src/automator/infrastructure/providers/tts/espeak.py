@@ -6,7 +6,9 @@ from pydantic import Field
 
 from automator.domain.capabilities import Capability, Speech, SpeechRequest, TimingSource
 from automator.infrastructure.providers.context import ProviderContext
+from automator.infrastructure.providers.output_path import ensure_parent
 from automator.infrastructure.providers.spec import ProviderOptions, ProviderSpec
+from automator.infrastructure.providers.tts.speech_text import require_text
 from automator.infrastructure.providers.tts.voice_language import (
     language_candidates,
     lookup_language,
@@ -19,7 +21,6 @@ from automator.infrastructure.providers.tts.whisper_aligner import (
 )
 from automator.infrastructure.providers.tts.word_timing import estimate_timings, spoken_words
 from automator.infrastructure.providers.wav_io import wav_duration
-from automator.shared.errors import UpstreamFailure
 
 
 class EspeakOptions(ProviderOptions):
@@ -78,9 +79,8 @@ class EspeakSpeech:
         return self.context.host.missing_binary(self.options.binary)
 
     def synthesize(self, request: SpeechRequest, output: Path) -> Speech:
-        if not request.text.strip():
-            raise UpstreamFailure("espeak needs some text to speak")
-        output.parent.mkdir(parents=True, exist_ok=True)
+        require_text(self.provider_id, request)
+        ensure_parent(output)
         command = espeak_command(request, self.options, output)
         self.context.runner.run(command, self.options.timeout_seconds, stdin=request.text)
         duration = wav_duration(output)

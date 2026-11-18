@@ -6,7 +6,8 @@ from pydantic import Field
 
 from automator.domain.capabilities import Capability, TextRequest
 from automator.infrastructure.providers.context import ProviderContext
-from automator.infrastructure.providers.http_retry import HttpOptions, dig, post_json
+from automator.infrastructure.providers.http_retry import BaseUrlHttpOptions, post_provider_json
+from automator.infrastructure.providers.json_response import dig
 from automator.infrastructure.providers.llm.image_payload import image_base64, image_mime_type
 from automator.infrastructure.providers.spec import ProviderSpec
 from automator.shared.errors import UpstreamFailure
@@ -14,7 +15,7 @@ from automator.shared.errors import UpstreamFailure
 SECRET = "gemini_api_key"
 
 
-class GeminiOptions(HttpOptions):
+class GeminiOptions(BaseUrlHttpOptions):
     model: str = Field(
         default="gemini-2.5-flash",
         min_length=1,
@@ -76,13 +77,12 @@ class GeminiText:
         return self.context.missing_secret(SECRET, "Gemini API key")
 
     def generate(self, request: TextRequest) -> str:
-        body = post_json(
-            self.context.http(self.options.timeout_seconds),
-            f"{self.options.base_url.rstrip('/')}/models/{self.options.model}:generateContent",
+        body = post_provider_json(
+            self.context,
+            self.options,
+            f"models/{self.options.model}:generateContent",
             gemini_payload(request),
             {"x-goog-api-key": self.context.secret(SECRET)},
-            self.options,
-            self.context.sleep,
             "Gemini",
         )
         return candidate_text(body)

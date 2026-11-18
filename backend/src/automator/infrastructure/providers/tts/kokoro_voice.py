@@ -12,6 +12,7 @@ from automator.infrastructure.providers.tts.kokoro_engine import (
     KokoroEngine,
     KokoroLibrary,
 )
+from automator.infrastructure.providers.tts.speech_text import require_text
 from automator.infrastructure.providers.tts.voice_language import lookup_language
 from automator.infrastructure.providers.tts.whisper_aligner import (
     AlignmentOptions,
@@ -63,6 +64,7 @@ class KokoroSpeech:
         return self.context.host.missing_module("kokoro", "tts")
 
     def synthesize(self, request: SpeechRequest, output: Path) -> Speech:
+        require_text(self.provider_id, request)
         lang_code = lookup_language(self.options.languages, request.language)
         if lang_code is None:
             raise UpstreamFailure(
@@ -70,6 +72,8 @@ class KokoroSpeech:
             )
         voice = request.voice or self.options.voice
         audio = self.engine.speak(request.text, voice, request.speed, lang_code)
+        if len(audio.samples) == 0:
+            raise UpstreamFailure("kokoro produced no audio")
         write_wav(output, audio.samples, KOKORO_SAMPLE_RATE)
         duration = round(len(audio.samples) / KOKORO_SAMPLE_RATE, 3)
         if audio.words:

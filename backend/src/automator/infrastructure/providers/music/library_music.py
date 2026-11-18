@@ -8,8 +8,9 @@ from automator.domain.capabilities import Capability, MusicRequest
 from automator.infrastructure.providers.context import ProviderContext
 from automator.infrastructure.providers.host import first_reason
 from automator.infrastructure.providers.music.audio_fit import AudioFitOptions, fit_audio_command
+from automator.infrastructure.providers.output_path import ensure_parent
 from automator.infrastructure.providers.spec import ProviderSpec
-from automator.infrastructure.providers.tts.word_alignment import normalised
+from automator.infrastructure.providers.word_normalisation import normalised
 from automator.shared.errors import UpstreamFailure
 from automator.shared.hashing import sha256_hex
 
@@ -65,7 +66,7 @@ class LibraryMusic:
         tracks = self.tracks()
         if not tracks:
             raise UpstreamFailure(f"no music tracks in {self.folder()}")
-        output.parent.mkdir(parents=True, exist_ok=True)
+        ensure_parent(output)
         source = pick_track(tracks, request.prompt)
         command = fit_audio_command(source, output, request.duration_seconds, self.options)
         self.context.runner.run(command, self.options.timeout_seconds)

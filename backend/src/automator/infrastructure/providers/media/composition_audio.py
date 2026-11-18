@@ -48,13 +48,16 @@ def music_chain(
     return f"[{index}:a]{','.join(steps)}[music]"
 
 
-def ducking_chains(composition: VideoComposition, options: FfmpegOptions) -> list[str]:
+def ducking_chains(
+    composition: VideoComposition, total: float, options: FfmpegOptions
+) -> list[str]:
     ratio = 1 + composition.music_ducking * (options.duck_max_ratio - 1)
     compressor = (
         f"sidechaincompress=threshold={options.duck_threshold:g}:ratio={ratio:.2f}"
         f":attack={options.duck_attack_ms:g}:release={options.duck_release_ms:g}"
     )
-    return ["[voice]asplit=2[voice_mix][voice_key]", f"[music][voice_key]{compressor}[bed]"]
+    padded_voice = f"[voice]apad=whole_dur={total:.3f},asplit=2[voice_mix][voice_key]"
+    return [padded_voice, f"[music][voice_key]{compressor}[bed]"]
 
 
 def stem_chains(
@@ -73,7 +76,7 @@ def stem_chains(
     if plan.music is not None:
         chains.append(music_chain(plan.music, composition, total, options))
     if voices and plan.music is not None and composition.music_ducking > 0:
-        chains.extend(ducking_chains(composition, options))
+        chains.extend(ducking_chains(composition, total, options))
         return chains, ["voice_mix", "bed", *stems]
     return chains, [
         *(["voice"] if voices else []),

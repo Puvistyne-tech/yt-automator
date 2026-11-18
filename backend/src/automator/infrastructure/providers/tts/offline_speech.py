@@ -14,6 +14,7 @@ from automator.domain.capabilities import (
 )
 from automator.infrastructure.providers.context import ProviderContext
 from automator.infrastructure.providers.spec import ProviderOptions, ProviderSpec
+from automator.infrastructure.providers.tts.speech_text import require_text
 from automator.infrastructure.providers.tts.word_timing import estimate_timings, spoken_words
 from automator.infrastructure.providers.wav_io import Samples, write_wav
 
@@ -68,7 +69,7 @@ class OfflineSpeech:
         return None
 
     def synthesize(self, request: SpeechRequest, output: Path) -> Speech:
-        words = spoken_words(request.text)
+        words = spoken_words(require_text(self.provider_id, request))
         lead = self.options.lead_seconds
         speaking_end = lead + speaking_seconds(len(words), request, self.options)
         total = speaking_end + self.options.tail_seconds

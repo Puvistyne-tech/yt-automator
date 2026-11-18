@@ -9,6 +9,7 @@ from automator.domain.capabilities import Capability, MusicRequest
 from automator.infrastructure.providers.context import ProviderContext
 from automator.infrastructure.providers.host import first_reason
 from automator.infrastructure.providers.music.audio_fit import AudioFitOptions, fit_audio_command
+from automator.infrastructure.providers.output_path import ensure_parent
 from automator.infrastructure.providers.seeds import prompt_seed
 from automator.infrastructure.providers.spec import ProviderSpec
 
@@ -78,7 +79,7 @@ class AceStepMusic:
         return first_reason(missing, self.context.host.missing_binary(self.options.ffmpeg_binary))
 
     def compose(self, request: MusicRequest, output: Path) -> Path:
-        output.parent.mkdir(parents=True, exist_ok=True)
+        ensure_parent(output)
         raw = output.with_suffix(".ace.wav")
         runner = self.context.runner
         try:

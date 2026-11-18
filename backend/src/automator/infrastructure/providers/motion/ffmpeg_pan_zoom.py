@@ -6,15 +6,16 @@ from pydantic import Field
 
 from automator.domain.capabilities import Capability, MotionRequest
 from automator.infrastructure.providers.context import ProviderContext
+from automator.infrastructure.providers.ffmpeg_args import X264Options
 from automator.infrastructure.providers.motion.pan_zoom_filter import (
     PanZoomTuning,
     pan_zoom_command,
 )
-from automator.infrastructure.providers.spec import ProviderOptions, ProviderSpec
+from automator.infrastructure.providers.output_path import ensure_parent
+from automator.infrastructure.providers.spec import ProviderSpec
 
 
-class PanZoomOptions(ProviderOptions):
-    binary: str = Field(default="ffmpeg", title="ffmpeg command", description="ffmpeg executable.")
+class PanZoomOptions(X264Options):
     max_zoom: float = Field(
         default=0.3,
         ge=0.0,
@@ -29,12 +30,7 @@ class PanZoomOptions(ProviderOptions):
         title="Supersampling",
         description="Scale the still up by this factor before moving to avoid jitter.",
     )
-    crf: int = Field(
-        default=18, ge=0, le=51, title="Quality (CRF)", description="Lower is better quality."
-    )
-    preset: str = Field(
-        default="medium", title="x264 preset", description="Encoder speed versus compression."
-    )
+    crf: int = Field(default=18, ge=0, le=51, title="Quality (CRF)", description="Lower is better.")
     timeout_seconds: float = Field(
         default=600.0, gt=0, title="Timeout", description="Seconds allowed for one clip."
     )
@@ -48,7 +44,7 @@ class FfmpegPanZoom:
         self.context = context
 
     def available(self) -> str | None:
-        return self.context.host.missing_binary(self.options.binary)
+        return self.context.host.missing_binary(self.options.ffmpeg_binary)
 
     def tuning(self) -> PanZoomTuning:
         return PanZoomTuning(
@@ -59,8 +55,8 @@ class FfmpegPanZoom:
         )
 
     def animate(self, request: MotionRequest, output: Path) -> Path:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        command = pan_zoom_command(request, self.tuning(), self.options.binary, output)
+        ensure_parent(output)
+        command = pan_zoom_command(request, self.tuning(), self.options.ffmpeg_binary, output)
         self.context.runner.run(command, self.options.timeout_seconds)
         return output
 
