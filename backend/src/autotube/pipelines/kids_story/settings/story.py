@@ -6,7 +6,6 @@ from pydantic import Field, model_validator
 
 from autotube.pipelines.kids_story.settings.base import (
     LocalizedNumber,
-    SettingsSection,
     StoryLanguage,
     localized_number,
     text_list_field,
@@ -17,6 +16,7 @@ from autotube.pipelines.kids_story.settings.choices import (
     STORY_SOURCE_CHOICES,
     THEME_MODE_CHOICES,
 )
+from autotube.pipelines.kids_story.settings.story_controls import StoryWritingSettings
 
 THEMES = [
     "sharing",
@@ -53,7 +53,7 @@ class StorySource(StrEnum):
     BUNDLED_ONLY = "bundled_only"
 
 
-class StorySettings(SettingsSection):
+class StorySettings(StoryWritingSettings):
     source: StorySource = Field(
         default=StorySource.LLM_WITH_FALLBACK,
         json_schema_extra=STORY_SOURCE_CHOICES,
@@ -152,7 +152,7 @@ class StorySettings(SettingsSection):
         ge=1,
         le=5,
         title="Closing scenes",
-        description="How many final scenes must contain the moral and the refrain.",
+        description="How many final scenes the ending check reads for the moral and refrain.",
     )
     question_count: int = Field(
         default=2,

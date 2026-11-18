@@ -9,6 +9,13 @@ class SoundEffectSettings(SettingsSection):
     enabled: bool = Field(
         default=True, title="Sound effects", description="Add the story's sound effect cues."
     )
+    max_per_scene: int = Field(
+        default=2,
+        ge=0,
+        le=5,
+        title="Most effects per scene",
+        description="How many sound cues the writer may give each scene. Extra cues are dropped.",
+    )
     prompt_template: str = Field(
         default="soft cartoon sound effect for a children's story: {cue}",
         min_length=1,

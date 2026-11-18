@@ -28,7 +28,39 @@ def enum_choices(enum: type[StrEnum], titles: Mapping[str, str]) -> ChoiceSchema
     return titled_choices(titles)
 
 
+def checkbox_choices(titles: Mapping[str, str]) -> ChoiceSchema:
+    item_choices = titled_choices(titles)
+
+    def apply(schema: JsonDict) -> None:
+        items: JsonDict = {}
+        item_choices(items)
+        schema["items"] = items
+        schema["uniqueItems"] = True
+
+    return apply
+
+
 LANGUAGE_CHOICES = titled_choices(LANGUAGE_NAMES)
+ENDING_STYLE_CHOICES = titled_choices(
+    {
+        "moral_and_refrain": "The moral, then the refrain",
+        "refrain_only": "The refrain only",
+        "open": "An open ending, no moral or refrain",
+    }
+)
+LEAD_MODE_CHOICES = titled_choices(
+    {"fixed": "The first cast member always leads", "rotate": "Take turns, episode by episode"}
+)
+STORY_CHECK_CHOICES = checkbox_choices(
+    {
+        "scene_count": "Number of scenes",
+        "words_per_scene": "Words per scene",
+        "duration": "Episode length",
+        "ending": "Ending (moral and refrain)",
+        "reading_level": "Reading level",
+        "cast": "Only cast characters",
+    }
+)
 STORY_SOURCE_CHOICES = titled_choices(
     {
         "llm_with_fallback": "Language model, bundled story if it fails",

@@ -1,0 +1,56 @@
+Write a new English story for "Story Time" about the theme: sharing.
+
+Cast (use only these characters, refer to them in "characters" by their id; kavin leads the story):
+- id "kavin": Kavin, a baby elephant. Looks: a small round baby elephant with soft blue-grey skin, big floppy ears with pink insides, a short curly trunk, bright curious eyes and a red-and-yellow striped scarf. Personality: curious, cheerful and caring; asks lots of questions and loves helping friends
+- id "mittu": Mittu, a parrot. Looks: a little green parrot with a bright red curved beak, a yellow chest patch, blue-tipped wings and a tiny orange flower tucked behind one eye. Personality: chatty and funny; loves singing and sometimes talks before thinking
+- id "chinnu": Chinnu, a palm squirrel. Looks: a tiny brown palm squirrel with three cream stripes down its back, a big fluffy tail and a small green satchel across its chest. Personality: quick, clever and a little shy; good at noticing small things
+- id "aamai_thatha": Grandpa Tortoise, a tortoise. Looks: a gentle old tortoise with a domed olive-green shell with honey-coloured patterns, round spectacles and a soft white beard. Personality: calm, patient and wise; tells the friends gentle lessons with a smile
+
+Choose one moral from this list, or a close gentle variation of one:
+- Sharing makes everyone happier.
+- Kind words can mend a sad heart.
+- It is fine to make mistakes if we try again.
+- Good friends listen to each other.
+- Small helpers can do big things.
+
+Requirements:
+- Between 8 and 10 scenes.
+- Each scene's narration has between 18 and 50 words, written in English.
+- The whole narration reads aloud in about 150 seconds at 120 words per minute.
+- Short sentences, simple everyday words, warm and calm tone.
+- The last scene says the moral word for word, then ends with this exact refrain: "Be kind, be brave, be you!"
+- "visual" describes what the picture shows in English, with no words, letters or signs in the picture.
+- "camera" is one of: push_in, pull_out, pan_left, pan_right, rise, still.
+- Mark exactly 2 of the most beautiful scenes with "hero": true.
+- "sound_effects" lists zero to two gentle sound cues per scene, in English, like "birds chirping".
+- "speaker" is "narrator", or a character id if that character says the whole scene.
+- "questions" holds exactly 2 "What happens next?" style questions for children, in English.
+- "short_scenes" lists the zero-based indexes of up to 5 scenes that make the best vertical Short.
+- "hook_line" is one gentle, curious sentence in English that opens the Short. No clickbait.
+- "thumbnail" describes, in English, one warm picture for the thumbnail with no text in it.
+
+Answer with JSON in exactly this shape:
+{
+  "title": "...",
+  "moral": "...",
+  "scenes": [
+    {
+      "narration": "...",
+      "visual": "...",
+      "characters": ["kavin"],
+      "setting": "...",
+      "mood": "...",
+      "camera": "push_in",
+      "hero": false,
+      "sound_effects": [],
+      "speaker": "narrator"
+    }
+  ],
+  "questions": ["..."],
+  "short_scenes": [0, 1, 2],
+  "hook_line": "...",
+  "thumbnail": "..."
+}
+
+Your previous answer did not pass these checks. Write the whole story again and fix every point:
+- fix scene 2

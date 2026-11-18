@@ -1,0 +1,444 @@
+{
+  "series": {
+    "name": {
+      "en": "Story Time",
+      "ta": "கதை நேரம்"
+    },
+    "tagline": {
+      "en": "Gentle stories for little hearts",
+      "ta": "சின்ன மனங்களுக்கு இனிய கதைகள்"
+    },
+    "refrain": {
+      "en": "Be kind, be brave, be you!",
+      "ta": "அன்பாக இரு, துணிவாக இரு, நீயாகவே இரு!"
+    },
+    "intro_line": {
+      "en": "Hello, little friends! Welcome to {series}. Let's begin!",
+      "ta": "வணக்கம், சின்ன நண்பர்களே! {series} உங்களை அன்புடன் வரவேற்கிறது. கதையைத் தொடங்குவோம்!"
+    },
+    "outro_line": {
+      "en": "Thank you for listening, little friends. See you in the next story!",
+      "ta": "கதையைக் கேட்டதற்கு நன்றி, சின்ன நண்பர்களே. அடுத்த கதையில் சந்திப்போம்!"
+    },
+    "editorial_rules": [
+      "Every story is gentle, warm and safe for children aged three to seven.",
+      "No violence, fear, danger, villains, punishment or unsafe behaviour.",
+      "Problems are small and everyday, and the friends solve them by being kind.",
+      "No brands, products, real people, places of worship or current events.",
+      "Use short sentences and simple words a young child understands.",
+      "End with the moral said plainly, then the series refrain."
+    ]
+  },
+  "look": {
+    "visual_style": "watercolour_storybook",
+    "custom_style": {
+      "prompt": "",
+      "negative_prompt": "",
+      "palette": [
+        "#A9D3EE",
+        "#CFE8C0",
+        "#A8D5BA",
+        "#7FB89A",
+        "#F3A69A"
+      ],
+      "outline": "thin",
+      "texture": "paper"
+    },
+    "colour_mood": "style",
+    "mood_palette": [
+      "#A9D3EE",
+      "#CFE8C0",
+      "#A8D5BA",
+      "#7FB89A",
+      "#F3A69A"
+    ],
+    "lighting": "style",
+    "detail_level": "style",
+    "background": "style",
+    "proportions": "style",
+    "extra_prompt": "",
+    "extra_negative_prompt": "",
+    "use_style_motion": true,
+    "use_style_lettering": true
+  },
+  "cast": [
+    {
+      "id": "kavin",
+      "name": {
+        "en": "Kavin",
+        "ta": "கவின்"
+      },
+      "species": "baby elephant",
+      "visual_descriptor": "a small round baby elephant with soft blue-grey skin, big floppy ears with pink insides, a short curly trunk, bright curious eyes and a red-and-yellow striped scarf",
+      "personality": "curious, cheerful and caring; asks lots of questions and loves helping friends",
+      "palette": [
+        "#8FA3B8",
+        "#E5534B",
+        "#F4C430"
+      ],
+      "voice_override": {
+        "en": "",
+        "ta": ""
+      }
+    },
+    {
+      "id": "mittu",
+      "name": {
+        "en": "Mittu",
+        "ta": "மிட்டு"
+      },
+      "species": "parrot",
+      "visual_descriptor": "a little green parrot with a bright red curved beak, a yellow chest patch, blue-tipped wings and a tiny orange flower tucked behind one eye",
+      "personality": "chatty and funny; loves singing and sometimes talks before thinking",
+      "palette": [
+        "#3DAA5C",
+        "#D7263D",
+        "#F7D046"
+      ],
+      "voice_override": {
+        "en": "",
+        "ta": ""
+      }
+    },
+    {
+      "id": "chinnu",
+      "name": {
+        "en": "Chinnu",
+        "ta": "சின்னு"
+      },
+      "species": "palm squirrel",
+      "visual_descriptor": "a tiny brown palm squirrel with three cream stripes down its back, a big fluffy tail and a small green satchel across its chest",
+      "personality": "quick, clever and a little shy; good at noticing small things",
+      "palette": [
+        "#8B5A2B",
+        "#F3E5C8",
+        "#6BA368"
+      ],
+      "voice_override": {
+        "en": "",
+        "ta": ""
+      }
+    },
+    {
+      "id": "aamai_thatha",
+      "name": {
+        "en": "Grandpa Tortoise",
+        "ta": "ஆமை தாத்தா"
+      },
+      "species": "tortoise",
+      "visual_descriptor": "a gentle old tortoise with a domed olive-green shell with honey-coloured patterns, round spectacles and a soft white beard",
+      "personality": "calm, patient and wise; tells the friends gentle lessons with a smile",
+      "palette": [
+        "#7A8F3E",
+        "#D9A441",
+        "#FFFFFF"
+      ],
+      "voice_override": {
+        "en": "",
+        "ta": ""
+      }
+    }
+  ],
+  "story": {
+    "source": "llm_with_fallback",
+    "primary_language": "en",
+    "theme_mode": "rotate",
+    "themes": [
+      "sharing",
+      "helping a friend",
+      "trying again",
+      "saying sorry",
+      "being patient",
+      "making a new friend",
+      "telling the truth",
+      "taking care of nature"
+    ],
+    "fixed_theme": "sharing",
+    "recent_themes": [],
+    "avoid_repeat_last": 3,
+    "morals": [
+      "Sharing makes everyone happier.",
+      "Kind words can mend a sad heart.",
+      "It is fine to make mistakes if we try again.",
+      "Good friends listen to each other.",
+      "Small helpers can do big things."
+    ],
+    "age_min": 3,
+    "age_max": 7,
+    "target_duration_seconds": 150,
+    "duration_tolerance_seconds": 30,
+    "scene_count_min": 8,
+    "scene_count_max": 10,
+    "words_per_scene_min": {
+      "en": 18.0,
+      "ta": 8.0
+    },
+    "words_per_scene_max": {
+      "en": 50.0,
+      "ta": 40.0
+    },
+    "words_per_minute": {
+      "en": 120.0,
+      "ta": 80.0
+    },
+    "reading_level": "preschool",
+    "max_average_sentence_words": {
+      "en": 12.0,
+      "ta": 9.0
+    },
+    "long_word_graphemes": {
+      "en": 9.0,
+      "ta": 10.0
+    },
+    "max_long_word_share": 0.15,
+    "ending_scenes": 2,
+    "question_count": 2,
+    "temperature": 0.8,
+    "translation_temperature": 0.3,
+    "max_tokens": 6000,
+    "max_attempts": 3
+  },
+  "safety": {
+    "banned_words": [
+      "kill",
+      "killed",
+      "blood",
+      "gun",
+      "knife",
+      "weapon",
+      "die",
+      "died",
+      "dead",
+      "monster",
+      "ghost",
+      "scary",
+      "hate",
+      "stupid",
+      "fight",
+      "punch",
+      "hurt"
+    ],
+    "brand_names": [
+      "Disney",
+      "Coca-Cola",
+      "Pepsi",
+      "McDonald's",
+      "Lego",
+      "Barbie",
+      "Nike",
+      "Adidas",
+      "Nintendo",
+      "Pixar",
+      "Marvel"
+    ],
+    "picture_exclusions": "text, letters, words, captions, watermark, logo, signature, scary, gloomy, violence, weapons, sharp teeth, distorted faces, extra limbs"
+  },
+  "visuals": {
+    "image_candidates": 2,
+    "hero_candidates": 4,
+    "hero_scene_count": 2,
+    "use_vision_judge": true,
+    "character_sheets": true,
+    "sheet_size": 1024,
+    "base_seed": 7,
+    "motion_intensity": 0.5,
+    "hero_motion_intensity": 0.7,
+    "card_camera": "push_in",
+    "short_art_mode": "crop",
+    "crop_focus": 0.5,
+    "overlay_series_badge": false,
+    "badge_text": "",
+    "badge_corner": "top_left",
+    "badge_size_ratio": 0.045
+  },
+  "voice": {
+    "narrator_voice": {
+      "en": "",
+      "ta": ""
+    },
+    "speed": 0.95,
+    "include_intro": true,
+    "include_outro": true
+  },
+  "subtitles": {
+    "enabled": true,
+    "upload_captions": true,
+    "burn_in_episode": false,
+    "burn_in_short": true,
+    "max_chars_per_line": 42,
+    "short_max_chars_per_line": 26,
+    "max_lines": 2,
+    "short_max_lines": 2,
+    "max_cue_seconds": 6.0,
+    "min_cue_seconds": 0.7,
+    "font_files": {
+      "en": [
+        "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+      ],
+      "ta": [
+        "/System/Library/Fonts/Supplemental/Tamil Sangam MN.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansTamil-Bold.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansTamil-Regular.ttf"
+      ]
+    },
+    "font_family": {
+      "en": "Noto Sans",
+      "ta": "Noto Sans Tamil"
+    },
+    "letter_width_estimate": {
+      "en": 0.6,
+      "ta": 1.15
+    },
+    "font_size": 54,
+    "short_font_size": 64,
+    "primary_color": "#FFFFFF",
+    "outline_color": "#000000",
+    "highlight_color": "#FFD54A",
+    "bottom_margin_share": 0.08,
+    "short_bottom_margin_share": 0.22,
+    "side_margin_share": 0.04
+  },
+  "music": {
+    "enabled": true,
+    "mood_prompt": "gentle playful lullaby with soft marimba, ukulele and light flute, calm and warm",
+    "volume": 0.18,
+    "ducking": 0.6
+  },
+  "sound_effects": {
+    "enabled": true,
+    "prompt_template": "soft cartoon sound effect for a children's story: {cue}",
+    "duration_seconds": 1.5,
+    "volume": 0.5,
+    "offset_seconds": 0.3
+  },
+  "episode": {
+    "resolution": "1920x1080",
+    "fps": 30,
+    "intro_card": true,
+    "outro_card": true,
+    "card_seconds": 3.0,
+    "card_text_size_ratio": 0.11,
+    "scene_lead_in_seconds": 0.4,
+    "scene_tail_seconds": 0.8,
+    "min_scene_seconds": 3.0,
+    "loudness_lufs": -16.0,
+    "fade_seconds": 0.5
+  },
+  "short": {
+    "enabled": true,
+    "resolution": "1080x1920",
+    "max_duration_seconds": 58.0,
+    "scene_selection": "auto",
+    "first_n_scenes": 4,
+    "max_scenes": 5,
+    "hook_line": true
+  },
+  "thumbnail": {
+    "title_text": true,
+    "width": 1280,
+    "height": 720,
+    "max_bytes": 2000000,
+    "jpeg_quality": 92,
+    "min_jpeg_quality": 40,
+    "downscale_step": 0.85,
+    "min_width": 640,
+    "text_position": "bottom",
+    "text_size_ratio": 0.11,
+    "margin_ratio": 0.05,
+    "outline_ratio": 0.08,
+    "text_color": "#FFFFFF",
+    "outline_color": "#3A2A1A",
+    "font_files": {
+      "en": [
+        "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+      ],
+      "ta": [
+        "/System/Library/Fonts/Supplemental/Tamil Sangam MN.ttc",
+        "/System/Library/Fonts/Supplemental/Tamil MN.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansTamil-Bold.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansTamil-Regular.ttf"
+      ]
+    }
+  },
+  "metadata": {
+    "title_template": {
+      "en": "{title} | {series}",
+      "ta": "{title} | {series}"
+    },
+    "short_title_template": {
+      "en": "{title} #Shorts",
+      "ta": "{title} #Shorts"
+    },
+    "description_template": {
+      "en": "{title}\n\nA gentle story from {series} about {theme}. {tagline}.\n\nToday's lesson: {moral}\n\nWhat do you think happens next?\n{questions}\n\nWatch together, talk together, and share a smile.\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் ஒரு இனிய கதை. {tagline}.\n\nஇன்றைய பாடம்: {moral}\n\nஅடுத்து என்ன நடக்கும் என்று நினைக்கிறீர்கள்?\n{questions}\n\nசேர்ந்து பாருங்கள், சேர்ந்து பேசுங்கள், புன்னகையைப் பகிருங்கள்.\n\n{hashtags}"
+    },
+    "tags": {
+      "en": [
+        "kids stories",
+        "stories for kids",
+        "moral stories",
+        "bedtime stories",
+        "animated stories"
+      ],
+      "ta": [
+        "தமிழ் கதைகள்",
+        "குழந்தைகள் கதைகள்",
+        "நீதிக் கதைகள்",
+        "Tamil kids stories"
+      ]
+    },
+    "hashtags": {
+      "en": [
+        "#KidsStories",
+        "#MoralStories",
+        "#BedtimeStories"
+      ],
+      "ta": [
+        "#தமிழ்கதைகள்",
+        "#KidsStories",
+        "#MoralStories"
+      ]
+    },
+    "playlist_title": {
+      "en": "{series}",
+      "ta": "{series}"
+    },
+    "category": "1"
+  },
+  "quality": {
+    "weights": {
+      "subtitle_timing": 2.0,
+      "episode_duration": 1.5,
+      "short_duration": 1.0,
+      "speaking_rate": 1.0,
+      "reading_level": 1.0,
+      "moral_and_refrain": 1.5,
+      "character_consistency": 1.0,
+      "metadata_limits": 1.0,
+      "loudness": 0.5,
+      "completeness": 2.0
+    },
+    "subtitle_min_coverage": 0.95,
+    "words_per_minute_min": {
+      "en": 80.0,
+      "ta": 50.0
+    },
+    "words_per_minute_max": {
+      "en": 160.0,
+      "ta": 120.0
+    },
+    "loudness_tolerance_lu": 2.0,
+    "points_lost_per_lu": 10.0,
+    "points_lost_per_second": 2.0,
+    "points_lost_per_wpm": 2.0,
+    "points_lost_per_problem": 50.0,
+    "subtitle_overlap_penalty": 0.5,
+    "subtitle_out_of_bounds_penalty": 0.5
+  }
+}

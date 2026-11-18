@@ -115,6 +115,11 @@ class SafetySettings(SettingsSection):
         "Brand names",
         "A story mentioning any of these names is rejected and rewritten.",
     )
+    avoid_topics: list[str] = text_list_field(
+        [],
+        "Topics to avoid",
+        "Subjects the writer is told never to write about, one per line.",
+    )
     picture_exclusions: str = Field(
         default=PICTURE_EXCLUSIONS,
         max_length=800,

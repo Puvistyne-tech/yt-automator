@@ -23,6 +23,7 @@ class StoryAuthor:
     llm: TextGenerator
     settings: KidsStorySettings
     log: StageLog
+    seed: str = ""
 
     def answer(self, request_text: Callable[[], str]) -> str:
         try:
@@ -31,7 +32,7 @@ class StoryAuthor:
             raise WriterUnavailableError(str(error) or type(error).__name__) from error
 
     def drafted(self, theme: str, language: str, feedback: list[str]) -> Story:
-        request = story_request(self.settings, theme, language, feedback)
+        request = story_request(self.settings, theme, language, feedback, self.seed)
         draft = parse_model(self.answer(partial(self.llm.generate, request)), StoryDraft)
         return Story(language=language, theme=theme, **draft.model_dump())
 

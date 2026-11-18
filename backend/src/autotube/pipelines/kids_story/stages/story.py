@@ -64,7 +64,7 @@ class StoryStage:
     ) -> Written | None:
         try:
             llm = context.providers.resolve(Capability.LLM)
-            author = StoryAuthor(llm, settings, context.log)
+            author = StoryAuthor(llm, settings, context.log, context.run_id)
             first = author.written(theme, order[0])
             if first is None:
                 return None

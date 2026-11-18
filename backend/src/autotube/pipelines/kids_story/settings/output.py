@@ -152,3 +152,10 @@ class ShortSettings(SettingsSection):
     hook_line: bool = Field(
         default=True, title="Hook line", description="Open the Short with the story's hook line."
     )
+    hook_style: str = Field(
+        default="gentle, curious",
+        min_length=1,
+        max_length=200,
+        title="Hook style",
+        description="How the hook line sounds: 'one <hook style> sentence that opens the Short'.",
+    )
