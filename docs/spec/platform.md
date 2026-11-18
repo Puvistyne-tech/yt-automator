@@ -135,10 +135,18 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   registry order, or a warning listing every provider's reason (offline fallbacks exist, so a
   capability without a provider never stops the app). `can_start` is false only when a check is an error.
 - `python -m automator.doctor` (`just doctor`) prints the report and exits 1 when `can_start` is false
-  or an `AUTOMATOR_*` setting is invalid, else 0. It writes nothing: it does not migrate or create the
-  database, and the file secret store creates its key only on the first write.
+  or an `AUTOMATOR_*` setting is invalid or the system refuses access (an OS error), else 0. It
+  creates no file or folder: it does not migrate or create the database, and the file secret store
+  creates its key only on the first write. The one change it may make is tightening an existing
+  `secrets.key` to mode 0600 when it reads secrets with the file store.
   `python -m automator.doctor --print-defaults` prints `KEY=value` lines (`DATA_DIR`, `APP_HOST`,
-  `APP_PORT`, `OLLAMA_MODEL`, `OLLAMA_URL`, `ACE_STEP_DIR`, `MUSIC_DIR`) that `scripts/setup.sh` reads.
+  `APP_PORT`, `REDIRECT_BASE_URL`, `OLLAMA_MODEL`, `OLLAMA_URL`, `ACE_STEP_DIR`, `MUSIC_DIR`) that
+  `scripts/setup.sh` reads once the backend venv exists; before that it uses the same defaults.
+- The OAuth redirect URI is `<redirect base>/api/oauth/callback`. The redirect base is the runtime
+  setting `redirect_base_url` when set, otherwise `http://<host>:<port>` with `127.0.0.1` in place
+  of a wildcard host (`0.0.0.0`, `::`), so it follows `AUTOMATOR_PORT` in both start modes.
+- The file secret store creates its key with an exclusive create (mode 0600); a writer that finds
+  the key already created uses it, and a store opened before the key existed reloads it from disk.
 - A keychain that cannot be used (locked, or access denied) raises the same 409 `secrets_unreadable`
   as an unreadable secrets file; the message names the keychain error type, never a value.
 - Made-for-kids on a target can only be forced on by a pipeline that declares the capability `kids_content`; such a pipeline's targets are always made for kids.

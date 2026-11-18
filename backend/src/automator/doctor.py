@@ -80,8 +80,8 @@ def main(
             out.write(defaults_text(setup_defaults(environ)))
             return 0
         doctor = build_doctor(environ)
-    except ValueError as failure:
-        out.write(f"Invalid configuration: {failure}\n{CANNOT_START}\n")
+    except (ValueError, OSError) as failure:
+        out.write(f"Cannot run the doctor: {failure}\n{CANNOT_START}\n")
         return 1
     report = doctor.execute()
     out.write(render(report))

@@ -3,7 +3,10 @@ from __future__ import annotations
 import io
 from pathlib import Path
 
-from automator.doctor import exit_code, main, render
+import pytest
+
+from automator import doctor as doctor_module
+from automator.doctor import CANNOT_START, exit_code, main, render
 from automator.domain.capabilities import Capability
 from automator.domain.diagnostics import CheckStatus, DoctorReport, HealthCheck, ProviderHealth
 from automator.domain.secrets import SecretDefinition
@@ -102,12 +105,28 @@ def test_main_exits_one_when_the_data_dir_is_unusable(tmp_path: Path) -> None:
 def test_main_exits_one_on_an_invalid_setting(tmp_path: Path) -> None:
     out = io.StringIO()
     assert main((), environment(tmp_path, AUTOMATOR_PORT="abc"), out) == 1
-    assert out.getvalue().startswith("Invalid configuration:")
+    assert out.getvalue().startswith("Cannot run the doctor:")
+    assert out.getvalue().rstrip().endswith(CANNOT_START)
+
+
+def test_main_exits_one_when_the_system_refuses_access(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse(_: object) -> None:
+        raise PermissionError("keychain access denied")
+
+    monkeypatch.setattr(doctor_module, "build_doctor", refuse)
+    out = io.StringIO()
+    assert main((), environment(tmp_path), out) == 1
+    assert "keychain access denied" in out.getvalue()
+    assert out.getvalue().rstrip().endswith(CANNOT_START)
 
 
 def test_main_prints_the_setup_defaults(tmp_path: Path) -> None:
     out = io.StringIO()
-    assert main(["--print-defaults"], environment(tmp_path / "data"), out) == 0
+    env = environment(tmp_path / "data", AUTOMATOR_PORT="9000")
+    assert main(["--print-defaults"], env, out) == 0
     lines = out.getvalue().splitlines()
     assert f"MUSIC_DIR={tmp_path / 'data' / 'assets' / 'music'}" in lines
-    assert "APP_PORT=8000" in lines
+    assert "APP_PORT=9000" in lines
+    assert "REDIRECT_BASE_URL=http://127.0.0.1:9000" in lines

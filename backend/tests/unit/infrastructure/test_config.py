@@ -12,6 +12,7 @@ from automator.infrastructure.config import (
     RuntimeConfig,
     SecretBackend,
     default_data_dir,
+    default_redirect_base,
     load_config,
 )
 
@@ -46,7 +47,7 @@ DEFAULTS: dict[str, Any] = {
     "host": "127.0.0.1",
     "port": 8000,
     "reload": False,
-    "redirect_base_url": "http://127.0.0.1:8000",
+    "redirect_base_url": "",
     "ui_base_url": "",
     "scheduler_tick_seconds": 30.0,
     "worker_poll_seconds": 1.0,
@@ -95,10 +96,32 @@ def test_defaults_and_derived_paths(tmp_path: Path) -> None:
     assert moved.oauth_redirect_uri == "http://h:1/api/oauth/callback"
 
 
-def test_doctor_policy_follows_the_config() -> None:
+@pytest.mark.parametrize(
+    ("host", "port", "expected"),
+    [
+        ("127.0.0.1", 9000, "http://127.0.0.1:9000"),
+        ("localhost", 8000, "http://localhost:8000"),
+        ("0.0.0.0", 8100, "http://127.0.0.1:8100"),
+        ("::", 8200, "http://127.0.0.1:8200"),
+    ],
+)
+def test_default_redirect_base_follows_host_and_port(host: str, port: int, expected: str) -> None:
+    assert default_redirect_base(host, port) == expected
+    config = load_config({env("host"): host, env("port"): str(port)})
+    assert config.redirect_base == expected
+    assert config.oauth_redirect_uri == expected + "/api/oauth/callback"
+
+
+def test_explicit_redirect_base_wins_over_the_port() -> None:
+    config = load_config({env("port"): "9000", env("redirect_base_url"): "http://h:1"})
+    assert config.redirect_base == "http://h:1"
+
+
+def test_doctor_policy_follows_the_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(config_module, "required_python", lambda: (3, 99))
     policy = load_config({env("doctor_min_free_gb"): "3"}).doctor_policy
     assert policy.min_free_gb == 3.0
-    assert policy.min_python == (3, 12)
+    assert policy.min_python == (3, 99)
 
 
 def test_doctor_policy_keeps_its_default_without_package_metadata(

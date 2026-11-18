@@ -4,11 +4,12 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND_DIR="$REPO_ROOT/backend"
 WEB_DIR="$REPO_ROOT/web"
-BACKEND_PYTHON="$BACKEND_DIR/.venv/bin/python"
+BACKEND_PYTHON="${SETUP_BACKEND_PYTHON:-$BACKEND_DIR/.venv/bin/python}"
 DATA_DIR="${AUTOMATOR_DATA_DIR:-$HOME/.yt-automator}"
 APP_HOST="${AUTOMATOR_HOST:-127.0.0.1}"
 APP_PORT="${AUTOMATOR_PORT:-8000}"
 USER_REDIRECT_BASE_URL="${AUTOMATOR_REDIRECT_BASE_URL:-}"
+APP_REDIRECT_BASE_URL=""
 PYTHON_VERSION="${SETUP_PYTHON_VERSION:-3.12}"
 USER_OLLAMA_MODEL="${OLLAMA_MODEL:-}"
 USER_OLLAMA_URL="${OLLAMA_URL:-}"
@@ -63,6 +64,9 @@ Environment: AUTOMATOR_DATA_DIR, AUTOMATOR_HOST, AUTOMATOR_PORT and
 AUTOMATOR_REDIRECT_BASE_URL as for the app. OLLAMA_MODEL pulls another model;
 choose it afterwards in the Ollama provider's Model option under Providers.
 SETUP_EXTRA_PATH is prepended to PATH (default ~/.local/bin:/opt/homebrew/bin).
+SETUP_BACKEND_PYTHON is the backend venv Python asked for the app's defaults
+(default backend/.venv/bin/python). OLLAMA_WAIT_SECONDS and
+SERVICE_STOP_WAIT_SECONDS are whole numbers of seconds.
 USAGE
 }
 
@@ -136,10 +140,16 @@ wait_for() {
   local check="$1" limit="$2" message="$3" waited=0
   is_dry_run && return 0
   until "$check"; do
-    [ "$waited" -ge "$limit" ] && fail "$message"
+    if ! [ "$waited" -lt "$limit" ] 2>/dev/null; then fail "$message"; fi
     sleep 1
     waited=$((waited + 1))
   done
+}
+
+require_seconds() {
+  case "$2" in
+    '' | *[!0-9]*) fail "$1 must be a whole number of seconds, got '$2'" ;;
+  esac
 }
 
 brew_has_formula() {
@@ -164,15 +174,23 @@ uv_tool() {
 
 derive_settings() {
   APP_URL="http://$APP_HOST:$APP_PORT"
-  REDIRECT_BASE_URL="${USER_REDIRECT_BASE_URL:-http://127.0.0.1:$APP_PORT}"
+  REDIRECT_BASE_URL="${USER_REDIRECT_BASE_URL:-${APP_REDIRECT_BASE_URL:-$(fallback_redirect_base)}}"
   EXTRAS_FILE="$DATA_DIR/setup/extras"
   LOG_DIR="$DATA_DIR/logs"
+}
+
+fallback_redirect_base() {
+  case "$APP_HOST" in
+    '' | 0.0.0.0 | ::) printf 'http://127.0.0.1:%s' "$APP_PORT" ;;
+    *) printf 'http://%s:%s' "$APP_HOST" "$APP_PORT" ;;
+  esac
 }
 
 print_defaults() {
   say "DATA_DIR=$DATA_DIR"
   say "APP_HOST=$APP_HOST"
   say "APP_PORT=$APP_PORT"
+  say "REDIRECT_BASE_URL=$REDIRECT_BASE_URL"
   say "OLLAMA_MODEL=$OLLAMA_MODEL"
   say "OLLAMA_URL=$OLLAMA_URL"
   say "ACE_STEP_DIR=$ACE_STEP_DIR"
@@ -184,6 +202,7 @@ apply_default() {
     DATA_DIR) DATA_DIR="$2" ;;
     APP_HOST) APP_HOST="$2" ;;
     APP_PORT) APP_PORT="$2" ;;
+    REDIRECT_BASE_URL) APP_REDIRECT_BASE_URL="$2" ;;
     OLLAMA_MODEL) OLLAMA_MODEL="${USER_OLLAMA_MODEL:-$2}" ;;
     OLLAMA_URL) OLLAMA_URL="${USER_OLLAMA_URL:-$2}" ;;
     ACE_STEP_DIR) ACE_STEP_DIR="$2" ;;
@@ -535,6 +554,8 @@ run_selected() {
 
 main() {
   local flag
+  require_seconds OLLAMA_WAIT_SECONDS "$OLLAMA_WAIT_SECONDS"
+  require_seconds SERVICE_STOP_WAIT_SECONDS "$SERVICE_STOP_WAIT_SECONDS"
   derive_settings
   for flag in "$@"; do parse_flag "$flag"; done
   choose_base

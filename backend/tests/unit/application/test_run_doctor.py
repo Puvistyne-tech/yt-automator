@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from automator.domain.diagnostics import CheckStatus
 from tests.fixtures.fake_diagnostics import UnreadableSecrets, run_doctor, system_facts
+from tests.fixtures.fake_keyring import locked_store
 from tests.fixtures.fake_runtime import InMemorySecrets
-from tests.unit.infrastructure.test_keyring_store import locked_store
 
 
 def test_healthy_system_can_start_and_lists_providers() -> None:

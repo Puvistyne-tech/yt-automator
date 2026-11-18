@@ -35,6 +35,25 @@ def load_key(key_path: Path) -> bytes | None:
     return key_path.read_bytes().strip()
 
 
+def shared_key(key_path: Path) -> bytes:
+    key_path.parent.mkdir(parents=True, exist_ok=True)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    try:
+        descriptor = os.open(key_path, flags, PRIVATE_FILE_MODE)
+    except FileExistsError:
+        return load_key(key_path) or b""
+    key = Fernet.generate_key()
+    with os.fdopen(descriptor, "wb") as handle:
+        handle.write(key)
+    return key
+
+
+def fresh_fernet(key_path: Path) -> Fernet:
+    key = Fernet.generate_key()
+    write_private(key_path, key)
+    return Fernet(key)
+
+
 def fernet_for(key: bytes | None) -> Fernet | None:
     try:
         return Fernet(key) if key is not None else None
@@ -53,6 +72,7 @@ class EncryptedFileSecretStore:
         return file_unreadable(self.path, self.key_path)
 
     def decrypted(self) -> bytes:
+        self.fernet = self.fernet or fernet_for(load_key(self.key_path))
         if self.fernet is None:
             raise self.unreadable()
         try:
@@ -62,9 +82,8 @@ class EncryptedFileSecretStore:
 
     def writer(self) -> Fernet:
         if self.fernet is None or not self.key_path.exists():
-            key = Fernet.generate_key()
-            write_private(self.key_path, key)
-            self.fernet = Fernet(key)
+            shared = fernet_for(shared_key(self.key_path))
+            self.fernet = shared or fresh_fernet(self.key_path)
         return self.fernet
 
     def read_all(self) -> dict[str, str]:

@@ -15,6 +15,7 @@ def setup_defaults(environ: Mapping[str, str]) -> dict[str, str]:
         "DATA_DIR": str(config.data_dir),
         "APP_HOST": config.host,
         "APP_PORT": str(config.port),
+        "REDIRECT_BASE_URL": config.redirect_base,
         "OLLAMA_MODEL": ollama.model,
         "OLLAMA_URL": ollama.base_url,
         "ACE_STEP_DIR": str(ace_step_venv(config.data_dir)),

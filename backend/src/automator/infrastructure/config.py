@@ -12,6 +12,8 @@ from automator.domain.run_parts import DEFAULT_MAX_RUN_LOGS
 from automator.infrastructure.runtime.python_requirement import required_python
 
 ENV_PREFIX = "AUTOMATOR_"
+LOOPBACK_HOST = "127.0.0.1"
+WILDCARD_HOSTS = frozenset({"", "0.0.0.0", "::"})
 DEFAULT_MIN_FREE_GB: float = DoctorPolicy.model_fields["min_free_gb"].default
 OAUTH_CALLBACK_PATH = "/api/oauth/callback"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -27,6 +29,11 @@ def default_data_dir() -> Path:
     return Path.home() / ".yt-automator"
 
 
+def default_redirect_base(host: str, port: int) -> str:
+    reachable = LOOPBACK_HOST if host in WILDCARD_HOSTS else host
+    return f"http://{reachable}:{port}"
+
+
 class RuntimeConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -35,7 +42,8 @@ class RuntimeConfig(BaseModel):
     port: int = Field(default=8000, ge=1, le=65535, description="Port the web server binds to")
     reload: bool = Field(default=False, description="Restart the server when code changes")
     redirect_base_url: str = Field(
-        default="http://127.0.0.1:8000", description="Public base URL used for the OAuth redirect"
+        default="",
+        description="Public base URL used for the OAuth redirect; empty follows host and port",
     )
     ui_base_url: str = Field(default="", description="Base URL the OAuth callback redirects to")
     scheduler_tick_seconds: float = Field(
@@ -94,7 +102,11 @@ class RuntimeConfig(BaseModel):
 
     @property
     def oauth_redirect_uri(self) -> str:
-        return self.redirect_base_url.rstrip("/") + OAUTH_CALLBACK_PATH
+        return self.redirect_base.rstrip("/") + OAUTH_CALLBACK_PATH
+
+    @property
+    def redirect_base(self) -> str:
+        return self.redirect_base_url or default_redirect_base(self.host, self.port)
 
     @property
     def database_path(self) -> Path:

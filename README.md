@@ -80,8 +80,12 @@ Each credential in the app is one Google Cloud project with its own daily quota.
    will connect as a **test user**. In Testing, Google expires the authorization after 7 days;
    the channel then shows as expired and you reconnect it in one click.
 5. Clients: create an OAuth client of type **Web application**. Under Authorised redirect URIs add
-   exactly `http://127.0.0.1:8000/api/oauth/callback`. This is `AUTOMATOR_REDIRECT_BASE_URL`
-   (default `http://127.0.0.1:8000`) followed by `/api/oauth/callback`; change both together.
+   exactly `http://127.0.0.1:8000/api/oauth/callback`. The redirect URI follows the port: with
+   `AUTOMATOR_PORT=9000` register `http://127.0.0.1:9000/api/oauth/callback` instead. It is
+   `http://<host>:<port>` (127.0.0.1 when the host is `0.0.0.0` or `::`) followed by
+   `/api/oauth/callback`, unless `AUTOMATOR_REDIRECT_BASE_URL` sets the base explicitly. If you
+   change the port later, update the URI in Google Cloud too. To see the base in use, run
+   `cd backend && uv run python -m automator.doctor --print-defaults` and read `REDIRECT_BASE_URL`.
 6. Copy the client id and client secret.
 
 Quota: each project gets 10,000 units per day, reset at midnight Pacific time. One upload costs

@@ -29,23 +29,34 @@ def hermetic_bin(tmp_path: Path) -> Path:
     return folder
 
 
-def stub(folder: Path, name: str) -> None:
+def stub(folder: Path, name: str, body: str = "exit 0") -> Path:
     path = folder / name
-    path.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    path.write_text(f"#!/bin/sh\n{body}\n", encoding="utf-8")
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
+    return path
 
 
 def setup_run(
-    tmp_path: Path, *flags: str, stubs: tuple[str, ...] = (), data_dir: bool = True
+    tmp_path: Path,
+    *flags: str,
+    stubs: tuple[str, ...] = (),
+    data_dir: bool = True,
+    extra: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     home = tmp_path / "home"
     home.mkdir(exist_ok=True)
     folder = hermetic_bin(tmp_path)
     for name in stubs:
         stub(folder, name)
-    env = {"HOME": str(home), "PATH": str(folder), "SETUP_EXTRA_PATH": ""}
+    env = {
+        "HOME": str(home),
+        "PATH": str(folder),
+        "SETUP_EXTRA_PATH": "",
+        "SETUP_BACKEND_PYTHON": str(tmp_path / "no-venv" / "python"),
+    }
     if data_dir:
         env["AUTOMATOR_DATA_DIR"] = str(home / "data")
+    env |= extra or {}
     bash = shutil.which("bash") or "bash"
     return subprocess.run(
         [bash, str(SCRIPT), *flags],
@@ -130,6 +141,7 @@ def test_no_base_alone_plans_nothing(tmp_path: Path) -> None:
 
 def test_present_tools_are_skipped(tmp_path: Path) -> None:
     result = setup_run(tmp_path, "--dry-run", stubs=("uv", "just"))
+    assert result.returncode == 0, result.stderr
     assert "uv is already present" in result.stdout
     assert "just is already present" in result.stdout
 
@@ -148,12 +160,36 @@ def test_help_prints_usage(tmp_path: Path, flag: str) -> None:
     assert "SETUP_EXTRA_PATH" in result.stdout
 
 
-def test_script_defaults_match_the_app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    "environ",
+    [{}, {"AUTOMATOR_PORT": "9000"}, {"AUTOMATOR_HOST": "0.0.0.0", "AUTOMATOR_PORT": "8100"}],
+)
+def test_script_defaults_match_the_app(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, environ: dict[str, str]
+) -> None:
     home = tmp_path / "home"
     monkeypatch.setenv("HOME", str(home))
     out = io.StringIO()
-    assert doctor_main(["--print-defaults"], {}, out) == 0
-    result = setup_run(tmp_path, "--print-defaults", data_dir=False)
+    assert doctor_main(["--print-defaults"], environ, out) == 0
+    result = setup_run(tmp_path, "--print-defaults", data_dir=False, extra=environ)
     assert result.returncode == 0
     assert f"DATA_DIR={home / '.yt-automator'}" in result.stdout.splitlines()
     assert result.stdout.splitlines() == out.getvalue().splitlines()
+
+
+def test_the_plan_uses_the_app_defaults_once_the_backend_exists(tmp_path: Path) -> None:
+    defaults = f"OLLAMA_MODEL=stub:1b\nMUSIC_DIR={tmp_path}/tracks\nREDIRECT_BASE_URL=http://x:1"
+    body = f'if [ "$1" = "-m" ]; then printf "{defaults}\\n"; else echo 3.12; fi'
+    python = stub(tmp_path, "python", body)
+    extra = {"SETUP_BACKEND_PYTHON": str(python)}
+    plan = setup_run(tmp_path, "--dry-run", "--ollama", "--music", extra=extra).stdout
+    assert "would run: ollama pull stub:1b" in plan
+    assert f"would run: mkdir -p {tmp_path}/tracks" in plan
+    assert "backend venv (Python 3.12, needed by Kokoro) is already present" in plan
+
+
+@pytest.mark.parametrize("variable", ["OLLAMA_WAIT_SECONDS", "SERVICE_STOP_WAIT_SECONDS"])
+def test_wait_limits_must_be_whole_seconds(tmp_path: Path, variable: str) -> None:
+    result = setup_run(tmp_path, "--dry-run", extra={variable: "soon"})
+    assert result.returncode == 1
+    assert f"{variable} must be a whole number of seconds, got 'soon'" in result.stderr
