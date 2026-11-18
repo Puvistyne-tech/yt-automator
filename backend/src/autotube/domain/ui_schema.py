@@ -11,6 +11,7 @@ UI_WIDGETS = frozenset({"textarea", "select", "radio", "checkboxes", "range", "c
 CARDS_WIDGET = "cards"
 CHOICE_GROUP_KEY = "x-group"
 CHOICE_SWATCHES_KEY = "x-swatches"
+MACHINE_LOCAL_KEY = "x-machine-local"
 SECTIONS_KEY = "ui:sections"
 ORDER_KEY = "ui:order"
 WIDGET_KEY = "ui:widget"

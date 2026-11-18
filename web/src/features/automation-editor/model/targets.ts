@@ -1,6 +1,6 @@
 import { isKidsPipeline } from "@/api/capabilities";
 import { needsReconnect } from "@/api/channelHealth";
-import { CHANNEL_STATUSES, PRIVACY_LABELS, PRIVACY_OPTIONS } from "@/api/labels";
+import { channelOptionLabel, PRIVACY_LABELS, PRIVACY_OPTIONS } from "@/api/labels";
 import type { Channel, PipelineDescriptor } from "@/api/types";
 import type { AutomationDraft, TargetDraft } from "@/features/automation-editor/model/draft";
 import type { CheckboxOption, SelectOption } from "@/shared/ui";
@@ -18,9 +18,7 @@ export function languageName(pipeline: PipelineDescriptor | undefined, code: str
 }
 
 function channelOption(channel: Channel): SelectOption {
-  const suffix =
-    channel.status === "connected" ? "" : ` (${CHANNEL_STATUSES[channel.status].label})`;
-  return { value: channel.id, label: `${channel.title}${suffix}` };
+  return { value: channel.id, label: channelOptionLabel(channel) };
 }
 
 function addBlockedReason(draft: AutomationDraft, channels: Channel[]): string | null {

@@ -1,4 +1,11 @@
-import type { ChannelStatus, Privacy, RunStatus, StageStatus, UploadStatus } from "@/api/types";
+import type {
+  Channel,
+  ChannelStatus,
+  Privacy,
+  RunStatus,
+  StageStatus,
+  UploadStatus,
+} from "@/api/types";
 import type { Tone } from "@/shared/ui/surfaces";
 
 interface Label {
@@ -39,6 +46,12 @@ export const CHANNEL_STATUSES: Record<ChannelStatus, Label> = {
   expired: { label: "Token expired", tone: "warning" },
   revoked: { label: "Access revoked", tone: "danger" },
 };
+
+export function channelOptionLabel(channel: Pick<Channel, "title" | "status">): string {
+  return channel.status === "connected"
+    ? channel.title
+    : `${channel.title} (${CHANNEL_STATUSES[channel.status].label})`;
+}
 
 export const PRIVACY_LABELS: Record<Privacy, string> = {
   private: "Private",

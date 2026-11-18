@@ -1,8 +1,8 @@
 import { HttpResponse, http } from "msw";
 import {
   choiceErrors,
+  documentErrors,
   exportDocument,
-  formatErrors,
   importPreview,
   missingChoiceErrors,
   refusalMessage,
@@ -15,6 +15,7 @@ import type {
   ImportPreview,
   ImportRequest,
 } from "@/api/types";
+import { isJsonObject } from "@/shared/isJsonObject";
 
 type Errors = Record<string, string>;
 
@@ -37,10 +38,10 @@ type Checked = { preview: ImportPreview; errors: Errors } | { refused: Response 
 async function checked(request: Request): Promise<Checked> {
   const body = (await request.json()) as Partial<ImportRequest>;
   const raw = body.document;
-  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+  if (!isJsonObject(raw)) {
     return { refused: validationFailed({ document: "Input should be a valid dictionary" }) };
   }
-  const problems = formatErrors(raw);
+  const problems = documentErrors(raw);
   if (Object.keys(problems).length > 0) {
     return { refused: apiError(400, "validation_failed", refusalMessage(problems), problems) };
   }

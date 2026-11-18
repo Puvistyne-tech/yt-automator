@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -112,11 +113,40 @@ def test_read_document_refuses_other_files(app: str | None) -> None:
     assert document is None and "app" in errors
 
 
-def test_read_document_reports_field_errors() -> None:
+def without_automation(raw: dict[str, Any]) -> None:
+    del raw["automation"]
+
+
+Change = Callable[[dict[str, Any]], None]
+
+
+def set_at(*path: str | int, value: Any) -> Change:
+    def change(raw: dict[str, Any]) -> None:
+        node: Any = raw
+        for key in path[:-1]:
+            node = node[key]
+        node[path[-1]] = value
+
+    return change
+
+
+@pytest.mark.parametrize(
+    ("change", "field"),
+    [
+        (without_automation, "automation"),
+        (set_at("automation", "languages", value=[]), "automation.languages"),
+        (set_at("automation", "languages", value="en"), "automation.languages"),
+        (set_at("automation", "schedule", value="daily"), "automation.schedule"),
+        (set_at("extra", value=1), "extra"),
+        (set_at("automation", "owner", value="me"), "automation.owner"),
+        (set_at("automation", "targets", 0, "id", value="t1"), "automation.targets.0.id"),
+    ],
+)
+def test_read_document_reports_field_errors(change: Change, field: str) -> None:
     raw = raw_document()
-    raw["automation"]["languages"] = []
+    change(raw)
     document, errors = read_document(raw)
-    assert document is None and set(errors) == {"automation.languages"}
+    assert document is None and set(errors) == {field}
 
 
 def parsed(*targets: Target, channels: tuple[Channel, ...] = ()) -> AutomationDocument:
@@ -137,6 +167,19 @@ def test_resolved_channels_prefers_explicit_choices() -> None:
     document = parsed(target("chan-1"), target("lost", "t2"))
     mapping = resolved_channels(document, [channel("chan-1")], {"chan-1": None, "lost": "x"})
     assert mapping == {"chan-1": None, "lost": "x"}
+
+
+def test_targets_sharing_a_missing_channel_need_one_choice() -> None:
+    document = parsed(target("gone"), target("gone", "t2"))
+    assert [item.id for item in unresolved_channels(document, {})] == ["gone"]
+    assert imported_input(document, {"gone": None}).targets == ()
+
+
+def test_imported_name_is_not_suffixed_twice() -> None:
+    document = parsed(target("a"))
+    renamed = document.automation.model_copy(update={"name": "Bedtime (imported)"})
+    again = document.model_copy(update={"automation": renamed})
+    assert imported_input(again, {}).name == "Bedtime (imported)"
 
 
 def test_unresolved_channels_carry_exported_title_or_bare_id() -> None:

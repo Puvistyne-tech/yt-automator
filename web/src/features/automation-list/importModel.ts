@@ -1,5 +1,7 @@
 import { errorMessage, fieldErrorsOf, normalizeFieldErrors } from "@/api/errors";
+import { channelOptionLabel } from "@/api/labels";
 import type { Channel, ChannelChoices, ExportedChannel, JsonObject } from "@/api/types";
+import { isJsonObject } from "@/shared/isJsonObject";
 import type { SelectOption } from "@/shared/ui";
 
 export const IMPORT_FILE_TYPES = ".json,application/json";
@@ -18,14 +20,10 @@ export interface ImportProblem {
   fields: { label: string; message: string }[];
 }
 
-function isObject(value: unknown): value is JsonObject {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 export function parseExportFile(text: string): ParsedFile {
   try {
     const parsed: unknown = JSON.parse(text);
-    return isObject(parsed) ? { document: parsed } : { error: NOT_AN_EXPORT };
+    return isJsonObject(parsed) ? { document: parsed } : { error: NOT_AN_EXPORT };
   } catch {
     return { error: NOT_AN_EXPORT };
   }
@@ -33,11 +31,7 @@ export function parseExportFile(text: string): ParsedFile {
 
 export function channelChoiceOptions(channels: Channel[]): SelectOption[] {
   return [
-    ...channels.map((channel) => ({
-      value: channel.id,
-      label:
-        channel.status === "connected" ? channel.title : `${channel.title} (${channel.status})`,
-    })),
+    ...channels.map((channel) => ({ value: channel.id, label: channelOptionLabel(channel) })),
     { value: LEAVE_OUT, label: "Leave its targets out" },
   ];
 }

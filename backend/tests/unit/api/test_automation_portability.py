@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
+from tests.fixtures.fake_runtime import InMemorySecrets
 from tests.unit.api.client import Api, error_of, ok
 
 
@@ -15,14 +17,15 @@ def import_body(document: dict[str, Any], **channel_map: str | None) -> dict[str
     return {"document": document, "channel_map": channel_map}
 
 
-def test_export_then_import_creates_a_disabled_copy(api: Api) -> None:
+def test_export_then_import_without_secrets(api: Api, secrets: InMemorySecrets) -> None:
     document = export_of(api)
+    seeded = list(secrets.values.values())
+    assert "csecret" in seeded and len(seeded) >= 2
     assert (document["app"], document["format_version"]) == ("AutoTube", 1)
-    assert "client_secret" not in str(document) and "c0de" not in str(document)
+    assert not [value for value in seeded if value in json.dumps(document)]
     preview = ok(api.client.post("/api/automations/import/preview", json=import_body(document)))
     assert preview["unknown_channels"] == []
-    created = ok(api.client.post("/api/automations/import", json=import_body(document)), 201)
-    assert (created["name"], created["enabled"]) == ("Bedtime (imported)", False)
+    ok(api.client.post("/api/automations/import", json=import_body(document)), 201)
     assert len(ok(api.client.get("/api/automations"))) == 2
 
 

@@ -22,6 +22,14 @@ IMPORTED_SUFFIX = " (imported)"
 ChannelChoices = Mapping[str, str | None]
 
 
+def channel_ids(targets: Sequence[TargetFields]) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(target.channel_id for target in targets))
+
+
+def imported_name(name: str) -> str:
+    return name if name.endswith(IMPORTED_SUFFIX) else f"{name}{IMPORTED_SUFFIX}"
+
+
 class ExportedChannel(DomainModel):
     id: str = Field(min_length=1)
     youtube_channel_id: str = ""
@@ -31,9 +39,6 @@ class ExportedChannel(DomainModel):
 class ExportedAutomation(AutomationFields):
     enabled: bool = Field(default=False, exclude=True)
     targets: tuple[TargetFields, ...] = ()
-
-    def channel_ids(self) -> tuple[str, ...]:
-        return tuple(dict.fromkeys(target.channel_id for target in self.targets))
 
 
 class AutomationDocument(DomainModel):
@@ -56,7 +61,7 @@ class ImportPreview(DomainModel):
 def exported_channels(
     automation: Automation, channels: Sequence[Channel]
 ) -> tuple[ExportedChannel, ...]:
-    used = dict.fromkeys(target.channel_id for target in automation.targets)
+    used = channel_ids(automation.targets)
     return tuple(
         ExportedChannel(id=item.id, youtube_channel_id=item.youtube_channel_id, title=item.title)
         for item in channels
@@ -114,7 +119,7 @@ def resolved_channels(
 ) -> dict[str, str | None]:
     local = {item.id for item in channels}
     mapping: dict[str, str | None] = {}
-    for channel_id in document.automation.channel_ids():
+    for channel_id in channel_ids(document.automation.targets):
         if channel_id in chosen:
             mapping[channel_id] = chosen[channel_id]
         elif channel_id in local:
@@ -129,7 +134,7 @@ def unresolved_channels(
 ) -> tuple[ExportedChannel, ...]:
     return tuple(
         document.exported_channel(channel_id)
-        for channel_id in document.automation.channel_ids()
+        for channel_id in channel_ids(document.automation.targets)
         if channel_id not in mapping
     )
 
@@ -152,7 +157,7 @@ def imported_input(document: AutomationDocument, mapping: ChannelChoices) -> Aut
     fields = source.model_dump(exclude={"targets", "enabled", "name"})
     return AutomationInput(
         **fields,
-        name=f"{source.name}{IMPORTED_SUFFIX}",
+        name=imported_name(source.name),
         enabled=False,
         targets=tuple(TargetInput(**target.model_dump()) for target in targets),
     )

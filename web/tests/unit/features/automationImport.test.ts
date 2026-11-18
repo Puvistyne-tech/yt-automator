@@ -31,7 +31,7 @@ describe("channel choices", () => {
     ]);
     expect(options).toEqual([
       { value: "chan-en", label: "Bedtime tales" },
-      { value: "chan-x", label: "Old (revoked)" },
+      { value: "chan-x", label: "Old (Access revoked)" },
       { value: LEAVE_OUT, label: "Leave its targets out" },
     ]);
   });

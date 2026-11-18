@@ -15,12 +15,7 @@ const DEFAULT_TEXTAREA_ROWS = 4;
 
 export function BaseInputTemplate(props: BaseInputTemplateProps) {
   const inputProps = getInputProps(props.schema, props.type, props.options);
-  const numeric = inputProps.type === "number" || inputProps.type === "integer";
-  const value = numeric
-    ? (props.value ?? props.value === 0)
-      ? props.value
-      : ""
-    : (props.value ?? "");
+  const value = props.value ?? "";
   const onChange = (event: ChangeEvent<HTMLInputElement>) =>
     props.onChange(event.target.value === "" ? props.options.emptyValue : event.target.value);
   return (

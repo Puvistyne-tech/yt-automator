@@ -109,6 +109,7 @@ def test_normalized_settings_fill_defaults() -> None:
         "score": 90.0,
         "with_thumbnail": True,
         "extra_meta": {},
+        "font_file": "",
     }
 
 

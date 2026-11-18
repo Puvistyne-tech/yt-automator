@@ -157,6 +157,17 @@ describe("SchemaForm defaults", () => {
     expect(sectionReset("Look")).toBeInTheDocument();
   });
 
+  it("lowers the section count when one field is reset", async () => {
+    const { user } = setup({ title: "Sun", names: { en: "Bedtime", ta: "Kathai" } });
+    const story = within(screen.getByRole("region", { name: "Story" }));
+    expect(story.getByText("2 changed")).toBeInTheDocument();
+
+    await user.click(marker("Title") as HTMLElement);
+
+    expect(story.getByText("1 changed")).toBeInTheDocument();
+    expect(marker("English")).toBeInTheDocument();
+  });
+
   it("tracks nothing without defaults", () => {
     setup({ title: "Sun" }, false);
 

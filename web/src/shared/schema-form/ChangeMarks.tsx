@@ -9,6 +9,7 @@ import {
 } from "@/shared/schema-form/changeTracking";
 import { defaultPreview, type FieldPath, tracksChanges } from "@/shared/schema-form/defaults";
 import { Button } from "@/shared/ui/Button";
+import "@/shared/schema-form/change-marks.css";
 
 const FOCUSABLE = "input:not([disabled]), select, textarea, button:not([disabled])";
 

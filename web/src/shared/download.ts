@@ -1,6 +1,7 @@
 export function fileSlug(text: string): string {
   const slug = text
     .normalize("NFKD")
+    .replace(/\p{M}+/gu, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");

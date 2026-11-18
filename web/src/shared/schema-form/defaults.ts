@@ -1,17 +1,14 @@
+import { isJsonObject } from "@/shared/isJsonObject";
+
 export type FieldPath = readonly (string | number)[];
-type PlainObject = Record<string, unknown>;
 
 const PREVIEW_LENGTH = 48;
-
-function isPlainObject(value: unknown): value is PlainObject {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function child(source: unknown, key: string | number): unknown {
   if (Array.isArray(source) && typeof key === "number") {
     return source[key];
   }
-  return isPlainObject(source) ? source[String(key)] : undefined;
+  return isJsonObject(source) ? source[String(key)] : undefined;
 }
 
 export function valueAt(source: unknown, path: FieldPath): unknown {
@@ -27,15 +24,15 @@ export function withValueAt<T>(source: T, path: FieldPath, value: unknown): T {
   if (Array.isArray(source) && typeof head === "number") {
     return source.map((item, index) => (index === head ? inner : item)) as T;
   }
-  return { ...(isPlainObject(source) ? source : {}), [head]: inner } as T;
+  return { ...(isJsonObject(source) ? source : {}), [head]: inner } as T;
 }
 
-function sameObjects(a: PlainObject, b: PlainObject): boolean {
+function sameObjects(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
   const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  return [...keys].every((key) => sameValue(a[key], b[key]));
+  return [...keys].every((key) => sameSettingValue(a[key], b[key]));
 }
 
-export function sameValue(a: unknown, b: unknown): boolean {
+export function sameSettingValue(a: unknown, b: unknown): boolean {
   if (a === undefined || a === null || b === undefined || b === null) {
     return (a ?? null) === (b ?? null);
   }
@@ -44,10 +41,10 @@ export function sameValue(a: unknown, b: unknown): boolean {
       Array.isArray(a) &&
       Array.isArray(b) &&
       a.length === b.length &&
-      a.every((item, index) => sameValue(item, b[index]))
+      a.every((item, index) => sameSettingValue(item, b[index]))
     );
   }
-  if (isPlainObject(a) && isPlainObject(b)) {
+  if (isJsonObject(a) && isJsonObject(b)) {
     return sameObjects(a, b);
   }
   return a === b;
@@ -60,14 +57,16 @@ export function tracksChanges(path: FieldPath): boolean {
 export function isChanged(value: unknown, defaults: unknown, path: FieldPath): boolean {
   const fallback = valueAt(defaults, path);
   return (
-    tracksChanges(path) && fallback !== undefined && !sameValue(valueAt(value, path), fallback)
+    tracksChanges(path) &&
+    fallback !== undefined &&
+    !sameSettingValue(valueAt(value, path), fallback)
   );
 }
 
 function changedLeaves(value: unknown, defaults: unknown, path: FieldPath): number {
   const fallback = valueAt(defaults, path);
   const current = valueAt(value, path);
-  if (isPlainObject(fallback) && isPlainObject(current)) {
+  if (isJsonObject(fallback) && isJsonObject(current)) {
     return Object.keys(fallback).reduce(
       (total, key) => total + changedLeaves(value, defaults, [...path, key]),
       0,
@@ -110,7 +109,7 @@ export function defaultPreview(value: unknown): string {
   if (Array.isArray(value)) {
     return listPreview(value);
   }
-  if (isPlainObject(value)) {
+  if (isJsonObject(value)) {
     return "default values";
   }
   return String(value) === "" ? "empty" : shortened(String(value));

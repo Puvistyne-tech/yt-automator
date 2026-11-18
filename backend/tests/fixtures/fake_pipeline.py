@@ -20,6 +20,7 @@ from autotube.domain.pipeline_descriptors import (
 )
 from autotube.domain.quality import ScoreItem
 from autotube.domain.run_enums import ArtifactKind, LogLevel
+from autotube.domain.ui_schema import MACHINE_LOCAL_KEY
 
 SRT = "application/x-subrip"
 LANGUAGES = (LanguageOption(code="en", name="English"), LanguageOption(code="ta", name="Tamil"))
@@ -37,6 +38,7 @@ class FakeSettings(BaseModel):
     score: float = Field(default=90.0, ge=0, le=100)
     with_thumbnail: bool = True
     extra_meta: dict[str, JsonValue] = Field(default_factory=dict)
+    font_file: str = Field(default="", json_schema_extra={MACHINE_LOCAL_KEY: True})
 
 
 def settings_of(context: StageContext) -> FakeSettings:

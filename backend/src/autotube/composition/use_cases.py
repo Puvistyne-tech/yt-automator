@@ -101,7 +101,7 @@ def automation_use_cases(p: Ports, c: Collaborators) -> AutomationUseCases:
         set_enabled=SetAutomationEnabled(p.automations, c.presenter, p.clock),
         delete=DeleteAutomation(p.automations),
         duplicate=DuplicateAutomation(p.automations, c.presenter, p.ids, p.clock),
-        export=ExportAutomation(p.automations, p.channels, p.clock),
+        export=ExportAutomation(p.automations, p.channels, p.pipelines, p.clock),
         import_automation=ImportAutomation(p.channels, c.builder, create),
         start_run=starter,
         scheduler=scheduler_tick(p, c, starter),

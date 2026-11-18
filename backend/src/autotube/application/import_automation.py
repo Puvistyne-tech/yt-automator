@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from autotube.application.automation_builder import AutomationBuilder
 from autotube.application.create_automation import CreateAutomation
+from autotube.application.lookups import descriptor_of
 from autotube.domain.automation_export import (
     ChannelChoices,
     ImportPreview,
@@ -16,7 +17,8 @@ from autotube.domain.automation_export import (
     unresolved_channels,
     without_missing_channel_errors,
 )
-from autotube.domain.automations import Automation
+from autotube.domain.automations import Automation, AutomationInput
+from autotube.domain.machine_local import portable_settings
 from autotube.domain.model_base import JsonObject
 from autotube.domain.ports import ChannelRepository
 from autotube.domain.validation import prefixed
@@ -29,6 +31,11 @@ class ImportAutomation:
     builder: AutomationBuilder
     create: CreateAutomation
 
+    def with_local_defaults(self, data: AutomationInput) -> AutomationInput:
+        descriptor = descriptor_of(self.builder.pipelines.get(data.pipeline_type))
+        settings = portable_settings(data.settings, descriptor)
+        return data.model_copy(update={"settings": settings})
+
     def checked(
         self, raw: JsonObject, chosen: ChannelChoices
     ) -> tuple[ImportPreview, dict[str, str]]:
@@ -38,7 +45,7 @@ class ImportAutomation:
         channels = self.channels.list()
         local = {channel.id for channel in channels}
         mapping = resolved_channels(document, channels, chosen)
-        data = imported_input(document, mapping)
+        data = self.with_local_defaults(imported_input(document, mapping))
         rule_errors = without_missing_channel_errors(self.builder.errors(data), data, local)
         errors = channel_choice_errors(chosen, local) | prefixed(rule_errors, "automation")
         unknown = unresolved_channels(document, mapping)

@@ -8,19 +8,26 @@ import pytest
 
 from autotube.application.export_automation import ExportAutomation
 from autotube.application.import_automation import ImportAutomation
-from autotube.domain.automation_export import FORMAT_VERSION
 from autotube.domain.automations import Automation
 from autotube.domain.channels import channel_token_secret_name
 from autotube.domain.credentials import credential_secret_name
+from autotube.domain.quality import ReviewMode, ReviewPolicy
+from autotube.domain.retries import RetryPolicy
+from autotube.domain.schedules import Schedule, ScheduleKind
 from autotube.shared.errors import NotFound, ValidationFailed
-from tests.fixtures.builders import add_channel, create_automation, target_input
+from tests.fixtures.builders import (
+    add_automation,
+    add_channel,
+    create_automation,
+    target_input,
+)
 from tests.fixtures.harness import Harness
 
 pytestmark = pytest.mark.usefixtures("channel")
 
 
 def exporter(harness: Harness) -> ExportAutomation:
-    return ExportAutomation(harness.automations, harness.channels, harness.clock)
+    return ExportAutomation(harness.automations, harness.channels, harness.pipelines, harness.clock)
 
 
 def importer(harness: Harness) -> ImportAutomation:
@@ -81,14 +88,42 @@ def test_import_unknown_pipeline_is_a_field_error(harness: Harness, automation: 
     assert len(harness.automations.list()) == 1
 
 
-def test_import_newer_format_is_refused_with_its_message(
+def test_round_trip_keeps_every_rule_language_and_target(harness: Harness) -> None:
+    source = add_automation(
+        harness,
+        description="Nightly",
+        languages=("en", "ta"),
+        targets=(
+            target_input(variants=("landscape", "short"), publish_delay_minutes=30),
+            target_input(language="ta", variants=("short",), playlist_id="pl-1"),
+        ),
+        schedule=Schedule(kind=ScheduleKind.INTERVAL, every_hours=6, max_runs_per_day=2),
+        review_policy=ReviewPolicy(
+            mode=ReviewMode.AUTO_WHEN_SCORE_AT_LEAST, min_score=90, reject_below=50
+        ),
+        retry_policy=RetryPolicy(auto_retry_count=2, retry_delay_minutes=15),
+    )
+    created = importer(harness).execute(exported(harness, source), {})
+    kept = {"id", "name", "enabled", "created_at", "updated_at", "targets", "next_run_at"}
+    assert created.model_dump(exclude=kept) == source.model_dump(exclude=kept)
+    without_ids = [target.model_dump(exclude={"id"}) for target in created.targets]
+    assert without_ids == [target.model_dump(exclude={"id"}) for target in source.targets]
+
+
+def test_enabled_in_a_document_still_imports_disabled(
     harness: Harness, automation: Automation
 ) -> None:
-    document = exported(harness, automation) | {"format_version": FORMAT_VERSION + 1}
-    with pytest.raises(ValidationFailed) as raised:
-        importer(harness).execute(document, {})
-    assert "newer AutoTube" in raised.value.message
-    assert set(raised.value.fields) == {"format_version"}
+    document = exported(harness, automation)
+    document["automation"]["enabled"] = True
+    assert importer(harness).execute(document, {}).enabled is False
+
+
+def test_machine_local_settings_never_travel(harness: Harness) -> None:
+    source = add_automation(harness, settings={"topic": "owls", "font_file": "/Users/me/a.ttf"})
+    document = exported(harness, source)
+    assert document["automation"]["settings"]["font_file"] == ""
+    document["automation"]["settings"]["font_file"] = "/Users/someone/b.ttf"
+    assert importer(harness).execute(document, {}).settings["font_file"] == ""
 
 
 def test_preview_lists_unknown_channels_without_failing(

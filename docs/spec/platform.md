@@ -144,6 +144,12 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     finite number above zero is ignored and the schema's own step is used.
   - No other `ui:` key is allowed. Help text comes from each field's `description` in the settings schema.
     The web mock pipeline uses this same format.
+- A settings property whose schema carries `x-machine-local: true` (`MACHINE_LOCAL_KEY` in `domain/ui_schema.py`,
+  set with `json_schema_extra`) holds a value that only makes sense on this machine, such as a file or folder
+  path. `domain/machine_local.py` finds these properties through nested objects, local `$ref`s and optional
+  objects (not inside array items). An export writes the pipeline's default for each of them instead of the
+  stored value, and an import replaces each of them with the importing pipeline's default, so paths never move
+  between machines. A marked property whose parent object is missing stays missing.
 - `PipelineDescriptor` rejects a `ui_schema` with any problem, so a broken plugin fails when it is loaded.
 - The kids story pipeline (`kids_story`, shown as "Kids story videos") carries no channel identity in its
   defaults: the series name defaults to "Story Time", the brand mark text is empty (no mark is drawn), and
@@ -283,7 +289,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   with errors prefixed `automation.`, except that a missing target channel is never reported on the target:
   the preview lists it in `unknown_channels`, and the import refuses it on `channel_map.<exported id>`
   ("... choose a channel for its targets or leave them out"). The import creates the automation through the
-  create use case, named with the suffix " (imported)", disabled, with new target ids.
+  create use case, named with the suffix " (imported)" (not added again when the name already ends with it),
+  disabled, with new target ids. Unknown keys anywhere in the document (a target `id` included) are field
+  errors "Extra inputs are not permitted" at their path.
 - A scheduled automation's next run is computed from the later of its last scheduled run, its `updated_at`, and
   the latest `skipped_start_at` among the runs created since its last scheduled run. Manual runs do not move the
   schedule. The schedule gives a candidate start; then, in the schedule's time zone:
@@ -574,10 +582,12 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
 
 - Automations list: name, pipeline, languages, targets, schedule, next run, last run status, enabled switch,
   actions (run now, edit, duplicate, export, delete with confirmation). Export downloads
-  `<name slug>.autotube.json`. Import (list header and empty state) opens a dialog: choosing a file runs the
-  preview; a file that is not a JSON object, a refused format and field errors are shown in the dialog, each
-  unknown channel gets a "Channel for “<title>”" select (connected channels, or "Leave its targets out"), and
-  "Import automation" stays disabled until the preview succeeds. Cancel creates nothing.
+  `<name slug>.autotube.json` (accents dropped, lower case, every other run of characters becomes "-",
+  trimmed, "untitled" when nothing is left). Import (list header and empty state) opens a dialog: choosing a
+  file runs the preview; a file that is not a JSON object, a refused format and field errors are shown in the
+  dialog, each unknown channel gets a "Channel for “<title>”" select (every channel, named like the target
+  channel select: its title, plus its status label in brackets when it is not connected; or "Leave its targets
+  out"), and "Import automation" stays disabled until the preview succeeds. Cancel creates nothing.
 - Settings forms with defaults (the editor's Content section passes the pipeline's `default_settings`): every
   field whose value differs from its default shows a "Changed from default" dot and a "Reset" button (its title
   names the default); changes are tracked on named fields, per-language values and other nested fields, whole

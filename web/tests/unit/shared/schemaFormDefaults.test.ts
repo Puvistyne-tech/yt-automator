@@ -5,7 +5,7 @@ import {
   isChanged,
   resetField,
   resetFields,
-  sameValue,
+  sameSettingValue,
   tracksChanges,
   valueAt,
   withValueAt,
@@ -38,16 +38,16 @@ describe("valueAt and withValueAt", () => {
   });
 });
 
-describe("sameValue", () => {
+describe("sameSettingValue", () => {
   it("compares deeply, ignoring key order, with null equal to missing", () => {
-    expect(sameValue({ a: 1, b: [1, { c: 2 }] }, { b: [1, { c: 2 }], a: 1 })).toBe(true);
-    expect(sameValue([1, 2], [2, 1])).toBe(false);
-    expect(sameValue([1], [1, 2])).toBe(false);
-    expect(sameValue({ a: 1 }, { a: 1, b: 2 })).toBe(false);
-    expect(sameValue(null, undefined)).toBe(true);
-    expect(sameValue({ a: null }, {})).toBe(true);
-    expect(sameValue("1", 1)).toBe(false);
-    expect(sameValue([1], { 0: 1 })).toBe(false);
+    expect(sameSettingValue({ a: 1, b: [1, { c: 2 }] }, { b: [1, { c: 2 }], a: 1 })).toBe(true);
+    expect(sameSettingValue([1, 2], [2, 1])).toBe(false);
+    expect(sameSettingValue([1], [1, 2])).toBe(false);
+    expect(sameSettingValue({ a: 1 }, { a: 1, b: 2 })).toBe(false);
+    expect(sameSettingValue(null, undefined)).toBe(true);
+    expect(sameSettingValue({ a: null }, {})).toBe(true);
+    expect(sameSettingValue("1", 1)).toBe(false);
+    expect(sameSettingValue([1], { 0: 1 })).toBe(false);
   });
 });
 

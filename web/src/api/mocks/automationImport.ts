@@ -14,6 +14,7 @@ import type {
   JsonObject,
   PipelineDescriptor,
 } from "@/api/types";
+import { isJsonObject } from "@/shared/isJsonObject";
 
 export const EXPORT_APP = "AutoTube";
 export const EXPORT_FORMAT_VERSION = 1;
@@ -35,7 +36,7 @@ export function exportDocument(automation: Automation, channels: Channel[]): Aut
   };
 }
 
-export function formatErrors(raw: JsonObject): Errors {
+function formatErrors(raw: JsonObject): Errors {
   if (raw.app !== EXPORT_APP) {
     return { app: `this file is not an ${EXPORT_APP} automation export` };
   }
@@ -45,10 +46,48 @@ export function formatErrors(raw: JsonObject): Errors {
       format_version: `this file was exported by a newer ${EXPORT_APP} (format ${version}); this version reads format ${EXPORT_FORMAT_VERSION} and older, so update ${EXPORT_APP} to import it`,
     };
   }
-  const automation = raw.automation;
-  return typeof automation === "object" && automation !== null && !Array.isArray(automation)
-    ? {}
-    : { automation: "Field required" };
+  return isJsonObject(raw.automation) ? {} : { automation: "Field required" };
+}
+
+const EXTRA_KEY = "Extra inputs are not permitted";
+const DOCUMENT_KEYS = ["app", "format_version", "exported_at", "automation", "channels"];
+const CHANNEL_KEYS = ["id", "youtube_channel_id", "title"];
+const AUTOMATION_KEYS = [
+  ...["name", "description", "pipeline_type", "settings", "languages", "enabled"],
+  ...["schedule", "review_policy", "retry_policy", "targets"],
+];
+const TARGET_KEYS = [
+  ...["channel_id", "language", "variants", "privacy", "made_for_kids", "playlist_id"],
+  ...["publish_delay_minutes", "publish_time_of_day", "publish_timezone"],
+];
+
+function extraKeys(value: unknown, allowed: string[], path: string): Errors {
+  const keys = isJsonObject(value) ? Object.keys(value) : [];
+  return Object.fromEntries(
+    keys.filter((key) => !allowed.includes(key)).map((key) => [`${path}${key}`, EXTRA_KEY]),
+  );
+}
+
+function listedExtraKeys(value: unknown, allowed: string[], path: string): Errors {
+  const items = Array.isArray(value) ? value : [];
+  return Object.assign(
+    {},
+    ...items.map((item, index) => extraKeys(item, allowed, `${path}${index}.`)),
+  );
+}
+
+export function documentErrors(raw: JsonObject): Errors {
+  const format = formatErrors(raw);
+  if (Object.keys(format).length > 0) {
+    return format;
+  }
+  const automation = raw.automation as JsonObject;
+  return {
+    ...extraKeys(raw, DOCUMENT_KEYS, ""),
+    ...listedExtraKeys(raw.channels, CHANNEL_KEYS, "channels."),
+    ...extraKeys(automation, AUTOMATION_KEYS, "automation."),
+    ...listedExtraKeys(automation.targets, TARGET_KEYS, "automation.targets."),
+  };
 }
 
 export function refusalMessage(errors: Errors): string {
