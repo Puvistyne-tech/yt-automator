@@ -15,6 +15,7 @@ Dependencies flow in one direction. A layer may import only from the layers list
 | `api` | FastAPI routers, request and response schemas | `application`, `domain`, `shared` |
 | `composition` | composition root helpers: the `Ports` bundle and the use-case graph | `api.container`, `application`, `domain`, `shared` |
 | `main.py` | composition root | everything |
+| `doctor.py` | command-line entry: renders the doctor report built by `main.py` | `main.py`, `domain`, `shared` |
 
 - `domain` performs no I/O and imports no framework: no FastAPI, SQLModel, httpx, subprocess, or filesystem access.
 - `application` reaches the outside world only through `domain/ports.py` interfaces.

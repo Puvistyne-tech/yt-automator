@@ -19,6 +19,7 @@ ALLOWED_IMPORTS: dict[str, frozenset[str]] = {
 }
 COMPOSITION_API_MODULES = frozenset({f"{PACKAGE}.api.container"})
 ROOT_ONLY_LAYERS = ("infrastructure", "composition")
+ROOT_ENTRY_IMPORTS = frozenset({"main", "domain", "shared"})
 FRAMEWORK_FREE_LAYERS = ("shared", "domain", "application")
 FORBIDDEN_FRAMEWORKS = frozenset(
     {
@@ -131,6 +132,21 @@ def test_composition_uses_only_the_api_container() -> None:
         - COMPOSITION_API_MODULES
     }
     assert api_imports == {}
+
+
+def test_root_entries_import_only_main_domain_and_shared() -> None:
+    entries = [
+        file
+        for file in sorted(PACKAGE_ROOT.glob("*.py"))
+        if file.name not in {"main.py", "__init__.py"}
+    ]
+    violations = {
+        display(file): sorted(imported_layers(file) - ROOT_ENTRY_IMPORTS)
+        for file in entries
+        if imported_layers(file) - ROOT_ENTRY_IMPORTS
+    }
+    assert entries
+    assert violations == {}
 
 
 @pytest.mark.parametrize("layer", ROOT_ONLY_LAYERS)

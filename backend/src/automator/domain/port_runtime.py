@@ -5,6 +5,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Protocol
 
+from automator.domain.diagnostics import SystemFacts
 from automator.domain.pipeline import NewArtifact
 from automator.domain.run_parts import Artifact
 from automator.domain.runs import RunEvent
@@ -61,3 +62,7 @@ class RunEvents(Protocol):
     def publish(self, event: RunEvent) -> None: ...
 
     def subscribe(self) -> AsyncIterator[RunEvent]: ...
+
+
+class SystemInspector(Protocol):
+    def facts(self) -> SystemFacts: ...

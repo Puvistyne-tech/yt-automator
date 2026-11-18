@@ -55,6 +55,15 @@ def test_the_run_log_cap_comes_from_the_runtime_config(
     assert runtime.use_cases.runs.execute.recorder.log_policy.max_entries == 7
 
 
+def test_the_doctor_policy_comes_from_the_runtime_config(
+    config: RuntimeConfig, overrides: Overrides
+) -> None:
+    app = create_app(config.model_copy(update={"doctor_min_free_gb": 7}), overrides)
+    runtime: Runtime = app.state.runtime
+    assert runtime.ports.doctor_policy.min_free_gb == 7
+    assert runtime.use_cases.config.doctor.policy.min_free_gb == 7
+
+
 def test_the_busy_timeout_comes_from_the_runtime_config(
     config: RuntimeConfig, overrides: Overrides
 ) -> None:
