@@ -6,6 +6,7 @@ from typing import Any
 Schema = Mapping[str, Any]
 LOCAL_REFERENCE = "#/"
 BRANCH_KEYS = ("anyOf", "oneOf", "allOf")
+ITEMS_KEY = "items"
 
 
 def resolve_ref(schema: Schema, root: Schema) -> dict[str, Any]:
@@ -35,3 +36,17 @@ def narrowed(schema: Schema) -> dict[str, Any]:
 
 def resolved(schema: Schema, root: Schema) -> dict[str, Any]:
     return resolve_ref(narrowed(resolve_ref(schema, root)), root)
+
+
+def property_schema(
+    node: Schema, key: str, root: Schema, *, items: bool = False
+) -> dict[str, Any] | None:
+    target = resolved(node, root)
+    if items and key == ITEMS_KEY and target.get("type") == "array":
+        child = target.get(ITEMS_KEY)
+        return dict(child) if isinstance(child, Mapping) else {}
+    properties = target.get("properties")
+    if not isinstance(properties, Mapping) or key not in properties:
+        return None
+    child = properties[key]
+    return dict(child) if isinstance(child, Mapping) else {}

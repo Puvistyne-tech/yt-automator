@@ -56,7 +56,7 @@ export function AutomationEditor(props: AutomationEditorProps) {
   const mode = useSettingsViewMode();
   const editor = useAutomationEditor({ ...props, onErrorsShown: mode.revealErrors });
   const { draft, update, pipeline, errors } = editor;
-  const filter = useSettingsFilter(mode.view, pipeline, draft.settings);
+  const filter = useSettingsFilter(mode.view, pipeline, draft, errors);
   const common = { draft, onChange: update, errors, shows: shownIn(mode.view) };
   return (
     <div className="editor">

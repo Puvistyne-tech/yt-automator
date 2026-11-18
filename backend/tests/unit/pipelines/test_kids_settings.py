@@ -57,9 +57,20 @@ def test_ui_schema_follows_the_ui_schema_contract() -> None:
 
 
 def test_ui_schema_offers_a_short_basic_view_across_the_main_sections() -> None:
-    basic = cast(list[str], KidsStoryPipeline().descriptor.ui_schema["ui:basic"])
-    assert 10 <= len(basic) <= 14
-    assert {path.split(".")[0] for path in basic} >= {"series", "look", "story", "voice", "short"}
+    assert KidsStoryPipeline().descriptor.ui_schema["ui:basic"] == [
+        "series.name",
+        "look.visual_style",
+        "story.theme_mode",
+        "story.themes",
+        "story.tone",
+        "story.target_duration_seconds",
+        "voice.narrator_voice",
+        "music.enabled",
+        "music.mood_prompt",
+        "subtitles.enabled",
+        "short.enabled",
+        "episode.resolution",
+    ]
 
 
 def test_ui_orders_list_every_field_of_their_section() -> None:

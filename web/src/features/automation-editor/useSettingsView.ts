@@ -1,13 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { FieldErrors } from "@/api/errors";
 import type { PipelineDescriptor } from "@/api/types";
+import type { AutomationDraft } from "@/features/automation-editor/model/draft";
 import {
+  applicableAdvancedFields,
   basicVisibility,
   readSettingsView,
   revealsHiddenError,
   SETTINGS_VIEW_STORAGE_KEY,
   type SettingsView,
+  settingsErrorPaths,
   simpleViewSummary,
+  withErrorPaths,
 } from "@/features/automation-editor/model/settingsView";
 import { useStoredChoice } from "@/shared/hooks/useStoredChoice";
 import { changedPaths } from "@/shared/schema-form/defaults";
@@ -16,8 +20,11 @@ import { schemaFields } from "@/shared/schema-form/schemaFields";
 
 export function useSettingsViewMode() {
   const [view, setView] = useStoredChoice(SETTINGS_VIEW_STORAGE_KEY, readSettingsView);
+  const current = useRef(view);
+  current.current = view;
   const revealErrors = (errors: FieldErrors, pipeline: PipelineDescriptor | undefined) => {
-    if (view === "simple" && revealsHiddenError(errors, basicVisibility(pipeline?.ui_schema))) {
+    const hidden = revealsHiddenError(errors, basicVisibility(pipeline?.ui_schema));
+    if (current.current === "simple" && hidden) {
       setView("all");
     }
   };
@@ -44,20 +51,21 @@ function useSettingsSearch() {
 export function useSettingsFilter(
   view: SettingsView,
   pipeline: PipelineDescriptor | undefined,
-  settings: object,
+  draft: AutomationDraft,
+  errors: FieldErrors,
 ) {
   const search = useSettingsSearch();
-  const { query, changedOnly } = search;
   const fields = useMemo(() => schemaFields(pipeline?.settings_schema ?? {}), [pipeline]);
   const basic = useMemo(() => basicVisibility(pipeline?.ui_schema), [pipeline]);
-  const changed = useChangedPaths(pipeline, settings);
-  const visible = useMemo(() => {
-    const rule =
-      view === "simple" ? basic : settingsFilter(fields, { query, changedOnly, changed });
-    return rule === undefined ? undefined : visiblePathSet(fields, rule);
-  }, [view, basic, fields, query, changedOnly, changed]);
-  const nothingFound = view === "all" && visible !== undefined && visible.size === 0;
-  return { visible, nothingFound, summary: simpleViewSummary(fields, basic, changed), search };
+  const changed = useChangedPaths(pipeline, draft.settings);
+  const errorPaths = settingsErrorPaths(errors);
+  const searched = settingsFilter(fields, { ...search, changed });
+  const rule = withErrorPaths(view === "simple" ? basic : searched, errorPaths);
+  const visible = rule === undefined ? undefined : visiblePathSet(fields, rule);
+  const nothingFound = view === "all" && visible?.size === 0 && errorPaths.length === 0;
+  const hiddenRules = applicableAdvancedFields(draft).length;
+  const summary = simpleViewSummary(fields, basic, changed, hiddenRules);
+  return { visible, nothingFound, summary, search };
 }
 
 export type SettingsFilterState = ReturnType<typeof useSettingsFilter>;

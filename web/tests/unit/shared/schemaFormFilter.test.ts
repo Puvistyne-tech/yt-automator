@@ -6,7 +6,6 @@ import {
   readBasicPaths,
   settingsFilter,
   shownBy,
-  visibleLeafCount,
   visiblePathSet,
   visibleProperties,
 } from "@/shared/schema-form/fieldFilter";
@@ -141,13 +140,18 @@ describe("settingsFilter", () => {
   });
 });
 
+describe("visiblePathSet", () => {
+  it("collects the visible paths of a schema", () => {
+    expect([...visiblePathSet(fields, shownBy(["music.enabled"]))]).toEqual([
+      "music",
+      "music.enabled",
+    ]);
+  });
+});
+
 describe("visibleProperties", () => {
   const properties = [{ name: "enabled" }, { name: "volume" }];
   const visible = visiblePathSet(fields, shownBy(["music.enabled"]));
-
-  it("collects the visible paths of a schema", () => {
-    expect([...visible]).toEqual(["music", "music.enabled"]);
-  });
 
   it("keeps the properties whose path is visible", () => {
     expect(visibleProperties(properties, ["music"], visible)).toEqual([{ name: "enabled" }]);
@@ -157,14 +161,17 @@ describe("visibleProperties", () => {
     expect(visibleProperties(properties, ["music"], undefined)).toEqual(properties);
     expect(visibleProperties(properties, ["cast", 0], visible)).toEqual(properties);
   });
+
+  it("keeps every entry of a visible setting with no visible path under it", () => {
+    const entries = [{ name: "en" }, { name: "ta" }];
+    expect(visibleProperties(entries, ["labels"], new Set(["labels"]))).toEqual(entries);
+    expect(visibleProperties(entries, ["labels"], new Set(["other"]))).toEqual([]);
+  });
 });
 
-describe("leaf counts", () => {
-  const visible = shownBy(["series", "tone"]);
-
-  it("counts the leaf fields a filter shows and hides", () => {
-    expect(visibleLeafCount(fields, visible)).toBe(3);
-    expect(hiddenLeafCount(fields, visible)).toBe(3);
+describe("hiddenLeafCount", () => {
+  it("counts the leaf fields a filter hides", () => {
+    expect(hiddenLeafCount(fields, shownBy(["series", "tone"]))).toBe(3);
   });
 });
 

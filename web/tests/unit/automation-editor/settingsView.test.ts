@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   ADVANCED_PLATFORM_FIELDS,
+  applicableAdvancedFields,
   basicVisibility,
   hiddenOptionsText,
   readSettingsView,
   revealsHiddenError,
+  settingsErrorPaths,
   shownIn,
   simpleViewSummary,
+  withErrorPaths,
 } from "@/features/automation-editor/model/settingsView";
 import { shownBy } from "@/shared/schema-form/fieldFilter";
 import { schemaFields } from "@/shared/schema-form/schemaFields";
@@ -52,40 +55,86 @@ describe("basicVisibility", () => {
   });
 });
 
+const ERROR_PATTERNS = ADVANCED_PLATFORM_FIELDS.flatMap((field) =>
+  field.errors.map((pattern) => pattern.replace("*", "0")),
+);
+
 describe("revealsHiddenError", () => {
   const visible = shownBy(["name"]);
 
-  it("spots errors on finer platform rules, including inside targets", () => {
-    expect(revealsHiddenError({ "retry_policy.delay_minutes": "x" }, visible)).toBe(true);
-    expect(revealsHiddenError({ "targets.2.publish_timezone": "x" }, visible)).toBe(true);
-    expect(revealsHiddenError({ "schedule.max_runs_per_day": "x" }, visible)).toBe(true);
+  it.each(ERROR_PATTERNS)("spots an error on the finer rule %s", (path) => {
+    expect(revealsHiddenError({ [path]: "x" }, visible)).toBe(true);
   });
+
+  it.each(["schedule.every_hours", "review_policy.mode", "targets.0.channel_id"])(
+    "ignores an error on the visible field %s",
+    (path) => {
+      expect(revealsHiddenError({ [path]: "x" }, visible)).toBe(false);
+    },
+  );
 
   it("spots errors on settings left out of the simple view", () => {
     expect(revealsHiddenError({ "settings.music.volume": "x" }, visible)).toBe(true);
     expect(revealsHiddenError({ "settings.name": "x" }, visible)).toBe(false);
   });
 
-  it("ignores errors that stay visible", () => {
-    expect(revealsHiddenError({ name: "x", "targets.0.channel_id": "x" }, visible)).toBe(false);
+  it("ignores settings errors without ui:basic", () => {
     expect(revealsHiddenError({ settings: "x", "settings.music.volume": "x" }, undefined)).toBe(
       false,
     );
-    expect(revealsHiddenError({ "schedule.every_hours": "x" }, visible)).toBe(false);
+  });
+});
+
+describe("withErrorPaths", () => {
+  const errors = { "settings.music.volume": "x", settings: "y", name: "z" };
+
+  it("keeps fields with errors visible under any rule", () => {
+    const visible = withErrorPaths(shownBy(["name"]), settingsErrorPaths(errors));
+    expect(visible?.("music.volume")).toBe(true);
+    expect(visible?.("music")).toBe(true);
+    expect(visible?.("name")).toBe(true);
+    expect(visible?.("music.enabled")).toBe(false);
+  });
+
+  it("leaves an unfiltered form unfiltered", () => {
+    expect(withErrorPaths(undefined, ["music.volume"])).toBeUndefined();
+  });
+
+  it("names the settings paths that carry errors", () => {
+    expect(settingsErrorPaths(errors)).toEqual(["music.volume"]);
+  });
+});
+
+describe("applicableAdvancedFields", () => {
+  const scheduled = { schedule: { kind: "interval" as const }, targets: [{}] };
+  const manual = { schedule: { kind: "manual" as const }, targets: [] };
+
+  it("lists every finer rule for a scheduled automation with targets", () => {
+    expect(applicableAdvancedFields(scheduled)).toEqual(
+      ADVANCED_PLATFORM_FIELDS.map((field) => field.id),
+    );
+  });
+
+  it("skips schedule and target rules that are not shown", () => {
+    expect(applicableAdvancedFields(manual)).toEqual([
+      "description",
+      "retry_policy",
+      "reject_below",
+    ]);
   });
 });
 
 describe("simpleViewSummary", () => {
   const fields = schemaFields(settingsSchema);
 
-  it("counts hidden settings, finer rules and hidden changes", () => {
-    const summary = simpleViewSummary(fields, shownBy(["name"]), ["music.volume", "name"]);
-    expect(summary).toEqual({ hidden: 2 + ADVANCED_PLATFORM_FIELDS.length, changed: 1 });
+  it("counts hidden settings, applicable finer rules and hidden changes", () => {
+    const summary = simpleViewSummary(fields, shownBy(["name"]), ["music.volume", "name"], 3);
+    expect(summary).toEqual({ hidden: 5, changed: 1 });
   });
 
   it("counts only the finer rules without ui:basic", () => {
-    const summary = simpleViewSummary(fields, undefined, ["music.volume"]);
-    expect(summary).toEqual({ hidden: ADVANCED_PLATFORM_FIELDS.length, changed: 0 });
+    const summary = simpleViewSummary(fields, undefined, ["music.volume"], 3);
+    expect(summary).toEqual({ hidden: 3, changed: 0 });
   });
 });
 

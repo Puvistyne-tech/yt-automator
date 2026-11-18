@@ -175,8 +175,19 @@ def with_basic(basic: JsonValue) -> JsonObject:
 
 
 def test_basic_paths_that_resolve_to_settings_have_no_problems() -> None:
-    basic: JsonValue = ["series.style", "series.name.en", "extra.en", "cast"]
+    basic: JsonValue = ["series.style", "series.name.en", "extra.en", "cast", "extra"]
     assert ui_schema_problems(with_basic(basic), SETTINGS) == []
+
+
+def test_basic_paths_may_name_whole_objects() -> None:
+    assert ui_schema_problems(with_basic(["series", "series.name"]), SETTINGS) == []
+
+
+def test_basic_is_a_root_only_key() -> None:
+    nested = with_sections(series={"ui:basic": ["style"]})
+    assert ui_schema_problems(nested, SETTINGS) == [
+        "series.ui:basic is not a key the ui_schema contract lists"
+    ]
 
 
 @pytest.mark.parametrize(
@@ -192,6 +203,17 @@ def test_basic_paths_that_resolve_to_settings_have_no_problems() -> None:
         (
             ["series.style", "extra", "series.style"],
             ["ui:basic names series.style more than once"],
+        ),
+        ([], ["ui:basic must not be empty"]),
+        (["extra.en", "extra.en"], ["ui:basic names extra.en more than once"]),
+        (
+            ["nope", 3, "nope", "series.style"],
+            [
+                "ui:basic path nope is not a setting",
+                "ui:basic entry 1 must be a dotted settings path",
+                "ui:basic path nope is not a setting",
+                "ui:basic names nope more than once",
+            ],
         ),
     ],
 )

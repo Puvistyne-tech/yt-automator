@@ -14,11 +14,11 @@ async function openBedtime() {
   return { ...app, content };
 }
 
-function withMusicVolume(volume: number) {
+function withSetting(group: string, patch: Record<string, unknown>) {
   const automation = stored();
   if (automation !== undefined) {
-    const music = automation.settings.music as Record<string, unknown>;
-    automation.settings = { ...automation.settings, music: { ...music, volume } };
+    const current = automation.settings[group] as Record<string, unknown>;
+    automation.settings = { ...automation.settings, [group]: { ...current, ...patch } };
   }
 }
 
@@ -38,7 +38,7 @@ describe("Automation editor: simple view", () => {
   });
 
   it("counts hidden changes and remembers the chosen view", async () => {
-    withMusicVolume(0.8);
+    withSetting("music", { volume: 0.8 });
     const { user, unmount } = await openBedtime();
 
     expect(screen.getByText(/more options in All settings, 1 changed\.$/)).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("Automation editor: simple view", () => {
   });
 
   it("switches to All settings when a hidden setting blocks the save", async () => {
-    withMusicVolume(5);
+    withSetting("music", { volume: 5 });
     const { user } = await openBedtime();
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
@@ -109,6 +109,7 @@ describe("Automation editor: all settings filters", () => {
   it("searches settings by title and description and shows an empty state", async () => {
     const { user, content } = await openBedtime();
     const search = content.getByRole("searchbox", { name: "Search settings" });
+    const changedOnly = content.getByRole("switch", { name: "Changed only" });
 
     await user.type(search, "volume");
     expect(content.getByLabelText(/^Music volume/)).toBeInTheDocument();
@@ -118,18 +119,19 @@ describe("Automation editor: all settings filters", () => {
     await user.clear(search);
     await user.type(search, "one theme from this list");
     expect(content.getByRole("heading", { name: "Story" })).toBeInTheDocument();
-    expect(content.getByText("Moral themes")).toBeInTheDocument();
     expect(content.queryByRole("heading", { name: "Characters" })).not.toBeInTheDocument();
 
+    await user.click(changedOnly);
     await user.type(search, " zebra");
     expect(content.getByText("No settings match")).toBeInTheDocument();
     await user.click(content.getByRole("button", { name: "Clear search" }));
     expect(search).toHaveValue("");
+    expect(changedOnly).not.toBeChecked();
     expect(content.getByLabelText(/^Series name/)).toBeInTheDocument();
   });
 
   it("shows only changed settings with Changed only", async () => {
-    withMusicVolume(0.8);
+    withSetting("music", { volume: 0.8 });
     const { user, content } = await openBedtime();
 
     await user.click(content.getByRole("switch", { name: "Changed only" }));
@@ -138,5 +140,35 @@ describe("Automation editor: all settings filters", () => {
     expect(sound.getByLabelText(/^Music volume/)).toBeInTheDocument();
     expect(sound.queryByLabelText(/^Play background music/)).not.toBeInTheDocument();
     expect(content.queryByLabelText(/^Series name/)).not.toBeInTheDocument();
+  });
+
+  it("shows a server error on an unchanged setting while Changed only is on", async () => {
+    failWith("put", "/automations/:id", 400, {
+      code: "validation_failed",
+      message: "Validation failed",
+      fields: { "settings.premise": "Too vague a premise." },
+    });
+    const { user, content } = await openBedtime();
+
+    await user.click(content.getByRole("switch", { name: "Changed only" }));
+    await user.type(sectionByName("General").getByLabelText(/^Name/), " Plus");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(await content.findByText("Too vague a premise.")).toBeInTheDocument();
+    expect(content.getByLabelText(/^Series premise/)).toBeInTheDocument();
+  });
+
+  it("reveals a hidden error that does not match the search", async () => {
+    withSetting("subtitles", { font_size: 500 });
+    const { user, content } = await openBedtime();
+
+    await user.type(content.getByRole("searchbox", { name: "Search settings" }), "volume");
+    await user.click(screen.getByRole("button", { name: "Simple" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await findToast("Fix the highlighted fields before saving.");
+    expect(viewButton("All settings")).toBeInTheDocument();
+    expect(content.getByLabelText(/^Font size/)).toBeInTheDocument();
+    expect(content.getByText(/must be <= 200/i)).toBeInTheDocument();
   });
 });

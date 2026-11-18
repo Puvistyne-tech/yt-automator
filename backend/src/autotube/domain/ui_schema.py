@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
-
 from pydantic import JsonValue
 
-from autotube.domain.json_schema import Schema, resolve_ref, resolved
+from autotube.domain.json_schema import Schema, property_schema, resolve_ref, resolved
 from autotube.domain.model_base import JsonObject
 from autotube.domain.ui_basic import BASIC_KEY, basic_problems
 
@@ -18,7 +16,6 @@ ORDER_KEY = "ui:order"
 WIDGET_KEY = "ui:widget"
 OPTIONS_KEY = "ui:options"
 UI_PREFIX = "ui:"
-ITEMS_KEY = "items"
 ORDER_WILDCARD = "*"
 ROOT_ONLY_KEYS = frozenset({SECTIONS_KEY, BASIC_KEY})
 
@@ -83,17 +80,6 @@ def order_problems(value: JsonValue, node: Schema, path: str) -> list[str]:
     return [*unknown, *(f"{path} leaves out {name}" for name in names if name not in value)]
 
 
-def child_schema(key: str, node: Schema) -> dict[str, Any] | None:
-    if key == ITEMS_KEY and node.get("type") == "array":
-        items = node.get(ITEMS_KEY)
-        return dict(items) if isinstance(items, dict) else {}
-    properties = node.get("properties")
-    if not isinstance(properties, dict) or key not in properties:
-        return None
-    child = properties[key]
-    return dict(child) if isinstance(child, dict) else {}
-
-
 def offers_choices(node: Schema) -> bool:
     return isinstance(node.get("oneOf"), list) or isinstance(node.get("enum"), list)
 
@@ -124,7 +110,7 @@ def entry_problems(
     node = resolved(schema, root)
     if key.startswith(UI_PREFIX):
         return ui_key_problems(key, value, node, offers_choices(resolve_ref(schema, root)), path)
-    child = child_schema(key, node)
+    child = property_schema(node, key, root, items=True)
     if child is None:
         return [f"{path} is not a setting"]
     if not isinstance(value, dict):

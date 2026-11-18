@@ -54,6 +54,11 @@ export function visiblePathSet(
   return new Set(fields.filter((field) => visible(field.path)).map((field) => field.path));
 }
 
+function showsWholly(parent: string, visible: ReadonlySet<string>): boolean {
+  const head = `${parent}.`;
+  return visible.has(parent) && ![...visible].some((path) => path.startsWith(head));
+}
+
 export function visibleProperties<T extends { name: string }>(
   properties: T[],
   parent: readonly (string | number)[],
@@ -62,11 +67,11 @@ export function visibleProperties<T extends { name: string }>(
   if (visible === undefined || parent.some((segment) => typeof segment === "number")) {
     return properties;
   }
+  const prefix = parent.join(".");
+  if (prefix !== "" && showsWholly(prefix, visible)) {
+    return properties;
+  }
   return properties.filter((property) => visible.has([...parent, property.name].join(".")));
-}
-
-export function visibleLeafCount(fields: readonly SchemaField[], visible: FieldVisibility): number {
-  return fields.filter((field) => field.leaf && visible(field.path)).length;
 }
 
 export function hiddenLeafCount(fields: readonly SchemaField[], visible: FieldVisibility): number {

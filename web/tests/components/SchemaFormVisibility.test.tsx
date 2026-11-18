@@ -67,6 +67,13 @@ describe("SchemaForm visibility", () => {
     expect(screen.queryByText("1 changed")).not.toBeInTheDocument();
   });
 
+  it("shows every child of a visible object", () => {
+    renderForm(showing(["music"]));
+    expect(screen.getByLabelText("Background music")).toBeInTheDocument();
+    expect(screen.getByLabelText("Volume")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
+  });
+
   it("shows whole array items under a visible array", () => {
     renderForm(showing(["cast"]));
     expect(screen.getByDisplayValue("Ada")).toBeInTheDocument();
