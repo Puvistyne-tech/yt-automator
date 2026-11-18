@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.run_enums import ArtifactKind
+from autotube.domain.run_enums import ArtifactKind
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, roles, run_chain
 from tests.fixtures.kids_fakes import FakeProviders
 

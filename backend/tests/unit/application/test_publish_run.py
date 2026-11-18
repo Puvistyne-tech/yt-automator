@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from automator.domain.channels import channel_token_secret_name
-from automator.domain.run_enums import RunEventKind, RunStatus, UploadStatus
-from automator.shared.errors import RuleConflict
+from autotube.domain.channels import channel_token_secret_name
+from autotube.domain.run_enums import RunEventKind, RunStatus, UploadStatus
+from autotube.shared.errors import RuleConflict
 from tests.fixtures.builders import add_channel, finished_run, target_input
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import approved_run, publish_run

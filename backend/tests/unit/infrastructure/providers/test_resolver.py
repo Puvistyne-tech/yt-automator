@@ -5,12 +5,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.capabilities import Capability, TextRequest
-from automator.domain.model_base import JsonObject
-from automator.domain.providers import ProviderChoice, ProviderConfig
-from automator.infrastructure.providers.llm.offline_text import OfflineTextOptions
-from automator.infrastructure.providers.option_validation import invalid_options_reason
-from automator.shared.errors import RuleConflict
+from autotube.domain.capabilities import Capability, TextRequest
+from autotube.domain.model_base import JsonObject
+from autotube.domain.providers import ProviderChoice, ProviderConfig
+from autotube.infrastructure.providers.llm.offline_text import OfflineTextOptions
+from autotube.infrastructure.providers.option_validation import invalid_options_reason
+from autotube.shared.errors import RuleConflict
 from tests.unit.infrastructure.providers.fakes import chain_config, local_catalog
 
 ZERO_WORDS: JsonObject = {"topic_words": 0}

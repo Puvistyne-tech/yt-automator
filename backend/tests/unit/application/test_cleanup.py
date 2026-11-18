@@ -4,11 +4,11 @@ import logging
 
 import pytest
 
-from automator.application.clean_up_storage import CleanUpStorage
-from automator.domain.port_repositories import RunChange
-from automator.domain.retention import CleanupAction
-from automator.domain.run_enums import RunStatus
-from automator.domain.runs import Run
+from autotube.application.clean_up_storage import CleanUpStorage
+from autotube.domain.port_repositories import RunChange
+from autotube.domain.retention import CleanupAction
+from autotube.domain.run_enums import RunStatus
+from autotube.domain.runs import Run
 from tests.fixtures.fake_repositories import InMemoryRuns
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import clean_up, cleanup_planner, preview_cleanup
@@ -56,7 +56,7 @@ def test_cleanup_removes_expired_runs_working_files_and_stray_folders(
     harness: Harness, caplog: pytest.LogCaptureFixture
 ) -> None:
     three_ages(harness)
-    with caplog.at_level(logging.INFO, logger="automator"):
+    with caplog.at_level(logging.INFO, logger="autotube"):
         report = clean_up(harness).execute()
     assert not report.dry_run and report.total_bytes == WORKING_BYTES + RUN_BYTES + 9
     assert set(harness.runs.items) == {"middle", "young", "waiting"}
@@ -129,7 +129,7 @@ def test_a_failing_item_does_not_stop_the_rest(
 ) -> None:
     three_ages(harness)
     harness.files.fail_for("old")
-    with caplog.at_level(logging.WARNING, logger="automator"):
+    with caplog.at_level(logging.WARNING, logger="autotube"):
         report = clean_up(harness).execute()
     assert sorted(item.run_id for item in report.items) == ["middle", "orphan-1"]
     assert harness.runs.items["middle"].intermediate_removed_at is not None

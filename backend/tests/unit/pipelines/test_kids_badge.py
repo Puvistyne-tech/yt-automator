@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from automator.pipelines.kids_story.art import lettering
-from automator.pipelines.kids_story.text.scripts import script_language
+from autotube.pipelines.kids_story.art import lettering
+from autotube.pipelines.kids_story.text.scripts import script_language
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, run_chain, with_font
 from tests.fixtures.kids_pictures import corner_is_solid, is_solid, scene_visual_files
 

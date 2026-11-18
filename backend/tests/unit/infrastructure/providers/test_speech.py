@@ -6,17 +6,17 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from automator.domain.capabilities import SpeechRequest, TimingSource, WordTiming
-from automator.infrastructure.providers.tts.edge_stream import EdgeChunk, as_chunk
-from automator.infrastructure.providers.tts.edge_voice import EdgeTtsOptions, EdgeTtsSpeech
-from automator.infrastructure.providers.tts.espeak import EspeakOptions, EspeakSpeech
-from automator.infrastructure.providers.tts.kokoro_voice import KokoroOptions, KokoroSpeech
-from automator.infrastructure.providers.tts.offline_speech import (
+from autotube.domain.capabilities import SpeechRequest, TimingSource, WordTiming
+from autotube.infrastructure.providers.tts.edge_stream import EdgeChunk, as_chunk
+from autotube.infrastructure.providers.tts.edge_voice import EdgeTtsOptions, EdgeTtsSpeech
+from autotube.infrastructure.providers.tts.espeak import EspeakOptions, EspeakSpeech
+from autotube.infrastructure.providers.tts.kokoro_voice import KokoroOptions, KokoroSpeech
+from autotube.infrastructure.providers.tts.offline_speech import (
     OfflineSpeech,
     OfflineSpeechOptions,
 )
-from automator.infrastructure.providers.tts.whisper_aligner import AlignmentOptions
-from automator.shared.errors import UpstreamFailure
+from autotube.infrastructure.providers.tts.whisper_aligner import AlignmentOptions
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.fakes import (
     FakeKokoro,
     FakeStream,

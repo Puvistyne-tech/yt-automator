@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides
 from tests.fixtures.fake_diagnostics import FakeInspector, system_facts
 from tests.fixtures.fake_runtime import InMemorySecrets
 from tests.unit.api.client import ok, wired

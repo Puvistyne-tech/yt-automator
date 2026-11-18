@@ -2,18 +2,18 @@ from __future__ import annotations
 
 import pytest
 
-from automator.application.delete_secret import DeleteSecret
-from automator.application.get_pipeline import GetPipeline
-from automator.application.get_providers import GetProviders
-from automator.application.get_settings import GetSettings
-from automator.application.list_pipelines import ListPipelines
-from automator.application.list_secrets import ListSecrets
-from automator.application.save_provider_config import SaveProviderConfig
-from automator.application.save_settings import SaveSettings
-from automator.application.set_secret import SetSecret
-from automator.domain.capabilities import Capability
-from automator.domain.providers import ProviderChoice, ProviderConfig
-from automator.shared.errors import NotFound, ValidationFailed
+from autotube.application.delete_secret import DeleteSecret
+from autotube.application.get_pipeline import GetPipeline
+from autotube.application.get_providers import GetProviders
+from autotube.application.get_settings import GetSettings
+from autotube.application.list_pipelines import ListPipelines
+from autotube.application.list_secrets import ListSecrets
+from autotube.application.save_provider_config import SaveProviderConfig
+from autotube.application.save_settings import SaveSettings
+from autotube.application.set_secret import SetSecret
+from autotube.domain.capabilities import Capability
+from autotube.domain.providers import ProviderChoice, ProviderConfig
+from autotube.shared.errors import NotFound, ValidationFailed
 from tests.fixtures.harness import Harness
 
 LLM_CHAIN = ProviderConfig(
@@ -105,7 +105,7 @@ def test_settings_round_trip_keeps_data_dir(harness: Harness) -> None:
         {"timezone": "Asia/Kolkata", "max_parallel_runs": 2, "keep_runs_days": 7}
     )
     assert GetSettings(harness.app_settings).execute() == saved
-    assert saved.data_dir == "/tmp/automator" and saved.timezone == "Asia/Kolkata"
+    assert saved.data_dir == "/tmp/autotube" and saved.timezone == "Asia/Kolkata"
 
 
 def test_settings_reject_unknown_timezone(harness: Harness) -> None:

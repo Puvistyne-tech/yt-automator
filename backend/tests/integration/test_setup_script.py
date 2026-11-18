@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from automator.doctor import main as doctor_main
-from automator.infrastructure.config import REPOSITORY_ROOT
+from autotube.doctor import main as doctor_main
+from autotube.infrastructure.config import REPOSITORY_ROOT
 
 SCRIPT = REPOSITORY_ROOT / "scripts" / "setup.sh"
 HOST_TOOLS = ("dirname", "uname", "id", "cat", "awk", "sort", "tr", "grep")
@@ -55,7 +55,7 @@ def setup_run(
         "SETUP_BACKEND_PYTHON": str(tmp_path / "no-venv" / "python"),
     }
     if data_dir:
-        env["AUTOMATOR_DATA_DIR"] = str(home / "data")
+        env["AUTOTUBE_DATA_DIR"] = str(home / "data")
     env |= extra or {}
     bash = shutil.which("bash") or "bash"
     return subprocess.run(
@@ -119,7 +119,7 @@ def test_model_groups_plan_their_installs(tmp_path: Path) -> None:
 def test_all_plans_everything_including_the_service(tmp_path: Path) -> None:
     plan = planned(tmp_path, "--all")
     assert groups_in(plan) >= {"base", "service", *MODEL_GROUPS}
-    assert "com.yt-automator.app.plist with AUTOMATOR_HOST=127.0.0.1 AUTOMATOR_PORT=8000" in plan
+    assert "com.autotube.app.plist with AUTOTUBE_HOST=127.0.0.1 AUTOTUBE_PORT=8000" in plan
     assert "The app starts at login." in plan
 
 
@@ -162,7 +162,7 @@ def test_help_prints_usage(tmp_path: Path, flag: str) -> None:
 
 @pytest.mark.parametrize(
     "environ",
-    [{}, {"AUTOMATOR_PORT": "9000"}, {"AUTOMATOR_HOST": "0.0.0.0", "AUTOMATOR_PORT": "8100"}],
+    [{}, {"AUTOTUBE_PORT": "9000"}, {"AUTOTUBE_HOST": "0.0.0.0", "AUTOTUBE_PORT": "8100"}],
 )
 def test_script_defaults_match_the_app(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, environ: dict[str, str]
@@ -173,7 +173,7 @@ def test_script_defaults_match_the_app(
     assert doctor_main(["--print-defaults"], environ, out) == 0
     result = setup_run(tmp_path, "--print-defaults", data_dir=False, extra=environ)
     assert result.returncode == 0
-    assert f"DATA_DIR={home / '.yt-automator'}" in result.stdout.splitlines()
+    assert f"DATA_DIR={home / '.autotube'}" in result.stdout.splitlines()
     assert result.stdout.splitlines() == out.getvalue().splitlines()
 
 

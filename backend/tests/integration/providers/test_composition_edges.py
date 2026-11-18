@@ -9,9 +9,9 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from automator.domain.capabilities import Capability, TimedClip, VideoComposition
-from automator.infrastructure.providers.catalog import build_provider_catalog
-from automator.infrastructure.providers.wav_io import write_wav
+from autotube.domain.capabilities import Capability, TimedClip, VideoComposition
+from autotube.infrastructure.providers.catalog import build_provider_catalog
+from autotube.infrastructure.providers.wav_io import write_wav
 from tests.fixtures.fake_runtime import InMemorySecrets
 
 pytestmark = [

@@ -4,10 +4,10 @@ from collections.abc import Callable
 
 import pytest
 
-from automator.application.duplicate_automation import DuplicateAutomation
-from automator.application.set_automation_enabled import SetAutomationEnabled
-from automator.domain.run_enums import ReviewDecision
-from automator.shared.errors import NotFound
+from autotube.application.duplicate_automation import DuplicateAutomation
+from autotube.application.set_automation_enabled import SetAutomationEnabled
+from autotube.domain.run_enums import ReviewDecision
+from autotube.shared.errors import NotFound
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import cancel_run, publish_run, review_run
 

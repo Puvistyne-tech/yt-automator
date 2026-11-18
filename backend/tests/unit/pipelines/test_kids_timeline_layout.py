@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from automator.pipelines.kids_story.settings.output import ShortSceneSelection, ShortSettings
-from automator.pipelines.kids_story.story.model import Story
-from automator.pipelines.kids_story.timeline.composition import Sources, composition, effect_clips
-from automator.pipelines.kids_story.timeline.selection import short_scene_indexes
-from automator.pipelines.kids_story.timeline.variants import planned
+from autotube.pipelines.kids_story.settings.output import ShortSceneSelection, ShortSettings
+from autotube.pipelines.kids_story.story.model import Story
+from autotube.pipelines.kids_story.timeline.composition import Sources, composition, effect_clips
+from autotube.pipelines.kids_story.timeline.selection import short_scene_indexes
+from autotube.pipelines.kids_story.timeline.variants import planned
 from tests.fixtures.kids_data import quick_settings, story, voices
 
 

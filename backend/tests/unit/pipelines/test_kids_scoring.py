@@ -5,25 +5,25 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.quality import ScoreItem
-from automator.domain.srt import SrtEntry
-from automator.pipelines.kids_story.plugin import KidsStoryPipeline
-from automator.pipelines.kids_story.scoring.content_items import (
+from autotube.domain.quality import ScoreItem
+from autotube.domain.srt import SrtEntry
+from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
+from autotube.pipelines.kids_story.scoring.content_items import (
     character_consistency,
     reading_level,
 )
-from automator.pipelines.kids_story.scoring.inputs import ScoreInputs, gathered
-from automator.pipelines.kids_story.scoring.measures import (
+from autotube.pipelines.kids_story.scoring.inputs import ScoreInputs, gathered
+from autotube.pipelines.kids_story.scoring.measures import (
     SubtitleRules,
     range_score,
     subtitle_track,
 )
-from automator.pipelines.kids_story.scoring.output_items import (
+from autotube.pipelines.kids_story.scoring.output_items import (
     completeness,
     loudness,
     metadata_limits,
 )
-from automator.pipelines.kids_story.scoring.timing_items import (
+from autotube.pipelines.kids_story.scoring.timing_items import (
     episode_duration,
     short_duration,
     speaking_rate,

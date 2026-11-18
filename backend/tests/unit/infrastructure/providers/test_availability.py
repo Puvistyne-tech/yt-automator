@@ -6,8 +6,8 @@ from pathlib import Path
 import httpx
 import pytest
 
-from automator.infrastructure.providers.host import HostProbe
-from automator.infrastructure.providers.registry import ALL_SPECS
+from autotube.infrastructure.providers.host import HostProbe
+from autotube.infrastructure.providers.registry import ALL_SPECS
 from tests.unit.infrastructure.providers.fakes import (
     FFMPEG_ONLY,
     host,

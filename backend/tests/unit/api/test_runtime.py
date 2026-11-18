@@ -6,9 +6,9 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-from automator.domain.run_enums import RunStatus
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides, Runtime, create_app, youtube_gateway
+from autotube.domain.run_enums import RunStatus
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides, Runtime, create_app, youtube_gateway
 from tests.unit.api.client import Api
 from tests.unit.infrastructure.records import run
 
@@ -45,7 +45,7 @@ def test_startup_recovers_interrupted_runs_and_logs_it(
     app = create_app(config, overrides)
     runtime: Runtime = app.state.runtime
     runtime.ports.runs.save(run("crashed", status=RunStatus.RUNNING))
-    with caplog.at_level(logging.INFO, logger="automator"), TestClient(app) as client:
+    with caplog.at_level(logging.INFO, logger="autotube"), TestClient(app) as client:
         crashed = Api(client, runtime).wait_for("crashed", "failed")
     assert "interrupted" in crashed["error"]
     assert "recovered 1 interrupted runs" in caplog.text
@@ -55,7 +55,7 @@ def test_shutdown_warns_when_workers_outlive_the_timeout(
     runtime: Runtime, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     monkeypatch.setattr(runtime.queue, "stop", lambda _timeout: False)
-    with caplog.at_level(logging.WARNING, logger="automator"):
+    with caplog.at_level(logging.WARNING, logger="autotube"):
         runtime.stop()
     assert "still working at shutdown" in caplog.text
 

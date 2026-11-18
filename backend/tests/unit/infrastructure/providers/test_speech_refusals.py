@@ -5,20 +5,20 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.capabilities import SpeechRequest, SpeechSynthesizer
-from automator.infrastructure.providers.context import ProviderContext
-from automator.infrastructure.providers.tts.edge_voice import (
+from autotube.domain.capabilities import SpeechRequest, SpeechSynthesizer
+from autotube.infrastructure.providers.context import ProviderContext
+from autotube.infrastructure.providers.tts.edge_voice import (
     EdgeTtsOptions,
     EdgeTtsSpeech,
     edge_rate,
 )
-from automator.infrastructure.providers.tts.espeak import EspeakOptions, EspeakSpeech
-from automator.infrastructure.providers.tts.kokoro_voice import KokoroOptions, KokoroSpeech
-from automator.infrastructure.providers.tts.offline_speech import (
+from autotube.infrastructure.providers.tts.espeak import EspeakOptions, EspeakSpeech
+from autotube.infrastructure.providers.tts.kokoro_voice import KokoroOptions, KokoroSpeech
+from autotube.infrastructure.providers.tts.offline_speech import (
     OfflineSpeech,
     OfflineSpeechOptions,
 )
-from automator.shared.errors import UpstreamFailure
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.fakes import (
     FakeKokoro,
     FakeStream,

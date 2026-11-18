@@ -6,12 +6,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from automator.domain.capabilities import WordTiming
-from automator.infrastructure.providers.tts.voice_language import lookup_language
-from automator.infrastructure.providers.tts.whisper_aligner import AlignmentOptions, WhisperAligner
-from automator.infrastructure.providers.tts.word_alignment import align_words
-from automator.infrastructure.providers.tts.word_timing import estimate_timings
-from automator.infrastructure.providers.word_normalisation import normalised
+from autotube.domain.capabilities import WordTiming
+from autotube.infrastructure.providers.tts.voice_language import lookup_language
+from autotube.infrastructure.providers.tts.whisper_aligner import AlignmentOptions, WhisperAligner
+from autotube.infrastructure.providers.tts.word_alignment import align_words
+from autotube.infrastructure.providers.tts.word_timing import estimate_timings
+from autotube.infrastructure.providers.word_normalisation import normalised
 from tests.unit.infrastructure.providers.fakes import host
 
 

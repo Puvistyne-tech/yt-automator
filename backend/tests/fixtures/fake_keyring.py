@@ -3,7 +3,7 @@ from __future__ import annotations
 from keyring.backend import KeyringBackend
 from keyring.errors import KeyringLocked
 
-from automator.infrastructure.secrets.keyring_store import KeyringSecretStore
+from autotube.infrastructure.secrets.keyring_store import KeyringSecretStore
 
 
 class LockedKeyring(KeyringBackend):
@@ -20,4 +20,4 @@ class LockedKeyring(KeyringBackend):
 
 
 def locked_store() -> KeyringSecretStore:
-    return KeyringSecretStore("automator-test", LockedKeyring())  # type: ignore[no-untyped-call]
+    return KeyringSecretStore("autotube-test", LockedKeyring())  # type: ignore[no-untyped-call]

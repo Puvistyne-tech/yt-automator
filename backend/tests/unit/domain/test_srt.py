@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from automator.domain.srt import parse_srt
+from autotube.domain.srt import parse_srt
 
 TIMING = "00:00:01,000 --> 00:00:02,500"
 

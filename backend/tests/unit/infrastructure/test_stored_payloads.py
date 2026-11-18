@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from automator.domain.quality import ReviewPolicy
-from automator.domain.retries import RetryPolicy
-from automator.infrastructure.db.database import Database
-from automator.infrastructure.db.entity_repositories import SqlAutomationRepository
-from automator.infrastructure.db.run_repository import SqlRunRepository
-from automator.infrastructure.db.tables import AutomationRow, RunRow
+from autotube.domain.quality import ReviewPolicy
+from autotube.domain.retries import RetryPolicy
+from autotube.infrastructure.db.database import Database
+from autotube.infrastructure.db.entity_repositories import SqlAutomationRepository
+from autotube.infrastructure.db.run_repository import SqlRunRepository
+from autotube.infrastructure.db.tables import AutomationRow, RunRow
 
 CREATED = "2026-01-01T00:00:00Z"
 OLD_TARGET: dict[str, Any] = {

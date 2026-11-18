@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from automator.domain.diagnostics import CheckStatus
+from autotube.domain.diagnostics import CheckStatus
 from tests.fixtures.fake_diagnostics import UnreadableSecrets, run_doctor, system_facts
 from tests.fixtures.fake_keyring import locked_store
 from tests.fixtures.fake_runtime import InMemorySecrets

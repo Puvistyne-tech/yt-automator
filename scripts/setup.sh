@@ -5,10 +5,10 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND_DIR="$REPO_ROOT/backend"
 WEB_DIR="$REPO_ROOT/web"
 BACKEND_PYTHON="${SETUP_BACKEND_PYTHON:-$BACKEND_DIR/.venv/bin/python}"
-DATA_DIR="${AUTOMATOR_DATA_DIR:-$HOME/.yt-automator}"
-APP_HOST="${AUTOMATOR_HOST:-127.0.0.1}"
-APP_PORT="${AUTOMATOR_PORT:-8000}"
-USER_REDIRECT_BASE_URL="${AUTOMATOR_REDIRECT_BASE_URL:-}"
+DATA_DIR="${AUTOTUBE_DATA_DIR:-$HOME/.autotube}"
+APP_HOST="${AUTOTUBE_HOST:-127.0.0.1}"
+APP_PORT="${AUTOTUBE_PORT:-8000}"
+USER_REDIRECT_BASE_URL="${AUTOTUBE_REDIRECT_BASE_URL:-}"
 APP_REDIRECT_BASE_URL=""
 PYTHON_VERSION="${SETUP_PYTHON_VERSION:-3.12}"
 USER_OLLAMA_MODEL="${OLLAMA_MODEL:-}"
@@ -21,7 +21,7 @@ ACE_STEP_PYTHON_VERSION="${ACE_STEP_PYTHON_VERSION:-3.11}"
 ACE_STEP_SOURCE="${ACE_STEP_SOURCE:-git+https://github.com/ace-step/ACE-Step.git}"
 ACE_STEP_DIR="$DATA_DIR/tools/ace-step"
 MUSIC_DIR="$DATA_DIR/assets/music"
-SERVICE_LABEL="com.yt-automator.app"
+SERVICE_LABEL="com.autotube.app"
 SERVICE_PLIST="$HOME/Library/LaunchAgents/$SERVICE_LABEL.plist"
 SETUP_EXTRA_PATH="${SETUP_EXTRA_PATH-$HOME/.local/bin:/opt/homebrew/bin}"
 MODEL_GROUPS=(ollama images motion speech music fonts)
@@ -41,7 +41,7 @@ usage() {
   cat <<USAGE
 Usage: scripts/setup.sh [options]
 
-Sets up YouTube Automator on an Apple-silicon Mac. Safe to run again.
+Sets up AutoTube on an Apple-silicon Mac. Safe to run again.
 With no option it installs the base: uv, just, ffmpeg, node, pnpm, the
 backend and web dependencies, and the built UI.
 
@@ -60,8 +60,8 @@ backend and web dependencies, and the built UI.
   --print-defaults     print the script's built-in defaults as KEY=value
   -h, --help           show this help
 
-Environment: AUTOMATOR_DATA_DIR, AUTOMATOR_HOST, AUTOMATOR_PORT and
-AUTOMATOR_REDIRECT_BASE_URL as for the app. OLLAMA_MODEL pulls another model;
+Environment: AUTOTUBE_DATA_DIR, AUTOTUBE_HOST, AUTOTUBE_PORT and
+AUTOTUBE_REDIRECT_BASE_URL as for the app. OLLAMA_MODEL pulls another model;
 choose it afterwards in the Ollama provider's Model option under Providers.
 SETUP_EXTRA_PATH is prepended to PATH (default ~/.local/bin:/opt/homebrew/bin).
 SETUP_BACKEND_PYTHON is the backend venv Python asked for the app's defaults
@@ -215,7 +215,7 @@ load_app_defaults() {
   [ -x "$BACKEND_PYTHON" ] || return 0
   while IFS='=' read -r key value; do
     apply_default "$key" "$value"
-  done < <("$BACKEND_PYTHON" -m automator.doctor --print-defaults 2>/dev/null || true)
+  done < <("$BACKEND_PYTHON" -m autotube.doctor --print-defaults 2>/dev/null || true)
   derive_settings
 }
 
@@ -410,17 +410,17 @@ service_plist() {
   <key>ProgramArguments</key>
   <array>
     <string>$uv_bin</string><string>run</string><string>--project</string><string>$BACKEND_DIR</string>
-    <string>python</string><string>-m</string><string>automator.main</string>
+    <string>python</string><string>-m</string><string>autotube.main</string>
   </array>
   <key>WorkingDirectory</key><string>$BACKEND_DIR</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key><string>$HOME/.local/bin:$brew_prefix/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>DYLD_FALLBACK_LIBRARY_PATH</key><string>$brew_prefix/lib</string>
-    <key>AUTOMATOR_HOST</key><string>$APP_HOST</string>
-    <key>AUTOMATOR_PORT</key><string>$APP_PORT</string>
-    <key>AUTOMATOR_DATA_DIR</key><string>$DATA_DIR</string>
-    <key>AUTOMATOR_REDIRECT_BASE_URL</key><string>$REDIRECT_BASE_URL</string>
+    <key>AUTOTUBE_HOST</key><string>$APP_HOST</string>
+    <key>AUTOTUBE_PORT</key><string>$APP_PORT</string>
+    <key>AUTOTUBE_DATA_DIR</key><string>$DATA_DIR</string>
+    <key>AUTOTUBE_REDIRECT_BASE_URL</key><string>$REDIRECT_BASE_URL</string>
   </dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
@@ -452,7 +452,7 @@ install_service() {
   section "service: launchd agent $SERVICE_LABEL on $APP_URL"
   run mkdir -p "$(dirname "$SERVICE_PLIST")" "$LOG_DIR"
   if is_dry_run; then
-    say "    would write $SERVICE_PLIST with AUTOMATOR_HOST=$APP_HOST AUTOMATOR_PORT=$APP_PORT"
+    say "    would write $SERVICE_PLIST with AUTOTUBE_HOST=$APP_HOST AUTOTUBE_PORT=$APP_PORT"
   else
     service_plist >"$SERVICE_PLIST"
   fi
@@ -560,7 +560,7 @@ main() {
   for flag in "$@"; do parse_flag "$flag"; done
   choose_base
   check_platform
-  say "YouTube Automator setup. Data directory: $DATA_DIR"
+  say "AutoTube setup. Data directory: $DATA_DIR"
   run_selected
   print_summary
 }

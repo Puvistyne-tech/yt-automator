@@ -6,9 +6,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
-from automator.domain.capabilities import Capability, TextRequest
-from automator.domain.pipeline import NewArtifact, Pipeline, Stage, StageContext, StageOutcome
-from automator.domain.pipeline_descriptors import (
+from autotube.domain.capabilities import Capability, TextRequest
+from autotube.domain.pipeline import NewArtifact, Pipeline, Stage, StageContext, StageOutcome
+from autotube.domain.pipeline_descriptors import (
     KIDS_CONTENT,
     Aspect,
     LanguageOption,
@@ -18,8 +18,8 @@ from automator.domain.pipeline_descriptors import (
     default_settings_of,
     settings_schema_of,
 )
-from automator.domain.quality import ScoreItem
-from automator.domain.run_enums import ArtifactKind, LogLevel
+from autotube.domain.quality import ScoreItem
+from autotube.domain.run_enums import ArtifactKind, LogLevel
 
 SRT = "application/x-subrip"
 LANGUAGES = (LanguageOption(code="en", name="English"), LanguageOption(code="ta", name="Tamil"))

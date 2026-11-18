@@ -8,21 +8,21 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
-from automator.domain.capabilities import Capability
-from automator.domain.channels import Channel
-from automator.domain.providers import ProviderChoice, ProviderConfig
-from automator.domain.run_enums import RunStatus, RunTrigger
-from automator.domain.runs import RunQuery
-from automator.domain.settings import AppSettings
-from automator.infrastructure.config import RuntimeConfig
-from automator.infrastructure.db.database import Database
-from automator.infrastructure.db.entity_repositories import (
+from autotube.domain.capabilities import Capability
+from autotube.domain.channels import Channel
+from autotube.domain.providers import ProviderChoice, ProviderConfig
+from autotube.domain.run_enums import RunStatus, RunTrigger
+from autotube.domain.runs import RunQuery
+from autotube.domain.settings import AppSettings
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.infrastructure.db.database import Database
+from autotube.infrastructure.db.entity_repositories import (
     SqlAutomationRepository,
     SqlChannelRepository,
     SqlCredentialRepository,
 )
-from automator.infrastructure.db.run_repository import SqlRunRepository
-from automator.infrastructure.db.settings_repositories import (
+from autotube.infrastructure.db.run_repository import SqlRunRepository
+from autotube.infrastructure.db.settings_repositories import (
     SqlAppSettingsRepository,
     SqlProviderConfigRepository,
     SqlQuotaLedger,

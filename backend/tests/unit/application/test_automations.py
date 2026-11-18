@@ -4,15 +4,15 @@ from datetime import timedelta
 
 import pytest
 
-from automator.application.delete_automation import DeleteAutomation
-from automator.application.duplicate_automation import DuplicateAutomation
-from automator.application.get_automation import GetAutomation
-from automator.application.list_automations import ListAutomations
-from automator.application.set_automation_enabled import SetAutomationEnabled
-from automator.domain.automations import Automation
-from automator.domain.run_enums import RunStatus
-from automator.domain.schedules import Schedule, ScheduleKind
-from automator.shared.errors import NotFound, ValidationFailed
+from autotube.application.delete_automation import DeleteAutomation
+from autotube.application.duplicate_automation import DuplicateAutomation
+from autotube.application.get_automation import GetAutomation
+from autotube.application.list_automations import ListAutomations
+from autotube.application.set_automation_enabled import SetAutomationEnabled
+from autotube.domain.automations import Automation
+from autotube.domain.run_enums import RunStatus
+from autotube.domain.schedules import Schedule, ScheduleKind
+from autotube.shared.errors import NotFound, ValidationFailed
 from tests.fixtures.builders import (
     add_automation,
     automation_input,

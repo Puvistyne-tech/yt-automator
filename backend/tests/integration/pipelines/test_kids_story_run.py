@@ -4,14 +4,14 @@ from collections.abc import Sequence
 
 import pytest
 
-from automator.application.execute_run import ExecuteRun
-from automator.domain.automations import TargetInput
-from automator.domain.providers import ProviderConfig, ProviderDescriptor
-from automator.domain.publish_plan import UploadPlan, plan_uploads
-from automator.domain.run_enums import ArtifactKind, ReviewDecision, RunStatus, StageStatus
-from automator.domain.runs import Run
-from automator.domain.secrets import SecretDefinition
-from automator.pipelines.registry import installed_pipelines
+from autotube.application.execute_run import ExecuteRun
+from autotube.domain.automations import TargetInput
+from autotube.domain.providers import ProviderConfig, ProviderDescriptor
+from autotube.domain.publish_plan import UploadPlan, plan_uploads
+from autotube.domain.run_enums import ArtifactKind, ReviewDecision, RunStatus, StageStatus
+from autotube.domain.runs import Run
+from autotube.domain.secrets import SecretDefinition
+from autotube.pipelines.registry import installed_pipelines
 from tests.fixtures.builders import add_automation, target_input
 from tests.fixtures.fake_pipeline import FakePipelineRegistry
 from tests.fixtures.harness import Harness

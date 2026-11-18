@@ -5,12 +5,12 @@ from pathlib import Path
 
 from PIL import Image
 
-from automator.domain.capabilities import CameraMove, ImageRequest, MotionRequest
-from automator.infrastructure.providers.image.mflux import MfluxImage, MfluxOptions
-from automator.infrastructure.providers.image.offline_image import OfflineImage, OfflineImageOptions
-from automator.infrastructure.providers.motion.depthflow import DepthflowMotion, DepthflowOptions
-from automator.infrastructure.providers.motion.ffmpeg_pan_zoom import FfmpegPanZoom, PanZoomOptions
-from automator.infrastructure.providers.motion.pan_zoom_filter import (
+from autotube.domain.capabilities import CameraMove, ImageRequest, MotionRequest
+from autotube.infrastructure.providers.image.mflux import MfluxImage, MfluxOptions
+from autotube.infrastructure.providers.image.offline_image import OfflineImage, OfflineImageOptions
+from autotube.infrastructure.providers.motion.depthflow import DepthflowMotion, DepthflowOptions
+from autotube.infrastructure.providers.motion.ffmpeg_pan_zoom import FfmpegPanZoom, PanZoomOptions
+from autotube.infrastructure.providers.motion.pan_zoom_filter import (
     PanZoomTuning,
     camera_expressions,
     pan_zoom_filter,

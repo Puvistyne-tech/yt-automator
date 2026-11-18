@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from pydantic import JsonValue
 
-from automator.domain.model_base import JsonObject
-from automator.domain.ui_schema import UI_WIDGETS, ui_schema_problems
+from autotube.domain.model_base import JsonObject
+from autotube.domain.ui_schema import UI_WIDGETS, ui_schema_problems
 
 SPEC = Path(__file__).resolve().parents[4] / "docs" / "spec" / "platform.md"
 WIDGET_LINE = "- `ui:widget`: one of "

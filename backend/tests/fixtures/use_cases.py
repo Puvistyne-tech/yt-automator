@@ -2,26 +2,26 @@ from __future__ import annotations
 
 from typing import Any
 
-from automator.application.cancel_run import CancelRun
-from automator.application.clean_up_storage import CleanUpStorage
-from automator.application.cleanup_planner import CleanupPlanner
-from automator.application.complete_channel_connect import CompleteChannelConnect
-from automator.application.delete_channel import DeleteChannel
-from automator.application.delete_credential import DeleteCredential
-from automator.application.delete_run import DeleteRun
-from automator.application.get_dashboard import GetDashboard
-from automator.application.get_storage import GetStorage
-from automator.application.list_channel_playlists import ListChannelPlaylists
-from automator.application.preview_cleanup import PreviewCleanup
-from automator.application.publish_run import PublishRun
-from automator.application.recover_interrupted_runs import RecoverInterruptedRuns
-from automator.application.retry_run import RetryRun
-from automator.application.review_run import ReviewRun
-from automator.application.run_due_automations import RunDueAutomations
-from automator.application.start_channel_connect import StartChannelConnect
-from automator.application.update_automation import UpdateAutomation
-from automator.domain.run_enums import ReviewDecision
-from automator.domain.runs import Run
+from autotube.application.cancel_run import CancelRun
+from autotube.application.clean_up_storage import CleanUpStorage
+from autotube.application.cleanup_planner import CleanupPlanner
+from autotube.application.complete_channel_connect import CompleteChannelConnect
+from autotube.application.delete_channel import DeleteChannel
+from autotube.application.delete_credential import DeleteCredential
+from autotube.application.delete_run import DeleteRun
+from autotube.application.get_dashboard import GetDashboard
+from autotube.application.get_storage import GetStorage
+from autotube.application.list_channel_playlists import ListChannelPlaylists
+from autotube.application.preview_cleanup import PreviewCleanup
+from autotube.application.publish_run import PublishRun
+from autotube.application.recover_interrupted_runs import RecoverInterruptedRuns
+from autotube.application.retry_run import RetryRun
+from autotube.application.review_run import ReviewRun
+from autotube.application.run_due_automations import RunDueAutomations
+from autotube.application.start_channel_connect import StartChannelConnect
+from autotube.application.update_automation import UpdateAutomation
+from autotube.domain.run_enums import ReviewDecision
+from autotube.domain.runs import Run
 from tests.fixtures.builders import finished_run
 from tests.fixtures.harness import Harness
 

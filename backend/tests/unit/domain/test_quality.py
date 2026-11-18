@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.quality import (
+from autotube.domain.quality import (
     ReviewMode,
     ReviewPolicy,
     ScoreItem,
@@ -12,7 +12,7 @@ from automator.domain.quality import (
     status_after_scoring,
     weighted_score,
 )
-from automator.domain.run_enums import RunStatus
+from autotube.domain.run_enums import RunStatus
 
 
 def item(score: float, weight: float = 1.0) -> ScoreItem:

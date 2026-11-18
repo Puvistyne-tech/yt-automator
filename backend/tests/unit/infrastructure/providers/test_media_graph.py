@@ -4,20 +4,20 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.capabilities import SubtitleStyle
-from automator.infrastructure.providers.media.ass_document import ass_color
-from automator.infrastructure.providers.media.composition_audio import (
+from autotube.domain.capabilities import SubtitleStyle
+from autotube.infrastructure.providers.media.ass_document import ass_color
+from autotube.infrastructure.providers.media.composition_audio import (
     LoudnessMeasurement,
     audio_graph,
 )
-from automator.infrastructure.providers.media.composition_inputs import (
+from autotube.infrastructure.providers.media.composition_inputs import (
     plan_inputs,
     timeline_seconds,
 )
-from automator.infrastructure.providers.media.composition_video import video_graph
-from automator.infrastructure.providers.media.media_commands import compose_command
-from automator.infrastructure.providers.media.subtitle_filter import filter_path, subtitle_filter
-from automator.shared.errors import UpstreamFailure
+from autotube.infrastructure.providers.media.composition_video import video_graph
+from autotube.infrastructure.providers.media.media_commands import compose_command
+from autotube.infrastructure.providers.media.subtitle_filter import filter_path, subtitle_filter
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.media_fixtures import OPTIONS, composition
 
 

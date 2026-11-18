@@ -5,11 +5,11 @@ from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
-from automator.domain.pipeline import NewArtifact
-from automator.domain.run_parts import Artifact
-from automator.domain.runs import RunEvent
-from automator.domain.schedule_timing import StartCounter, next_run_at, no_starts
-from automator.domain.schedules import Schedule
+from autotube.domain.pipeline import NewArtifact
+from autotube.domain.run_parts import Artifact
+from autotube.domain.runs import RunEvent
+from autotube.domain.schedule_timing import StartCounter, next_run_at, no_starts
+from autotube.domain.schedules import Schedule
 
 START = datetime(2026, 1, 5, 10, 0, tzinfo=UTC)
 

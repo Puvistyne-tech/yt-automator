@@ -3,14 +3,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.pipeline import Pipeline
-from automator.domain.pipeline_descriptors import PipelineDescriptor
-from automator.domain.ui_schema import ui_schema_problems
-from automator.infrastructure.pipelines.static_registry import (
+from autotube.domain.pipeline import Pipeline
+from autotube.domain.pipeline_descriptors import PipelineDescriptor
+from autotube.domain.ui_schema import ui_schema_problems
+from autotube.infrastructure.pipelines.static_registry import (
     DuplicatePipelineError,
     StaticPipelineRegistry,
 )
-from automator.pipelines.registry import installed_pipelines
+from autotube.pipelines.registry import installed_pipelines
 
 
 def test_registry_lists_and_finds_installed_pipelines() -> None:

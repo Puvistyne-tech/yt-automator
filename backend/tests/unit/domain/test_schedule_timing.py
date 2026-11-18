@@ -5,8 +5,8 @@ from typing import Any
 
 import pytest
 
-from automator.domain.schedule_timing import NEVER_STARTS, next_run_at, schedule_start_errors
-from automator.domain.schedules import BOTH_ACTIVE_HOURS, Schedule, ScheduleKind, schedule_errors
+from autotube.domain.schedule_timing import NEVER_STARTS, next_run_at, schedule_start_errors
+from autotube.domain.schedules import BOTH_ACTIVE_HOURS, Schedule, ScheduleKind, schedule_errors
 
 AFTER = datetime(2026, 1, 5, 10, 0, tzinfo=UTC)
 

@@ -3,10 +3,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from automator.domain.capabilities import Capability, TextRequest
-from automator.domain.providers import ProviderConfig, ProviderDescriptor
-from automator.domain.secrets import SecretDefinition
-from automator.domain.validation import field_path
+from autotube.domain.capabilities import Capability, TextRequest
+from autotube.domain.providers import ProviderConfig, ProviderDescriptor
+from autotube.domain.secrets import SecretDefinition
+from autotube.domain.validation import field_path
 
 DESCRIPTORS = (
     ProviderDescriptor(provider_id="fake-llm", capability=Capability.LLM, name="Fake LLM"),

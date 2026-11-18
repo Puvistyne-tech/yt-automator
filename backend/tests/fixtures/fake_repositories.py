@@ -5,14 +5,14 @@ import threading
 from collections.abc import Sequence
 from typing import Protocol
 
-from automator.domain.automations import Automation
-from automator.domain.channels import Channel
-from automator.domain.credentials import Credential
-from automator.domain.ports import RunChange, RunCheck
-from automator.domain.providers import ProviderConfig
-from automator.domain.runs import Run, RunQuery
-from automator.domain.settings import AppSettings, AppSettingsInput
-from automator.domain.settings_overrides import (
+from autotube.domain.automations import Automation
+from autotube.domain.channels import Channel
+from autotube.domain.credentials import Credential
+from autotube.domain.ports import RunChange, RunCheck
+from autotube.domain.providers import ProviderConfig
+from autotube.domain.runs import Run, RunQuery
+from autotube.domain.settings import AppSettings, AppSettingsInput
+from autotube.domain.settings_overrides import (
     Overrides,
     effective_settings,
     storable_settings,
@@ -114,7 +114,7 @@ class InMemoryProviderConfigs:
 
 
 class InMemoryAppSettings:
-    def __init__(self, data_dir: str = "/tmp/automator", overrides: Overrides = ()) -> None:
+    def __init__(self, data_dir: str = "/tmp/autotube", overrides: Overrides = ()) -> None:
         self.data_dir = data_dir
         self.overrides = tuple(overrides)
         self.stored = AppSettingsInput()

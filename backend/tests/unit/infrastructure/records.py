@@ -3,14 +3,14 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from automator.domain.automations import Automation, Target
-from automator.domain.channels import Channel, ChannelDefaults, Privacy
-from automator.domain.credentials import Credential
-from automator.domain.quality import ScoreItem
-from automator.domain.run_enums import ArtifactKind
-from automator.domain.run_parts import Artifact, StageRun
-from automator.domain.runs import Run
-from automator.domain.schedules import Schedule, ScheduleKind
+from autotube.domain.automations import Automation, Target
+from autotube.domain.channels import Channel, ChannelDefaults, Privacy
+from autotube.domain.credentials import Credential
+from autotube.domain.quality import ScoreItem
+from autotube.domain.run_enums import ArtifactKind
+from autotube.domain.run_parts import Artifact, StageRun
+from autotube.domain.runs import Run
+from autotube.domain.schedules import Schedule, ScheduleKind
 from tests.fixtures.fake_runtime import START
 
 

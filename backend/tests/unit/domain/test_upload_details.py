@@ -3,11 +3,11 @@ from __future__ import annotations
 import pytest
 from pydantic import JsonValue
 
-from automator.domain.artifact_selection import VideoMetadata, language_code, video_metadata
-from automator.domain.channels import ChannelDefaults
-from automator.domain.run_enums import ArtifactKind
-from automator.domain.run_parts import Artifact
-from automator.domain.upload_details import (
+from autotube.domain.artifact_selection import VideoMetadata, language_code, video_metadata
+from autotube.domain.channels import ChannelDefaults
+from autotube.domain.run_enums import ArtifactKind
+from autotube.domain.run_parts import Artifact
+from autotube.domain.upload_details import (
     DESCRIPTION_MAX_BYTES,
     HASHTAGS_MAX,
     upload_details,

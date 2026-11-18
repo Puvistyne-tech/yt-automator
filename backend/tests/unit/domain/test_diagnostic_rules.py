@@ -4,8 +4,8 @@ from typing import Any
 
 import pytest
 
-from automator.domain.capabilities import Capability
-from automator.domain.diagnostic_rules import (
+from autotube.domain.capabilities import Capability
+from autotube.domain.diagnostic_rules import (
     GIB,
     capability_checks,
     database_check,
@@ -16,8 +16,8 @@ from automator.domain.diagnostic_rules import (
     system_checks,
     tool_check,
 )
-from automator.domain.diagnostics import CheckStatus, DoctorPolicy, HealthCheck
-from automator.domain.providers import ProviderDescriptor
+from autotube.domain.diagnostics import CheckStatus, DoctorPolicy, HealthCheck
+from autotube.domain.providers import ProviderDescriptor
 from tests.fixtures.fake_diagnostics import system_facts as facts
 
 POLICY = DoctorPolicy(min_free_gb=5.0)

@@ -7,14 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from automator.infrastructure.config import RuntimeConfig
-from automator.infrastructure.diagnostics.system_inspector import (
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.infrastructure.diagnostics.system_inspector import (
     build_system_inspector,
     tool_version,
     writable_dir,
 )
-from automator.infrastructure.providers.process import SubprocessRunner
-from automator.infrastructure.storage.disk_usage import free_space
+from autotube.infrastructure.providers.process import SubprocessRunner
+from autotube.infrastructure.storage.disk_usage import free_space
 from tests.fixtures.fake_diagnostics import MIGRATION_HEAD
 
 

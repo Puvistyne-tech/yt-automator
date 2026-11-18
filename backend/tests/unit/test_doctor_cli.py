@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from automator import doctor as doctor_module
-from automator.doctor import CANNOT_START, exit_code, main, render
-from automator.domain.capabilities import Capability
-from automator.domain.diagnostics import CheckStatus, DoctorReport, HealthCheck, ProviderHealth
-from automator.domain.secrets import SecretDefinition
+from autotube import doctor as doctor_module
+from autotube.doctor import CANNOT_START, exit_code, main, render
+from autotube.domain.capabilities import Capability
+from autotube.domain.diagnostics import CheckStatus, DoctorReport, HealthCheck, ProviderHealth
+from autotube.domain.secrets import SecretDefinition
 from tests.fixtures.fake_diagnostics import UnreadableSecrets, run_doctor, system_facts
 from tests.fixtures.fake_runtime import InMemorySecrets
 
@@ -80,9 +80,9 @@ def test_render_without_providers_keeps_the_heading() -> None:
 
 def environment(data_dir: Path, **extra: str) -> dict[str, str]:
     return {
-        "AUTOMATOR_DATA_DIR": str(data_dir),
-        "AUTOMATOR_WEB_DIST_DIR": str(data_dir.parent / "dist"),
-        "AUTOMATOR_SECRET_BACKEND": "file",
+        "AUTOTUBE_DATA_DIR": str(data_dir),
+        "AUTOTUBE_WEB_DIST_DIR": str(data_dir.parent / "dist"),
+        "AUTOTUBE_SECRET_BACKEND": "file",
         **extra,
     }
 
@@ -104,7 +104,7 @@ def test_main_exits_one_when_the_data_dir_is_unusable(tmp_path: Path) -> None:
 
 def test_main_exits_one_on_an_invalid_setting(tmp_path: Path) -> None:
     out = io.StringIO()
-    assert main((), environment(tmp_path, AUTOMATOR_PORT="abc"), out) == 1
+    assert main((), environment(tmp_path, AUTOTUBE_PORT="abc"), out) == 1
     assert out.getvalue().startswith("Cannot run the doctor:")
     assert out.getvalue().rstrip().endswith(CANNOT_START)
 
@@ -124,7 +124,7 @@ def test_main_exits_one_when_the_system_refuses_access(
 
 def test_main_prints_the_setup_defaults(tmp_path: Path) -> None:
     out = io.StringIO()
-    env = environment(tmp_path / "data", AUTOMATOR_PORT="9000")
+    env = environment(tmp_path / "data", AUTOTUBE_PORT="9000")
     assert main(["--print-defaults"], env, out) == 0
     lines = out.getvalue().splitlines()
     assert f"MUSIC_DIR={tmp_path / 'data' / 'assets' / 'music'}" in lines

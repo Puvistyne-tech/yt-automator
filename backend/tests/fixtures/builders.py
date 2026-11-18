@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from automator.application.create_automation import CreateAutomation
-from automator.application.execute_run import ExecuteRun
-from automator.domain.automations import Automation, AutomationInput, TargetInput
-from automator.domain.channels import Channel, ChannelDefaults, channel_token_secret_name
-from automator.domain.credentials import Credential, credential_secret_name
-from automator.domain.runs import Run
+from autotube.application.create_automation import CreateAutomation
+from autotube.application.execute_run import ExecuteRun
+from autotube.domain.automations import Automation, AutomationInput, TargetInput
+from autotube.domain.channels import Channel, ChannelDefaults, channel_token_secret_name
+from autotube.domain.credentials import Credential, credential_secret_name
+from autotube.domain.runs import Run
 from tests.fixtures.harness import Harness
 
 

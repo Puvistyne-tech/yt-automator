@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from automator.infrastructure.runtime.worker_pool import WorkerPoolQueue
+from autotube.infrastructure.runtime.worker_pool import WorkerPoolQueue
 from tests.unit.infrastructure.worker_pool_support import (
     TIMEOUT,
     BlockingExecutor,

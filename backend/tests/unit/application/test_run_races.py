@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 
-from automator.domain.pipeline import StageContext
-from automator.domain.run_enums import RunEventKind, RunStatus
-from automator.domain.runs import Run
+from autotube.domain.pipeline import StageContext
+from autotube.domain.run_enums import RunEventKind, RunStatus
+from autotube.domain.runs import Run
 from tests.fixtures.builders import execute_run, started_run
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry
 from tests.fixtures.harness import Harness

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from automator.infrastructure.secrets.unreadable import SecretsUnreadable
+from autotube.infrastructure.secrets.unreadable import SecretsUnreadable
 from tests.fixtures.fake_keyring import locked_store
 
 

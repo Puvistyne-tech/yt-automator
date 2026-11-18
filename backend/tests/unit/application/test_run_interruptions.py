@@ -5,11 +5,11 @@ from dataclasses import replace
 
 import pytest
 
-from automator.domain.pipeline import StageContext
-from automator.domain.run_enums import LogLevel, RunEventKind, RunStatus, StageStatus
-from automator.domain.run_parts import RunLogPolicy, Upload
-from automator.domain.run_state import transition
-from automator.shared.errors import NotFound
+from autotube.domain.pipeline import StageContext
+from autotube.domain.run_enums import LogLevel, RunEventKind, RunStatus, StageStatus
+from autotube.domain.run_parts import RunLogPolicy, Upload
+from autotube.domain.run_state import transition
+from autotube.shared.errors import NotFound
 from tests.fixtures.builders import execute_run, finished_run, started_run
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry
 from tests.fixtures.harness import Harness

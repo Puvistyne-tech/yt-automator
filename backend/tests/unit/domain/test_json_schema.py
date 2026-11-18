@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from automator.domain.json_schema import narrowed, non_null, resolve_ref, resolved
+from autotube.domain.json_schema import narrowed, non_null, resolve_ref, resolved
 
 ROOT: dict[str, Any] = {
     "$defs": {"Text": {"type": "string", "title": "Text"}, "Leaf": "not an object"},

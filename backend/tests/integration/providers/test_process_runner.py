@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
-from automator.infrastructure.providers.process import SubprocessRunner
-from automator.shared.errors import UpstreamFailure
+from autotube.infrastructure.providers.process import SubprocessRunner
+from autotube.shared.errors import UpstreamFailure
 
 pytestmark = pytest.mark.integration
 

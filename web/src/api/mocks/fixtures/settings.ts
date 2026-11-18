@@ -24,10 +24,10 @@ export const SETTINGS: AppSettings = {
   max_run_log_entries: 2000,
   log_level: "info",
   doctor_min_free_gb: 10,
-  data_dir: "~/Library/Application Support/YouTube Automator",
+  data_dir: "~/Library/Application Support/AutoTube",
   locked: {
     caption_track_name:
-      "Set by the environment variable AUTOMATOR_YOUTUBE_CAPTION_TRACK_NAME; unset it to change it here",
+      "Set by the environment variable AUTOTUBE_YOUTUBE_CAPTION_TRACK_NAME; unset it to change it here",
   },
   restart_required: ["log_level"],
 };

@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from automator.domain.run_enums import RunStatus
-from automator.domain.settings import AppSettings, ServerLogLevel
-from automator.domain.settings_overrides import SettingOverride
-from automator.infrastructure.config import RuntimeConfig
-from automator.infrastructure.db.database import Database
-from automator.infrastructure.db.run_repository import SqlRunRepository
-from automator.infrastructure.db.settings_repositories import (
+from autotube.domain.run_enums import RunStatus
+from autotube.domain.settings import AppSettings, ServerLogLevel
+from autotube.domain.settings_overrides import SettingOverride
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.infrastructure.db.database import Database
+from autotube.infrastructure.db.run_repository import SqlRunRepository
+from autotube.infrastructure.db.settings_repositories import (
     APP_SETTINGS_ID,
     SqlAppSettingsRepository,
 )
-from automator.infrastructure.db.tables import AppSettingsRow
-from automator.infrastructure.settings_env import settings_overrides
+from autotube.infrastructure.db.tables import AppSettingsRow
+from autotube.infrastructure.settings_env import settings_overrides
 from tests.fixtures.retention_data import LEGACY_PAYLOAD
 from tests.unit.infrastructure.records import run
 
@@ -65,7 +65,7 @@ def test_only_environment_variables_that_are_set_become_overrides() -> None:
         ("cleanup_interval_hours", 0),
     }
     reasons = {o.field: o.reason for o in overrides}
-    assert "AUTOMATOR_YOUTUBE_CAPTION_TRACK_NAME" in reasons["caption_track_name"]
+    assert "AUTOTUBE_YOUTUBE_CAPTION_TRACK_NAME" in reasons["caption_track_name"]
 
 
 def test_an_environment_log_level_is_stored_as_its_name() -> None:

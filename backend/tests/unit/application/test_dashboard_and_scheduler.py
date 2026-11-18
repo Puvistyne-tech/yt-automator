@@ -4,9 +4,9 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from automator.domain.run_enums import RunStatus, RunTrigger
-from automator.domain.schedules import Schedule, ScheduleKind
-from automator.domain.settings import AppSettingsInput
+from autotube.domain.run_enums import RunStatus, RunTrigger
+from autotube.domain.schedules import Schedule, ScheduleKind
+from autotube.domain.settings import AppSettingsInput
 from tests.fixtures.builders import add_automation, add_credential, automation_input, finished_run
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import get_dashboard, run_due, update_automation

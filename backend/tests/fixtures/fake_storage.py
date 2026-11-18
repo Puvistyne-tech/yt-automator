@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from automator.domain.storage import DiskSpace, FileUsage
-from automator.shared.errors import UpstreamFailure
+from autotube.domain.storage import DiskSpace, FileUsage
+from autotube.shared.errors import UpstreamFailure
 
 ARTIFACTS = "artifacts/"
 WORKSPACE = "workspace/"
@@ -61,7 +61,7 @@ class InMemoryRunFiles:
     def disk(self) -> DiskSpace:
         used = sum(sum(files.values()) for files in self.files.values())
         return DiskSpace(
-            data_dir="/tmp/automator",
+            data_dir="/tmp/autotube",
             data_dir_bytes=used + self.other_bytes,
             free_bytes=self.free_bytes,
             disk_bytes=None if self.free_bytes is None else self.free_bytes + used,

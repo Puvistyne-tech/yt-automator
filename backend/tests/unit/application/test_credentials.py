@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import pytest
 
-from automator.application.create_credential import CreateCredential
-from automator.application.list_credentials import ListCredentials
-from automator.application.update_credential import UpdateCredential
-from automator.domain.channels import Channel
-from automator.domain.credentials import (
+from autotube.application.create_credential import CreateCredential
+from autotube.application.list_credentials import ListCredentials
+from autotube.application.update_credential import UpdateCredential
+from autotube.domain.channels import Channel
+from autotube.domain.credentials import (
     Credential,
     CredentialInput,
     CredentialPatch,
     credential_secret_name,
 )
-from automator.shared.errors import NotFound, RuleConflict
+from autotube.shared.errors import NotFound, RuleConflict
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import delete_credential
 

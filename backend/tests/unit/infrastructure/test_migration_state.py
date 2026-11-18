@@ -4,8 +4,8 @@ import sqlite3
 from contextlib import closing
 from pathlib import Path
 
-from automator.infrastructure.db.database import Database
-from automator.infrastructure.db.migration_state import migration_state
+from autotube.infrastructure.db.database import Database
+from autotube.infrastructure.db.migration_state import migration_state
 from tests.fixtures.fake_diagnostics import MIGRATION_HEAD as HEAD
 
 
@@ -18,10 +18,10 @@ def write_sqlite(path: Path, *statements: str) -> Path:
 
 
 def test_migrated_database_is_at_head(tmp_path: Path) -> None:
-    database = Database(tmp_path / "automator.db", 100)
+    database = Database(tmp_path / "autotube.db", 100)
     database.migrate()
     database.dispose()
-    state = migration_state(tmp_path / "automator.db")
+    state = migration_state(tmp_path / "autotube.db")
     assert (state.revision, state.head, state.known, state.error) == (HEAD, HEAD, True, "")
 
 

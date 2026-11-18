@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from automator.domain.capabilities import (
+from autotube.domain.capabilities import (
     Capability,
     ImageRequest,
     MotionRequest,
@@ -17,10 +17,10 @@ from automator.domain.capabilities import (
     TimedClip,
     VideoComposition,
 )
-from automator.infrastructure.providers.fallback import FallbackChain, fallback_proxy
-from automator.infrastructure.providers.tts.espeak import EspeakOptions, EspeakSpeech
-from automator.infrastructure.providers.tts.kokoro_voice import KokoroOptions, KokoroSpeech
-from automator.shared.errors import UpstreamFailure
+from autotube.infrastructure.providers.fallback import FallbackChain, fallback_proxy
+from autotube.infrastructure.providers.tts.espeak import EspeakOptions, EspeakSpeech
+from autotube.infrastructure.providers.tts.kokoro_voice import KokoroOptions, KokoroSpeech
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.fakes import (
     FakeKokoro,
     RecordingRunner,

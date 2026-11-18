@@ -4,7 +4,7 @@ import { msw } from "msw/vite";
 import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
-const backendOrigin = process.env.AUTOMATOR_API_ORIGIN ?? "http://127.0.0.1:8000";
+const backendOrigin = process.env.AUTOTUBE_API_ORIGIN ?? "http://127.0.0.1:8000";
 const servedFrom = "/";
 const buildDir = "dist";
 

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from automator.domain.channels import Channel, ChannelStatus
-from automator.domain.run_enums import UploadStatus
-from automator.domain.youtube import AUTHORIZATION_EXPIRED_CODE, ChannelProfile
-from automator.shared.errors import UpstreamFailure
+from autotube.domain.channels import Channel, ChannelStatus
+from autotube.domain.run_enums import UploadStatus
+from autotube.domain.youtube import AUTHORIZATION_EXPIRED_CODE, ChannelProfile
+from autotube.shared.errors import UpstreamFailure
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import (
     approved_run,

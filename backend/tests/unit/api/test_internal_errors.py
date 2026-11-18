@@ -5,7 +5,7 @@ import asyncio
 import pytest
 from starlette.types import Message, Receive, Scope, Send
 
-from automator.api.internal_errors import InternalErrorMiddleware
+from autotube.api.internal_errors import InternalErrorMiddleware
 
 HTTP_SCOPE: Scope = {"type": "http", "method": "GET", "path": "/", "headers": []}
 

@@ -10,8 +10,8 @@ from urllib.parse import parse_qs, urlparse
 from fastapi.testclient import TestClient
 from httpx2 import Response
 
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides, Runtime, create_app
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides, Runtime, create_app
 
 WAIT_SECONDS = 10.0
 POLL_SECONDS = 0.02

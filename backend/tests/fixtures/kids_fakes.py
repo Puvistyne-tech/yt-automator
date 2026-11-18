@@ -8,7 +8,7 @@ from typing import Any
 
 from PIL import Image
 
-from automator.domain.capabilities import (
+from autotube.domain.capabilities import (
     Capability,
     ImageRequest,
     MotionRequest,
@@ -20,7 +20,7 @@ from automator.domain.capabilities import (
     VideoComposition,
     WordTiming,
 )
-from automator.domain.run_enums import LogLevel
+from autotube.domain.run_enums import LogLevel
 
 WORD_SECONDS = {"en": 0.5, "ta": 0.75}
 TAIL_SECONDS = 0.2

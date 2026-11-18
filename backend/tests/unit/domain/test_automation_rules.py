@@ -4,10 +4,10 @@ from typing import Any
 
 import pytest
 
-from automator.domain.automation_rules import automation_errors, normalized_settings
-from automator.domain.automations import Automation
-from automator.domain.quality import ReviewMode, ReviewPolicy
-from automator.domain.schedules import Schedule, ScheduleKind
+from autotube.domain.automation_rules import automation_errors, normalized_settings
+from autotube.domain.automations import Automation
+from autotube.domain.quality import ReviewMode, ReviewPolicy
+from autotube.domain.schedules import Schedule, ScheduleKind
 from tests.fixtures.builders import automation_input, target_input
 from tests.fixtures.fake_pipeline import FakePipeline, FakeSettings, kids_pipeline
 

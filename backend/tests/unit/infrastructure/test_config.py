@@ -5,9 +5,9 @@ from typing import Any
 
 import pytest
 
-from automator.domain.diagnostics import DoctorPolicy
-from automator.infrastructure import config as config_module
-from automator.infrastructure.config import (
+from autotube.domain.diagnostics import DoctorPolicy
+from autotube.infrastructure import config as config_module
+from autotube.infrastructure.config import (
     REPOSITORY_ROOT,
     RuntimeConfig,
     SecretBackend,
@@ -17,7 +17,7 @@ from automator.infrastructure.config import (
 )
 
 OVERRIDES: list[tuple[str, str, Any]] = [
-    ("data_dir", "/tmp/automator-data", Path("/tmp/automator-data")),
+    ("data_dir", "/tmp/autotube-data", Path("/tmp/autotube-data")),
     ("host", "0.0.0.0", "0.0.0.0"),
     ("port", "9000", 9000),
     ("reload", "true", True),
@@ -54,7 +54,7 @@ DEFAULTS: dict[str, Any] = {
     "worker_poll_seconds": 1.0,
     "shutdown_timeout_seconds": 10.0,
     "secret_backend": SecretBackend.AUTO,
-    "keyring_service": "yt-automator",
+    "keyring_service": "autotube",
     "web_dist_dir": REPOSITORY_ROOT / "web" / "dist",
     "cors_origins": ("http://localhost:5173", "http://127.0.0.1:5173"),
     "event_queue_size": 256,
@@ -73,7 +73,7 @@ DEFAULTS: dict[str, Any] = {
 
 
 def env(field: str) -> str:
-    return "AUTOMATOR_" + field.upper()
+    return "AUTOTUBE_" + field.upper()
 
 
 def test_every_field_has_a_tested_override_and_default() -> None:
@@ -94,7 +94,7 @@ def test_defaults_and_derived_paths(tmp_path: Path) -> None:
     assert {name: getattr(config, name) for name in DEFAULTS} == DEFAULTS
     assert config.oauth_redirect_uri == "http://127.0.0.1:8000/api/oauth/callback"
     moved = load_config({env("data_dir"): str(tmp_path), env("redirect_base_url"): "http://h:1/"})
-    assert moved.database_path == tmp_path / "automator.db"
+    assert moved.database_path == tmp_path / "autotube.db"
     assert moved.oauth_redirect_uri == "http://h:1/api/oauth/callback"
 
 

@@ -4,12 +4,12 @@ from typing import Any
 
 from alembic.script import ScriptDirectory
 
-from automator.application.run_doctor import RunDoctor
-from automator.domain.diagnostic_rules import GIB
-from automator.domain.diagnostics import DoctorPolicy, SystemFacts
-from automator.domain.ports import SecretStore
-from automator.infrastructure.db.database import MIGRATIONS_DIR
-from automator.shared.errors import RuleConflict
+from autotube.application.run_doctor import RunDoctor
+from autotube.domain.diagnostic_rules import GIB
+from autotube.domain.diagnostics import DoctorPolicy, SystemFacts
+from autotube.domain.ports import SecretStore
+from autotube.infrastructure.db.database import MIGRATIONS_DIR
+from autotube.shared.errors import RuleConflict
 from tests.fixtures.fake_providers import FakeProviderCatalog
 from tests.fixtures.fake_runtime import InMemorySecrets
 
@@ -22,7 +22,7 @@ HEALTHY_FACTS: dict[str, Any] = {
     "free_bytes": 50 * GIB,
     "ffmpeg_version": "ffmpeg version 7.1",
     "ffprobe_version": "ffprobe version 7.1",
-    "database_path": "/data/automator.db",
+    "database_path": "/data/autotube.db",
     "database_revision": "0001",
     "database_head": "0001",
     "web_dist_dir": "/web/dist",

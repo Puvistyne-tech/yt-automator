@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from automator.domain.capabilities import ImageRequest
-from automator.pipelines.kids_story.art import lettering
-from automator.pipelines.kids_story.art.cards import lettering_for
-from automator.pipelines.kids_story.settings.base import Placement
+from autotube.domain.capabilities import ImageRequest
+from autotube.pipelines.kids_story.art import lettering
+from autotube.pipelines.kids_story.art.cards import lettering_for
+from autotube.pipelines.kids_story.settings.base import Placement
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, run_chain, with_font
 from tests.fixtures.kids_fakes import FakeImages, FakeProviders
 from tests.fixtures.kids_pictures import is_solid

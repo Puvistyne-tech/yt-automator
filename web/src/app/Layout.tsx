@@ -49,7 +49,7 @@ function Sidebar({ stream }: { stream: StreamState }) {
         <span className="brand-mark">
           <Icon name="logo" size={20} />
         </span>
-        <span className="brand-name">YouTube Automator</span>
+        <span className="brand-name">AutoTube</span>
       </div>
       <nav aria-label="Main" className="nav">
         {NAV.map((item) => (

@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import pytest
 
-from automator.domain.automations import Automation
-from automator.domain.channels import Channel
-from automator.domain.deletion_rules import (
+from autotube.domain.automations import Automation
+from autotube.domain.channels import Channel
+from autotube.domain.deletion_rules import (
     ensure_channel_deletable,
     ensure_credential_deletable,
     ensure_run_deletable,
 )
-from automator.domain.run_enums import RunStatus
-from automator.domain.runs import Run
-from automator.shared.errors import RuleConflict
+from autotube.domain.run_enums import RunStatus
+from autotube.domain.runs import Run
+from autotube.shared.errors import RuleConflict
 
 
 def test_channel_targeted_by_enabled_automation_cannot_be_deleted(

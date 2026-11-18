@@ -5,11 +5,11 @@ from pathlib import Path
 import httpx
 import pytest
 
-from automator.domain.capabilities import TextRequest
-from automator.domain.model_base import JsonObject
-from automator.infrastructure.providers.llm.gemini import GeminiOptions, GeminiText
-from automator.infrastructure.providers.llm.ollama import OllamaOptions, OllamaText
-from automator.shared.errors import UpstreamFailure
+from autotube.domain.capabilities import TextRequest
+from autotube.domain.model_base import JsonObject
+from autotube.infrastructure.providers.llm.gemini import GeminiOptions, GeminiText
+from autotube.infrastructure.providers.llm.ollama import OllamaOptions, OllamaText
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.fakes import make_context
 from tests.unit.infrastructure.providers.http_fakes import Recorder
 

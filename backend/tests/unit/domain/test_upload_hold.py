@@ -5,12 +5,12 @@ from typing import Any
 
 import pytest
 
-from automator.domain.automations import TargetFields
-from automator.domain.channels import Privacy
-from automator.domain.retention import CleanupAction, RetentionPolicy, cleanup_action
-from automator.domain.run_enums import UploadStatus
-from automator.domain.run_parts import Upload
-from automator.domain.upload_hold import holds_run
+from autotube.domain.automations import TargetFields
+from autotube.domain.channels import Privacy
+from autotube.domain.retention import CleanupAction, RetentionPolicy, cleanup_action
+from autotube.domain.run_enums import UploadStatus
+from autotube.domain.run_parts import Upload
+from autotube.domain.upload_hold import holds_run
 from tests.fixtures.retention_data import days_later, finished, upload
 
 DAY_MINUTES = 24 * 60

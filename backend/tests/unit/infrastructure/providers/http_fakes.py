@@ -5,7 +5,7 @@ from pathlib import Path
 
 import httpx
 
-from automator.infrastructure.providers.context import ProviderContext
+from autotube.infrastructure.providers.context import ProviderContext
 from tests.unit.infrastructure.providers.fakes import make_context
 
 

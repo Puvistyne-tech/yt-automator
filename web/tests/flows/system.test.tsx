@@ -9,9 +9,9 @@ describe("Settings page", () => {
   it("validates and saves app settings", async () => {
     const { user } = renderApp("/settings");
     const parallel = await screen.findByLabelText(/^Parallel runs/);
-    expect(
-      screen.getByDisplayValue("~/Library/Application Support/YouTube Automator"),
-    ).toHaveAttribute("readonly");
+    expect(screen.getByDisplayValue("~/Library/Application Support/AutoTube")).toHaveAttribute(
+      "readonly",
+    );
 
     await user.clear(parallel);
     await user.click(screen.getByRole("button", { name: "Save settings" }));

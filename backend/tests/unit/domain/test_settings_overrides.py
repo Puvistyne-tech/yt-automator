@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from automator.domain.diagnostics import DoctorPolicy
-from automator.domain.settings import (
+from autotube.domain.diagnostics import DoctorPolicy
+from autotube.domain.settings import (
     AppSettings,
     AppSettingsInput,
     ServerLogLevel,
     locked_field_errors,
 )
-from automator.domain.settings_overrides import (
+from autotube.domain.settings_overrides import (
     SettingOverride,
     doctor_policy,
     effective_settings,
@@ -17,7 +17,7 @@ from automator.domain.settings_overrides import (
 )
 from tests.fixtures.retention_data import LEGACY_PAYLOAD
 
-LOCKED_LEVEL = SettingOverride(field="log_level", value="debug", reason="Set by AUTOMATOR_X")
+LOCKED_LEVEL = SettingOverride(field="log_level", value="debug", reason="Set by AUTOTUBE_X")
 
 
 def test_settings_stored_before_retention_load_unchanged_with_new_defaults() -> None:
@@ -51,7 +51,7 @@ def test_an_override_wins_over_the_stored_value_and_locks_the_field() -> None:
     stored = AppSettingsInput(log_level=ServerLogLevel.ERROR)
     settings = effective_settings(stored, (LOCKED_LEVEL,), "/d")
     assert settings.log_level is ServerLogLevel.DEBUG
-    assert settings.locked == {"log_level": "Set by AUTOMATOR_X"}
+    assert settings.locked == {"log_level": "Set by AUTOTUBE_X"}
 
 
 def test_saving_keeps_the_stored_value_of_a_locked_field() -> None:
@@ -66,7 +66,7 @@ def test_changing_a_locked_field_is_an_error_but_resending_it_is_not() -> None:
     same = current.input()
     assert locked_field_errors(same, current) == {}
     changed = same.model_copy(update={"log_level": ServerLogLevel.ERROR})
-    assert locked_field_errors(changed, current) == {"log_level": "Set by AUTOMATOR_X"}
+    assert locked_field_errors(changed, current) == {"log_level": "Set by AUTOTUBE_X"}
 
 
 def test_input_drops_the_read_only_fields() -> None:

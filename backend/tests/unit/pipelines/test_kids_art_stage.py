@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.capabilities import ImageRequest, TextRequest
-from automator.domain.model_base import JsonObject
-from automator.pipelines.kids_story.art.prompts import parse_choice
+from autotube.domain.capabilities import ImageRequest, TextRequest
+from autotube.domain.model_base import JsonObject
+from autotube.pipelines.kids_story.art.prompts import parse_choice
 from tests.fixtures.kids_data import (
     StageRig,
     is_judge,

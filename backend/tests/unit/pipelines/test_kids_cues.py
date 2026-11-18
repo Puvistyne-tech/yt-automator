@@ -2,22 +2,22 @@ from __future__ import annotations
 
 import pytest
 
-from automator.domain.capabilities import WordTiming
-from automator.domain.srt import parse_srt
-from automator.pipelines.kids_story.story.words import ends_sentence
-from automator.pipelines.kids_story.subtitles.cues import (
+from autotube.domain.capabilities import WordTiming
+from autotube.domain.srt import parse_srt
+from autotube.pipelines.kids_story.story.words import ends_sentence
+from autotube.pipelines.kids_story.subtitles.cues import (
     Cue,
     CueRules,
     separated,
     word_groups,
     wrapped,
 )
-from automator.pipelines.kids_story.subtitles.layout import subtitle_layout
-from automator.pipelines.kids_story.subtitles.srt import render_srt, timestamp
-from automator.pipelines.kids_story.subtitles.timeline_cues import cue_rules, timeline_cues
-from automator.pipelines.kids_story.text.graphemes import grapheme_length
-from automator.pipelines.kids_story.timeline.plan import Segment
-from automator.pipelines.kids_story.timeline.voices import VoiceLine
+from autotube.pipelines.kids_story.subtitles.layout import subtitle_layout
+from autotube.pipelines.kids_story.subtitles.srt import render_srt, timestamp
+from autotube.pipelines.kids_story.subtitles.timeline_cues import cue_rules, timeline_cues
+from autotube.pipelines.kids_story.text.graphemes import grapheme_length
+from autotube.pipelines.kids_story.timeline.plan import Segment
+from autotube.pipelines.kids_story.timeline.voices import VoiceLine
 from tests.fixtures.kids_data import quick_settings
 
 RULES = CueRules(max_chars=20, max_lines=2, max_seconds=2.5, min_seconds=0.5)

@@ -4,14 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.capabilities import WordTiming
-from automator.pipelines.kids_story.art import lettering
-from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.settings.subtitles import SubtitleSettings
-from automator.pipelines.kids_story.subtitles.layout import subtitle_layout
-from automator.pipelines.kids_story.subtitles.subtitle_font import subtitle_font
-from automator.pipelines.kids_story.subtitles.timeline_cues import cue_rules
-from automator.pipelines.kids_story.subtitles.timing import segment_cues
+from autotube.domain.capabilities import WordTiming
+from autotube.pipelines.kids_story.art import lettering
+from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.kids_story.settings.subtitles import SubtitleSettings
+from autotube.pipelines.kids_story.subtitles.layout import subtitle_layout
+from autotube.pipelines.kids_story.subtitles.subtitle_font import subtitle_font
+from autotube.pipelines.kids_story.subtitles.timeline_cues import cue_rules
+from autotube.pipelines.kids_story.subtitles.timing import segment_cues
 from tests.fixtures.fonts import embedded_font, embedded_font_family
 from tests.fixtures.kids_data import quick_settings
 

@@ -3,19 +3,19 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from automator.application.auto_publish import AutoPublish
-from automator.application.automation_builder import AutomationBuilder
-from automator.application.automation_presenter import AutomationPresenter
-from automator.application.channel_auth import ChannelAuthorizer
-from automator.application.channel_expiry import ChannelExpiry
-from automator.application.credential_views import CredentialViews
-from automator.application.publish_run import PublishRun
-from automator.application.quota_report import QuotaReport
-from automator.application.run_progress import RunProgress
-from automator.application.run_recorder import RunRecorder
-from automator.application.stage_runner import StageRunner
-from automator.application.start_run import StartRun
-from automator.application.upload_performer import UploadPerformer
+from autotube.application.auto_publish import AutoPublish
+from autotube.application.automation_builder import AutomationBuilder
+from autotube.application.automation_presenter import AutomationPresenter
+from autotube.application.channel_auth import ChannelAuthorizer
+from autotube.application.channel_expiry import ChannelExpiry
+from autotube.application.credential_views import CredentialViews
+from autotube.application.publish_run import PublishRun
+from autotube.application.quota_report import QuotaReport
+from autotube.application.run_progress import RunProgress
+from autotube.application.run_recorder import RunRecorder
+from autotube.application.stage_runner import StageRunner
+from autotube.application.start_run import StartRun
+from autotube.application.upload_performer import UploadPerformer
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry, kids_pipeline
 from tests.fixtures.fake_providers import FakeProviderCatalog
 from tests.fixtures.fake_repositories import (

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from automator.domain.channels import ChannelDefaults
-from automator.domain.publish_plan import plan_uploads
-from automator.domain.run_enums import RunStatus, UploadStatus
-from automator.domain.youtube import ChannelAuth, UploadedVideo, VideoUpload
-from automator.shared.errors import NotFound
+from autotube.domain.channels import ChannelDefaults
+from autotube.domain.publish_plan import plan_uploads
+from autotube.domain.run_enums import RunStatus, UploadStatus
+from autotube.domain.youtube import ChannelAuth, UploadedVideo, VideoUpload
+from autotube.shared.errors import NotFound
 from tests.fixtures.builders import add_channel, add_credential, target_input
 from tests.fixtures.fake_pipeline import FakePipelineRegistry
 from tests.fixtures.harness import Harness

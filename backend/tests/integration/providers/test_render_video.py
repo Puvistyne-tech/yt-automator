@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from automator.domain.capabilities import (
+from autotube.domain.capabilities import (
     CameraMove,
     Capability,
     ImageRequest,
@@ -21,9 +21,9 @@ from automator.domain.capabilities import (
     TimingSource,
     VideoComposition,
 )
-from automator.domain.pipeline import ProviderResolver
-from automator.domain.providers import ProviderChoice, ProviderConfig
-from automator.infrastructure.providers.catalog import build_provider_catalog
+from autotube.domain.pipeline import ProviderResolver
+from autotube.domain.providers import ProviderChoice, ProviderConfig
+from autotube.infrastructure.providers.catalog import build_provider_catalog
 from tests.fixtures.fake_runtime import InMemorySecrets
 
 pytestmark = [

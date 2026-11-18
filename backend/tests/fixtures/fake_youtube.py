@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from automator.domain.youtube import (
+from autotube.domain.youtube import (
     ChannelAuth,
     ChannelProfile,
     OAuthClient,
@@ -11,7 +11,7 @@ from automator.domain.youtube import (
     UploadedVideo,
     VideoUpload,
 )
-from automator.shared.errors import UpstreamFailure
+from autotube.shared.errors import UpstreamFailure
 
 
 @dataclass

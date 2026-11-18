@@ -4,11 +4,11 @@ from datetime import timedelta
 
 import pytest
 
-from automator.application.scheduled_cleanup import ScheduledCleanup
-from automator.domain.channels import Privacy
-from automator.domain.run_enums import RunStatus, StageStatus
-from automator.domain.settings import AppSettingsInput
-from automator.shared.errors import RuleConflict
+from autotube.application.scheduled_cleanup import ScheduledCleanup
+from autotube.domain.channels import Privacy
+from autotube.domain.run_enums import RunStatus, StageStatus
+from autotube.domain.settings import AppSettingsInput
+from autotube.shared.errors import RuleConflict
 from tests.fixtures.builders import target_input
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import (

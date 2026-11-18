@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import pytest
 
-from automator.application.recover_interrupted_runs import (
+from autotube.application.recover_interrupted_runs import (
     INTERRUPTED_RUN_ERROR,
     INTERRUPTED_UPLOAD_ERROR,
     RecoveryReport,
 )
-from automator.domain.publish_outcome import NO_UPLOAD_SUCCEEDED
-from automator.domain.run_enums import RunEventKind, RunStatus, StageStatus, UploadStatus
-from automator.domain.run_parts import StageRun, Upload
-from automator.domain.runs import Run
+from autotube.domain.publish_outcome import NO_UPLOAD_SUCCEEDED
+from autotube.domain.run_enums import RunEventKind, RunStatus, StageStatus, UploadStatus
+from autotube.domain.run_parts import StageRun, Upload
+from autotube.domain.runs import Run
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import recover_runs
 from tests.unit.infrastructure.records import run

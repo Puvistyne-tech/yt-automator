@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from automator.domain.local_times import (
+from autotube.domain.local_times import (
     next_local_midnight,
     next_local_time,
     parse_time_of_day,

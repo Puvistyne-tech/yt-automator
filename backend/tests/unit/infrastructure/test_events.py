@@ -4,9 +4,9 @@ import asyncio
 import threading
 from collections.abc import AsyncIterator
 
-from automator.domain.run_enums import RunEventKind
-from automator.domain.runs import RunEvent
-from automator.infrastructure.runtime.events import InProcessRunEvents
+from autotube.domain.run_enums import RunEventKind
+from autotube.domain.runs import RunEvent
+from autotube.infrastructure.runtime.events import InProcessRunEvents
 from tests.fixtures.fake_runtime import START
 
 

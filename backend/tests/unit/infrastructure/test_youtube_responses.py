@@ -5,9 +5,9 @@ from typing import Any
 
 import pytest
 
-from automator.domain.youtube import Playlist
-from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
-from automator.infrastructure.youtube.settings import YouTubeSettings
+from autotube.domain.youtube import Playlist
+from autotube.infrastructure.youtube.gateway import GoogleYouTubeGateway
+from autotube.infrastructure.youtube.settings import YouTubeSettings
 from tests.unit.infrastructure.youtube_fakes import FakeService, auth, media
 
 H, M, D = {"url": "h"}, {"url": "m"}, {"url": "d"}
