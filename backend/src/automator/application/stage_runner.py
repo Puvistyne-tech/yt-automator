@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from functools import partial
 
 from automator.application.run_progress import RunProgress
 from automator.application.run_recorder import RunRecorder
@@ -39,11 +40,15 @@ class StageRunner:
         )
         run = self.recorder.stage(self.with_stage(run, started), started)
         try:
-            outcome = stage.run(context_for(run))
+            outcome = stage.run(self.stage_context(run, stage_id, context_for))
             saved = self.saved_artifacts(run.id, stage_id, outcome)
         except Exception as error:
             return self.failed(run, started, error)
         return self.completed(run, started, outcome, saved)
+
+    def stage_context(self, run: Run, stage_id: str, context_for: ContextFactory) -> StageContext:
+        log = partial(self.recorder.log, run.id, stage_id=stage_id)
+        return replace(context_for(run), log=log)
 
     def with_stage(self, run: Run, stage: StageRun) -> Run:
         if run.stage(stage.stage_id) is not None:
@@ -66,7 +71,10 @@ class StageRunner:
                 "finished_at": self.clock.now(),
             }
         )
-        run = self.recorder.stage(self.progress.synced(run), stage)
+        owned = self.progress.owned(run)
+        if owned is None:
+            return self.progress.synced(run)
+        run = self.recorder.stage(owned, stage)
         if run.status is not RunStatus.RUNNING:
             return run
         return self.progress.fail(run, f"stage {stage.stage_id} failed: {message}")
@@ -82,5 +90,14 @@ class StageRunner:
                 "finished_at": self.clock.now(),
             }
         )
-        run = self.progress.synced(run)
-        return self.recorder.stage(self.recorder.artifacts(run, saved), stage)
+        owned = self.progress.owned(run)
+        if owned is None:
+            self.discard_unreferenced(run, saved)
+            return self.progress.synced(run)
+        return self.recorder.stage(self.recorder.artifacts(owned, saved), stage)
+
+    def discard_unreferenced(self, run: Run, saved: tuple[Artifact, ...]) -> None:
+        kept = self.progress.kept_filenames(run)
+        for artifact in saved:
+            if artifact.filename not in kept:
+                self.store.discard(run.id, artifact)

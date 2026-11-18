@@ -81,6 +81,9 @@ class ExecuteRun:
             items = tuple(pipeline.score(context))
         except Exception as error:
             return self.progress.fail(run, f"scoring failed: {describe_error(error)}")
+        run = self.progress.synced(run)
+        if run.status is not RunStatus.RUNNING:
+            return run
         score = weighted_score(items)
         run = run.model_copy(update={"score": score, "score_details": items})
         return self.progress.move(run, status_after_scoring(run.review_policy, score))

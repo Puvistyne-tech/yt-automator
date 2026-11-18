@@ -16,6 +16,7 @@ from automator.domain.ports import (
     PipelineRegistry,
     RunRepository,
 )
+from automator.domain.publish_outcome import publish_outcome
 from automator.domain.publish_plan import UploadPlan, plan_uploads, quota_needed
 from automator.domain.quota import quota_shortfalls
 from automator.domain.run_enums import RunStatus, UploadStatus
@@ -84,9 +85,5 @@ class PublishRun:
             raise RuleConflict("quota_exceeded", f"daily quota too low: {detail}")
 
     def concluded(self, run: Run) -> Run:
-        statuses = [upload.status for upload in run.uploads]
-        done = UploadStatus.DONE in statuses
-        pending = any(s in (UploadStatus.PENDING, UploadStatus.UPLOADING) for s in statuses)
-        if done and not pending:
-            return self.progress.move(run, RunStatus.PUBLISHED)
-        return self.progress.move(run, RunStatus.APPROVED, "no upload succeeded")
+        status, error = publish_outcome(run.uploads)
+        return self.progress.move(run, status, error)

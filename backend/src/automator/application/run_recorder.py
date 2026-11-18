@@ -5,8 +5,8 @@ from dataclasses import dataclass
 
 from automator.domain.model_base import JsonObject
 from automator.domain.ports import Clock, RunEvents, RunRepository
-from automator.domain.run_enums import RunEventKind
-from automator.domain.run_parts import Artifact, StageRun, Upload
+from automator.domain.run_enums import LogLevel, RunEventKind
+from automator.domain.run_parts import Artifact, RunLog, StageRun, Upload
 from automator.domain.runs import Run, RunEvent
 
 
@@ -52,5 +52,15 @@ class RunRecorder:
         updated = run.model_copy(update={"uploads": uploads})
         return self._save_and_emit(updated, RunEventKind.UPLOAD, (upload,))
 
-    def log(self, run_id: str, message: str) -> None:
-        self.emit(run_id, RunEventKind.LOG, {"message": message})
+    def log(
+        self,
+        run_id: str,
+        message: str,
+        level: LogLevel = LogLevel.INFO,
+        stage_id: str | None = None,
+    ) -> None:
+        entry = RunLog(at=self.clock.now(), level=level, stage_id=stage_id, message=message)
+        stored = self.runs.get(run_id)
+        if stored is not None:
+            self.runs.save(stored.model_copy(update={"logs": (*stored.logs, entry)}))
+        self.emit(run_id, RunEventKind.LOG, entry.model_dump(mode="json", exclude={"at"}))

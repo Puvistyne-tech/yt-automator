@@ -10,6 +10,7 @@ from automator.application.delete_run import DeleteRun
 from automator.application.get_dashboard import GetDashboard
 from automator.application.list_channel_playlists import ListChannelPlaylists
 from automator.application.publish_run import PublishRun
+from automator.application.recover_interrupted_runs import RecoverInterruptedRuns
 from automator.application.retry_run import RetryRun
 from automator.application.review_run import ReviewRun
 from automator.application.run_due_automations import RunDueAutomations
@@ -33,6 +34,10 @@ def complete_connect(h: Harness) -> CompleteChannelConnect:
 
 def retry_run(h: Harness) -> RetryRun:
     return RetryRun(h.runs, h.store, h.progress, h.queue)
+
+
+def recover_runs(h: Harness) -> RecoverInterruptedRuns:
+    return RecoverInterruptedRuns(h.runs, h.recorder, h.progress, h.queue, h.clock)
 
 
 def cancel_run(h: Harness) -> CancelRun:
@@ -85,7 +90,7 @@ def delete_credential(h: Harness) -> DeleteCredential:
 
 
 def list_playlists(h: Harness) -> ListChannelPlaylists:
-    return ListChannelPlaylists(h.channels, h.authorizer, h.youtube)
+    return ListChannelPlaylists(h.channels, h.authorizer, h.youtube, h.expiry)
 
 
 def approved_run(h: Harness, **overrides: Any) -> Run:

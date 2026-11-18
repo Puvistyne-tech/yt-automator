@@ -6,6 +6,8 @@ from pathlib import Path
 from automator.application.automation_builder import AutomationBuilder
 from automator.application.automation_presenter import AutomationPresenter
 from automator.application.channel_auth import ChannelAuthorizer
+from automator.application.channel_expiry import ChannelExpiry
+from automator.application.credential_views import CredentialViews
 from automator.application.quota_report import QuotaReport
 from automator.application.run_progress import RunProgress
 from automator.application.run_recorder import RunRecorder
@@ -69,6 +71,14 @@ class Harness:
         return QuotaReport(self.ledger, self.clock)
 
     @property
+    def expiry(self) -> ChannelExpiry:
+        return ChannelExpiry(self.channels)
+
+    @property
+    def credential_views(self) -> CredentialViews:
+        return CredentialViews(self.secrets, self.quota_report)
+
+    @property
     def presenter(self) -> AutomationPresenter:
         return AutomationPresenter(self.runs, self.schedules)
 
@@ -90,7 +100,9 @@ class Harness:
 
     @property
     def performer(self) -> UploadPerformer:
-        return UploadPerformer(self.youtube, self.store, self.authorizer, self.quota_report)
+        return UploadPerformer(
+            self.youtube, self.store, self.authorizer, self.quota_report, self.expiry
+        )
 
     @property
     def start_run(self) -> StartRun:
