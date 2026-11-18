@@ -61,6 +61,20 @@
       ]
     }
   ],
+  "ui:basic": [
+    "series.name",
+    "look.visual_style",
+    "story.theme_mode",
+    "story.themes",
+    "story.tone",
+    "story.target_duration_seconds",
+    "voice.narrator_voice",
+    "music.enabled",
+    "music.mood_prompt",
+    "subtitles.enabled",
+    "short.enabled",
+    "episode.resolution"
+  ],
   "series": {
     "ui:order": [
       "name",

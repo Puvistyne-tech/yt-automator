@@ -168,3 +168,54 @@ def test_each_section_breach_is_named(ui: JsonObject, problems: list[str]) -> No
 )
 def test_each_hint_breach_is_named(hints: JsonObject, problems: list[str]) -> None:
     assert ui_schema_problems(with_sections(**hints), SETTINGS) == problems
+
+
+def with_basic(basic: JsonValue) -> JsonObject:
+    return {**VALID, "ui:basic": basic}
+
+
+def test_basic_paths_that_resolve_to_settings_have_no_problems() -> None:
+    basic: JsonValue = ["series.style", "series.name.en", "extra.en", "cast", "extra"]
+    assert ui_schema_problems(with_basic(basic), SETTINGS) == []
+
+
+def test_basic_paths_may_name_whole_objects() -> None:
+    assert ui_schema_problems(with_basic(["series", "series.name"]), SETTINGS) == []
+
+
+def test_basic_is_a_root_only_key() -> None:
+    nested = with_sections(series={"ui:basic": ["style"]})
+    assert ui_schema_problems(nested, SETTINGS) == [
+        "series.ui:basic is not a key the ui_schema contract lists"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("basic", "problems"),
+    [
+        ("series.style", ["ui:basic must be a list"]),
+        (["series.style", 3], ["ui:basic entry 1 must be a dotted settings path"]),
+        (["series.nope"], ["ui:basic path series.nope is not a setting"]),
+        (["series.style.deeper"], ["ui:basic path series.style.deeper is not a setting"]),
+        (["cast.items"], ["ui:basic path cast.items is not a setting"]),
+        ([""], ["ui:basic path  is not a setting"]),
+        (["lost.en"], ["ui:basic path lost.en is not a setting"]),
+        (
+            ["series.style", "extra", "series.style"],
+            ["ui:basic names series.style more than once"],
+        ),
+        ([], ["ui:basic must not be empty"]),
+        (["extra.en", "extra.en"], ["ui:basic names extra.en more than once"]),
+        (
+            ["nope", 3, "nope", "series.style"],
+            [
+                "ui:basic path nope is not a setting",
+                "ui:basic entry 1 must be a dotted settings path",
+                "ui:basic path nope is not a setting",
+                "ui:basic names nope more than once",
+            ],
+        ),
+    ],
+)
+def test_each_basic_breach_is_named(basic: JsonValue, problems: list[str]) -> None:
+    assert ui_schema_problems(with_basic(basic), SETTINGS) == problems

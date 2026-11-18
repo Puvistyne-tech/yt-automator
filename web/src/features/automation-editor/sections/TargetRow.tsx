@@ -1,6 +1,7 @@
 import { errorAt } from "@/api/errors";
 import type { Channel, PipelineDescriptor } from "@/api/types";
 import type { TargetDraft } from "@/features/automation-editor/model/draft";
+import type { PlatformShows } from "@/features/automation-editor/model/settingsView";
 import {
   type TargetOptions,
   targetChannelWarning,
@@ -22,6 +23,7 @@ interface TargetRowProps {
   pipeline: PipelineDescriptor;
   channels: Channel[];
   errors: Record<string, string>;
+  shows: PlatformShows;
   onChange: (patch: Partial<TargetDraft>) => void;
   onRemove: () => void;
 }
@@ -41,7 +43,7 @@ function TargetHead({ index, onRemove }: Pick<TargetRowProps, "index" | "onRemov
 }
 
 export function TargetRow(props: TargetRowProps) {
-  const { index, target, options, pipeline, channels, errors, onChange } = props;
+  const { index, target, options, pipeline, channels, errors, shows, onChange } = props;
   const error = (field: string) => errorAt(errors, `targets.${index}.${field}`);
   const field = { target, options, error, onChange };
   const channel = channels.find((c) => c.id === target.channel_id);
@@ -54,9 +56,16 @@ export function TargetRow(props: TargetRowProps) {
         <ChannelField {...field} />
         <LanguageField {...field} pipeline={pipeline} />
         <PrivacyField {...field} channel={channel} />
-        <PlaylistField {...field} />
+        {shows("playlist") && <PlaylistField {...field} />}
         <KidsField {...field} />
-        <PublishTimingFields target={target} error={error} onChange={onChange} channel={channel} />
+        {shows("publish_timing") && (
+          <PublishTimingFields
+            target={target}
+            error={error}
+            onChange={onChange}
+            channel={channel}
+          />
+        )}
       </div>
       <CheckboxGroup
         label="Outputs"
