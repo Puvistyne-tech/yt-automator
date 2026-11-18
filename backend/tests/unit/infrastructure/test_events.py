@@ -45,20 +45,16 @@ def test_events_fan_out_to_every_subscriber_from_threads() -> None:
 
 
 def test_slow_subscribers_keep_only_the_newest_events() -> None:
-    async def scenario() -> list[int]:
+    async def scenario() -> tuple[list[int], int]:
         events = InProcessRunEvents(queue_size=2)
-        stream = events.subscribe()
-        pending = asyncio.ensure_future(anext(stream))
-        while events.subscriber_count() == 0:
-            await asyncio.sleep(0)
+        subscriber = events.register()
         for index in range(5):
             events.publish(event(index))
         await asyncio.sleep(0)
-        head = int(str((await pending).payload["i"]))
-        tail = await take(stream, 1)
-        return [head, *tail]
+        kept = [int(str(subscriber.queue.get_nowait().payload["i"])) for _ in range(2)]
+        return kept, subscriber.dropped
 
-    assert asyncio.run(scenario()) == [3, 4]
+    assert asyncio.run(scenario()) == ([3, 4], 3)
 
 
 def test_subscriber_is_dropped_when_its_loop_is_gone() -> None:

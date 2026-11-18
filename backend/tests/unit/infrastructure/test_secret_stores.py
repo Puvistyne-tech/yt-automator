@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import stat
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+from cryptography.fernet import Fernet
 from keyring.backend import KeyringBackend
 from keyring.backends import fail
 from keyring.errors import PasswordDeleteError
 
 from automator.domain.ports import SecretStore
 from automator.infrastructure.config import SecretBackend
-from automator.infrastructure.secrets.file_store import EncryptedFileSecretStore
+from automator.infrastructure.secrets.file_store import EncryptedFileSecretStore, SecretsUnreadable
 from automator.infrastructure.secrets.keyring_store import KeyringSecretStore
 from automator.infrastructure.secrets.selection import build_secret_store
 
@@ -57,18 +59,87 @@ def test_store_sets_reads_and_deletes(store: SecretStore) -> None:
     store.set("credential/k/client_secret", "s3cret")
     assert store.get("channel/c1/token") == "tok-1"
     assert store.has("credential/k/client_secret")
+    store.set("channel/c1/token", "tok-2")
+    assert store.get("channel/c1/token") == "tok-2"
     store.delete("channel/c1/token")
     store.delete("channel/c1/token")
     assert store.get("channel/c1/token") is None
     assert store.get("credential/k/client_secret") == "s3cret"
 
 
+def mode_of(path: Path) -> int:
+    return stat.S_IMODE(path.stat().st_mode)
+
+
 def test_file_store_encrypts_and_restricts_permissions(tmp_path: Path) -> None:
-    file_store(tmp_path).set("api", "plain-value")
-    assert b"plain-value" not in (tmp_path / "secrets.enc").read_bytes()
-    for name in ("secrets.enc", "secrets.key"):
-        assert stat.S_IMODE((tmp_path / name).stat().st_mode) == 0o600
-    assert file_store(tmp_path).get("api") == "plain-value"
+    nested = tmp_path / "nested"
+    file_store(nested).set("api", "plain-value")
+    assert b"plain-value" not in (nested / "secrets.enc").read_bytes()
+    assert {mode_of(nested / name) for name in ("secrets.enc", "secrets.key")} == {0o600}
+    assert sorted(path.name for path in nested.iterdir()) == ["secrets.enc", "secrets.key"]
+    assert file_store(nested).get("api") == "plain-value"
+
+
+def test_an_existing_loose_key_is_reused_and_tightened(tmp_path: Path) -> None:
+    file_store(tmp_path).set("api", "value")
+    key = tmp_path / "secrets.key"
+    key.chmod(0o644)
+    assert file_store(tmp_path).get("api") == "value"
+    assert mode_of(key) == 0o600
+
+
+def lose_key(tmp_path: Path) -> None:
+    (tmp_path / "secrets.key").unlink()
+
+
+def truncate_secrets(tmp_path: Path) -> None:
+    (tmp_path / "secrets.enc").write_bytes(b"trunc")
+
+
+def corrupt_key(tmp_path: Path) -> None:
+    (tmp_path / "secrets.key").write_bytes(b"not-a-key")
+
+
+def store_a_list(tmp_path: Path) -> None:
+    key = (tmp_path / "secrets.key").read_bytes()
+    (tmp_path / "secrets.enc").write_bytes(Fernet(key).encrypt(b"[1]"))
+
+
+def store_bad_json(tmp_path: Path) -> None:
+    key = (tmp_path / "secrets.key").read_bytes()
+    (tmp_path / "secrets.enc").write_bytes(Fernet(key).encrypt(b"{"))
+
+
+@pytest.mark.parametrize(
+    "damage", [lose_key, truncate_secrets, corrupt_key, store_a_list, store_bad_json]
+)
+def test_unreadable_secrets_raise_a_reconnect_error(
+    tmp_path: Path, damage: Callable[[Path], None]
+) -> None:
+    file_store(tmp_path).set("api", "value")
+    damage(tmp_path)
+    store = file_store(tmp_path)
+    with pytest.raises(SecretsUnreadable, match="reconnect your channels") as raised:
+        store.get("api")
+    assert raised.value.code == "secrets_unreadable"
+    assert "value" not in raised.value.message
+    with pytest.raises(SecretsUnreadable):
+        store.set("api", "new")
+
+
+def test_a_store_without_its_key_never_writes(tmp_path: Path) -> None:
+    file_store(tmp_path).set("api", "value")
+    lose_key(tmp_path)
+    store = file_store(tmp_path)
+    (tmp_path / "secrets.enc").unlink()
+    assert store.get("api") is None
+    with pytest.raises(SecretsUnreadable):
+        store.set("api", "new")
+    assert not (tmp_path / "secrets.key").exists()
+
+
+class SilentKeyring(MemoryKeyring):
+    priority = 0
 
 
 @pytest.mark.parametrize(
@@ -76,11 +147,17 @@ def test_file_store_encrypts_and_restricts_permissions(tmp_path: Path) -> None:
     [
         (SecretBackend.AUTO, MemoryKeyring(), KeyringSecretStore),
         (SecretBackend.AUTO, fail.Keyring(), EncryptedFileSecretStore),  # type: ignore[no-untyped-call]
+        (SecretBackend.AUTO, SilentKeyring(), EncryptedFileSecretStore),
         (SecretBackend.FILE, MemoryKeyring(), EncryptedFileSecretStore),
+        (SecretBackend.FILE, fail.Keyring(), EncryptedFileSecretStore),  # type: ignore[no-untyped-call]
         (SecretBackend.KEYRING, MemoryKeyring(), KeyringSecretStore),
     ],
 )
 def test_selection_prefers_a_working_keychain(
     tmp_path: Path, choice: SecretBackend, backend: KeyringBackend, expected: type
 ) -> None:
-    assert isinstance(build_secret_store(choice, tmp_path, SERVICE, backend), expected)
+    selected = build_secret_store(choice, tmp_path, SERVICE, backend)
+    assert isinstance(selected, expected)
+    if isinstance(selected, EncryptedFileSecretStore):
+        assert selected.path == tmp_path / "secrets.enc"
+        assert (tmp_path / "secrets.key").is_file()

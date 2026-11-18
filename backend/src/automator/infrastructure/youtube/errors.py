@@ -5,9 +5,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
+import httplib2  # type: ignore[import-untyped]
 from google.auth.exceptions import RefreshError, TransportError
 from googleapiclient.errors import HttpError  # type: ignore[import-untyped]
 
+from automator.domain.youtube import AUTHORIZATION_EXPIRED_CODE
 from automator.shared.errors import UpstreamFailure
 
 QUOTA_REASONS = frozenset({"quotaExceeded", "dailyLimitExceeded", "rateLimitExceeded"})
@@ -41,7 +43,7 @@ def refresh_failure(error: RefreshError) -> UpstreamFailure:
     if "invalid_grant" in str(error):
         return UpstreamFailure(
             "the channel authorization was revoked or expired; reconnect the channel",
-            "youtube_invalid_grant",
+            AUTHORIZATION_EXPIRED_CODE,
         )
     return UpstreamFailure("could not refresh the channel authorization", "youtube_auth_failed")
 
@@ -54,5 +56,9 @@ def google_errors() -> Iterator[None]:
         raise http_failure(error) from error
     except RefreshError as error:
         raise refresh_failure(error) from error
-    except TransportError as error:
-        raise UpstreamFailure("could not reach Google", "youtube_unreachable") from error
+    except (TransportError, OSError, httplib2.HttpLib2Error) as error:
+        raise unreachable() from error
+
+
+def unreachable() -> UpstreamFailure:
+    return UpstreamFailure("could not reach Google", "youtube_unreachable")

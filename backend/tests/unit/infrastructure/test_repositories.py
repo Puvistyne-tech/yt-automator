@@ -9,10 +9,12 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from automator.domain.capabilities import Capability
+from automator.domain.channels import Channel
 from automator.domain.providers import ProviderChoice, ProviderConfig
 from automator.domain.run_enums import RunStatus, RunTrigger
 from automator.domain.runs import RunQuery
 from automator.domain.settings import AppSettings
+from automator.infrastructure.config import RuntimeConfig
 from automator.infrastructure.db.database import Database
 from automator.infrastructure.db.entity_repositories import (
     SqlAutomationRepository,
@@ -34,6 +36,10 @@ def test_migrations_are_idempotent_and_enable_wal(database: Database) -> None:
     with database.engine.connect() as connection:
         assert connection.execute(text("PRAGMA journal_mode")).scalar() == "wal"
         assert connection.execute(text("PRAGMA foreign_keys")).scalar() == 1
+        busy_timeout = connection.execute(text("PRAGMA busy_timeout")).scalar()
+        assert busy_timeout == RuntimeConfig().database_busy_timeout_ms
+        version = connection.execute(text("SELECT version_num FROM alembic_version")).scalar()
+        assert version == "0001"
 
 
 @pytest.mark.parametrize(
@@ -58,13 +64,45 @@ def test_entities_round_trip_losslessly(
     repository.delete(model_id)
 
 
-def test_save_overwrites_and_list_orders_by_creation(database: Database) -> None:
-    repository = SqlCredentialRepository(database)
-    later = credential("cred-2").model_copy(update={"created_at": START + timedelta(days=1)})
-    repository.save(later)
-    repository.save(credential())
-    repository.save(credential().model_copy(update={"name": "Renamed"}))
-    assert [item.name for item in repository.list()] == ["Renamed", "Project"]
+def renamed_later(model: Any, field: str) -> Any:
+    changes: dict[str, Any] = {"id": "later", field: START + timedelta(days=1)}
+    if isinstance(model, Channel):
+        changes["youtube_channel_id"] = "UC-2"
+    return model.model_copy(update=changes)
+
+
+@pytest.mark.parametrize(
+    ("repository_type", "model", "field"),
+    [
+        (SqlCredentialRepository, credential(), "created_at"),
+        (SqlChannelRepository, channel(), "connected_at"),
+        (SqlAutomationRepository, automation(), "created_at"),
+    ],
+)
+def test_save_overwrites_and_list_orders_by_creation(
+    database: Database, repository_type: Any, model: Any, field: str
+) -> None:
+    SqlCredentialRepository(database).save(credential())
+    repository = repository_type(database)
+    repository.save(renamed_later(model, field))
+    repository.save(model)
+    repository.save(model)
+    assert [item.id for item in repository.list()] == [model.id, "later"]
+
+
+def test_credential_with_channels_cannot_be_deleted(database: Database) -> None:
+    credentials = SqlCredentialRepository(database)
+    credentials.save(credential())
+    SqlChannelRepository(database).save(channel())
+    with pytest.raises(IntegrityError):
+        credentials.delete("cred-1")
+
+
+def test_runs_created_together_are_ordered_by_id(database: Database) -> None:
+    runs = SqlRunRepository(database)
+    runs.save(run("a", 0))
+    runs.save(run("b", 0))
+    assert [item.id for item in runs.list(RunQuery())] == ["b", "a"]
 
 
 def test_channels_are_unique_per_youtube_id_and_need_a_credential(database: Database) -> None:
@@ -99,6 +137,14 @@ def stored_runs(database: Database) -> SqlRunRepository:
         (RunQuery(trigger=RunTrigger.SCHEDULE), ["r3"]),
         (RunQuery(created_after=START + timedelta(minutes=10)), ["r4", "r3", "r2"]),
         (RunQuery(automation_id="auto-1", status=RunStatus.AWAITING_REVIEW, limit=1), ["r4"]),
+        (
+            RunQuery(
+                automation_id="auto-1",
+                status=RunStatus.AWAITING_REVIEW,
+                created_after=START + timedelta(minutes=15),
+            ),
+            ["r4"],
+        ),
     ],
 )
 def test_run_queries_filter_in_sql_newest_first(

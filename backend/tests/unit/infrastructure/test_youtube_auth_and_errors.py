@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -10,14 +12,16 @@ import pytest
 from google.auth.exceptions import RefreshError, TransportError
 from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError  # type: ignore[import-untyped]
-from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
+from oauthlib.oauth2.rfc6749.errors import InvalidClientError, InvalidGrantError
 
+from automator.domain.channels import Privacy
+from automator.domain.youtube import VideoUpload
 from automator.infrastructure.youtube.errors import google_errors
 from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
 from automator.infrastructure.youtube.oauth import GoogleOAuth
 from automator.infrastructure.youtube.settings import YouTubeSettings
 from automator.shared.errors import UpstreamFailure
-from tests.unit.infrastructure.youtube_fakes import CLIENT, FakeService, auth
+from tests.unit.infrastructure.youtube_fakes import CLIENT, FakeService, auth, media
 
 REDIRECT = "http://127.0.0.1:9000/api/oauth/callback"
 
@@ -25,6 +29,21 @@ REDIRECT = "http://127.0.0.1:9000/api/oauth/callback"
 def http_error(status: int, reason: str = "") -> HttpError:
     body = {"error": {"errors": [{"reason": reason}], "message": "nope"}}
     return HttpError(httplib2.Response({"status": status}), json.dumps(body).encode())
+
+
+def raw_http_error(status: int, content: bytes) -> HttpError:
+    return HttpError(httplib2.Response({"status": status}), content)
+
+
+VIDEO = VideoUpload(
+    path=Path("v.mp4"),
+    title="t",
+    category_id="22",
+    default_language="en",
+    privacy=Privacy.PRIVATE,
+    made_for_kids=False,
+    notify_subscribers=False,
+)
 
 
 @dataclass
@@ -75,18 +94,34 @@ def test_exchange_returns_a_token_blob_without_the_client_secret() -> None:
     assert "client_secret" not in blob
 
 
-def test_exchange_translates_a_rejected_code() -> None:
-    flow = FakeFlow(failure=InvalidGrantError())
+@pytest.mark.parametrize(
+    ("failure", "code"),
+    [
+        (InvalidGrantError(), "youtube_invalid_grant"),
+        (InvalidClientError(), "youtube_oauth_failed"),
+        (TransportError("x"), "youtube_unreachable"),  # type: ignore[no-untyped-call]
+        (Warning("Scope has changed"), "youtube_scope_denied"),
+    ],
+)
+def test_exchange_translates_failures(failure: Exception, code: str) -> None:
+    flow = FakeFlow(failure=failure)
     oauth = GoogleOAuth(YouTubeSettings(), flows=lambda _client, _settings: flow)
     with pytest.raises(UpstreamFailure) as raised:
         oauth.exchange_code(CLIENT, "bad")
-    assert raised.value.code == "youtube_invalid_grant"
+    assert raised.value.code == code
 
 
 @pytest.mark.parametrize(
     ("error", "code"),
     [
         (http_error(403, "quotaExceeded"), "youtube_quota_exceeded"),
+        (http_error(403, "dailyLimitExceeded"), "youtube_quota_exceeded"),
+        (http_error(429, "rateLimitExceeded"), "youtube_quota_exceeded"),
+        (http_error(400), "youtube_bad_request"),
+        (raw_http_error(503, b"<html>"), "youtube_error"),
+        (raw_http_error(500, b"[1]"), "youtube_error"),
+        (OSError("socket closed"), "youtube_unreachable"),
+        (httplib2.HttpLib2Error("broken"), "youtube_unreachable"),
         (http_error(403, "forbidden"), "youtube_forbidden"),
         (http_error(401), "youtube_unauthorized"),
         (http_error(404, "videoNotFound"), "youtube_not_found"),
@@ -102,12 +137,25 @@ def test_google_errors_become_upstream_failures(error: Exception, code: str) -> 
     assert raised.value.code == code
 
 
-def test_gateway_calls_translate_errors() -> None:
+GATEWAY_CALLS: list[tuple[str, str, Callable[[GoogleYouTubeGateway], object]]] = [
+    ("playlistItems", "insert", lambda g: g.add_to_playlist(auth(), "v", "p")),
+    ("playlists", "list", lambda g: g.list_playlists(auth())),
+    ("channels", "list", lambda g: g.describe_channel(auth())),
+    ("thumbnails", "set", lambda g: g.set_thumbnail(auth(), "v", Path("t.png"))),
+    ("captions", "insert", lambda g: g.upload_captions(auth(), "v", "en", Path("c.srt"))),
+    ("videos", "insert", lambda g: g.upload_video(auth(), VIDEO)),
+]
+
+
+@pytest.mark.parametrize(("resource", "method", "call"), GATEWAY_CALLS)
+def test_gateway_calls_translate_errors(
+    resource: str, method: str, call: Callable[[GoogleYouTubeGateway], object]
+) -> None:
     service = FakeService()
-    service.respond("playlistItems", "insert", http_error(403, "quotaExceeded"))
-    gateway = GoogleYouTubeGateway(YouTubeSettings(), services=lambda _c: service, media=dict)
+    service.respond(resource, method, http_error(403, "quotaExceeded"))
+    gateway = GoogleYouTubeGateway(YouTubeSettings(), services=lambda _c: service, media=media)
     with pytest.raises(UpstreamFailure) as raised:
-        gateway.add_to_playlist(auth(), "v", "p")
+        call(gateway)
     assert raised.value.code == "youtube_quota_exceeded"
 
 

@@ -7,6 +7,7 @@ from sqlmodel import col, select
 from automator.domain.runs import Run, RunQuery
 from automator.infrastructure.db.codec import sortable_time, to_payload
 from automator.infrastructure.db.database import Database
+from automator.infrastructure.db.row_repository import RowStore
 from automator.infrastructure.db.tables import RunRow
 
 
@@ -35,30 +36,11 @@ def run_statement(query: RunQuery) -> Any:
     return statement.limit(query.limit) if query.limit is not None else statement
 
 
-def decode_run(row: RunRow) -> Run:
-    return Run.model_validate(row.payload)
-
-
-class SqlRunRepository:
+class SqlRunRepository(RowStore[Run, RunRow]):
     def __init__(self, db: Database) -> None:
-        self.db = db
-
-    def get(self, run_id: str) -> Run | None:
-        with self.db.session() as session:
-            row = session.get(RunRow, run_id)
-            return decode_run(row) if row is not None else None
+        super().__init__(db, RunRow, Run, run_row)
 
     def list(self, query: RunQuery) -> list[Run]:
         with self.db.session() as session:
             rows = session.exec(run_statement(query)).all()
-            return [decode_run(row) for row in rows]
-
-    def save(self, run: Run) -> None:
-        with self.db.session() as session:
-            session.merge(run_row(run))
-
-    def delete(self, run_id: str) -> None:
-        with self.db.session() as session:
-            row = session.get(RunRow, run_id)
-            if row is not None:
-                session.delete(row)
+            return [self.decode(row) for row in rows]

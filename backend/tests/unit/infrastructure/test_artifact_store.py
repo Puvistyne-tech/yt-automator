@@ -6,6 +6,7 @@ import pytest
 
 from automator.domain.pipeline import NewArtifact
 from automator.domain.run_enums import ArtifactKind
+from automator.domain.run_parts import Artifact
 from automator.infrastructure.storage.artifact_store import FileArtifactStore
 from automator.shared.errors import NotFound, ValidationFailed
 
@@ -78,3 +79,39 @@ def test_discard_and_delete_run_remove_files(store: FileArtifactStore, tmp_path:
         store.open("run-1", artifact)
     store.delete_run("run-1")
     assert not (tmp_path / "runs" / "run-1").exists()
+
+
+def stored_artifact(**changes: str) -> Artifact:
+    base = Artifact(
+        id="art-1",
+        kind=ArtifactKind.VIDEO,
+        stage_id="s",
+        filename="a.txt",
+        media_type="t",
+        size_bytes=1,
+    )
+    return base.model_copy(update=changes)
+
+
+@pytest.mark.parametrize(
+    ("artifact", "error"),
+    [
+        (stored_artifact(filename=".."), ValidationFailed),
+        (stored_artifact(id="../a"), ValidationFailed),
+        (stored_artifact(filename="../x"), NotFound),
+    ],
+)
+def test_open_refuses_malicious_names(
+    store: FileArtifactStore, artifact: Artifact, error: type[Exception]
+) -> None:
+    with pytest.raises(error):
+        store.open("run-1", artifact)
+
+
+@pytest.mark.parametrize(
+    "artifact",
+    [stored_artifact(filename=".."), stored_artifact(filename="../x"), stored_artifact(id="../a")],
+)
+def test_discard_refuses_malicious_names(store: FileArtifactStore, artifact: Artifact) -> None:
+    with pytest.raises(ValidationFailed):
+        store.discard("run-1", artifact)

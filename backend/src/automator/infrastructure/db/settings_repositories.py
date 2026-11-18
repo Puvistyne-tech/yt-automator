@@ -9,7 +9,7 @@ from sqlmodel import col, select
 
 from automator.domain.providers import ProviderConfig
 from automator.domain.settings import AppSettings
-from automator.infrastructure.db.codec import to_payload
+from automator.infrastructure.db.codec import from_payload, to_payload
 from automator.infrastructure.db.database import Database
 from automator.infrastructure.db.tables import AppSettingsRow, ProviderConfigRow, QuotaEntryRow
 
@@ -23,7 +23,7 @@ class SqlProviderConfigRepository:
     def list(self) -> list[ProviderConfig]:
         with self.db.session() as session:
             rows = session.exec(select(ProviderConfigRow).order_by(col(ProviderConfigRow.position)))
-            return [ProviderConfig.model_validate(row.payload) for row in rows.all()]
+            return [from_payload(ProviderConfig, row.payload) for row in rows.all()]
 
     def save_all(self, configs: Sequence[ProviderConfig]) -> None:
         with self.db.session() as session:
@@ -46,7 +46,7 @@ class SqlAppSettingsRepository:
     def get(self) -> AppSettings:
         with self.db.session() as session:
             row = session.get(AppSettingsRow, APP_SETTINGS_ID)
-            stored = AppSettings.model_validate(row.payload) if row is not None else AppSettings()
+            stored = from_payload(AppSettings, row.payload) if row is not None else AppSettings()
         return stored.model_copy(update={"data_dir": self.data_dir})
 
     def save(self, settings: AppSettings) -> None:

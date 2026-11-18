@@ -5,12 +5,36 @@ from pathlib import Path
 
 import pytest
 
+from automator.infrastructure.config import RuntimeConfig
 from automator.infrastructure.db.database import Database
+from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
+from automator.infrastructure.youtube.settings import YouTubeSettings
+from tests.unit.infrastructure.youtube_fakes import FakeService, media
 
 
 @pytest.fixture
 def database(tmp_path: Path) -> Iterator[Database]:
-    db = Database(tmp_path / "test.db")
+    db = Database(tmp_path / "test.db", RuntimeConfig().database_busy_timeout_ms)
     db.migrate()
     yield db
     db.dispose()
+
+
+@pytest.fixture
+def service() -> FakeService:
+    return FakeService()
+
+
+@pytest.fixture
+def refreshed() -> list[str]:
+    return []
+
+
+@pytest.fixture
+def gateway(service: FakeService, refreshed: list[str]) -> GoogleYouTubeGateway:
+    return GoogleYouTubeGateway(
+        YouTubeSettings(upload_chunk_bytes=256 * 1024, playlist_page_size=2),
+        services=lambda _credentials: service,
+        media=media,
+        refresher=lambda credentials: refreshed.append(credentials.refresh_token or ""),
+    )

@@ -15,6 +15,10 @@ def auth(token: dict[str, str] | None = None) -> ChannelAuth:
     return ChannelAuth(client=CLIENT, token=json.dumps(token or VALID_TOKEN))
 
 
+def media(path: str, **options: Any) -> dict[str, Any]:
+    return {"path": path} | options
+
+
 @dataclass
 class FakeRequest:
     response: Any

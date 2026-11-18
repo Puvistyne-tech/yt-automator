@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from collections import deque
 from collections.abc import Callable
 
@@ -11,12 +12,17 @@ RunExecutor = Callable[[str], object]
 ParallelLimit = Callable[[], int]
 
 
+def remaining(deadline: float) -> float:
+    return max(deadline - time.monotonic(), 0.0)
+
+
 class WorkerPoolQueue:
     def __init__(self, limit: ParallelLimit, poll_seconds: float) -> None:
         self.limit = limit
         self.poll_seconds = poll_seconds
         self.pending: deque[str] = deque()
         self.active: dict[str, threading.Thread] = {}
+        self.requeue: set[str] = set()
         self.condition = threading.Condition()
         self.dispatcher: threading.Thread | None = None
         self.executor: RunExecutor | None = None
@@ -24,7 +30,9 @@ class WorkerPoolQueue:
 
     def enqueue(self, run_id: str) -> None:
         with self.condition:
-            if run_id not in self.pending and run_id not in self.active:
+            if run_id in self.active:
+                self.requeue.add(run_id)
+            elif run_id not in self.pending:
                 self.pending.append(run_id)
             self.condition.notify_all()
 
@@ -32,6 +40,7 @@ class WorkerPoolQueue:
         with self.condition:
             if run_id in self.pending:
                 self.pending.remove(run_id)
+            self.requeue.discard(run_id)
             self.condition.notify_all()
 
     def start(self, executor: RunExecutor) -> None:
@@ -41,15 +50,16 @@ class WorkerPoolQueue:
         self.dispatcher = threading.Thread(target=self.dispatch, name="run-dispatcher", daemon=True)
         self.dispatcher.start()
 
-    def stop(self, timeout: float) -> None:
+    def stop(self, timeout: float) -> bool:
+        deadline = time.monotonic() + timeout
         with self.condition:
             self.stopping = True
             self.condition.notify_all()
-            workers = list(self.active.values())
-        if self.dispatcher is not None:
-            self.dispatcher.join(timeout)
-        for worker in workers:
-            worker.join(timeout)
+            threads = [self.dispatcher, *self.active.values()]
+        alive = [thread for thread in threads if thread is not None]
+        for thread in alive:
+            thread.join(remaining(deadline))
+        return not any(thread.is_alive() for thread in alive)
 
     def wait_idle(self, timeout: float) -> bool:
         with self.condition:
@@ -63,9 +73,12 @@ class WorkerPoolQueue:
             return 1
 
     def dispatch(self) -> None:
-        with self.condition:
-            while not self.stopping:
-                while self.pending and len(self.active) < self.capacity():
+        while True:
+            limit = self.capacity()
+            with self.condition:
+                if self.stopping:
+                    return
+                while self.pending and len(self.active) < limit:
                     self.launch(self.pending.popleft())
                 self.condition.wait(self.poll_seconds)
 
@@ -76,6 +89,14 @@ class WorkerPoolQueue:
         worker.start()
         self.condition.notify_all()
 
+    def finish(self, run_id: str) -> None:
+        with self.condition:
+            self.active.pop(run_id, None)
+            if run_id in self.requeue:
+                self.requeue.discard(run_id)
+                self.pending.append(run_id)
+            self.condition.notify_all()
+
     def work(self, run_id: str) -> None:
         try:
             if self.executor is not None:
@@ -83,6 +104,4 @@ class WorkerPoolQueue:
         except Exception:
             logger.exception("run %s crashed in its worker", run_id)
         finally:
-            with self.condition:
-                self.active.pop(run_id, None)
-                self.condition.notify_all()
+            self.finish(run_id)

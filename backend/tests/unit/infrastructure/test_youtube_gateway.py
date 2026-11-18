@@ -2,40 +2,14 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from automator.domain.channels import Privacy
 from automator.domain.youtube import Playlist, VideoUpload
 from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
-from automator.infrastructure.youtube.settings import YouTubeSettings
 from automator.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.youtube_fakes import EXPIRED_TOKEN, FakeService, auth
-
-
-def media(path: str, **options: Any) -> dict[str, Any]:
-    return {"path": path} | options
-
-
-@pytest.fixture
-def service() -> FakeService:
-    return FakeService()
-
-
-@pytest.fixture
-def refreshed() -> list[str]:
-    return []
-
-
-@pytest.fixture
-def gateway(service: FakeService, refreshed: list[str]) -> GoogleYouTubeGateway:
-    return GoogleYouTubeGateway(
-        YouTubeSettings(upload_chunk_bytes=256 * 1024, playlist_page_size=2),
-        services=lambda _credentials: service,
-        media=media,
-        refresher=lambda credentials: refreshed.append(credentials.refresh_token or ""),
-    )
 
 
 def video(path: Path, publish_at: datetime | None = None) -> VideoUpload:
@@ -70,6 +44,8 @@ def test_upload_builds_a_resumable_insert(
         "resumable": True,
     }
     body = kwargs["body"]
+    assert (body["snippet"]["title"], body["snippet"]["description"]) == ("Owls", "A story")
+    assert body["snippet"]["defaultAudioLanguage"] == "ta"
     assert body["snippet"]["tags"] == ["kids", "owls"]
     assert (body["snippet"]["categoryId"], body["snippet"]["defaultLanguage"]) == ("27", "ta")
     assert body["status"] == {

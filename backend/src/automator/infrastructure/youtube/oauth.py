@@ -9,7 +9,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow  # type: ignore[import-untyped]
 from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 
-from automator.domain.youtube import ChannelAuth, OAuthClient
+from automator.domain.youtube import AUTHORIZATION_EXPIRED_CODE, ChannelAuth, OAuthClient
 from automator.infrastructure.youtube.errors import google_errors
 from automator.infrastructure.youtube.settings import YouTubeSettings
 from automator.shared.errors import UpstreamFailure
@@ -46,8 +46,16 @@ def token_blob(credentials: Credentials) -> str:
 
 
 def oauth_failure(error: OAuth2Error) -> UpstreamFailure:
-    code = "youtube_invalid_grant" if error.error == "invalid_grant" else "youtube_oauth_failed"
+    code = AUTHORIZATION_EXPIRED_CODE if error.error == "invalid_grant" else "youtube_oauth_failed"
     return UpstreamFailure(f"Google rejected the authorization: {error.error}", code)
+
+
+def scope_denied() -> UpstreamFailure:
+    return UpstreamFailure(
+        "Google granted fewer permissions than YouTube Automator needs; connect again and allow "
+        "every requested permission",
+        "youtube_scope_denied",
+    )
 
 
 def refresh_with_google(credentials: Credentials) -> None:
@@ -84,4 +92,6 @@ class GoogleOAuth:
                 flow.fetch_token(code=code)
         except OAuth2Error as error:
             raise oauth_failure(error) from error
+        except Warning as warning:
+            raise scope_denied() from warning
         return token_blob(flow.credentials)

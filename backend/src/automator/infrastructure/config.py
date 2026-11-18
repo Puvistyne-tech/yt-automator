@@ -65,6 +65,15 @@ class RuntimeConfig(BaseModel):
     upload_chunk_bytes: int = Field(
         default=8 * 1024 * 1024, ge=256 * 1024, description="Resumable upload chunk size"
     )
+    database_busy_timeout_ms: int = Field(
+        default=5000, ge=0, description="Milliseconds SQLite waits for a locked database"
+    )
+    youtube_caption_track_name: str = Field(
+        default="", description="Name shown on YouTube for uploaded caption tracks"
+    )
+    youtube_playlist_page_size: int = Field(
+        default=50, ge=1, le=50, description="Playlists fetched per YouTube API page"
+    )
     log_level: str = Field(default="info", description="Server log level")
 
     @property
