@@ -1,0 +1,159 @@
+import { makeChannel, makeCredential } from "@/api/mocks/fixtures/factories";
+import { settingsChanged, settingsInput, validateSettings } from "@/features/app-settings/validate";
+import {
+  credentialPayload,
+  credentialSecretHint,
+  credentialValues,
+  validateCredential,
+} from "@/features/channels/credentialForm";
+import { channelDefaultsPayload, validateChannelDefaults } from "@/features/channels/defaultsForm";
+import { oauthReturnMessage, withoutOAuthParams } from "@/features/channels/oauthReturn";
+import { validateSecretValue } from "@/features/secrets/secretForm";
+
+const values = { name: " Main ", client_id: " id ", client_secret: "", daily_quota_units: 500 };
+
+describe("credential form", () => {
+  it("starts from defaults or an existing credential without its secret", () => {
+    expect(credentialValues(undefined)).toEqual({
+      name: "",
+      client_id: "",
+      client_secret: "",
+      daily_quota_units: 10_000,
+    });
+    expect(credentialValues(makeCredential())).toMatchObject({
+      name: "Main Google project",
+      client_secret: "",
+    });
+  });
+
+  it("requires a secret only for new credentials", () => {
+    expect(validateCredential(values, false)).toEqual({});
+    expect(validateCredential(values, true)).toEqual({
+      client_secret: "Paste the OAuth client secret.",
+    });
+  });
+
+  it("reports every missing field", () => {
+    const empty = { name: "", client_id: " ", client_secret: "", daily_quota_units: 0.5 };
+    expect(Object.keys(validateCredential(empty, true)).sort()).toEqual([
+      "client_id",
+      "client_secret",
+      "daily_quota_units",
+      "name",
+    ]);
+  });
+
+  it.each([0, 2.5])("rejects a daily quota of %d on its own", (daily_quota_units) => {
+    expect(validateCredential({ ...values, daily_quota_units }, false)).toEqual({
+      daily_quota_units: "Use a whole number of units, at least 1.",
+    });
+  });
+
+  it("hints at the stored secret state", () => {
+    expect(credentialSecretHint(undefined)).toBe(
+      "Stored in the keychain. It is never shown again.",
+    );
+    expect(credentialSecretHint(makeCredential())).toBe(
+      "A secret is stored. Leave blank to keep it.",
+    );
+    expect(credentialSecretHint(makeCredential({ has_secret: false }))).toBe(
+      "No secret stored yet.",
+    );
+  });
+
+  it("sends the secret only when one was typed", () => {
+    expect(credentialPayload(values, false)).toEqual({
+      name: "Main",
+      client_id: "id",
+      daily_quota_units: 500,
+    });
+    expect(credentialPayload({ ...values, client_secret: " s " }, false)).toMatchObject({
+      client_secret: "s",
+    });
+    expect(credentialPayload(values, true)).toMatchObject({ client_secret: "" });
+  });
+});
+
+describe("oauthReturnMessage", () => {
+  const title = (id: string) => (id === "chan-en" ? "Kutty Stories" : undefined);
+
+  it.each([
+    ["connected=chan-en", { tone: "success", message: "Connected Kutty Stories." }],
+    ["connected=other", { tone: "success", message: "Channel connected." }],
+    [
+      "error=access_denied",
+      { tone: "error", message: "Connecting the channel failed: access denied." },
+    ],
+    ["connected=chan-en&error=x", { tone: "success", message: "Connected Kutty Stories." }],
+    ["", null],
+  ])("reads ?%s", (query, expected) => {
+    expect(oauthReturnMessage(new URLSearchParams(query), title)).toEqual(expected);
+  });
+
+  it("strips only the oauth parameters from the url", () => {
+    const params = new URLSearchParams("connected=a&error=b&credential=c&tab=x");
+    expect(withoutOAuthParams(params).toString()).toBe("tab=x");
+  });
+});
+
+describe("app settings", () => {
+  const settings = { timezone: "UTC", max_parallel_runs: 2, keep_runs_days: 30, data_dir: "/d" };
+
+  it("drops read-only fields from the input", () => {
+    expect(settingsInput(settings)).toEqual({
+      timezone: "UTC",
+      max_parallel_runs: 2,
+      keep_runs_days: 30,
+    });
+  });
+
+  it.each([
+    [{ timezone: "" }, { timezone: "Choose a timezone." }],
+    [{ max_parallel_runs: 0 }, { max_parallel_runs: "Use a whole number, at least 1." }],
+    [{ keep_runs_days: 1.5 }, { keep_runs_days: "Keep runs for at least 1 day." }],
+    [{}, {}],
+  ])("validates %j", (patch, errors) => {
+    expect(validateSettings({ ...settingsInput(settings), ...patch })).toEqual(errors);
+  });
+});
+
+describe("channel defaults form", () => {
+  const defaults = makeChannel().defaults;
+
+  it("requires category and language", () => {
+    expect(validateChannelDefaults(defaults)).toEqual({});
+    expect(
+      validateChannelDefaults({ ...defaults, category_id: " ", default_language: "" }),
+    ).toEqual({ category_id: "Required.", default_language: "Required." });
+  });
+
+  it("trims the codes it sends", () => {
+    expect(
+      channelDefaultsPayload({ ...defaults, category_id: " 1 ", default_language: " ta " }),
+    ).toMatchObject({ category_id: "1", default_language: "ta" });
+  });
+});
+
+describe("secret form", () => {
+  it("trims the value and rejects blanks", () => {
+    expect(validateSecretValue("  ")).toEqual({ ok: false, error: "Enter a value." });
+    expect(validateSecretValue(" key ")).toEqual({ ok: true, value: "key" });
+  });
+});
+
+describe("settingsChanged", () => {
+  const settings = {
+    timezone: "UTC",
+    max_parallel_runs: 1,
+    keep_runs_days: 30,
+    data_dir: "/data",
+  };
+
+  it("is false when the input matches the saved settings", () => {
+    expect(settingsChanged(settingsInput(settings), settings)).toBe(false);
+  });
+
+  it("is true when any field differs", () => {
+    expect(settingsChanged({ ...settingsInput(settings), keep_runs_days: 7 }, settings)).toBe(true);
+  });
+});
