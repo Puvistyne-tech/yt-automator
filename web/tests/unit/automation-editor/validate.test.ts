@@ -1,18 +1,16 @@
+import { DEFAULT_REVIEW_POLICY, DEFAULT_SCHEDULE_LIMITS } from "@/api/automationDefaults";
 import { makeAutomation, makeChannel, makeTarget } from "@/api/mocks/fixtures/factories";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import type { Schedule } from "@/api/types";
 import { draftFromAutomation } from "@/features/automation-editor/model/draft";
+import { reviewErrors, scheduleErrors } from "@/features/automation-editor/model/ruleErrors";
 import {
   errorCounts,
   firstErrorSection,
   sectionAnchor,
   sectionOf,
 } from "@/features/automation-editor/model/sections";
-import {
-  reviewErrors,
-  scheduleErrors,
-  validateDraft,
-} from "@/features/automation-editor/model/validate";
+import { validateDraft } from "@/features/automation-editor/model/validate";
 
 const context = { pipeline: kidsStoryPipeline, channels: [makeChannel()], settingsErrors: {} };
 const HOURS_ERROR = "Run at least every 1 hour, in whole hours.";
@@ -21,6 +19,7 @@ const schedule = (patch: Partial<Schedule>): Schedule => ({
   every_hours: null,
   cron: null,
   timezone: "UTC",
+  ...DEFAULT_SCHEDULE_LIMITS,
   ...patch,
 });
 
@@ -110,7 +109,7 @@ describe("schedule and review rules", () => {
       { "review_policy.min_score": "Use a score between 0 and 100." },
     ],
   ] as const)("validates the review policy %j", (policy, errors) => {
-    expect(reviewErrors(policy)).toEqual(errors);
+    expect(reviewErrors({ ...DEFAULT_REVIEW_POLICY, ...policy })).toEqual(errors);
   });
 });
 
@@ -123,6 +122,7 @@ describe("editor sections", () => {
     ["targets.1.channel_id", "targets"],
     ["schedule.cron", "schedule"],
     ["review_policy.min_score", "review"],
+    ["retry_policy.auto_retry_count", "schedule"],
   ])("maps %s to the %s section", (path, section) => {
     expect(sectionOf(path)).toBe(section);
   });

@@ -95,6 +95,7 @@ def execute_run(harness: Harness) -> ExecuteRun:
         harness.recorder,
         harness.progress,
         harness.stage_runner,
+        harness.auto_publish,
     )
 
 

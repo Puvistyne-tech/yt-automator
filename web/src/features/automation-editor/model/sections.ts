@@ -16,6 +16,7 @@ const PREFIXES: [string, EditorSectionId][] = [
   ["languages", "languages"],
   ["targets", "targets"],
   ["schedule", "schedule"],
+  ["retry_policy", "schedule"],
   ["review_policy", "review"],
 ];
 

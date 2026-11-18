@@ -10,7 +10,7 @@ from tests.fixtures.builders import add_automation, add_credential, automation_i
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import get_dashboard, run_due, update_automation
 
-HOURLY = Schedule(kind=ScheduleKind.INTERVAL, every_hours=1)
+HOURLY = Schedule(kind=ScheduleKind.INTERVAL, every_hours=1, skip_if_unfinished=False)
 NINE_AM = Schedule(kind=ScheduleKind.CRON, cron="0 9 * * *")
 
 

@@ -3,11 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from automator.application.auto_publish import AutoPublish
 from automator.application.automation_builder import AutomationBuilder
 from automator.application.automation_presenter import AutomationPresenter
 from automator.application.channel_auth import ChannelAuthorizer
 from automator.application.channel_expiry import ChannelExpiry
 from automator.application.credential_views import CredentialViews
+from automator.application.publish_run import PublishRun
 from automator.application.quota_report import QuotaReport
 from automator.application.run_progress import RunProgress
 from automator.application.run_recorder import RunRecorder
@@ -109,3 +111,22 @@ class Harness:
         return StartRun(
             self.automations, self.pipelines, self.recorder, self.queue, self.ids, self.clock
         )
+
+    @property
+    def publisher(self) -> PublishRun:
+        return PublishRun(
+            self.runs,
+            self.automations,
+            self.channels,
+            self.credentials,
+            self.pipelines,
+            self.quota_report,
+            self.performer,
+            self.recorder,
+            self.progress,
+            self.clock,
+        )
+
+    @property
+    def auto_publish(self) -> AutoPublish:
+        return AutoPublish(self.runs, self.publisher, self.recorder)

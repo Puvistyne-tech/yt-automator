@@ -7,12 +7,12 @@ import {
 } from "@/features/automation-editor/model/targets";
 import {
   ChannelField,
-  DelayField,
   KidsField,
   LanguageField,
   PlaylistField,
   PrivacyField,
 } from "@/features/automation-editor/sections/TargetFields";
+import { PublishTimingFields } from "@/features/automation-editor/sections/TargetPublishFields";
 import { AlertCallout, CheckboxGroup, IconButton } from "@/shared/ui";
 
 interface TargetRowProps {
@@ -56,7 +56,7 @@ export function TargetRow(props: TargetRowProps) {
         <PrivacyField {...field} channel={channel} />
         <PlaylistField {...field} />
         <KidsField {...field} />
-        <DelayField target={target} error={error} onChange={onChange} />
+        <PublishTimingFields target={target} error={error} onChange={onChange} channel={channel} />
       </div>
       <CheckboxGroup
         label="Outputs"

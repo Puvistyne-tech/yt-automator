@@ -1,0 +1,29 @@
+{
+  "auto_reject": {
+    "score": 42.25,
+    "threshold": 50,
+    "message": "Rejected automatically: the score 42.2 is below the auto-reject threshold 50"
+  },
+  "auto_publish_started": {
+    "message": "Publishing automatically after approval"
+  },
+  "auto_publish_stopped": {
+    "reason": "no upload succeeded",
+    "message": "Auto-publish stopped: no upload succeeded"
+  },
+  "automatic_retry": {
+    "attempt": 1,
+    "count": 2,
+    "stage": "render",
+    "failure": "stage render failed: render exploded",
+    "message": "Automatic retry 1 of 2 from stage render after: stage render failed: render exploded"
+  },
+  "skipped_start": {
+    "slot": "2026-01-05T12:30:00+00:00",
+    "timezone": "Asia/Kolkata",
+    "local": "2026-01-05 18:00 Asia/Kolkata",
+    "run_id": "run-1",
+    "state": "running",
+    "message": "Scheduled start at 2026-01-05 18:00 Asia/Kolkata skipped: run run-1 is still running"
+  }
+}

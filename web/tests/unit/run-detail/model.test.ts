@@ -1,3 +1,4 @@
+import { DEFAULT_REVIEW_POLICY } from "@/api/automationDefaults";
 import { makeRun, makeUpload, stagesWith } from "@/api/mocks/fixtures/factories";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import type { RunStatus, UploadStatus } from "@/api/types";
@@ -17,6 +18,7 @@ import {
   uploadSummary,
   weightedScore,
 } from "@/features/run-detail/model";
+import { formatDateTime } from "@/shared/format/dates";
 
 const upload = (status: UploadStatus) => makeUpload({ status });
 
@@ -85,9 +87,11 @@ describe("review", () => {
   it("words the outcome and the review rule", () => {
     expect(reviewMessage("approved")).toBe("Run approved. You can publish it now.");
     expect(reviewMessage("rejected")).toBe("Run rejected.");
-    expect(reviewRuleLabel({ mode: "always", min_score: 85 })).toBe("Review rule: always");
-    expect(reviewRuleLabel({ mode: "auto_when_score_at_least", min_score: 85 })).toBe(
-      "Review rule: auto-approve at 85+",
+    expect(reviewRuleLabel(DEFAULT_REVIEW_POLICY)).toBe("Review rule: always");
+    const auto = { ...DEFAULT_REVIEW_POLICY, mode: "auto_when_score_at_least" as const };
+    expect(reviewRuleLabel(auto)).toBe("Review rule: auto-approve at 85+");
+    expect(reviewRuleLabel({ ...auto, reject_below: 60, auto_publish: true })).toBe(
+      "Review rule: auto-approve at 85+, reject under 60, publish on approval",
     );
   });
 
@@ -138,15 +142,20 @@ describe("scores and uploads", () => {
     expect(uploadAudience(makeUpload({ privacy: "unlisted", made_for_kids: true }))).toEqual({
       privacy: "Unlisted",
       madeForKids: "Yes",
+      goesPublic: "—",
     });
     expect(uploadAudience(makeUpload({ privacy: "public", made_for_kids: false }))).toEqual({
       privacy: "Public",
       madeForKids: "No",
+      goesPublic: "—",
     });
     expect(uploadAudience(makeUpload({ privacy: null, made_for_kids: null }))).toEqual({
       privacy: "—",
       madeForKids: "—",
+      goesPublic: "—",
     });
+    const scheduled = uploadAudience(makeUpload({ publish_at: "2026-01-05T12:30:00Z" }));
+    expect(scheduled.goesPublic).toBe(formatDateTime("2026-01-05T12:30:00Z"));
   });
 
   it("shows failures as errors and skip reasons as notes", () => {

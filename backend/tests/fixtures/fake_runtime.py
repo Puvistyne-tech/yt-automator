@@ -8,7 +8,8 @@ from pathlib import Path
 from automator.domain.pipeline import NewArtifact
 from automator.domain.run_parts import Artifact
 from automator.domain.runs import RunEvent
-from automator.domain.schedules import Schedule, next_run_at
+from automator.domain.schedule_timing import StartCounter, next_run_at, no_starts
+from automator.domain.schedules import Schedule
 
 START = datetime(2026, 1, 5, 10, 0, tzinfo=UTC)
 
@@ -36,8 +37,10 @@ class SequentialIds:
 
 
 class PureScheduleCalculator:
-    def next_run_at(self, schedule: Schedule, after: datetime) -> datetime | None:
-        return next_run_at(schedule, after)
+    def next_run_at(
+        self, schedule: Schedule, after: datetime, started_on: StartCounter = no_starts
+    ) -> datetime | None:
+        return next_run_at(schedule, after, started_on)
 
 
 class InMemorySecrets:

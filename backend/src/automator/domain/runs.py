@@ -4,6 +4,7 @@ from pydantic import AwareDatetime, Field
 
 from automator.domain.model_base import DomainModel, JsonObject
 from automator.domain.quality import ReviewPolicy, ScoreItem
+from automator.domain.retries import RetryPolicy
 from automator.domain.run_enums import RunEventKind, RunStatus, RunTrigger
 from automator.domain.run_parts import Artifact, Review, RunLog, StageRun, Upload
 
@@ -26,6 +27,10 @@ class Run(DomainModel):
     languages: tuple[str, ...]
     settings_snapshot: JsonObject
     review_policy: ReviewPolicy = Field(default_factory=ReviewPolicy)
+    retry_policy: RetryPolicy = Field(default_factory=RetryPolicy)
+    auto_retries: int = Field(default=0, ge=0)
+    retry_at: AwareDatetime | None = None
+    skipped_start_at: AwareDatetime | None = None
     stages: tuple[StageRun, ...] = ()
     artifacts: tuple[Artifact, ...] = ()
     score: float | None = None

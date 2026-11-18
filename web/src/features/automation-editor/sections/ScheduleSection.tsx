@@ -1,10 +1,17 @@
 import { useMemo } from "react";
-import type { Schedule } from "@/api/types";
-import { withEveryHours, withScheduleKind } from "@/features/automation-editor/model/draft";
+import type { Channel, Schedule } from "@/api/types";
+import { withEveryHours, withScheduleKind } from "@/features/automation-editor/model/schedule";
+import { automationSummary } from "@/features/automation-editor/model/summary";
 import {
   EditorSection,
   type SectionProps,
 } from "@/features/automation-editor/sections/EditorSection";
+import { RetryFields } from "@/features/automation-editor/sections/RetryFields";
+import { RulesSummary } from "@/features/automation-editor/sections/RulesSummary";
+import {
+  type ScheduleFieldsProps,
+  ScheduleLimits,
+} from "@/features/automation-editor/sections/ScheduleLimits";
 import { describeSchedule, timezoneSelectOptions } from "@/shared/format/schedule";
 import { FormField, Icon, Input, NumberInput, RadioCards, Select } from "@/shared/ui";
 
@@ -22,43 +29,47 @@ const KINDS = [
   },
 ];
 
-interface ScheduleFieldsProps {
-  schedule: Schedule;
-  errors: Record<string, string>;
-  onChange: (schedule: Schedule) => void;
-}
-
-function IntervalFields({ schedule, errors, onChange }: ScheduleFieldsProps) {
+function CadenceField({ schedule, errors, onChange }: ScheduleFieldsProps) {
+  if (schedule.kind === "interval") {
+    return (
+      <FormField label="Every (hours)" required error={errors["schedule.every_hours"]}>
+        <NumberInput
+          min={1}
+          step={1}
+          value={schedule.every_hours}
+          onValueChange={(hours) => onChange(withEveryHours(schedule, hours))}
+        />
+      </FormField>
+    );
+  }
   return (
-    <FormField label="Every (hours)" required error={errors["schedule.every_hours"]}>
-      <NumberInput
-        min={1}
-        step={1}
-        value={schedule.every_hours}
-        onValueChange={(hours) => onChange(withEveryHours(schedule, hours))}
+    <FormField
+      label="Cron expression"
+      required
+      hint="minute hour day-of-month month day-of-week"
+      error={errors["schedule.cron"]}
+    >
+      <Input
+        className="mono"
+        value={schedule.cron ?? ""}
+        spellCheck={false}
+        onChange={(e) => onChange({ ...schedule, cron: e.target.value })}
       />
     </FormField>
   );
 }
 
-function CronFields({ schedule, errors, onChange }: ScheduleFieldsProps) {
+function TimingFields(props: ScheduleFieldsProps) {
+  const { schedule, errors, onChange } = props;
   const zones = useMemo(() => timezoneSelectOptions(schedule.timezone), [schedule.timezone]);
   return (
     <div className="grid-2">
+      <CadenceField {...props} />
       <FormField
-        label="Cron expression"
-        required
-        hint="minute hour day-of-month month day-of-week"
-        error={errors["schedule.cron"]}
+        label="Timezone"
+        hint="Used for cron times, active hours and the daily cap."
+        error={errors["schedule.timezone"]}
       >
-        <Input
-          className="mono"
-          value={schedule.cron ?? ""}
-          spellCheck={false}
-          onChange={(e) => onChange({ ...schedule, cron: e.target.value })}
-        />
-      </FormField>
-      <FormField label="Timezone" error={errors["schedule.timezone"]}>
         <Select
           value={schedule.timezone}
           options={zones}
@@ -69,9 +80,15 @@ function CronFields({ schedule, errors, onChange }: ScheduleFieldsProps) {
   );
 }
 
-export function ScheduleSection({ draft, onChange, errors }: SectionProps) {
+export function ScheduleSection({
+  draft,
+  onChange,
+  errors,
+  channels,
+}: SectionProps & { channels: Channel[] }) {
   const schedule = draft.schedule;
   const set = (next: Schedule) => onChange({ ...draft, schedule: next });
+  const fields = { schedule, errors, onChange: set };
   return (
     <EditorSection id="schedule" title="Schedule" description="When new runs start on their own.">
       <div className="stack">
@@ -82,16 +99,18 @@ export function ScheduleSection({ draft, onChange, errors }: SectionProps) {
           value={schedule.kind}
           onChange={(kind) => set(withScheduleKind(schedule, kind))}
         />
-        {schedule.kind === "interval" && (
-          <IntervalFields schedule={schedule} errors={errors} onChange={set} />
-        )}
-        {schedule.kind === "cron" && (
-          <CronFields schedule={schedule} errors={errors} onChange={set} />
-        )}
+        {schedule.kind !== "manual" && <TimingFields {...fields} />}
         <p className="schedule-preview" aria-live="polite">
           <Icon name="clock" />
           <span>{describeSchedule(schedule)}</span>
         </p>
+        {schedule.kind !== "manual" && <ScheduleLimits {...fields} />}
+        <RetryFields
+          policy={draft.retry_policy}
+          errors={errors}
+          onChange={(retry_policy) => onChange({ ...draft, retry_policy })}
+        />
+        <RulesSummary text={automationSummary(draft, channels)} />
       </div>
     </EditorSection>
   );

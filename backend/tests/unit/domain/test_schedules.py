@@ -4,10 +4,10 @@ from datetime import UTC, datetime
 
 import pytest
 
+from automator.domain.schedule_timing import next_run_at
 from automator.domain.schedules import (
     Schedule,
     ScheduleKind,
-    next_run_at,
     schedule_errors,
 )
 

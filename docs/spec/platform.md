@@ -38,18 +38,24 @@ LanguageOption      code, name
 VariantOption       id, name, aspect ("16:9" | "9:16"), description
 
 Automation      id, name, description, pipeline_type, settings (object), languages: [code],
-                targets: [Target], schedule, review_policy, enabled, created_at, updated_at,
-                next_run_at (nullable, derived), last_run (nullable RunSummary, derived)
+                targets: [Target], schedule, review_policy, retry_policy, enabled, created_at,
+                updated_at, next_run_at (nullable, derived), last_run (nullable RunSummary, derived)
 Target          id, channel_id, language, variants: [variant id], privacy (nullable = channel default),
                 made_for_kids (nullable = channel default), playlist_id (nullable),
-                publish_delay_minutes: int = 0
+                publish_delay_minutes: int >= 0 = 0, publish_time_of_day ("HH:MM" 24-hour, nullable),
+                publish_timezone (IANA, default "UTC")
 Schedule        kind: manual | interval | cron, every_hours (interval), cron (5-field expression),
-                timezone (IANA, default "UTC")
-ReviewPolicy    mode: always | auto_when_score_at_least, min_score: float 0..100 = 85
+                timezone (IANA, default "UTC"), skip_if_unfinished: bool = true,
+                max_runs_per_day (nullable int >= 1 = no cap), active_from, active_until
+                ("HH:MM" 24-hour, nullable, both or neither)
+ReviewPolicy    mode: always | auto_when_score_at_least, min_score: float 0..100 = 85,
+                reject_below (nullable float 0..100 = never), auto_publish: bool = false
+RetryPolicy     auto_retry_count: int 0..10 = 0, retry_delay_minutes: int 0..1440 = 10
 
 Run             id, automation_id, automation_name, pipeline_type, status, trigger: manual|schedule,
-                languages, settings_snapshot, review_policy, stages: [StageRun], artifacts: [Artifact],
-                score (nullable),
+                languages, settings_snapshot, review_policy, retry_policy, auto_retries: int = 0,
+                retry_at (nullable), skipped_start_at (nullable), stages: [StageRun],
+                artifacts: [Artifact], score (nullable),
                 score_details: [ScoreItem], review (nullable), uploads: [Upload], logs: [RunLog],
                 error (nullable),
                 created_at, started_at, finished_at
@@ -63,7 +69,8 @@ ScoreItem       id, title, score 0..100, weight, detail
 Review          decision: approved|rejected, notes, decided_at
 Upload          target_id, channel_id, language, variant, status: pending|uploading|done|failed|skipped,
                 youtube_video_id, url, error, quota_units,
-                privacy (nullable: private|unlisted|public), made_for_kids (nullable bool)
+                privacy (nullable: private|unlisted|public), made_for_kids (nullable bool),
+                publish_at (nullable: when YouTube makes a scheduled video public)
 RunLog          at, level: info|warning|error = info, stage_id (nullable: null outside a stage), message
 RunSummary      id, status, score, created_at, finished_at
 RunEvent        run_id, kind: status|stage|log|artifact|upload, at, payload (object)
@@ -167,7 +174,15 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
     thumbnail sends its thumbnail text or the first scene's).
 - Every automation language must be one the pipeline offers. Every target language must be in the automation's languages. Every target variant must be one the pipeline offers. Every target channel must exist.
 - An automation with schedule `interval` needs `every_hours >= 1`. With `cron` it needs a valid 5-field expression.
-- A run snapshots the automation's settings, languages and review policy at creation. Editing or deleting the automation never changes a past or queued run.
+- Times of day (`active_from`, `active_until`, `publish_time_of_day`) are 24-hour `HH:MM`. Time zones must exist
+  in the system zone database. `active_from` and `active_until` are set together and differ; a cron schedule whose
+  every match falls outside its active hours is refused on `schedule.active_from`.
+- Automations and runs stored before a field existed load with that field's default, so their behaviour is
+  unchanged except that `skip_if_unfinished` is on.
+- `review_policy.reject_below` must be below `min_score` when the mode is `auto_when_score_at_least`.
+- A target's `publish_time_of_day` cannot be combined with a `publish_delay_minutes` above 0, nor with an explicit
+  `private` or `unlisted` privacy (both reported on `targets.<i>.publish_time_of_day`).
+- A run snapshots the automation's settings, languages, review policy and retry policy at creation. Editing or deleting the automation never changes a past or queued run.
 - Stage order is the pipeline's. A stage failure fails the run. A retry re-runs from a chosen stage and keeps earlier artifacts.
 - Retry is allowed from `failed`, `cancelled`, `awaiting_review`, `approved` and `rejected`. It re-queues the run and clears its score, score details, review and uploads.
 - Cancel is allowed from `queued`, `running`, `awaiting_review` and `approved`. A stage that fails after the run was cancelled is recorded as failed, but the run stays `cancelled` without an error.
@@ -180,6 +195,26 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   A run keeps only its newest `max_run_log_entries` entries (runtime setting, default 2000); older entries are dropped. Every entry is still published as an event.
 - Deleting a `queued`, `running` or `publishing` run is refused; cancel it first.
 - After the last stage the run is scored, then becomes `awaiting_review`, or `approved` directly when the policy is `auto_when_score_at_least` and the score reaches `min_score`.
+- When `reject_below` is set and the score is below it, the run becomes `rejected` instead, whatever the mode. Its
+  review is `rejected` with the notes "Rejected automatically: the score <score> is below the auto-reject threshold
+  <reject_below>", and the same text is logged as a warning. A run with no score is never rejected automatically.
+- With `auto_publish`, a run publishes as soon as it is approved: at once when the score approves it, and through
+  the run queue when a person approves it. It logs "Publishing automatically after approval". When publishing
+  cannot start (quota, nothing to publish, automation deleted, a publish already started), or every upload fails,
+  the run stays `approved` and logs a warning "Auto-publish stopped: <reason>" ("no upload succeeded" when every
+  upload failed). When some uploads succeed the run is `published` and the failed uploads keep their errors. Without `auto_publish` nothing publishes until a person
+  presses Publish. A rejected run never publishes. Auto-publish uses the same upload plan as a manual publish, so
+  privacy and made-for-kids follow the same rules.
+- When a run fails and it has used fewer than `retry_policy.auto_retry_count` automatic retries, `retry_at` is set
+  to the failure time plus `retry_delay_minutes`. Any failure counts, including a run interrupted at startup. On
+  the first scheduler tick at or after `retry_at`, the run is re-queued from its first stage that is not done
+  (the failed stage), through one atomic run update that also adds 1 to `auto_retries`, and logs "Automatic retry
+  <n> of <count> from stage <stage> after: <error>". Re-queuing a run by hand clears `retry_at` and resets
+  `auto_retries` to 0, so a run that fails again gets the full allowance of automatic retries. A due automatic
+  retry goes ahead even while another run of the same automation is unfinished: `skip_if_unfinished` only governs
+  scheduled starts, and the worker pool's parallel run limit caps how many runs execute at once. The message is
+  logged only after the re-queue succeeds; a retry that lost a race with a manual retry or a delete logs nothing.
+  Automatic retries do not create runs and do not count toward `max_runs_per_day`.
 - Only an `approved` run can publish. Publishing creates one upload per target and variant. A target whose language is not in the run, whose channel no longer exists, or that has no matching video yields a `skipped` upload with the reason in `error`. A failed upload fails only itself; the run is `published` when at least one upload is done and none is pending.
 - Every upload records the effective `privacy` and `made_for_kids` it was planned with (target value, else the
   channel default; kids pipelines always force made-for-kids), skipped uploads included. Uploads stored before
@@ -200,11 +235,35 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   one, deduplicated with casefold, only while the description stays within 5000 UTF-8 bytes and holds at most 60
   hashtags in total. The playlist is always the target's `playlist_id`;
   `playlist_title` is informational and no playlist is ever created.
-- `publish_delay_minutes` applies only when the effective privacy is `public`: the video is uploaded private with `publish_at` set to now plus the delay, and YouTube makes it public then.
+- Scheduled publishing applies only when the effective privacy is `public`. The video is uploaded `private` with
+  `publish_at` set, and YouTube keeps it private until then and makes it public at that time. With
+  `publish_time_of_day`, `publish_at` is the next occurrence of that wall time in `publish_timezone` strictly after
+  publishing starts (today if still ahead, else tomorrow). A time that does not exist that day because clocks go
+  forward moves forward by the gap (02:30 becomes 03:30); a time that happens twice because clocks go back uses
+  its first occurrence. Otherwise, with `publish_delay_minutes` above 0, `publish_at` is the publish start plus
+  the delay. With neither, or when the effective privacy is not `public`, `publish_at` is null and the video gets
+  its privacy at once. Every upload records the `publish_at` it was planned with.
 - Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track, 50 per playlist insertion).
 - The quota day resets at midnight Pacific time (`America/Los_Angeles`), as YouTube's does.
 - Duplicating an automation creates a disabled copy named with the suffix " (copy)" and new target ids.
-- A scheduled automation's next run is computed from the later of its last scheduled run and its `updated_at`. Manual runs do not move the schedule.
+- A scheduled automation's next run is computed from the later of its last scheduled run, its `updated_at`, and
+  the latest `skipped_start_at` among the runs created since its last scheduled run. Manual runs do not move the
+  schedule. The schedule gives a candidate start; then, in the schedule's time zone:
+  - with active hours, a candidate outside `[active_from, active_until)` moves to the next `active_from` (a window
+    whose end is before its start crosses midnight); for a cron schedule the start is then the first match at or
+    after that moment. An `active_from` in a clock-forward gap moves forward by the gap.
+  - with `max_runs_per_day`, a candidate on a local day that already has that many runs of the automation
+    (manual runs included) moves to the next local midnight, then the active hours apply again.
+  These limits only shape scheduled starts; Run now is never blocked.
+- With `skip_if_unfinished` (on by default), a scheduled start that is due while a run of the automation is
+  unfinished (`queued`, `running`, `publishing`, or `failed` with a pending automatic retry) does not start.
+  The newest run of the automation gets `skipped_start_at` set to the skipped start (one atomic run update), so
+  that start is consumed and the next one follows the schedule, and the unfinished run logs the warning
+  "Scheduled start at <YYYY-MM-DD HH:MM> <zone> skipped: run <id> is still <status, or waiting for an automatic
+  retry>". Turning it off lets scheduled runs overlap. The mark lives on that run: deleting it loses the mark,
+  so the same start can be skipped and logged again on the next tick.
+- Each scheduler tick first re-queues the failed runs whose automatic retry is due, oldest first, then starts the
+  due automations.
 - Deleting a channel is refused while an enabled automation targets it. Deleting a credential is refused while a channel uses it. Deleting an automation keeps its runs.
 - Saving provider configs (PUT `/providers`) rejects an unknown provider, a provider listed under the
   wrong capability or twice, a capability configured twice, and options that do not validate against the
@@ -252,7 +311,8 @@ missing or `change` returns None; the read and the write happen in one transacti
 resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
 exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
 `ArtifactStore` (workspace for a run, save, open, discard one artifact, delete run), `RunQueue` (enqueue, cancel),
-`RunEvents` (publish, subscribe), `ScheduleCalculator` (next_run_at),
+`RunEvents` (publish, subscribe), `ScheduleCalculator` (next_run_at(schedule, after, started_on) where
+`started_on(local date) -> int` counts the automation's runs created that day in the schedule's zone),
 `SystemInspector` (facts() -> SystemFacts: Python, data directory, free space, ffmpeg and ffprobe
 versions, migration state and UI build, read without changing anything).
 
@@ -415,7 +475,13 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   actions (run now, edit, duplicate, delete with confirmation).
 - Automation editor: sections General, Content (form generated from `settings_schema` and `ui_schema`),
   Languages (multi-select from the pipeline's languages), Targets (rows of channel, language, variants,
-  privacy, playlist), Schedule, Review. Client-side validation mirrors the rules; server errors map to fields.
+  privacy, playlist, made for kids, and when to go public: at once, after a delay, or at a time of day in a time
+  zone), Schedule (kind, active hours, daily cap, skip while unfinished, and automatic retries with their delay),
+  Review (mode, minimum score, auto-reject below, publish after approval). Client-side validation mirrors the
+  rules; server errors map to fields (`retry_policy.*` errors show in Schedule). The editor shows one
+  plain-language summary of the schedule and review rules, for example "Runs every 6 hours, 08:00 to 20:00,
+  at most 2 a day. Publishes privately after you approve.", built by a pure function. When a target goes public
+  at a time of day, the summary names it ("Goes public at 18:00 (Asia/Kolkata).").
   A saved automation without unsaved changes offers Run now; with unsaved changes it is disabled with the reason.
   A "Run queued" toast (list or editor) links to the new run; a toast with an action stays until it is
   used or dismissed, other toasts close after five seconds. An unknown automation id shows a not-found
@@ -425,7 +491,11 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   Artifacts list final outputs first (kinds `video`, `thumbnail`, `subtitle`, `metadata` with a language),
   grouped by language and variant with video players, subtitles and metadata; every other artifact is an
   intermediate file, collapsed per stage in the run's stage order. The uploads table shows each upload's
-  privacy and made-for-kids flag. Cancel is offered for the statuses the Rules allow. When the run's
+  privacy, made-for-kids flag and scheduled publish time. Automatic events are called out above the logs:
+  an automatic rejection with its reason, a pending automatic retry with its time and attempt, retries already
+  made, skipped scheduled starts and stopped auto-publishes. Only run-level logs (no `stage_id`) are read as
+  automatic events, by the message prefixes in `docs/spec/automatic-events.json`; backend and web tests both
+  check those sample messages against their builders. Cancel is offered for the statuses the Rules allow. When the run's
   automation was deleted, the header says so instead of linking to it.
 - Channels: credentials and their quota meters, connect flow, per-channel defaults, disconnect.
 - Providers: per capability, an ordered chain with enable switches and options forms; secrets with set/clear.

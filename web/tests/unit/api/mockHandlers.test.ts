@@ -108,6 +108,7 @@ describe("mock automation and run handlers", () => {
 
   it("retries from the first unfinished stage by default", async () => {
     const run = await api.post<Run>("/runs/run-failed/retry", {});
+    expect(run).toMatchObject({ auto_retries: 0, retry_at: null });
     expect(run.stages.map((stage) => stage.status)).toEqual([
       "done",
       "done",

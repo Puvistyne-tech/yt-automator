@@ -53,6 +53,7 @@ class Upload(DomainModel):
     quota_units: int = Field(default=0, ge=0)
     privacy: Privacy | None = None
     made_for_kids: bool | None = None
+    publish_at: AwareDatetime | None = None
 
 
 class RunLog(DomainModel):

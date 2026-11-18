@@ -1,3 +1,4 @@
+import { DEFAULT_RETRY_POLICY, DEFAULT_REVIEW_POLICY } from "@/api/automationDefaults";
 import { isKidsPipeline } from "@/api/capabilities";
 import type {
   Automation,
@@ -6,11 +7,12 @@ import type {
   JsonObject,
   PipelineDescriptor,
   Privacy,
+  RetryPolicy,
   ReviewPolicy,
   Schedule,
-  ScheduleKind,
   Target,
 } from "@/api/types";
+import { emptySchedule, normalizeSchedule } from "@/features/automation-editor/model/schedule";
 
 export interface TargetDraft {
   key: string;
@@ -22,6 +24,8 @@ export interface TargetDraft {
   made_for_kids: boolean | null;
   playlist_id: string | null;
   publish_delay_minutes: number;
+  publish_time_of_day: string | null;
+  publish_timezone: string;
 }
 
 export interface AutomationDraft {
@@ -33,12 +37,9 @@ export interface AutomationDraft {
   targets: TargetDraft[];
   schedule: Schedule;
   review_policy: ReviewPolicy;
+  retry_policy: RetryPolicy;
   enabled: boolean;
 }
-
-export const DEFAULT_INTERVAL_HOURS = 24;
-export const DEFAULT_CRON = "0 18 * * *";
-export const DEFAULT_MIN_SCORE = 85;
 
 let keySeed = 0;
 
@@ -55,8 +56,9 @@ export function emptyDraft(timezone = "UTC"): AutomationDraft {
     settings: {},
     languages: [],
     targets: [],
-    schedule: { kind: "manual", every_hours: null, cron: null, timezone },
-    review_policy: { mode: "always", min_score: DEFAULT_MIN_SCORE },
+    schedule: emptySchedule(timezone),
+    review_policy: { ...DEFAULT_REVIEW_POLICY },
+    retry_policy: { ...DEFAULT_RETRY_POLICY },
     enabled: true,
   };
 }
@@ -89,6 +91,7 @@ export function draftFromAutomation(automation: Automation): AutomationDraft {
     targets: automation.targets.map(targetDraft),
     schedule: { ...automation.schedule },
     review_policy: { ...automation.review_policy },
+    retry_policy: { ...automation.retry_policy },
     enabled: automation.enabled,
   };
 }
@@ -124,29 +127,8 @@ export function newTarget(
     made_for_kids: isKidsPipeline(pipeline) ? true : null,
     playlist_id: null,
     publish_delay_minutes: 0,
-  };
-}
-
-export function withScheduleKind(schedule: Schedule, kind: ScheduleKind): Schedule {
-  return {
-    ...schedule,
-    kind,
-    every_hours:
-      kind === "interval" ? (schedule.every_hours ?? DEFAULT_INTERVAL_HOURS) : schedule.every_hours,
-    cron: kind === "cron" ? (schedule.cron ?? DEFAULT_CRON) : schedule.cron,
-  };
-}
-
-export function withEveryHours(schedule: Schedule, hours: number): Schedule {
-  return { ...schedule, every_hours: Number.isNaN(hours) ? null : hours };
-}
-
-export function normalizeSchedule(schedule: Schedule): Schedule {
-  return {
-    kind: schedule.kind,
-    every_hours: schedule.kind === "interval" ? schedule.every_hours : null,
-    cron: schedule.kind === "cron" ? (schedule.cron ?? "").trim() : null,
-    timezone: schedule.timezone,
+    publish_time_of_day: null,
+    publish_timezone: draft.schedule.timezone,
   };
 }
 
@@ -168,6 +150,7 @@ export function draftToInput(
     })),
     schedule: normalizeSchedule(draft.schedule),
     review_policy: draft.review_policy,
+    retry_policy: draft.retry_policy,
     enabled: draft.enabled,
   };
 }

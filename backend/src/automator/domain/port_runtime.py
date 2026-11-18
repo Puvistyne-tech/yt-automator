@@ -9,6 +9,7 @@ from automator.domain.diagnostics import SystemFacts
 from automator.domain.pipeline import NewArtifact
 from automator.domain.run_parts import Artifact
 from automator.domain.runs import RunEvent
+from automator.domain.schedule_timing import StartCounter
 from automator.domain.schedules import Schedule
 
 
@@ -37,7 +38,9 @@ class QuotaLedger(Protocol):
 
 
 class ScheduleCalculator(Protocol):
-    def next_run_at(self, schedule: Schedule, after: datetime) -> datetime | None: ...
+    def next_run_at(
+        self, schedule: Schedule, after: datetime, started_on: StartCounter
+    ) -> datetime | None: ...
 
 
 class ArtifactStore(Protocol):

@@ -5,6 +5,7 @@ from pydantic import AwareDatetime, Field
 from automator.domain.channels import Privacy
 from automator.domain.model_base import DomainModel, JsonObject
 from automator.domain.quality import ReviewPolicy
+from automator.domain.retries import RetryPolicy
 from automator.domain.runs import RunSummary
 from automator.domain.schedules import Schedule
 
@@ -16,7 +17,21 @@ class TargetFields(DomainModel):
     privacy: Privacy | None = None
     made_for_kids: bool | None = None
     playlist_id: str | None = None
-    publish_delay_minutes: int = Field(default=0, ge=0)
+    publish_delay_minutes: int = Field(
+        default=0,
+        ge=0,
+        description="Public videos only: upload private and go public this many minutes later.",
+    )
+    publish_time_of_day: str | None = Field(
+        default=None,
+        description=(
+            "Public videos only, instead of a delay: upload private and go public at the next "
+            "HH:MM (24-hour) in publish_timezone after publishing starts."
+        ),
+    )
+    publish_timezone: str = Field(
+        default="UTC", description="IANA time zone for publish_time_of_day."
+    )
 
 
 class TargetInput(TargetFields):
@@ -35,6 +50,7 @@ class AutomationFields(DomainModel):
     languages: tuple[str, ...] = Field(min_length=1)
     schedule: Schedule = Field(default_factory=Schedule)
     review_policy: ReviewPolicy = Field(default_factory=ReviewPolicy)
+    retry_policy: RetryPolicy = Field(default_factory=RetryPolicy)
     enabled: bool = True
 
 

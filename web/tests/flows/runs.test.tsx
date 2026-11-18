@@ -7,8 +7,8 @@ describe("Runs list", () => {
   it("lists runs and filters by status and automation through the url", async () => {
     const { user, router } = renderApp("/runs");
     const table = await screen.findByRole("table", { name: "Runs" });
-    expect(within(table).getAllByRole("row")).toHaveLength(6);
-    expect(within(table).getAllByRole("link", { name: "Tamil shorts" })).toHaveLength(2);
+    expect(within(table).getAllByRole("row")).toHaveLength(7);
+    expect(within(table).getAllByRole("link", { name: "Tamil shorts" })).toHaveLength(3);
 
     await user.selectOptions(screen.getByLabelText("Status"), "failed");
     await waitFor(() =>
@@ -47,7 +47,9 @@ describe("Run detail", () => {
   it("shows the auto-approve review rule next to the score", async () => {
     await openRun("run-failed");
 
-    expect(screen.getByText("auto-approve at 90+")).toBeInTheDocument();
+    expect(
+      screen.getByText("auto-approve at 90+, reject under 60, publish on approval"),
+    ).toBeInTheDocument();
   });
 
   it("shows why an upload was skipped", async () => {

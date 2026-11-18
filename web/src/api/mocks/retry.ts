@@ -36,6 +36,8 @@ function reset(run: Run, start: number): Run {
     score_details: [],
     review: null,
     uploads: [],
+    retry_at: null,
+    auto_retries: 0,
     started_at: null,
     finished_at: null,
   };

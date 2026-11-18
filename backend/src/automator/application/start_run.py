@@ -54,6 +54,7 @@ class StartRun:
             languages=automation.languages,
             settings_snapshot=deepcopy(automation.settings),
             review_policy=automation.review_policy,
+            retry_policy=automation.retry_policy,
             stages=stages,
             created_at=self.clock.now(),
         )

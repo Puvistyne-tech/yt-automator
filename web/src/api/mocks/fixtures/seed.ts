@@ -1,3 +1,4 @@
+import { DEFAULT_SCHEDULE_LIMITS } from "@/api/automationDefaults";
 import {
   hoursAgo,
   makeAutomation,
@@ -28,6 +29,7 @@ export interface MockState {
   playlists: Record<string, Playlist[]>;
   automations: Automation[];
   runs: Run[];
+  publishQueue: string[];
   descriptors: ProviderDescriptor[];
   providerConfig: ProviderConfig[];
   secrets: SecretInfo[];
@@ -61,10 +63,27 @@ const SHORTS = makeAutomation({
       language: "ta",
       variants: ["short"],
       privacy: "public",
+      publish_time_of_day: "18:00",
+      publish_timezone: "Asia/Kolkata",
     }),
   ],
-  schedule: { kind: "interval", every_hours: 6, cron: null, timezone: "UTC" },
-  review_policy: { mode: "auto_when_score_at_least", min_score: 90 },
+  schedule: {
+    kind: "interval",
+    every_hours: 6,
+    cron: null,
+    timezone: "Asia/Kolkata",
+    skip_if_unfinished: true,
+    max_runs_per_day: 2,
+    active_from: "08:00",
+    active_until: "20:00",
+  },
+  review_policy: {
+    mode: "auto_when_score_at_least",
+    min_score: 90,
+    reject_below: 60,
+    auto_publish: true,
+  },
+  retry_policy: { auto_retry_count: 2, retry_delay_minutes: 15 },
   next_run_at: hoursAgo(-2),
   last_run: {
     id: "run-failed",
@@ -80,7 +99,13 @@ const FESTIVAL = makeAutomation({
   name: "Festival specials",
   description: "Hand-triggered festival episodes.",
   targets: [makeTarget({ id: "target-classics", channel_id: "chan-old", variants: ["episode"] })],
-  schedule: { kind: "manual", every_hours: null, cron: null, timezone: "UTC" },
+  schedule: {
+    kind: "manual",
+    every_hours: null,
+    cron: null,
+    timezone: "UTC",
+    ...DEFAULT_SCHEDULE_LIMITS,
+  },
   enabled: false,
   next_run_at: null,
 });
@@ -134,6 +159,7 @@ const SETTINGS: AppSettings = {
 };
 
 const SEED: Omit<MockState, "runs"> = {
+  publishQueue: [],
   pipelines: [kidsStoryPipeline],
   credentials: CREDENTIALS,
   channels: CHANNELS,
