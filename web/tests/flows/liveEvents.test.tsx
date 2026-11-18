@@ -83,10 +83,32 @@ describe("Live run events", () => {
     act(() => latest().onopen?.());
 
     db.state.runs = db.state.runs.map((r) =>
-      r.id === "run-live" ? { ...r, status: "failed" } : r,
+      r.id === "run-live" ? { ...r, status: "failed", error: "Out of memory." } : r,
     );
     latest().emit(event("status", { status: "failed", error: "Out of memory." }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Out of memory.");
+  });
+
+  it("refetches the open run on a status event so its score appears without a reload", async () => {
+    const { user } = renderApp("/runs/run-live");
+    await screen.findByRole("heading", { level: 1 });
+    act(() => latest().onopen?.());
+    await user.click(screen.getByRole("tab", { name: "Score" }));
+    expect(screen.getByText("Not scored yet")).toBeInTheDocument();
+
+    const score_details = [
+      { id: "story", title: "Story quality", score: 77, weight: 1, detail: "" },
+    ];
+    db.state.runs = db.state.runs.map((r) =>
+      r.id === "run-live"
+        ? { ...r, status: "awaiting_review", score: 77, score_details, finished_at: db.now() }
+        : r,
+    );
+    latest().emit(event("status", { status: "awaiting_review", error: null }));
+
+    expect(await screen.findByText("overall score out of 100")).toBeInTheDocument();
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("77");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Awaiting review");
   });
 
   it("reconnects with backoff after an error", async () => {

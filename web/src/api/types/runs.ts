@@ -1,5 +1,5 @@
 import type { ReviewPolicy } from "@/api/types/automations";
-import type { JsonObject } from "@/api/types/common";
+import type { JsonObject, Privacy } from "@/api/types/common";
 
 export type RunStatus =
   | "queued"
@@ -79,6 +79,8 @@ export interface Upload {
   url: string | null;
   error: string | null;
   quota_units: number;
+  privacy: Privacy | null;
+  made_for_kids: boolean | null;
 }
 
 export interface Run {

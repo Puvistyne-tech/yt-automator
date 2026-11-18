@@ -3,6 +3,8 @@ import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import type { RunStatus, UploadStatus } from "@/api/types";
 import {
   availableActions,
+  canCancelRun,
+  cancelMessage,
   defaultRetryStage,
   publishDescription,
   retryStageOptions,
@@ -11,6 +13,7 @@ import {
   reviewRuleLabel,
   scoreTone,
   stageProgress,
+  uploadAudience,
   uploadNote,
   uploadSummary,
   weightedScore,
@@ -35,6 +38,29 @@ describe("availableActions", () => {
       .filter(([, on]) => on)
       .map(([name]) => name);
     expect(enabled.sort()).toEqual([...allowed].sort());
+  });
+
+  it.each<[RunStatus, boolean]>([
+    ["queued", true],
+    ["running", true],
+    ["awaiting_review", true],
+    ["approved", true],
+    ["rejected", false],
+    ["publishing", false],
+    ["published", false],
+    ["failed", false],
+    ["cancelled", false],
+  ])("allows cancelling a %s run exactly as the backend does: %s", (status, allowed) => {
+    expect(canCancelRun(status)).toBe(allowed);
+  });
+
+  it.each<[RunStatus, string]>([
+    ["queued", "The run stops before it starts and is marked cancelled."],
+    ["running", "The current stage stops and the run is marked cancelled."],
+    ["awaiting_review", "The finished run is marked cancelled and will not be published."],
+    ["approved", "The finished run is marked cancelled and will not be published."],
+  ])("explains what cancelling a %s run does", (status, message) => {
+    expect(cancelMessage(status)).toBe(message);
   });
 
   it("shows the publish panel once a run has uploads", () => {
@@ -120,6 +146,21 @@ describe("scores and uploads", () => {
     expect(publishDescription(makeRun({ uploads: [upload("done"), upload("skipped")] }))).toBe(
       "1 uploaded · 0 failed · 0 pending · 1 skipped",
     );
+  });
+
+  it("labels the privacy and made-for-kids flag an upload was planned with", () => {
+    expect(uploadAudience(makeUpload({ privacy: "unlisted", made_for_kids: true }))).toEqual({
+      privacy: "Unlisted",
+      madeForKids: "Yes",
+    });
+    expect(uploadAudience(makeUpload({ privacy: "public", made_for_kids: false }))).toEqual({
+      privacy: "Public",
+      madeForKids: "No",
+    });
+    expect(uploadAudience(makeUpload({ privacy: null, made_for_kids: null }))).toEqual({
+      privacy: "—",
+      madeForKids: "—",
+    });
   });
 
   it("shows failures as errors and skip reasons as notes", () => {

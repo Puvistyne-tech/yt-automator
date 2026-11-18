@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { db } from "@/api/mocks/db";
-import { renderApp } from "../helpers/renderApp";
+import { findRow, renderApp } from "../helpers/renderApp";
 import { openRun } from "../helpers/runs";
 
 describe("Runs list", () => {
@@ -44,6 +44,32 @@ describe("Run detail", () => {
     expect(screen.getByRole("tabpanel")).toHaveTextContent("Review rule: always");
   });
 
+  it("lists final outputs first and collapses intermediate files by stage", async () => {
+    const { user } = await openRun("run-review");
+
+    const sections = screen.getAllByRole("region", { name: /Final outputs|Intermediate files/ });
+    expect(sections.map((s) => s.getAttribute("aria-label"))).toEqual([
+      "Final outputs",
+      "Intermediate files",
+    ]);
+    const final = within(screen.getByRole("region", { name: "Final outputs" }));
+    expect(await final.findByText("English — Episode · 16:9")).toBeInTheDocument();
+    expect(final.queryByText("story.md")).not.toBeInTheDocument();
+    const working = within(screen.getByRole("region", { name: "Intermediate files" }));
+    const summaries = working.getAllByText(/^\d+ files?$/).map((n) => n.parentElement?.textContent);
+    expect(summaries).toEqual([
+      "Write story1 file",
+      "Illustrate scenes3 files",
+      "Animate1 file",
+      "Narrate2 files",
+    ]);
+    expect(working.queryByText("story.md")).not.toBeInTheDocument();
+
+    await user.click(working.getByText("Write story"));
+
+    expect(await working.findByText("story.md")).toBeInTheDocument();
+  });
+
   it("shows the auto-approve review rule next to the score", async () => {
     await openRun("run-failed");
 
@@ -57,6 +83,21 @@ describe("Run detail", () => {
     expect(within(uploads).getByText("Skipped")).toBeInTheDocument();
     expect(within(uploads).getByText("Language ta is not in this run.")).toBeInTheDocument();
     expect(screen.getByText("1 uploaded · 1 failed · 0 pending · 1 skipped")).toBeInTheDocument();
+  });
+
+  it("shows the privacy and made-for-kids flag of each upload", async () => {
+    await openRun("run-published");
+
+    const uploads = await screen.findByRole("table", { name: "Uploads" });
+    const headers = within(uploads)
+      .getAllByRole("columnheader")
+      .map((h) => h.textContent);
+    expect(headers).toEqual(expect.arrayContaining(["Privacy", "Made for kids"]));
+    const tamil = (await findRow("Uploads", "Kutty Kathaigal")).getAllByRole("cell");
+    expect(tamil.map((cell) => cell.textContent)).toEqual(
+      expect.arrayContaining(["Unlisted", "Yes"]),
+    );
+    expect(within(uploads).getAllByText("Private")).toHaveLength(2);
   });
 
   it("shows an empty log for a run without log lines", async () => {

@@ -98,6 +98,12 @@
   font-weight: 560;
 }
 
+.run-now-reason {
+  max-width: 22rem;
+  font-size: var(--text-sm);
+  text-align: right;
+}
+
 @media (max-width: 1240px) {
   .target-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

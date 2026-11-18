@@ -1,7 +1,14 @@
 import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { db } from "@/api/mocks/db";
-import { cancelDialog, confirmDialog, findRow, findToast, renderApp } from "../helpers/renderApp";
+import {
+  cancelDialog,
+  confirmDialog,
+  findRow,
+  findToast,
+  pathOf,
+  renderApp,
+} from "../helpers/renderApp";
 import { failWith, server } from "../helpers/server";
 
 const automation = (id: string) => db.state.automations.find((a) => a.id === id);
@@ -94,15 +101,18 @@ describe("Automations list", () => {
     );
   });
 
-  it("queues a run with Run now", async () => {
-    const { user } = renderApp("/automations");
+  it("queues a run with Run now and links the toast to the new run", async () => {
+    const { user, router } = renderApp("/automations");
     const row = await findRow("Automations", "Tamil shorts");
-    const before = db.state.runs.length;
+    const known = db.state.runs.map((r) => r.id);
 
     await user.click(row.getByRole("button", { name: "Run Tamil shorts now" }));
 
     await findToast("Run queued for Tamil shorts.");
-    expect(db.state.runs).toHaveLength(before + 1);
+    expect(db.state.runs).toHaveLength(known.length + 1);
+    const queued = db.state.runs.find((r) => !known.includes(r.id));
+    await user.click(screen.getByRole("button", { name: "View run" }));
+    await waitFor(() => expect(pathOf(router)).toBe(`/runs/${queued?.id}`));
   });
 
   it("reports a failed duplicate without adding a row", async () => {

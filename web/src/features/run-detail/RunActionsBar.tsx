@@ -1,5 +1,5 @@
 import type { Run } from "@/api/types";
-import { availableActions } from "@/features/run-detail/model";
+import { availableActions, cancelMessage } from "@/features/run-detail/model";
 import { RetryDialog } from "@/features/run-detail/RetryDialog";
 import {
   type RunActionHandlers,
@@ -19,7 +19,7 @@ function RunActionDialogs({ run, handlers }: { run: Run; handlers: RunActionHand
       <ConfirmDialog
         open={handlers.pending === "cancel"}
         title="Cancel this run?"
-        message="The current stage stops and the run is marked cancelled."
+        message={cancelMessage(run.status)}
         confirmLabel="Cancel run"
         cancelLabel="Keep running"
         busy={handlers.cancelling}

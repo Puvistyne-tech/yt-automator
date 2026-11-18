@@ -1,6 +1,8 @@
 import { db } from "@/api/mocks/db";
 import { makeUpload } from "@/api/mocks/fixtures/factories";
-import type { Run, Target, Upload } from "@/api/types";
+import type { ChannelDefaults, Run, Target, Upload } from "@/api/types";
+
+const KIDS_CAPABILITY = "kids_content";
 
 export const NO_UPLOAD_SUCCEEDED = "no upload succeeded";
 
@@ -23,6 +25,22 @@ export function skipReason(run: Run, target: Target, variant: string): string | 
     : `No ${variant} video for ${target.language} in this run.`;
 }
 
+const FALLBACK_DEFAULTS: Pick<ChannelDefaults, "privacy" | "made_for_kids"> = {
+  privacy: "private",
+  made_for_kids: false,
+};
+
+function effectiveAudience(run: Run, target: Target): Pick<Upload, "privacy" | "made_for_kids"> {
+  const defaults =
+    db.state.channels.find((c) => c.id === target.channel_id)?.defaults ?? FALLBACK_DEFAULTS;
+  const pipeline = db.state.pipelines.find((p) => p.type_id === run.pipeline_type);
+  const kids = pipeline?.capabilities.includes(KIDS_CAPABILITY) ?? false;
+  return {
+    privacy: target.privacy ?? defaults.privacy,
+    made_for_kids: kids || (target.made_for_kids ?? defaults.made_for_kids),
+  };
+}
+
 function uploadFor(run: Run, target: Target, variant: string): Upload {
   const reason = skipReason(run, target, variant);
   return makeUpload({
@@ -30,6 +48,7 @@ function uploadFor(run: Run, target: Target, variant: string): Upload {
     channel_id: target.channel_id,
     language: target.language,
     variant,
+    ...effectiveAudience(run, target),
     ...(reason === null
       ? { youtube_video_id: `vid${Math.random().toString(36).slice(2, 10)}` }
       : { status: "skipped", youtube_video_id: null, url: null, error: reason, quota_units: 0 }),

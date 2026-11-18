@@ -5,6 +5,7 @@ import {
   errorCounts,
   sectionAnchor,
 } from "@/features/automation-editor/model/sections";
+import { RunNowButton } from "@/features/automation-editor/RunNowButton";
 import { ContentSection } from "@/features/automation-editor/sections/ContentSection";
 import { GeneralSection } from "@/features/automation-editor/sections/GeneralSection";
 import { LanguagesSection } from "@/features/automation-editor/sections/LanguagesSection";
@@ -70,6 +71,7 @@ export function AutomationEditor(props: AutomationEditorProps) {
           saveDisabled={false}
           onSave={editor.submit}
         >
+          <RunNowButton automationId={props.automationId} name={draft.name} dirty={editor.dirty} />
           <ButtonLink to="/automations">Cancel</ButtonLink>
         </SaveBar>
       </div>

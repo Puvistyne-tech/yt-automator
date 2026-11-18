@@ -1,0 +1,40 @@
+.artifact-sections {
+  gap: var(--space-8);
+}
+
+.artifact-section-title {
+  margin-bottom: var(--space-3);
+}
+
+.artifact-stages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.artifact-stage {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.artifact-stage-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-md);
+  font-weight: 520;
+  cursor: pointer;
+}
+
+.artifact-stage[open] .artifact-stage-summary {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.artifact-stage-body {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}

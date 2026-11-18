@@ -1,7 +1,11 @@
 import { makeArtifact, makeRun } from "@/api/mocks/fixtures/factories";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
+import type { ArtifactKind } from "@/api/types";
 import {
+  finalOutputs,
   groupArtifacts,
+  intermediateByStage,
+  isFinalOutput,
   isTallArtifact,
   posterFor,
   splitGroup,
@@ -69,6 +73,41 @@ describe("groupArtifacts", () => {
     expect(parts.documents.map((a) => a.id)).toEqual(["s", "m"]);
     expect(parts.captions?.id).toBe("s");
     expect(parts.poster?.id).toBe("t");
+  });
+
+  it("treats per-language videos, thumbnails, captions and metadata as final outputs", () => {
+    const final = (kind: ArtifactKind, language: string | null) =>
+      isFinalOutput(makeArtifact({ kind, language }));
+    expect(
+      ["video", "thumbnail", "subtitle", "metadata"].map((k) => final(k as ArtifactKind, "en")),
+    ).toEqual([true, true, true, true]);
+    expect(final("video", null)).toBe(false);
+    expect(final("image", "en")).toBe(false);
+    expect(final("audio", "en")).toBe(false);
+    expect(final("text", null)).toBe(false);
+  });
+
+  it("splits a run into final outputs and intermediate files by stage in run order", () => {
+    const run = makeRun({
+      artifacts: [
+        makeArtifact({ id: "clip", stage_id: "motion", language: null, variant: "episode" }),
+        makeArtifact({ id: "final", stage_id: "render", language: "en", variant: "episode" }),
+        makeArtifact({ id: "scene", kind: "image", stage_id: "images", language: null }),
+        makeArtifact({ id: "odd", kind: "text", stage_id: "extra", language: null }),
+        makeArtifact({ id: "story", kind: "text", stage_id: "story", language: null }),
+        makeArtifact({ id: "scene2", kind: "image", stage_id: "images", language: null }),
+      ],
+    });
+
+    expect(finalOutputs(run).map((a) => a.id)).toEqual(["final"]);
+    expect(
+      intermediateByStage(run).map((s) => [s.stageId, s.title, s.artifacts.map((a) => a.id)]),
+    ).toEqual([
+      ["story", "Write story", ["story"]],
+      ["images", "Illustrate scenes", ["scene", "scene2"]],
+      ["motion", "Animate", ["clip"]],
+      ["extra", "extra", ["odd"]],
+    ]);
   });
 
   it("decides tall previews from the variant aspect, then the frame size", () => {

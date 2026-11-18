@@ -1,5 +1,9 @@
 import type { JsonObject, PipelineDescriptor } from "@/api/types";
 
+function choices(titles: Record<string, string>) {
+  return Object.entries(titles).map(([value, title]) => ({ const: value, title }));
+}
+
 const castMember = {
   type: "object",
   title: "Cast member",
@@ -9,7 +13,7 @@ const castMember = {
     role: {
       type: "string",
       title: "Role",
-      enum: ["hero", "friend", "mentor", "trickster"],
+      oneOf: choices({ hero: "Hero", friend: "Friend", mentor: "Mentor", trickster: "Trickster" }),
       default: "friend",
     },
     description: {
@@ -74,7 +78,12 @@ const settingsSchema = {
     art_style: {
       type: "string",
       title: "Art style",
-      enum: ["watercolor", "flat_vector", "claymation", "storybook_3d"],
+      oneOf: choices({
+        watercolor: "Watercolour",
+        flat_vector: "Flat vector",
+        claymation: "Claymation",
+        storybook_3d: "Storybook 3D",
+      }),
       default: "watercolor",
     },
     voices: {
@@ -111,7 +120,7 @@ const settingsSchema = {
         style: {
           type: "string",
           title: "Background",
-          enum: ["box", "outline", "none"],
+          oneOf: choices({ box: "Box", outline: "Outline", none: "None" }),
           default: "outline",
         },
       },
@@ -128,12 +137,8 @@ const uiSchema = {
   premise: { "ui:widget": "textarea" },
   story_length_minutes: { "ui:widget": "range" },
   moral_themes: { "ui:widget": "checkboxes" },
-  art_style: {
-    "ui:enumNames": ["Watercolour", "Flat vector", "Claymation", "Storybook 3D"],
-  },
   cast: {
     items: {
-      role: { "ui:enumNames": ["Hero", "Friend", "Mentor", "Trickster"] },
       description: { "ui:widget": "textarea" },
       color: { "ui:widget": "color" },
     },
@@ -142,7 +147,6 @@ const uiSchema = {
   subtitles: {
     text_color: { "ui:widget": "color" },
     font_size: { "ui:widget": "range" },
-    style: { "ui:enumNames": ["Box", "Outline", "None"] },
   },
 };
 

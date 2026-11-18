@@ -94,6 +94,7 @@ const PUBLISHED_UPLOADS = [
     target_id: "target-ta",
     channel_id: "chan-ta",
     language: "ta",
+    privacy: "unlisted",
     status: "skipped",
     youtube_video_id: null,
     url: null,

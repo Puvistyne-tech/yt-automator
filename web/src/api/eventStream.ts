@@ -12,7 +12,7 @@ function handleRunEvent(client: QueryClient, event: RunEvent) {
     run === undefined ? run : applyRunEvent(run, event),
   );
   if (event.kind === "status") {
-    void invalidateWithDashboard(client, keys.runLists, keys.automations);
+    void invalidateWithDashboard(client, keys.run(event.run_id), keys.runLists, keys.automations);
   }
 }
 

@@ -15,7 +15,14 @@ export interface GroupParts {
   poster: Artifact | undefined;
 }
 
+export interface StageFiles {
+  stageId: string;
+  title: string;
+  artifacts: Artifact[];
+}
+
 const MEDIA_KINDS = new Set<Artifact["kind"]>(["video", "thumbnail", "image", "audio"]);
+const FINAL_KINDS = new Set<Artifact["kind"]>(["video", "thumbnail", "subtitle", "metadata"]);
 
 function languageTitle(language: string | null, pipeline?: PipelineDescriptor): string {
   if (language === null) {
@@ -61,9 +68,13 @@ function newGroup(key: string, artifact: Artifact, pipeline?: PipelineDescriptor
   };
 }
 
-export function groupArtifacts(run: Run, pipeline?: PipelineDescriptor): ArtifactGroup[] {
+export function groupArtifacts(
+  run: Run,
+  pipeline?: PipelineDescriptor,
+  artifacts: Artifact[] = run.artifacts,
+): ArtifactGroup[] {
   const groups = new Map<string, ArtifactGroup>();
-  for (const artifact of run.artifacts) {
+  for (const artifact of artifacts) {
     const key = `${artifact.language ?? "*"}|${artifact.variant ?? "*"}`;
     const group = groups.get(key) ?? newGroup(key, artifact, pipeline);
     group.artifacts.push(artifact);
@@ -77,17 +88,46 @@ export function groupArtifacts(run: Run, pipeline?: PipelineDescriptor): Artifac
   );
 }
 
+function findKind(artifacts: Artifact[], kind: Artifact["kind"]): Artifact | undefined {
+  return artifacts.find((a) => a.kind === kind);
+}
+
 export function posterFor(group: ArtifactGroup): Artifact | undefined {
-  return group.artifacts.find((a) => a.kind === "thumbnail");
+  return findKind(group.artifacts, "thumbnail");
+}
+
+export function splitArtifacts(artifacts: Artifact[]): GroupParts {
+  return {
+    media: artifacts.filter((a) => MEDIA_KINDS.has(a.kind)),
+    documents: artifacts.filter((a) => !MEDIA_KINDS.has(a.kind)),
+    captions: findKind(artifacts, "subtitle"),
+    poster: findKind(artifacts, "thumbnail"),
+  };
 }
 
 export function splitGroup(group: ArtifactGroup): GroupParts {
-  return {
-    media: group.artifacts.filter((a) => MEDIA_KINDS.has(a.kind)),
-    documents: group.artifacts.filter((a) => !MEDIA_KINDS.has(a.kind)),
-    captions: group.artifacts.find((a) => a.kind === "subtitle"),
-    poster: posterFor(group),
-  };
+  return splitArtifacts(group.artifacts);
+}
+
+export function isFinalOutput(artifact: Artifact): boolean {
+  return FINAL_KINDS.has(artifact.kind) && artifact.language !== null;
+}
+
+export function finalOutputs(run: Run): Artifact[] {
+  return run.artifacts.filter(isFinalOutput);
+}
+
+export function intermediateByStage(run: Run): StageFiles[] {
+  const intermediate = run.artifacts.filter((a) => !isFinalOutput(a));
+  const order = run.stages.map((s) => s.stage_id);
+  const stageIds = [...new Set(intermediate.map((a) => a.stage_id))].sort(
+    (a, b) => orderOf(order, a) - orderOf(order, b),
+  );
+  return stageIds.map((stageId) => ({
+    stageId,
+    title: run.stages.find((s) => s.stage_id === stageId)?.title ?? stageId,
+    artifacts: intermediate.filter((a) => a.stage_id === stageId),
+  }));
 }
 
 export function isTallArtifact(artifact: Artifact, pipeline?: PipelineDescriptor): boolean {
