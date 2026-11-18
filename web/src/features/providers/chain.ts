@@ -1,0 +1,95 @@
+import type {
+  ProviderChoice,
+  ProviderConfig,
+  ProviderDescriptor,
+  ProvidersResponse,
+} from "@/api/types";
+import { humanizeId } from "@/shared/format/numbers";
+
+const CAPABILITY_TITLES: Record<string, string> = {
+  llm: "Text generation",
+  image: "Images",
+  motion: "Motion",
+  tts: "Narration",
+  music: "Music",
+};
+
+export function capabilityTitle(capability: string): string {
+  return CAPABILITY_TITLES[capability] ?? humanizeId(capability);
+}
+
+export function capabilitiesOf(response: ProvidersResponse): string[] {
+  const ordered = response.config.map((c) => c.capability);
+  const extra = response.descriptors.map((d) => d.capability).filter((c) => !ordered.includes(c));
+  return [...new Set([...ordered, ...extra])];
+}
+
+export function chainFor(config: ProviderConfig[], capability: string): ProviderChoice[] {
+  return config.find((c) => c.capability === capability)?.chain ?? [];
+}
+
+export function withChain(
+  config: ProviderConfig[],
+  capability: string,
+  chain: ProviderChoice[],
+): ProviderConfig[] {
+  const exists = config.some((c) => c.capability === capability);
+  return exists
+    ? config.map((c) => (c.capability === capability ? { ...c, chain } : c))
+    : [...config, { capability, chain }];
+}
+
+export function moveChoice(
+  chain: ProviderChoice[],
+  index: number,
+  delta: -1 | 1,
+): ProviderChoice[] {
+  const target = index + delta;
+  const item = chain[index];
+  const other = chain[target];
+  if (item === undefined || other === undefined) {
+    return chain;
+  }
+  const next = [...chain];
+  next[index] = other;
+  next[target] = item;
+  return next;
+}
+
+export function patchChoice(
+  chain: ProviderChoice[],
+  index: number,
+  patch: Partial<ProviderChoice>,
+): ProviderChoice[] {
+  return chain.map((choice, i) => (i === index ? { ...choice, ...patch } : choice));
+}
+
+export function removeChoice(chain: ProviderChoice[], index: number): ProviderChoice[] {
+  return chain.filter((_, i) => i !== index);
+}
+
+export function addableProviders(
+  descriptors: ProviderDescriptor[],
+  capability: string,
+  chain: ProviderChoice[],
+): ProviderDescriptor[] {
+  const used = new Set(chain.map((c) => c.provider_id));
+  return descriptors.filter((d) => d.capability === capability && !used.has(d.provider_id));
+}
+
+export function activeProvider(
+  chain: ProviderChoice[],
+  descriptors: ProviderDescriptor[],
+): ProviderDescriptor | undefined {
+  return chain
+    .filter((choice) => choice.enabled)
+    .map((choice) => descriptors.find((d) => d.provider_id === choice.provider_id))
+    .find((descriptor) => descriptor?.available === true);
+}
+
+export function hasOptions(descriptor: ProviderDescriptor | undefined): boolean {
+  const properties = descriptor?.options_schema.properties;
+  return (
+    typeof properties === "object" && properties !== null && Object.keys(properties).length > 0
+  );
+}

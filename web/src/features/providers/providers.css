@@ -1,0 +1,75 @@
+.chain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.chain-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.chain-row-off {
+  background: var(--color-surface-2);
+}
+
+.chain-row-off .chain-info > .cell-title {
+  color: var(--color-text-muted);
+}
+
+.chain-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.chain-position {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.chain-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.chain-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.chain-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-left: calc(26px + var(--space-3));
+}
+
+.chain-options > .btn {
+  align-self: flex-start;
+}
+
+.providers-footer {
+  position: sticky;
+}

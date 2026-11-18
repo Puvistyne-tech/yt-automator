@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:mock": "VITE_USE_MOCKS=1 vite",
     "build": "tsc --noEmit && vite build",
     "fmt": "biome check --write .",
     "lint": "biome ci .",
@@ -12,18 +13,26 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@rjsf/core": "^6.11.1",
+    "@rjsf/utils": "^6.11.1",
+    "@rjsf/validator-ajv8": "^6.11.1",
+    "@tanstack/react-query": "^5.107.2",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "react-router": "^8.5.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.12",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
     "jsdom": "^31.0.1",
+    "msw": "^3.0.6",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",
     "vitest": "^5.1.0"

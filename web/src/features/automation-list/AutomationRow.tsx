@@ -1,0 +1,97 @@
+import { Link } from "react-router";
+import { RUN_STATUSES } from "@/api/labels";
+import type { Automation, Channel, PipelineDescriptor } from "@/api/types";
+import { languagesLabel, pipelineName, targetsLabel } from "@/features/automation-list/summary";
+import type { ListActions } from "@/features/automation-list/useListActions";
+import { formatRelative } from "@/shared/format/dates";
+import { describeSchedule } from "@/shared/format/schedule";
+import { ButtonLink, IconButton, StatusBadge, Switch } from "@/shared/ui";
+
+interface AutomationRowProps {
+  automation: Automation;
+  pipelines: PipelineDescriptor[];
+  channels: Channel[];
+  actions: ListActions;
+}
+
+function LastRun({ automation }: { automation: Automation }) {
+  const last = automation.last_run;
+  if (last === null) {
+    return <span className="subtle">Never run</span>;
+  }
+  return (
+    <Link to={`/runs/${last.id}`} className="cell-stack cell-link">
+      <StatusBadge {...RUN_STATUSES[last.status]} />
+      <span className="subtle">{formatRelative(last.created_at)}</span>
+    </Link>
+  );
+}
+
+export function AutomationRow({ automation, pipelines, channels, actions }: AutomationRowProps) {
+  const pipeline = pipelines.find((p) => p.type_id === automation.pipeline_type);
+  return (
+    <tr>
+      <td>
+        <div className="cell-stack">
+          <Link to={`/automations/${automation.id}`} className="cell-title">
+            {automation.name}
+          </Link>
+          {automation.description && (
+            <span className="subtle clamp-1">{automation.description}</span>
+          )}
+        </div>
+      </td>
+      <td>
+        <div className="cell-stack">
+          <span>{pipelineName(pipelines, automation.pipeline_type)}</span>
+          <span className="subtle">{languagesLabel(automation.languages, pipeline)}</span>
+        </div>
+      </td>
+      <td className="cell-wrap cell-narrow">{targetsLabel(automation, channels)}</td>
+      <td className="cell-wrap cell-narrow">
+        <div className="cell-stack">
+          <span>{describeSchedule(automation.schedule)}</span>
+          <span className="subtle">
+            {automation.enabled ? `Next ${formatRelative(automation.next_run_at)}` : "Paused"}
+          </span>
+        </div>
+      </td>
+      <td>
+        <LastRun automation={automation} />
+      </td>
+      <td>
+        <Switch
+          checked={automation.enabled}
+          ariaLabel={`Enable ${automation.name}`}
+          onChange={(enabled) => actions.setEnabled(automation, enabled)}
+        />
+      </td>
+      <td className="cell-actions">
+        <IconButton
+          icon="play"
+          label={`Run ${automation.name} now`}
+          onClick={() => actions.runNow(automation)}
+        />
+        <ButtonLink
+          to={`/automations/${automation.id}`}
+          size="sm"
+          variant="ghost"
+          icon="edit"
+          aria-label={`Edit ${automation.name}`}
+          className="btn-icon"
+        />
+        <IconButton
+          icon="copy"
+          label={`Duplicate ${automation.name}`}
+          onClick={() => actions.duplicate(automation)}
+        />
+        <IconButton
+          icon="trash"
+          variant="danger"
+          label={`Delete ${automation.name}`}
+          onClick={() => actions.askDelete(automation)}
+        />
+      </td>
+    </tr>
+  );
+}
