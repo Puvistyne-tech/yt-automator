@@ -12,6 +12,7 @@ from pathlib import Path
 PROTECTED_BRANCHES = {"main", "master"}
 SEPARATORS = re.compile(r"&&|\|\||[;|\n]|\$\(|`")
 GIT_OPTIONS_WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree"}
+ONE_SIDED_STRATEGIES = {"ours", "theirs"}
 
 
 def project_root() -> Path:
@@ -74,6 +75,29 @@ def push_violation(arguments: list[str], branch: str) -> str | None:
     return None
 
 
+def option_values(arguments: list[str], short: str, long: str) -> list[str]:
+    values: list[str] = []
+    for index, argument in enumerate(arguments):
+        if argument in {short, long}:
+            values.append(arguments[index + 1] if index + 1 < len(arguments) else "")
+        elif argument.startswith(f"{long}="):
+            values.append(argument.removeprefix(f"{long}="))
+        elif argument.startswith(short) and not argument.startswith("--"):
+            values.append(argument.removeprefix(short))
+    return values
+
+
+def one_sided_merge_violation(arguments: list[str]) -> str | None:
+    overrides = set(option_values(arguments, "-X", "--strategy-option")) & ONE_SIDED_STRATEGIES
+    strategies = set(option_values(arguments, "-s", "--strategy")) & {"ours"}
+    if overrides or strategies:
+        return (
+            "Merges that keep one side (-X ours, -X theirs, -s ours) are blocked. "
+            "Do a plain merge and resolve conflicts by hand."
+        )
+    return None
+
+
 def merge_marker_matches(root: Path) -> bool:
     marker = root / ".claude" / ".ship-verified"
     if not marker.is_file():
@@ -90,6 +114,8 @@ def git_violation(arguments: list[str], root: Path) -> str | None:
         return "git reset --hard is blocked. Use git stash, or git restore on specific paths."
     if command == "push":
         return push_violation(rest, branch)
+    if command in {"merge", "pull"} and (reason := one_sided_merge_violation(rest)):
+        return reason
     if command in {"commit", "merge", "rebase", "cherry-pick"} and branch in PROTECTED_BRANCHES:
         return f"git {command} on {branch} is blocked. Work on a feature branch and deliver with /ship."
     return None

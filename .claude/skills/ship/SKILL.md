@@ -37,6 +37,9 @@ Run `just check`. If anything fails, fix it and rerun only the failing command u
 Read the final diff once as a reviewer: correctness, error paths, security, secrets, unrelated changes, leftover debug output.
 Fix what you find and rerun the affected check.
 
+- Run `git diff origin/main HEAD -- .claude CLAUDE.md .gitignore .github justfile` and confirm it shows only lines this change intends.
+- When the change affects rendered video, image or audio, confirm the implementer rendered a sample offline and looked at an extracted frame, and list those paths in the pull request body.
+
 ## 5. Deliver
 
 1. `git add -A` then commit with a Conventional Commit message: `type(scope): summary`.
@@ -45,7 +48,7 @@ Fix what you find and rerun the affected check.
 4. `gh pr create --fill-first --base main`, with a body that states what changed, how it was verified, and the advisory findings.
 5. `gh pr merge --squash --auto --delete-branch`
 6. `gh pr checks --watch --fail-fast`. If a check fails, read its log, fix, and return to step 1.
-   If the pull request reports a conflict, merge `origin/main` into the branch, rerun `just check`, and push.
+   If the pull request reports a conflict, merge `origin/main` into the branch with a plain merge, resolve each conflict by hand, rerun `just check`, and push.
 7. Confirm the merge with `gh pr view --json state`, then `git checkout main && git pull --ff-only`.
 
 ## 6. Compound

@@ -31,10 +31,13 @@ You implement exactly one task handed to you by the orchestrator.
 
 Run `just check`. While fixing, rerun only the failing command.
 Measure function and file lengths over what you changed and fix every overrun before reporting.
+When the change affects rendered video, image or audio, render a sample offline, extract a frame (or the image itself), and look at it before reporting done.
 
 ## Report
 
 - files created and changed
 - the contract you exposed: function signatures, routes, schema fields
-- the exact output of the final `just check`
+- every test you added, as `path::test_name`, each confirmed present in the file
+- the exact output of the final `just check`, pasted verbatim, as the only source of test counts
+- the sample and frame paths for any change to rendered output
 - anything you could not do and why
