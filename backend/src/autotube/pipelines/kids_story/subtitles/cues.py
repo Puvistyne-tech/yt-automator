@@ -34,6 +34,7 @@ class Cue(BaseModel):
     end: float = Field(ge=0)
     lines: tuple[str, ...]
     limit: float = Field(ge=0)
+    words: tuple[WordTiming, ...] = ()
 
     @property
     def text(self) -> str:

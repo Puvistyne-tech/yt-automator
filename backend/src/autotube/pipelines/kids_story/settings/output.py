@@ -4,12 +4,12 @@ from enum import StrEnum
 
 from pydantic import Field
 
-from autotube.pipelines.kids_story.settings.base import SettingsSection
 from autotube.pipelines.kids_story.settings.choices import (
     LANDSCAPE_CHOICES,
     PORTRAIT_CHOICES,
     SCENE_SELECTION_CHOICES,
 )
+from autotube.pipelines.kids_story.settings.video_look import EpisodeLookSettings, ShortLookSettings
 
 
 class LandscapeResolution(StrEnum):
@@ -35,7 +35,7 @@ def size_of(resolution: StrEnum) -> tuple[int, int]:
     return int(width), int(height)
 
 
-class EpisodeSettings(SettingsSection):
+class EpisodeSettings(EpisodeLookSettings):
     resolution: LandscapeResolution = Field(
         default=LandscapeResolution.FULL_HD,
         json_schema_extra=LANDSCAPE_CHOICES,
@@ -47,17 +47,17 @@ class EpisodeSettings(SettingsSection):
         ge=12,
         le=60,
         title="Frames per second",
-        description="Frames per second for every video, both the episode and the Short.",
+        description="Frames per second of the episode, and of the Short unless it sets its own.",
     )
     intro_card: bool = Field(
         default=True,
         title="Intro card",
-        description="Open the episode with a card showing the series name and story title.",
+        description="Open the episode with a card showing the intro card text.",
     )
     outro_card: bool = Field(
         default=True,
         title="Outro card",
-        description="Close the episode with a card showing the refrain and series name.",
+        description="Close the episode with a card showing the outro card text.",
     )
     card_seconds: float = Field(
         default=3.0,
@@ -110,7 +110,7 @@ class EpisodeSettings(SettingsSection):
     )
 
 
-class ShortSettings(SettingsSection):
+class ShortSettings(ShortLookSettings):
     enabled: bool = Field(
         default=True,
         title="Make a Short",

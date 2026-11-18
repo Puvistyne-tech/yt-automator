@@ -8,13 +8,13 @@ from autotube.domain.capabilities import CameraMove
 from autotube.pipelines.kids_story.settings.base import (
     Corner,
     Placement,
-    SettingsSection,
 )
 from autotube.pipelines.kids_story.settings.choices import (
     CAMERA_MOVE_CHOICES,
     CORNER_CHOICES,
     SHORT_ART_CHOICES,
 )
+from autotube.pipelines.kids_story.settings.logo import LogoSettings
 from autotube.pipelines.kids_story.text.templates import unknown_placeholders
 
 STYLE_MOTION_NOTE = "Used when Move the way the style suggests is off, or for a custom style."
@@ -34,7 +34,7 @@ class ShortArtMode(StrEnum):
     CROP = "crop"
 
 
-class VisualSettings(SettingsSection):
+class VisualSettings(LogoSettings):
     image_candidates: int = Field(
         default=2,
         ge=1,

@@ -16,7 +16,8 @@ def with_ass_subtitles(
     if subtitles is None or not burned or subtitles.suffix.lower() == ASS_SUFFIX:
         return composition
     entries = parse_srt(subtitles.read_text(encoding="utf-8"))
-    document = ass_document(entries, composition.subtitle_style, size, outline)
+    style, words = composition.subtitle_style, composition.subtitle_words
+    document = ass_document(entries, style, size, outline, words)
     target = output.with_suffix(ASS_SUFFIX)
     target.write_text(document, encoding="utf-8")
     return composition.model_copy(update={"subtitles": target})

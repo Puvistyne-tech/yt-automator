@@ -232,6 +232,39 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   - `ResolvedStyle.night` is true only for lighting `moonlight` or colour mood `night`. Pictures send it in
     their hints with the scene's visual, setting and mood as `scene_text` (character sheets send none; a
     thumbnail sends its thumbnail text or the first scene's).
+- Kids story video look. Every option below defaults to today's output: stored settings without these fields load
+  unchanged and give the same ffmpeg command and ASS document.
+  - `subtitles`: `karaoke` (default off) colours each word in `highlight_color` while it is spoken, from the
+    narration's word timings; `position` (bottom, middle, top; the bottom margin is kept from the top edge at the
+    top and ignored in the middle); `bold`; `shadow` (pixels, 0 none); `outline_width` (-1, the default, keeps the
+    media provider's outline option; 0 to 20 pixels otherwise; it is the box padding when the box is on);
+    `box_background` with `box_color` and `box_opacity` (0 to 1) draws a filled box instead of an outline.
+  - `episode`: `intro_card_text` and `outro_card_text` (per language, one line per row; placeholders `{title}`
+    `{series}` `{tagline}` `{moral}` `{hook}` `{refrain}`; defaults `{series}\n{title}` and `{refrain}\n{series}`)
+    and `card_text_position` (any placement, default centre); `transition` (cut, crossfade, fade_through_black,
+    default cut) and `transition_seconds` (above 0, at most 3, default 0.5) for the episode and the Short;
+    `video_quality`.
+  - `short`: `fps` (0, the default, follows `episode.fps`; otherwise 12 to 60), also used for the Short's motion
+    clips; `video_quality`. Quality levels are draft, standard (default: the media provider's CRF), high and best.
+  - `thumbnail`: `text_template` (per language, default `{title}`, placeholders `{title}` `{series}` `{moral}`
+    `{hook}`, drawn only when `title_text` is on) and `candidates` (1 to 8, default 1). With more than one, every
+    candidate is drawn with seeds `base_seed + 5000 + n` and saved as `thumbnail-wide-c<n>.png` (the first keeps
+    `thumbnail-wide.png`) and recorded as `candidate` artifacts with `thumbnail: true`; the picture judge picks
+    when `use_vision_judge` is on, otherwise the first is kept; the run log records "thumbnail: kept picture k of
+    n" and the thumbnail art carries `candidate`.
+  - `visuals`: `logo_file` (a .png, .jpg, .jpeg or .webp path on this machine, trimmed, empty default),
+    `logo_corner` (default top right), `logo_size_percent` (of the video width, default 12), `logo_opacity`
+    (default 0.8), `logo_margin_percent` (of the height, default 3), `logo_on_episode` and `logo_on_short` (both
+    default on). Planning the composition does not touch the file; the edit stage checks it just before
+    rendering and fails with "visuals.logo_file: no picture at ...". `visuals.logo_file`,
+    `subtitles.font_files` and `thumbnail.font_files` are machine-local, so an export carries their defaults.
+  - A template with an unknown placeholder is refused on its field (for example `thumbnail.text_template`), and
+    the message names the field and the placeholders it may use.
+  - Transitions overlap neighbouring segments: each boundary overlaps by `transition_seconds`, cut down to the
+    quiet time between the two narrations (the earlier segment's time after its narration plus the later one's
+    lead-in, or its whole length when silent) and to half of either segment. Segment lengths stay the same, so
+    the video is shorter by the sum of the overlaps, and narration, sound effects and subtitle cues move with
+    their segment.
 - Every automation language must be one the pipeline offers. Every target language must be in the automation's languages. Every target variant must be one the pipeline offers. Every target channel must exist.
 - An automation with schedule `interval` needs `every_hours >= 1`. With `cron` it needs a valid 5-field expression.
 - Times of day (`active_from`, `active_until`, `publish_time_of_day`) are 24-hour `HH:MM`. Time zones must exist
@@ -529,8 +562,28 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   the last narration clip.
 - `extract_frame` fails with an upstream failure when no frame was written, for example past the end.
 - Speech synthesizers refuse blank text with an upstream failure.
-- `SubtitleStyle`: burn_in, font_family, font_file (nullable), font_size, primary, outline and highlight
-  colours, margin_bottom, margin_sides, wrap_lines (default false).
+- `SubtitleStyle` (`domain/video_look.py`): burn_in, font_family, font_file (nullable), font_size, primary,
+  outline and highlight colours, margin_bottom, margin_sides, wrap_lines (default false), karaoke (default
+  false), position (bottom|middle|top, ASS alignment 2, 5, 8; margin_bottom is the vertical margin from that
+  edge), bold, shadow (pixels), box (default false), box_color, box_opacity, outline_width (nullable: null uses
+  the provider's outline option). The ASS style keeps today's fields when all of these are at their defaults;
+  a box uses border style 3 with the box colour and opacity in the outline colour.
+- `VideoComposition` also carries `subtitle_words` (word timings in timeline seconds, one per displayed word, in
+  order), `transition` (cut|crossfade|fade_through_black, default cut), `quality`
+  (draft|standard|high|best, default standard) and `watermark` (nullable `Watermark`: image, corner,
+  width_share of the frame width, opacity, margin_share of the frame height).
+- With `SubtitleStyle.karaoke`, every entry is still drawn whole on layer 0 in the `Default` style (so a box stays
+  one box), and a second style `Spoken` (the highlight colour, no outline, box or shadow, same font, size,
+  weight, alignment and margins) draws on layer 1 one event per word, from that word's start to the next word's
+  start (the last to the entry's end), with every other word fully transparent so the spoken word lands exactly
+  on top. Words belong to the entry they start inside; an entry whose words do not match its displayed words one
+  for one gets no layer 1 events. Without karaoke the document has no `Spoken` style and no layer 1.
+- The ffmpeg toolkit reads overlaps from the visual timeline (a clip starting before the previous one ends).
+  Crossfade fades the later clip in over the overlap; fade through black darkens the earlier clip over the first
+  half and reveals the later one over the second half; cut draws overlapping clips as they are. The watermark is
+  read as one still picture whatever its path holds (`-f image2 -pattern_type none -i file:<path>`), scaled to
+  an even width, given the opacity, and overlaid in its corner before subtitles are burned in. Quality
+  shifts the provider CRF by +8 (draft), 0 (standard), -4 (high) or -8 (best), kept within 0 to 51.
 - Burned-in subtitles (`subtitles` set and `SubtitleStyle.burn_in`): an SRT file is converted to an ASS
   document whose canvas is the frame size, so `font_size`, `margin_bottom` and `margin_sides` are frame
   pixels. Each SRT line is drawn as one line: the renderer does not re-wrap unless `wrap_lines` is true,

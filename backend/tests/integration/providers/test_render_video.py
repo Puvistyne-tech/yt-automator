@@ -16,13 +16,13 @@ from autotube.domain.capabilities import (
     MusicRequest,
     Speech,
     SpeechRequest,
-    SubtitleStyle,
     TimedClip,
     TimingSource,
     VideoComposition,
 )
 from autotube.domain.pipeline import ProviderResolver
 from autotube.domain.providers import ProviderChoice, ProviderConfig
+from autotube.domain.video_look import SubtitleStyle
 from autotube.infrastructure.providers.catalog import build_provider_catalog
 from tests.fixtures.fake_runtime import InMemorySecrets
 

@@ -5,7 +5,9 @@ from enum import StrEnum
 
 from pydantic.config import JsonDict
 
+from autotube.domain.video_look import SubtitlePosition, Transition, VideoQuality
 from autotube.pipelines.kids_story.languages import LANGUAGE_NAMES
+from autotube.pipelines.kids_story.settings.base import Placement
 
 ChoiceSchema = Callable[[JsonDict], None]
 
@@ -66,15 +68,32 @@ CAMERA_MOVE_CHOICES = titled_choices(
 SHORT_ART_CHOICES = titled_choices(
     {"native": "Draw a new vertical picture", "crop": "Crop the wide picture"}
 )
-CORNER_CHOICES = titled_choices(
-    {
-        "top_left": "Top left",
-        "top_right": "Top right",
-        "bottom_left": "Bottom left",
-        "bottom_right": "Bottom right",
-    }
+CORNER_TITLES = {
+    "top_left": "Top left",
+    "top_right": "Top right",
+    "bottom_left": "Bottom left",
+    "bottom_right": "Bottom right",
+}
+EDGE_TITLES = {"top": "Top", "bottom": "Bottom"}
+CORNER_CHOICES = titled_choices(CORNER_TITLES)
+EDGE_CHOICES = titled_choices(EDGE_TITLES)
+PLACEMENT_CHOICES = enum_choices(Placement, {**EDGE_TITLES, "center": "Centre", **CORNER_TITLES})
+SUBTITLE_POSITION_CHOICES = enum_choices(
+    SubtitlePosition, {"bottom": "Bottom", "middle": "Middle", "top": "Top"}
 )
-EDGE_CHOICES = titled_choices({"top": "Top", "bottom": "Bottom"})
+TRANSITION_CHOICES = enum_choices(
+    Transition,
+    {"cut": "Cut", "crossfade": "Crossfade", "fade_through_black": "Fade through black"},
+)
+VIDEO_QUALITY_CHOICES = enum_choices(
+    VideoQuality,
+    {
+        "draft": "Draft: small files, softer picture",
+        "standard": "Standard: the media provider's quality",
+        "high": "High: sharper, larger files",
+        "best": "Best: sharpest, largest files",
+    },
+)
 CATEGORY_CHOICES = titled_choices(
     {"1": "Film & Animation", "24": "Entertainment", "27": "Education"}
 )

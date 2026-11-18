@@ -29,7 +29,7 @@ def motion_request(
     scene = story.scenes[need.scene] if need.scene is not None else None
     motion = resolve_style(settings).motion
     width, height = settings.video_size(need.variant)
-    fps = settings.episode.fps
+    fps = settings.video_fps(need.variant)
     return MotionRequest(
         image=path_of(context, image),
         prompt=motion_prompt(settings, scene, motion.feel),

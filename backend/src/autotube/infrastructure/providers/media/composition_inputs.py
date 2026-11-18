@@ -15,6 +15,7 @@ class InputPlan:
     narration: list[int] = field(default_factory=list)
     effects: list[int] = field(default_factory=list)
     music: int | None = None
+    watermark: int | None = None
     count: int = 0
 
     def add(self, *args: str) -> int:
@@ -43,6 +44,10 @@ def visual_input(clip: TimedClip, fps: int) -> tuple[str, ...]:
     return ("-i", str(clip.path))
 
 
+def still_picture_input(path: Path) -> tuple[str, ...]:
+    return ("-f", "image2", "-pattern_type", "none", "-i", f"file:{path}")
+
+
 def plan_inputs(composition: VideoComposition) -> InputPlan:
     plan = InputPlan()
     for clip in composition.visuals:
@@ -53,4 +58,6 @@ def plan_inputs(composition: VideoComposition) -> InputPlan:
         plan.effects.append(plan.add("-i", str(clip.path)))
     if composition.music is not None:
         plan.music = plan.add("-stream_loop", "-1", "-i", str(composition.music))
+    if composition.watermark is not None:
+        plan.watermark = plan.add(*still_picture_input(composition.watermark.image))
     return plan

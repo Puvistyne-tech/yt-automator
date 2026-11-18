@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from autotube.domain.capabilities import SubtitleStyle, TimedClip, VideoComposition
+from autotube.domain.capabilities import TimedClip, VideoComposition
+from autotube.domain.video_look import SubtitleStyle
 from autotube.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 
 OPTIONS = FfmpegOptions()

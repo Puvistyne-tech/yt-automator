@@ -8,6 +8,7 @@ from pydantic import Field
 
 from autotube.domain.image_style import ImageStyleHints
 from autotube.domain.model_base import DomainModel, JsonObject
+from autotube.domain.video_look import SubtitleStyle, Transition, VideoQuality, Watermark
 
 
 class Capability(StrEnum):
@@ -97,19 +98,6 @@ class TimedClip(DomainModel):
     volume: float = Field(default=1.0, ge=0.0, le=2.0)
 
 
-class SubtitleStyle(DomainModel):
-    burn_in: bool = False
-    font_family: str = "Noto Sans"
-    font_size: int = Field(default=54, ge=8)
-    primary_color: str = "#FFFFFF"
-    outline_color: str = "#000000"
-    highlight_color: str = "#FFD54A"
-    margin_bottom: int = Field(default=90, ge=0)
-    margin_sides: int = Field(default=40, ge=0)
-    font_file: Path | None = None
-    wrap_lines: bool = False
-
-
 class VideoComposition(DomainModel):
     width: int = Field(
         ge=1, description="Output width in pixels; an odd value is rounded down to even, min 2."
@@ -126,8 +114,12 @@ class VideoComposition(DomainModel):
     sound_effects: tuple[TimedClip, ...] = ()
     subtitles: Path | None = None
     subtitle_style: SubtitleStyle = Field(default_factory=SubtitleStyle)
+    subtitle_words: tuple[WordTiming, ...] = ()
     loudness_lufs: float = Field(default=-16.0, le=0.0)
     fade_seconds: float = Field(default=0.5, ge=0.0)
+    transition: Transition = Transition.CUT
+    quality: VideoQuality = VideoQuality.STANDARD
+    watermark: Watermark | None = None
 
 
 class TextGenerator(Protocol):

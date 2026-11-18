@@ -1,15 +1,28 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 
-from autotube.domain.capabilities import SubtitleStyle
+from autotube.domain.capabilities import WordTiming
 from autotube.domain.font_names import safe_font_family
 from autotube.domain.srt import SrtEntry
+from autotube.domain.video_look import SubtitlePosition, SubtitleStyle
+from autotube.infrastructure.providers.media.ass_karaoke import karaoke_events
+from autotube.infrastructure.providers.media.ass_text import ass_color, ass_text, ass_time
 from autotube.shared.errors import UpstreamFailure
 
 NO_WRAPPING = 2
 SMART_WRAPPING = 0
-TEXT_REPLACEMENTS = (("\\", "/"), ("{", "("), ("}", ")"), ("\r", " "), ("\n", " "))
+OUTLINE_BORDER = "1"
+BOX_BORDER = "3"
+ASS_TRUE = "-1"
+ASS_FALSE = "0"
+SHADOW_COLOUR = "&H00000000"
+DEFAULT_STYLE = "Default"
+SPOKEN_STYLE = "Spoken"
+TEXT_LAYER = 0
+SPOKEN_LAYER = 1
+ALIGNMENTS = {SubtitlePosition.BOTTOM: "2", SubtitlePosition.MIDDLE: "5", SubtitlePosition.TOP: "8"}
 STYLE_FORMAT = (
     "Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, "
     "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, "
@@ -18,12 +31,12 @@ STYLE_FORMAT = (
 EVENT_FORMAT = "Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
 
 
-def ass_color(hex_color: str) -> str:
-    digits = hex_color.lstrip("#")
-    if len(digits) != 6 or any(char not in "0123456789abcdefABCDEF" for char in digits):
-        raise UpstreamFailure(f"subtitle colour {hex_color!r} is not #RRGGBB")
-    red, green, blue = digits[0:2], digits[2:4], digits[4:6]
-    return f"&H00{blue}{green}{red}".upper()
+@dataclass(frozen=True)
+class Edge:
+    colour: str
+    border: str
+    width: str
+    shadow: str
 
 
 def font_name(family: str) -> str:
@@ -34,37 +47,21 @@ def font_name(family: str) -> str:
     )
 
 
-def ass_time(seconds: float) -> str:
-    centis = round(max(seconds, 0.0) * 100)
-    hours, rest = divmod(centis, 360_000)
-    minutes, rest = divmod(rest, 6_000)
-    whole, centis = divmod(rest, 100)
-    return f"{hours}:{minutes:02d}:{whole:02d}.{centis:02d}"
-
-
-def ass_line(line: str) -> str:
-    for unsafe, safe in TEXT_REPLACEMENTS:
-        line = line.replace(unsafe, safe)
-    return line
-
-
-def ass_text(lines: Sequence[str]) -> str:
-    return "\\N".join(ass_line(line) for line in lines)
-
-
-def style_line(style: SubtitleStyle, outline: float) -> str:
+def style_entry(name: str, style: SubtitleStyle, primary: str, edge: Edge) -> str:
     fields = [
-        "Default",
+        name,
         font_name(style.font_family),
         str(style.font_size),
-        ass_color(style.primary_color),
+        primary,
         ass_color(style.highlight_color),
-        ass_color(style.outline_color),
-        "&H00000000",
-        *("0", "0", "0", "0", "100", "100", "0", "0", "1"),
-        f"{outline:g}",
-        "0",
-        "2",
+        edge.colour,
+        SHADOW_COLOUR,
+        ASS_TRUE if style.bold else ASS_FALSE,
+        *("0", "0", "0", "100", "100", "0", "0"),
+        edge.border,
+        edge.width,
+        edge.shadow,
+        ALIGNMENTS[style.position],
         *(str(style.margin_sides),) * 2,
         str(style.margin_bottom),
         "1",
@@ -72,10 +69,51 @@ def style_line(style: SubtitleStyle, outline: float) -> str:
     return "Style: " + ",".join(fields)
 
 
+def text_edge(style: SubtitleStyle, outline: float) -> Edge:
+    width = f"{outline if style.outline_width is None else style.outline_width:g}"
+    if style.box:
+        return Edge(
+            ass_color(style.box_color, style.box_opacity), BOX_BORDER, width, f"{style.shadow:g}"
+        )
+    return Edge(ass_color(style.outline_color), OUTLINE_BORDER, width, f"{style.shadow:g}")
+
+
+def style_line(style: SubtitleStyle, outline: float) -> str:
+    return style_entry(
+        DEFAULT_STYLE, style, ass_color(style.primary_color), text_edge(style, outline)
+    )
+
+
+def spoken_style_line(style: SubtitleStyle) -> str:
+    bare = Edge(ass_color(style.outline_color), OUTLINE_BORDER, "0", "0")
+    return style_entry(SPOKEN_STYLE, style, ass_color(style.highlight_color), bare)
+
+
+def dialogue(layer: int, start: float, end: float, style: str, text: str) -> str:
+    return f"Dialogue: {layer},{ass_time(start)},{ass_time(end)},{style},,0,0,0,,{text}"
+
+
+def entry_dialogues(
+    entry: SrtEntry, style: SubtitleStyle, words: Sequence[WordTiming]
+) -> list[str]:
+    lines = [dialogue(TEXT_LAYER, entry.start, entry.end, DEFAULT_STYLE, ass_text(entry.lines))]
+    if style.karaoke:
+        lines += [
+            dialogue(SPOKEN_LAYER, start, end, SPOKEN_STYLE, text)
+            for start, end, text in karaoke_events(entry, words)
+        ]
+    return lines
+
+
 def ass_document(
-    entries: Sequence[SrtEntry], style: SubtitleStyle, size: tuple[int, int], outline: float
+    entries: Sequence[SrtEntry],
+    style: SubtitleStyle,
+    size: tuple[int, int],
+    outline: float,
+    words: Sequence[WordTiming] = (),
 ) -> str:
     width, height = size
+    styles = [style_line(style, outline), *([spoken_style_line(style)] if style.karaoke else [])]
     header = [
         "[Script Info]",
         "ScriptType: v4.00+",
@@ -86,14 +124,10 @@ def ass_document(
         "",
         "[V4+ Styles]",
         f"Format: {STYLE_FORMAT}",
-        style_line(style, outline),
+        *styles,
         "",
         "[Events]",
         f"Format: {EVENT_FORMAT}",
     ]
-    events = [
-        f"Dialogue: 0,{ass_time(entry.start)},{ass_time(entry.end)},Default,,0,0,0,,"
-        + ass_text(entry.lines)
-        for entry in entries
-    ]
+    events = [line for entry in entries for line in entry_dialogues(entry, style, words)]
     return "\n".join([*header, *events]) + "\n"

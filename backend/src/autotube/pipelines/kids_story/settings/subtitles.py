@@ -10,12 +10,12 @@ from autotube.pipelines.kids_story.settings.base import (
     LocalizedList,
     LocalizedNumber,
     LocalizedText,
-    SettingsSection,
     color,
     localized_list,
     localized_number,
     localized_text,
 )
+from autotube.pipelines.kids_story.settings.subtitle_look import SubtitleLookSettings
 
 LATIN_SUBTITLE_FONTS = [
     "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
@@ -30,7 +30,7 @@ TAMIL_SUBTITLE_FONTS = [
 ]
 
 
-class SubtitleSettings(SettingsSection):
+class SubtitleSettings(SubtitleLookSettings):
     enabled: bool = Field(
         default=True,
         title="Subtitles",
@@ -102,6 +102,7 @@ class SubtitleSettings(SettingsSection):
         "Font files",
         "Font files tried in order for burned-in subtitles; the first one that loads draws every "
         "line and measures it where the script can be shaped. Its own font name is used.",
+        machine_local=True,
     )
     font_family: LocalizedText = localized_text(
         "Noto Sans",
@@ -133,7 +134,9 @@ class SubtitleSettings(SettingsSection):
     )
     primary_color: HexColor = color("#FFFFFF", "Text colour", "Colour of the letters.")
     outline_color: HexColor = color("#000000", "Outline colour", "Colour around the letters.")
-    highlight_color: HexColor = color("#FFD54A", "Highlight colour", "Colour of the spoken word.")
+    highlight_color: HexColor = color(
+        "#FFD54A", "Highlight colour", "Colour of the spoken word when the karaoke highlight is on."
+    )
     bottom_margin_share: float = Field(
         default=0.08,
         ge=0,

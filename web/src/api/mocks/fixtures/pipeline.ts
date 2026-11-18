@@ -1,10 +1,12 @@
 import { KIDS_CAPABILITY } from "@/api/capabilities";
 import { STYLE_CHOICES } from "@/api/mocks/fixtures/styleChoices";
+import {
+  choices,
+  EPISODE_SCHEMA,
+  SUBTITLES_SCHEMA,
+  VIDEO_LOOK_UI,
+} from "@/api/mocks/fixtures/videoLook";
 import type { JsonObject, PipelineDescriptor } from "@/api/types";
-
-function choices(titles: Record<string, string>) {
-  return Object.entries(titles).map(([value, title]) => ({ const: value, title }));
-}
 
 const castMember = {
   type: "object",
@@ -114,21 +116,8 @@ const settingsSchema = {
         },
       },
     },
-    subtitles: {
-      type: "object",
-      title: "Subtitles",
-      properties: {
-        burn_in: { type: "boolean", title: "Burn subtitles into the video", default: false },
-        font_size: { type: "integer", title: "Font size", minimum: 24, maximum: 72, default: 42 },
-        text_color: { type: "string", title: "Text colour", default: "#ffffff" },
-        style: {
-          type: "string",
-          title: "Background",
-          oneOf: choices({ box: "Box", outline: "Outline", none: "None" }),
-          default: "outline",
-        },
-      },
-    },
+    subtitles: SUBTITLES_SCHEMA,
+    episode: EPISODE_SCHEMA,
   },
 };
 
@@ -137,7 +126,9 @@ const uiSchema = {
     { title: "Story", fields: ["series_name", "premise", "story_length_minutes", "moral_themes"] },
     { title: "Characters", fields: ["cast"] },
     { title: "Visual style", fields: ["look"] },
-    { title: "Sound", fields: ["voices", "music", "subtitles"] },
+    { title: "Sound", fields: ["voices", "music"] },
+    { title: "Subtitles", fields: ["subtitles"] },
+    { title: "Videos", fields: ["episode"] },
   ],
   premise: { "ui:widget": "textarea", "ui:options": { rows: 3 } },
   look: { visual_style: { "ui:widget": "cards" } },
@@ -151,10 +142,7 @@ const uiSchema = {
     },
   },
   music: { volume: { "ui:widget": "range", "ui:options": { step: 0.05 } } },
-  subtitles: {
-    text_color: { "ui:widget": "color" },
-    font_size: { "ui:widget": "range" },
-  },
+  ...VIDEO_LOOK_UI,
 };
 
 function defaultsOf(schema: JsonObject): JsonObject {

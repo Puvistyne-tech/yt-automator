@@ -4,7 +4,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from autotube.domain.capabilities import ImageGenerator, ImageRequest, TextGenerator
+from autotube.domain.capabilities import (
+    ImageGenerator,
+    ImageRequest,
+    TextGenerator,
+    TextRequest,
+)
 from autotube.domain.pipeline import StageLog
 from autotube.domain.run_enums import LogLevel
 from autotube.pipelines.kids_story.art.prompts import (
@@ -77,10 +82,13 @@ class ScenePainter:
         ]
 
     def pick(self, scene: StoryScene, paths: Sequence[Path]) -> int:
+        return self.pick_by(judge_request(self.settings, scene, paths), paths)
+
+    def pick_by(self, request: TextRequest, paths: Sequence[Path]) -> int:
         if self.judge is None or len(paths) < 2:
             return 0
         try:
-            answer = self.judge.generate(judge_request(self.settings, scene, paths))
+            answer = self.judge.generate(request)
         except Exception as error:
             self.log(
                 f"picture judge failed, using the first picture: {error}",

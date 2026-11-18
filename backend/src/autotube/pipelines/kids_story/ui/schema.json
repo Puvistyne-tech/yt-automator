@@ -319,6 +319,8 @@
     "ui:order": [
       "enabled",
       "resolution",
+      "fps",
+      "video_quality",
       "max_duration_seconds",
       "scene_selection",
       "first_n_scenes",
@@ -331,9 +333,39 @@
     },
     "scene_selection": {
       "ui:widget": "radio"
+    },
+    "video_quality": {
+      "ui:widget": "select"
     }
   },
   "visuals": {
+    "ui:order": [
+      "image_candidates",
+      "hero_candidates",
+      "hero_scene_count",
+      "use_vision_judge",
+      "judge_criteria",
+      "character_sheets",
+      "sheet_size",
+      "base_seed",
+      "motion_intensity",
+      "hero_motion_intensity",
+      "motion_prompt",
+      "card_camera",
+      "short_art_mode",
+      "crop_focus",
+      "overlay_series_badge",
+      "badge_text",
+      "badge_corner",
+      "badge_size_ratio",
+      "logo_file",
+      "logo_corner",
+      "logo_size_percent",
+      "logo_opacity",
+      "logo_margin_percent",
+      "logo_on_episode",
+      "logo_on_short"
+    ],
     "motion_intensity": {
       "ui:widget": "range",
       "ui:options": {
@@ -377,6 +409,15 @@
       "ui:widget": "textarea",
       "ui:options": {
         "rows": 3
+      }
+    },
+    "logo_corner": {
+      "ui:widget": "select"
+    },
+    "logo_opacity": {
+      "ui:widget": "range",
+      "ui:options": {
+        "step": 0.05
       }
     }
   },
@@ -431,6 +472,37 @@
     }
   },
   "subtitles": {
+    "ui:order": [
+      "enabled",
+      "upload_captions",
+      "burn_in_episode",
+      "burn_in_short",
+      "max_chars_per_line",
+      "short_max_chars_per_line",
+      "max_lines",
+      "short_max_lines",
+      "max_cue_seconds",
+      "min_cue_seconds",
+      "font_files",
+      "font_family",
+      "letter_width_estimate",
+      "font_size",
+      "short_font_size",
+      "bold",
+      "primary_color",
+      "outline_color",
+      "outline_width",
+      "shadow",
+      "box_background",
+      "box_color",
+      "box_opacity",
+      "karaoke",
+      "highlight_color",
+      "position",
+      "bottom_margin_share",
+      "short_bottom_margin_share",
+      "side_margin_share"
+    ],
     "primary_color": {
       "ui:widget": "color"
     },
@@ -439,14 +511,101 @@
     },
     "highlight_color": {
       "ui:widget": "color"
+    },
+    "box_color": {
+      "ui:widget": "color"
+    },
+    "box_opacity": {
+      "ui:widget": "range",
+      "ui:options": {
+        "step": 0.05
+      }
+    },
+    "position": {
+      "ui:widget": "radio"
     }
   },
   "episode": {
+    "ui:order": [
+      "resolution",
+      "fps",
+      "video_quality",
+      "intro_card",
+      "intro_card_text",
+      "outro_card",
+      "outro_card_text",
+      "card_seconds",
+      "card_text_size_ratio",
+      "card_text_position",
+      "transition",
+      "transition_seconds",
+      "scene_lead_in_seconds",
+      "scene_tail_seconds",
+      "min_scene_seconds",
+      "loudness_lufs",
+      "fade_seconds"
+    ],
     "resolution": {
       "ui:widget": "select"
+    },
+    "video_quality": {
+      "ui:widget": "select"
+    },
+    "intro_card_text": {
+      "en": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 2
+        }
+      },
+      "ta": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 2
+        }
+      }
+    },
+    "outro_card_text": {
+      "en": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 2
+        }
+      },
+      "ta": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 2
+        }
+      }
+    },
+    "card_text_position": {
+      "ui:widget": "select"
+    },
+    "transition": {
+      "ui:widget": "radio"
     }
   },
   "thumbnail": {
+    "ui:order": [
+      "title_text",
+      "text_template",
+      "text_position",
+      "text_size_ratio",
+      "margin_ratio",
+      "outline_ratio",
+      "text_color",
+      "outline_color",
+      "font_files",
+      "candidates",
+      "width",
+      "height",
+      "max_bytes",
+      "jpeg_quality",
+      "min_jpeg_quality",
+      "downscale_step",
+      "min_width"
+    ],
     "text_position": {
       "ui:widget": "radio"
     },
@@ -472,6 +631,20 @@
       "ui:widget": "range",
       "ui:options": {
         "step": 0.05
+      }
+    },
+    "text_template": {
+      "en": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 2
+        }
+      },
+      "ta": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 2
+        }
       }
     }
   },
