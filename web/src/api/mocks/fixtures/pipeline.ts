@@ -1,4 +1,5 @@
 import { KIDS_CAPABILITY } from "@/api/capabilities";
+import { STYLE_CHOICES } from "@/api/mocks/fixtures/styleChoices";
 import type { JsonObject, PipelineDescriptor } from "@/api/types";
 
 function choices(titles: Record<string, string>) {
@@ -78,14 +79,10 @@ const settingsSchema = {
     },
     art_style: {
       type: "string",
-      title: "Art style",
-      oneOf: choices({
-        watercolor: "Watercolour",
-        flat_vector: "Flat vector",
-        claymation: "Claymation",
-        storybook_3d: "Storybook 3D",
-      }),
-      default: "watercolor",
+      title: "Visual style",
+      description: "The look of every picture.",
+      oneOf: STYLE_CHOICES,
+      default: "watercolour_storybook",
     },
     voices: {
       type: "object",
@@ -136,6 +133,7 @@ const uiSchema = {
     { title: "Look and sound", fields: ["art_style", "voices", "music", "subtitles"] },
   ],
   premise: { "ui:widget": "textarea", "ui:options": { rows: 3 } },
+  art_style: { "ui:widget": "cards" },
   story_length_minutes: { "ui:widget": "range" },
   moral_themes: { "ui:widget": "checkboxes" },
   cast: {

@@ -30,6 +30,14 @@ const schema = {
     checkboxes: { type: "array", title: "Checkboxes field", uniqueItems: true, items: choice },
     range: { type: "number", title: "Range field", minimum: 0, maximum: 1, multipleOf: 0.1 },
     color: { type: "string", title: "Color field" },
+    cards: {
+      type: "string",
+      title: "Cards field",
+      oneOf: [
+        { const: "calm", title: "Calm" },
+        { const: "funny", title: "Funny" },
+      ],
+    },
   },
 };
 
@@ -54,7 +62,7 @@ function renderWidgets(step?: unknown, onChange = vi.fn()) {
 describe("contract widgets", () => {
   it("reads the widget list from the spec and registers a widget for each name", () => {
     const names = specWidgets();
-    expect(names).toEqual(["checkboxes", "color", "radio", "range", "select", "textarea"]);
+    expect(names).toEqual(["cards", "checkboxes", "color", "radio", "range", "select", "textarea"]);
     expect(names.filter((name) => !(registryName(name) in widgets))).toEqual([]);
   });
 
@@ -68,6 +76,7 @@ describe("contract widgets", () => {
     expect(screen.getAllByRole("checkbox", { name: "calm" })).toHaveLength(1);
     expect(screen.getByRole("slider", { name: "Range field" })).toHaveAttribute("step", "0.1");
     expect(screen.getByLabelText("Color field")).toHaveAttribute("type", "color");
+    expect(screen.getByRole("radiogroup", { name: "Cards field" })).toBeInTheDocument();
   });
 
   it("stores the picked radio option", async () => {

@@ -41,9 +41,9 @@ class OfflineImage:
         image = paint_scene(
             request.prompt,
             scene_seed(request),
-            request.width,
-            request.height,
+            (request.width, request.height),
             self.options.supersample,
+            request.style,
         )
         ensure_parent(output)
         try:
