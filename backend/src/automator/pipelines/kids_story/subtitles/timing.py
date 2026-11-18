@@ -59,16 +59,25 @@ def screenfuls(window: Window, lines: Sequence[str], rules: CueRules) -> list[Cu
     return cues
 
 
+def late_joined(
+    groups: list[list[WordTiming]], offset: float, latest: float
+) -> list[list[WordTiming]]:
+    early = [group for group in groups if offset + group[0].start_seconds < latest]
+    late = [word for group in groups if offset + group[0].start_seconds >= latest for word in group]
+    return [*early, late] if late else early
+
+
 def segment_cues(
     words: Sequence[WordTiming], offset: float, audio_seconds: float, rules: CueRules
 ) -> list[Cue]:
     limit = offset + audio_seconds
     latest = max(offset, limit - rules.min_seconds)
-    groups = word_groups(words, rules)
+    groups = late_joined(word_groups(words, rules), offset, latest)
     starts = [min(offset + group[0].start_seconds, latest) for group in groups]
     cues: list[Cue] = []
     for group, start, following in zip(groups, starts, [*starts, limit][1:], strict=True):
-        end = max(start, min(offset + group[-1].end_seconds, limit))
-        window = Window(start=start, end=end, room=max(following, end), limit=limit)
+        room = max(following, start)
+        end = min(max(start, min(offset + group[-1].end_seconds, limit)), room)
+        window = Window(start=start, end=end, room=room, limit=limit)
         cues.extend(screenfuls(window, wrapped([word.word for word in group], rules), rules))
     return cues

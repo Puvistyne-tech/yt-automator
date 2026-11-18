@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
+from automator.domain.font_names import safe_font_family
 from automator.pipelines.kids_story.settings.base import (
     HexColor,
     LocalizedList,
@@ -69,14 +70,16 @@ class SubtitleSettings(SettingsSection):
         ge=1,
         le=3,
         title="Lines per cue",
-        description="Most lines of text shown on screen at the same time in the episode.",
+        description="Most lines of text shown on screen at the same time in the episode. Text "
+        "is never dropped: a word too long to show in parts may exceed this.",
     )
     short_max_lines: int = Field(
         default=2,
         ge=1,
         le=3,
         title="Lines per cue in Shorts",
-        description="Most lines of text shown on screen at the same time in the Short.",
+        description="Most lines of text shown on screen at the same time in the Short. Text "
+        "is never dropped: a word too long to show in parts may exceed this.",
     )
     max_cue_seconds: float = Field(
         default=6.0,
@@ -90,20 +93,22 @@ class SubtitleSettings(SettingsSection):
         ge=0,
         le=5,
         title="Shortest cue",
-        description="Fewest seconds one subtitle stays on screen, so children can read it.",
+        description="Fewest seconds one subtitle stays on screen, so children can read it. "
+        "When a cue is split and there is not enough time, the parts join into one screen.",
     )
     font_files: LocalizedList = localized_list(
         LATIN_SUBTITLE_FONTS,
         TAMIL_SUBTITLE_FONTS,
         "Font files",
-        "Font files tried in order for burned-in subtitles; the first one found draws and "
-        "measures every line.",
+        "Font files tried in order for burned-in subtitles; the first one that loads draws every "
+        "line and measures it where the script can be shaped. Its own font name is used.",
     )
     font_family: LocalizedText = localized_text(
         "Noto Sans",
         "Noto Sans Tamil",
         "Fallback font",
-        "Font name used when none of the font files is found, per language.",
+        "Font name used, with the letter width estimate, when no font file loads or its name has "
+        "characters other than letters, digits, spaces, '-' and '_'.",
     )
     letter_width_estimate: LocalizedNumber = localized_number(
         0.6,
@@ -152,6 +157,14 @@ class SubtitleSettings(SettingsSection):
         description="Space kept clear at the left and right of every subtitle line, as a share "
         "of the picture width.",
     )
+
+    @field_validator("font_family")
+    @classmethod
+    def check_font_family(cls, value: LocalizedText) -> LocalizedText:
+        unsafe = [name for name in (value.en, value.ta) if not safe_font_family(name)]
+        if unsafe:
+            raise ValueError("font names may only use letters, digits, spaces, '-' and '_'")
+        return value
 
     @model_validator(mode="before")
     @classmethod

@@ -114,3 +114,18 @@ def test_durations_share_what_is_left_after_the_minimum() -> None:
     assert durations(10.0, [1, 3], 1.0) == pytest.approx([3.0, 7.0])
     assert durations(1.0, [1, 3], 1.0) == pytest.approx([0.5, 0.5])
     assert screenfuls(Window(start=0, end=1, room=1, limit=1), [], RULES) == []
+
+
+def test_late_sentences_join_rather_than_vanish() -> None:
+    words = [*word("one.", 9.0, 9.2), *word("two.", 9.4, 9.6), *word("three.", 9.7, 9.9)]
+    cues = separated(segment_cues(words, 0.0, 9.5, RULES), RULES.min_seconds)
+    assert " ".join(cue.text for cue in cues) == "one. two. three."
+    assert all(left.end <= right.start for left, right in zip(cues, cues[1:], strict=False))
+
+
+def test_screens_never_run_past_the_next_group() -> None:
+    rules = SPLIT.model_copy(update={"min_seconds": 0.5})
+    words = [*word("b" * 18, 0.0, 4.0), *word("next", 2.0, 3.0)]
+    cues = segment_cues(words, 0.0, 9.0, rules)
+    assert cues[-1].text == "next"
+    assert all(cue.end <= cues[-1].start + 1e-9 for cue in cues[:-1])

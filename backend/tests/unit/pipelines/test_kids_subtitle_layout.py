@@ -8,7 +8,6 @@ from automator.domain.capabilities import WordTiming
 from automator.pipelines.kids_story.art import lettering
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.settings.subtitles import SubtitleSettings
-from automator.pipelines.kids_story.subtitles import subtitle_font as fonts
 from automator.pipelines.kids_story.subtitles.layout import subtitle_layout
 from automator.pipelines.kids_story.subtitles.subtitle_font import subtitle_font
 from automator.pipelines.kids_story.subtitles.timeline_cues import cue_rules
@@ -81,31 +80,29 @@ def test_unreadable_font_files_are_skipped_in_order(tmp_path: Path) -> None:
     assert (found.file, found.family) == (good, embedded_font_family())
 
 
-def test_tamil_is_estimated_when_it_cannot_be_shaped(
+def test_tamil_without_shaping_keeps_the_file_but_measures_by_estimate(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(lettering, "shaping_available", lambda: False)
-    settings = settings_with([str(embedded_font(tmp_path))])
-    assert subtitle_font(settings.subtitles, "ta", 40).file is None
-    assert subtitle_font(settings.subtitles, "en", 40).file is not None
+    file = embedded_font(tmp_path)
+    settings = settings_with([str(file)])
+    tamil = subtitle_font(settings.subtitles, "ta", 40)
+    assert (tamil.file, tamil.family) == (file, embedded_font_family())
+    assert tamil.measure("குட்டி") == pytest.approx(3 * 40 * ESTIMATE.ta)
+    english = subtitle_font(settings.subtitles, "en", 40)
+    assert english.file == file and english.measure("ab") != pytest.approx(2 * 40 * ESTIMATE.en)
 
 
 class OddlyNamedFont:
     def getname(self) -> tuple[str, str]:
         return ("Fonts & Co.", "Regular")
 
-    def getlength(self, text: str) -> float:
-        return 7.0 * len(text)
 
-
-def test_an_unsafe_family_name_falls_back_to_the_configured_name(
+def test_an_unsafe_family_name_is_measured_and_drawn_like_a_missing_font(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     found = (Path("/fonts/odd.ttf"), OddlyNamedFont())
-    monkeypatch.setattr(fonts, "measurable_font", lambda *_: found)
+    monkeypatch.setattr(lettering, "load_font", lambda *_: found)
     font = subtitle_font(SubtitleSettings(), "en", 40)
-    assert (font.family, font.file, font.measure("ab")) == (
-        "Noto Sans",
-        Path("/fonts/odd.ttf"),
-        14.0,
-    )
+    assert (font.family, font.file) == ("Noto Sans", None)
+    assert font.measure("ab") == pytest.approx(2 * 40 * ESTIMATE.en)

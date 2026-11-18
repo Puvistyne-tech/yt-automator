@@ -32,21 +32,17 @@ def measured_width(font: Font) -> Callable[[str], float]:
     return measure
 
 
-def measurable_font(
-    settings: SubtitleSettings, language: str, size: int
-) -> tuple[Path, Font] | None:
-    if not lettering.can_letter(language):
-        return None
-    return lettering.load_font(settings.font_files.for_language(language), size)
-
-
 def subtitle_font(settings: SubtitleSettings, language: str, size: int) -> SubtitleFont:
     fallback = settings.font_family.for_language(language)
-    loaded = measurable_font(settings, language, size)
+    letter_width = settings.letter_width_estimate.for_language(language)
+    estimate = SubtitleFont(family=fallback, file=None, measure=estimated_width(size, letter_width))
+    loaded = lettering.load_font(settings.font_files.for_language(language), size)
     if loaded is None:
-        letter_width = settings.letter_width_estimate.for_language(language)
-        return SubtitleFont(family=fallback, file=None, measure=estimated_width(size, letter_width))
+        return estimate
     file, font = loaded
     named = str(font.getname()[0])
-    family = named if safe_font_family(named) else fallback
-    return SubtitleFont(family=family, file=file, measure=measured_width(font))
+    if not safe_font_family(named):
+        return estimate
+    shaped = lettering.can_letter(language)
+    measure = measured_width(font) if shaped else estimate.measure
+    return SubtitleFont(family=named, file=file, measure=measure)

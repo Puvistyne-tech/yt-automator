@@ -248,6 +248,13 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   shaping (needed for Tamil and other Indic scripts). When `font_file` is set its folder is the font
   folder, otherwise the provider's configured fonts folder, otherwise the system fonts.
 - `domain/srt.py` parses SRT into entries (start, end, lines); producers and the media toolkit share it.
+- Kutty Stories wraps each cue line to the measured frame width and splits a cue that needs more than
+  `max_lines` lines into consecutive screens, each shown for at least `min_cue_seconds`, using free time
+  before the next cue. Text is never dropped: when there is no time to show the parts, they join into
+  one screen that may exceed `max_lines`, and sentences that start in the last `min_cue_seconds` of a
+  narration join into one cue. A font whose name is unsafe, or none loading, means the configured
+  fallback name with the letter width estimate; a script Pillow cannot shape keeps the font file for
+  drawing and is measured by the estimate.
 
 ## HTTP API
 
