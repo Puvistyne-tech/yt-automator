@@ -7,8 +7,8 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides, Runtime
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides, Runtime
 from tests.fixtures.fake_runtime import FakeClock
 from tests.unit.api.client import Api, error_of, ok, wired
 

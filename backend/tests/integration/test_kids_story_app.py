@@ -10,9 +10,9 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from automator.domain.channels import Privacy
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides, create_app
+from autotube.domain.channels import Privacy
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides, create_app
 from tests.fixtures.fake_runtime import InMemorySecrets
 from tests.fixtures.fake_youtube import FakeYouTube
 from tests.unit.api.client import Api, ok

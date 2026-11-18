@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from automator.infrastructure.storage.disk_usage import tree_bytes
-from automator.infrastructure.storage.run_storage import FileRunStorage
-from automator.shared.errors import UpstreamFailure
+from autotube.infrastructure.storage.disk_usage import tree_bytes
+from autotube.infrastructure.storage.run_storage import FileRunStorage
+from autotube.shared.errors import UpstreamFailure
 
 FINAL = frozenset({"a-video"})
 
@@ -26,7 +26,7 @@ def storage(tmp_path: Path) -> FileRunStorage:
     write(runs / "run-2" / "workspace" / "story.json", 5)
     write(runs / "not an id" / "x", 1)
     write(runs / "stray.txt", 1)
-    write(tmp_path / "automator.db", 50)
+    write(tmp_path / "autotube.db", 50)
     return FileRunStorage(tmp_path)
 
 
@@ -80,7 +80,7 @@ def test_deleting_every_run_id_leaves_the_database_and_non_run_entries(
     for run_id in storage.run_ids():
         storage.delete_run(run_id)
     runs = tmp_path / "runs"
-    kept = [tmp_path / "automator.db", runs / "not an id" / "x", runs / "stray.txt"]
+    kept = [tmp_path / "autotube.db", runs / "not an id" / "x", runs / "stray.txt"]
     assert [path.stat().st_size for path in kept] == [50, 1, 1]
     assert storage.run_ids() == frozenset()
 

@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.capabilities import SubtitleStyle
-from automator.domain.srt import SrtEntry
-from automator.infrastructure.providers.media.ass_document import ass_document, ass_text, ass_time
-from automator.infrastructure.providers.media.ass_subtitles import with_ass_subtitles
-from automator.shared.errors import UpstreamFailure
+from autotube.domain.capabilities import SubtitleStyle
+from autotube.domain.srt import SrtEntry
+from autotube.infrastructure.providers.media.ass_document import ass_document, ass_text, ass_time
+from autotube.infrastructure.providers.media.ass_subtitles import with_ass_subtitles
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.media_fixtures import composition
 
 STYLE = SubtitleStyle(

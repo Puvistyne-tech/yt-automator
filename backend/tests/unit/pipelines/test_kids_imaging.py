@@ -7,13 +7,13 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
-from automator.pipelines.kids_story.art.imaging import (
+from autotube.pipelines.kids_story.art.imaging import (
     JpegBudget,
     covered_copy,
     qualities,
     saved_jpeg,
 )
-from automator.pipelines.kids_story.settings.thumbnail import ThumbnailSettings
+from autotube.pipelines.kids_story.settings.thumbnail import ThumbnailSettings
 
 
 def noisy(path: Path, size: tuple[int, int] = (640, 360)) -> Path:

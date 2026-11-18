@@ -7,16 +7,16 @@ from pathlib import Path
 import httpx
 import numpy as np
 
-from automator.domain.capabilities import Capability, WordTiming
-from automator.domain.providers import ProviderChoice, ProviderConfig
-from automator.infrastructure.providers.catalog import LocalProviderCatalog
-from automator.infrastructure.providers.context import ProviderContext
-from automator.infrastructure.providers.host import HostProbe
-from automator.infrastructure.providers.process import ProcessResult
-from automator.infrastructure.providers.tts.edge_stream import EdgeChunk
-from automator.infrastructure.providers.tts.kokoro_engine import KokoroAudio
-from automator.infrastructure.providers.wav_io import write_wav
-from automator.shared.errors import UpstreamFailure
+from autotube.domain.capabilities import Capability, WordTiming
+from autotube.domain.providers import ProviderChoice, ProviderConfig
+from autotube.infrastructure.providers.catalog import LocalProviderCatalog
+from autotube.infrastructure.providers.context import ProviderContext
+from autotube.infrastructure.providers.host import HostProbe
+from autotube.infrastructure.providers.process import ProcessResult
+from autotube.infrastructure.providers.tts.edge_stream import EdgeChunk
+from autotube.infrastructure.providers.tts.kokoro_engine import KokoroAudio
+from autotube.infrastructure.providers.wav_io import write_wav
+from autotube.shared.errors import UpstreamFailure
 from tests.fixtures.fake_runtime import InMemorySecrets
 
 

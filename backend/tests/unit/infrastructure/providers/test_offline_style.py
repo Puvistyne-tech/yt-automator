@@ -7,16 +7,16 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
-from automator.domain.capabilities import ImageRequest, MotionRequest
-from automator.domain.image_style import ImageStyleHints, Outline, Texture
-from automator.infrastructure.providers.image.offline_image import OfflineImage, OfflineImageOptions
-from automator.infrastructure.providers.image.scene_palette import Palette
-from automator.infrastructure.providers.image.style_palette import (
+from autotube.domain.capabilities import ImageRequest, MotionRequest
+from autotube.domain.image_style import ImageStyleHints, Outline, Texture
+from autotube.infrastructure.providers.image.offline_image import OfflineImage, OfflineImageOptions
+from autotube.infrastructure.providers.image.scene_palette import Palette
+from autotube.infrastructure.providers.image.style_palette import (
     hinted_palette,
     ink_for,
     luminance,
 )
-from automator.infrastructure.providers.motion.pan_zoom_filter import PanZoomTuning, pan_zoom_filter
+from autotube.infrastructure.providers.motion.pan_zoom_filter import PanZoomTuning, pan_zoom_filter
 from tests.unit.infrastructure.providers.fakes import make_context
 
 WARM = ("#F4A259", "#E9C46A", "#E76F51", "#9C4A2F", "#F7D08A")

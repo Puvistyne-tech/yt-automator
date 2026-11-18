@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from automator.domain.channels import Privacy
-from automator.domain.quality import ReviewMode, ReviewPolicy
-from automator.domain.run_enums import LogLevel, ReviewDecision, RunStatus, UploadStatus
-from automator.domain.runs import Run
+from autotube.domain.channels import Privacy
+from autotube.domain.quality import ReviewMode, ReviewPolicy
+from autotube.domain.run_enums import LogLevel, ReviewDecision, RunStatus, UploadStatus
+from autotube.domain.runs import Run
 from tests.fixtures.builders import execute_run, finished_run, started_run, target_input
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import review_run

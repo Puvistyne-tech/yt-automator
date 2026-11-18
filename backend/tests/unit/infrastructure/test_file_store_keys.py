@@ -3,7 +3,7 @@ from __future__ import annotations
 import stat
 from pathlib import Path
 
-from automator.infrastructure.secrets.file_store import EncryptedFileSecretStore, shared_key
+from autotube.infrastructure.secrets.file_store import EncryptedFileSecretStore, shared_key
 
 
 def file_store(folder: Path) -> EncryptedFileSecretStore:

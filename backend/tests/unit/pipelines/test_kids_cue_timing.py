@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import pytest
 
-from automator.domain.capabilities import WordTiming
-from automator.pipelines.kids_story.subtitles.cues import Cue, CueRules, separated
-from automator.pipelines.kids_story.subtitles.timing import (
+from autotube.domain.capabilities import WordTiming
+from autotube.pipelines.kids_story.subtitles.cues import Cue, CueRules, separated
+from autotube.pipelines.kids_story.subtitles.timing import (
     Window,
     durations,
     screenfuls,
     segment_cues,
 )
-from automator.pipelines.kids_story.text.graphemes import grapheme_length
+from autotube.pipelines.kids_story.text.graphemes import grapheme_length
 
 RULES = CueRules(max_chars=20, max_lines=2, max_seconds=2.5, min_seconds=0.5)
 SPLIT = CueRules(max_chars=6, max_lines=2, max_seconds=60, min_seconds=0)

@@ -53,15 +53,15 @@ describe("validateSettings", () => {
 
   it("skips fields the environment locks", () => {
     const input = { ...settingsInput(settings), max_run_log_entries: 0 };
-    expect(validateSettings(input, { max_run_log_entries: "Set by AUTOMATOR_X" })).toEqual({});
+    expect(validateSettings(input, { max_run_log_entries: "Set by AUTOTUBE_X" })).toEqual({});
   });
 });
 
 describe("setting notes", () => {
   it("reports a lock reason and the restart marker from the API", () => {
-    const locked = { ...settings, locked: { log_level: "Set by AUTOMATOR_LOG_LEVEL" } };
+    const locked = { ...settings, locked: { log_level: "Set by AUTOTUBE_LOG_LEVEL" } };
     expect(settingNote(locked, "log_level")).toEqual({
-      locked: "Set by AUTOMATOR_LOG_LEVEL",
+      locked: "Set by AUTOTUBE_LOG_LEVEL",
       restart: true,
     });
     expect(settingNote(locked, "timezone")).toEqual({ locked: undefined, restart: false });

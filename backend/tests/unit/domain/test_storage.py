@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from automator.domain.storage import DiskSpace, FileUsage, storage_report
+from autotube.domain.storage import DiskSpace, FileUsage, storage_report
 from tests.unit.infrastructure.records import run
 
 DISK = DiskSpace(data_dir="/d", data_dir_bytes=1000, free_bytes=5000, disk_bytes=9000)

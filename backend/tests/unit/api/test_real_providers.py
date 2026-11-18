@@ -4,9 +4,9 @@ from collections.abc import Iterator
 
 import pytest
 
-from automator.infrastructure.config import RuntimeConfig
-from automator.infrastructure.providers.registry import ALL_SPECS
-from automator.main import Overrides
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.infrastructure.providers.registry import ALL_SPECS
+from autotube.main import Overrides
 from tests.unit.api.client import Api, error_of, ok, wired
 
 

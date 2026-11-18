@@ -4,17 +4,17 @@ from datetime import timedelta
 
 import pytest
 
-from automator.application.retry_due_runs import (
+from autotube.application.retry_due_runs import (
     RetryDueRuns,
     automatic_retry_reset,
     retry_message,
 )
-from automator.application.retry_run import RetryRun
-from automator.application.run_progress import Prepare
-from automator.domain.retries import RetryPolicy
-from automator.domain.run_enums import RunStatus, StageStatus
-from automator.domain.runs import Run
-from automator.shared.errors import RuleConflict
+from autotube.application.retry_run import RetryRun
+from autotube.application.run_progress import Prepare
+from autotube.domain.retries import RetryPolicy
+from autotube.domain.run_enums import RunStatus, StageStatus
+from autotube.domain.runs import Run
+from autotube.shared.errors import RuleConflict
 from tests.fixtures.builders import execute_run, finished_run
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import retry_run

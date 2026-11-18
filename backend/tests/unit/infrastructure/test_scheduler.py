@@ -3,7 +3,7 @@ from __future__ import annotations
 import threading
 from datetime import datetime
 
-from automator.infrastructure.runtime.scheduler import SchedulerTicker
+from autotube.infrastructure.runtime.scheduler import SchedulerTicker
 from tests.fixtures.fake_runtime import FakeClock
 
 

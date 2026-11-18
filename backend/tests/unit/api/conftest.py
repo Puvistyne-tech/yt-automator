@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides, Runtime, create_app
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides, Runtime, create_app
 from tests.fixtures.fake_diagnostics import FakeInspector
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry, kids_pipeline
 from tests.fixtures.fake_providers import FakeProviderCatalog

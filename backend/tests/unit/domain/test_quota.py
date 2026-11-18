@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from automator.domain.quota import QuotaPolicy, QuotaUsage, quota_shortfalls, upload_cost
+from autotube.domain.quota import QuotaPolicy, QuotaUsage, quota_shortfalls, upload_cost
 
 POLICY = QuotaPolicy()
 

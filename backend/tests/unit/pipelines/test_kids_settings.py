@@ -5,13 +5,13 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.model_base import JsonObject
-from automator.domain.pipeline_descriptors import Aspect
-from automator.domain.ui_schema import ui_schema_problems
-from automator.domain.validation import validated_settings
-from automator.pipelines.kids_story.plugin import KidsStoryPipeline
-from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.settings.subtitles import SubtitleSettings
+from autotube.domain.model_base import JsonObject
+from autotube.domain.pipeline_descriptors import Aspect
+from autotube.domain.ui_schema import ui_schema_problems
+from autotube.domain.validation import validated_settings
+from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
+from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.kids_story.settings.subtitles import SubtitleSettings
 
 SCHEMA = KidsStorySettings.model_json_schema()
 

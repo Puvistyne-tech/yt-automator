@@ -5,7 +5,7 @@ describe("App shell", () => {
   it("shows the product name and every main section in the sidebar", async () => {
     renderApp("/");
 
-    expect(screen.getByText("YouTube Automator")).toBeInTheDocument();
+    expect(screen.getByText("AutoTube")).toBeInTheDocument();
     const nav = within(screen.getByRole("navigation", { name: "Main" }));
     for (const name of ["Dashboard", "Automations", "Runs", "Channels", "Providers", "Settings"]) {
       expect(nav.getByRole("link", { name: new RegExp(name) })).toBeInTheDocument();

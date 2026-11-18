@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.retries import RetryPolicy, next_retry_at
+from autotube.domain.retries import RetryPolicy, next_retry_at
 
 AT = datetime(2026, 1, 5, 10, tzinfo=UTC)
 

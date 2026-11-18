@@ -5,25 +5,25 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from automator.domain.capabilities import Capability
-from automator.domain.channels import channel_token_secret_name
-from automator.domain.connect_state import (
+from autotube.domain.capabilities import Capability
+from autotube.domain.channels import channel_token_secret_name
+from autotube.domain.connect_state import (
     ConnectState,
     ConnectStatePolicy,
     issue_state,
     read_state,
     verify_state,
 )
-from automator.domain.credentials import Credential, credential_secret_name
-from automator.domain.providers import (
+from autotube.domain.credentials import Credential, credential_secret_name
+from autotube.domain.providers import (
     ProviderChoice,
     ProviderConfig,
     provider_config_errors,
 )
-from automator.domain.run_parts import Upload
-from automator.domain.settings import AppSettings, AppSettingsInput, app_settings_errors
-from automator.domain.validation import ROOT_FIELD, field_errors, validated_settings
-from automator.shared.errors import ValidationFailed
+from autotube.domain.run_parts import Upload
+from autotube.domain.settings import AppSettings, AppSettingsInput, app_settings_errors
+from autotube.domain.validation import ROOT_FIELD, field_errors, validated_settings
+from autotube.shared.errors import ValidationFailed
 from tests.fixtures.fake_providers import DESCRIPTORS
 
 NOW = datetime(2026, 1, 5, 10, tzinfo=UTC)

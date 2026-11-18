@@ -5,9 +5,9 @@ from typing import Any
 
 import pytest
 
-from automator.domain.automations import Target
-from automator.domain.channels import Privacy
-from automator.domain.publish_time import (
+from autotube.domain.automations import Target
+from autotube.domain.channels import Privacy
+from autotube.domain.publish_time import (
     DELAY_OR_TIME,
     NEEDS_PUBLIC,
     publish_time_errors,

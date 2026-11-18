@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
-from automator.domain.run_enums import ArtifactKind, RunStatus
-from automator.domain.run_parts import Artifact, Upload
-from automator.domain.runs import Run
+from autotube.domain.run_enums import ArtifactKind, RunStatus
+from autotube.domain.run_parts import Artifact, Upload
+from autotube.domain.runs import Run
 from tests.fixtures.fake_runtime import START
 from tests.unit.infrastructure.records import run
 

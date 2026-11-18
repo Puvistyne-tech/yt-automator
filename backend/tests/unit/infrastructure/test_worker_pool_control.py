@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from automator.infrastructure.runtime.worker_pool import ParallelLimit, WorkerPoolQueue
+from autotube.infrastructure.runtime.worker_pool import ParallelLimit, WorkerPoolQueue
 from tests.unit.infrastructure.worker_pool_support import (
     TIMEOUT,
     BlockingExecutor,

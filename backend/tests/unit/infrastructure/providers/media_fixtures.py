@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from automator.domain.capabilities import SubtitleStyle, TimedClip, VideoComposition
-from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
+from autotube.domain.capabilities import SubtitleStyle, TimedClip, VideoComposition
+from autotube.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 
 OPTIONS = FfmpegOptions()
 

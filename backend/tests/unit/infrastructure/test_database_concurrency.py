@@ -9,11 +9,11 @@ from pathlib import Path
 import pytest
 from sqlalchemy import text
 
-from automator.domain.run_parts import RunLog
-from automator.domain.runs import Run, RunQuery
-from automator.infrastructure.db.database import Database
-from automator.infrastructure.db.run_repository import SqlRunRepository
-from automator.infrastructure.db.settings_repositories import SqlQuotaLedger
+from autotube.domain.run_parts import RunLog
+from autotube.domain.runs import Run, RunQuery
+from autotube.infrastructure.db.database import Database
+from autotube.infrastructure.db.run_repository import SqlRunRepository
+from autotube.infrastructure.db.settings_repositories import SqlQuotaLedger
 from tests.fixtures.fake_runtime import START
 from tests.unit.infrastructure.records import run
 

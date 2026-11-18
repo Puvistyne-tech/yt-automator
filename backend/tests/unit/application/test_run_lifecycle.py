@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from automator.application.get_run import GetRun
-from automator.application.list_runs import ListRuns
-from automator.application.open_run_artifact import OpenRunArtifact
-from automator.domain.run_enums import ReviewDecision, RunStatus, StageStatus
-from automator.domain.runs import RunQuery
-from automator.shared.errors import NotFound, RuleConflict, ValidationFailed
+from autotube.application.get_run import GetRun
+from autotube.application.list_runs import ListRuns
+from autotube.application.open_run_artifact import OpenRunArtifact
+from autotube.domain.run_enums import ReviewDecision, RunStatus, StageStatus
+from autotube.domain.runs import RunQuery
+from autotube.shared.errors import NotFound, RuleConflict, ValidationFailed
 from tests.fixtures.builders import add_automation, execute_run, finished_run, started_run
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import cancel_run, delete_run, failed_at_render, retry_run, review_run

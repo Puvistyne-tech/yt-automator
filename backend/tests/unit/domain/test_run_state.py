@@ -5,9 +5,9 @@ from itertools import product
 
 import pytest
 
-from automator.domain.retries import RetryPolicy
-from automator.domain.run_enums import RunStatus
-from automator.domain.run_state import (
+from autotube.domain.retries import RetryPolicy
+from autotube.domain.run_enums import RunStatus
+from autotube.domain.run_state import (
     ALLOWED_TRANSITIONS,
     accepts_stage_results,
     can_transition,
@@ -15,8 +15,8 @@ from automator.domain.run_state import (
     retry_due,
     transition,
 )
-from automator.domain.runs import Run
-from automator.shared.errors import RuleConflict
+from autotube.domain.runs import Run
+from autotube.shared.errors import RuleConflict
 
 S = RunStatus
 CREATED = datetime(2026, 1, 5, 9, tzinfo=UTC)

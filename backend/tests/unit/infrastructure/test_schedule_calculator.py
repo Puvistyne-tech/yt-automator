@@ -4,9 +4,9 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from automator.domain.schedule_timing import next_run_at
-from automator.domain.schedules import Schedule, ScheduleKind
-from automator.infrastructure.scheduling.schedule_calculator import StandardScheduleCalculator
+from autotube.domain.schedule_timing import next_run_at
+from autotube.domain.schedules import Schedule, ScheduleKind
+from autotube.infrastructure.scheduling.schedule_calculator import StandardScheduleCalculator
 
 AFTER = datetime(2026, 1, 5, 10, 0, tzinfo=UTC)
 

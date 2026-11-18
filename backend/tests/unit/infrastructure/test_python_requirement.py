@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from automator.infrastructure.runtime.python_requirement import minimum_python, required_python
+from autotube.infrastructure.runtime.python_requirement import minimum_python, required_python
 
 
 @pytest.mark.parametrize(
@@ -18,4 +18,4 @@ def test_required_python_comes_from_the_installed_package() -> None:
 
 
 def test_required_python_of_a_missing_package_is_unknown() -> None:
-    assert required_python("no-such-package-automator") is None
+    assert required_python("no-such-package-autotube") is None

@@ -7,9 +7,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from automator.api.spa import mount_web_ui
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides, create_app
+from autotube.api.spa import mount_web_ui
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides, create_app
 from tests.fixtures.fake_runtime import InMemorySecrets
 from tests.unit.api.client import Api, error_of
 

@@ -4,8 +4,8 @@ from datetime import timedelta
 
 import pytest
 
-from automator.domain.retention import cleanup_due, working_files_removed_message
-from automator.domain.settings import AppSettingsInput
+from autotube.domain.retention import cleanup_due, working_files_removed_message
+from autotube.domain.settings import AppSettingsInput
 from tests.fixtures.fake_runtime import START
 
 

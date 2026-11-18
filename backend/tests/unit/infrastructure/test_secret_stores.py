@@ -10,14 +10,14 @@ from keyring.backend import KeyringBackend
 from keyring.backends import fail
 from keyring.errors import PasswordDeleteError
 
-from automator.domain.ports import SecretStore
-from automator.infrastructure.config import SecretBackend
-from automator.infrastructure.secrets.file_store import EncryptedFileSecretStore
-from automator.infrastructure.secrets.keyring_store import KeyringSecretStore
-from automator.infrastructure.secrets.selection import build_secret_store
-from automator.infrastructure.secrets.unreadable import SecretsUnreadable
+from autotube.domain.ports import SecretStore
+from autotube.infrastructure.config import SecretBackend
+from autotube.infrastructure.secrets.file_store import EncryptedFileSecretStore
+from autotube.infrastructure.secrets.keyring_store import KeyringSecretStore
+from autotube.infrastructure.secrets.selection import build_secret_store
+from autotube.infrastructure.secrets.unreadable import SecretsUnreadable
 
-SERVICE = "automator-test"
+SERVICE = "autotube-test"
 
 
 class MemoryKeyring(KeyringBackend):

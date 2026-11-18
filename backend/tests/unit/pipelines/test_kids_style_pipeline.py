@@ -4,14 +4,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-from automator.domain.image_style import Texture
-from automator.pipelines.kids_story.art.cards import lettering_for
-from automator.pipelines.kids_story.art.prompts import judge_request, motion_prompt
-from automator.pipelines.kids_story.resources import resource_text
-from automator.pipelines.kids_story.settings.base import Placement
-from automator.pipelines.kids_story.stages.motion import held_rate
-from automator.pipelines.kids_story.story.model import StoryScene
-from automator.pipelines.kids_story.styles.library import style_named
+from autotube.domain.image_style import Texture
+from autotube.pipelines.kids_story.art.cards import lettering_for
+from autotube.pipelines.kids_story.art.prompts import judge_request, motion_prompt
+from autotube.pipelines.kids_story.resources import resource_text
+from autotube.pipelines.kids_story.settings.base import Placement
+from autotube.pipelines.kids_story.stages.motion import held_rate
+from autotube.pipelines.kids_story.story.model import StoryScene
+from autotube.pipelines.kids_story.styles.library import style_named
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, run_chain, smart_writer
 from tests.fixtures.kids_fakes import FakeProviders
 

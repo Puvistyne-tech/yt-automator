@@ -5,15 +5,15 @@ from typing import Any
 
 import pytest
 
-from automator.domain.artifact_selection import best_artifact, caption_tracks, video_metadata
-from automator.domain.automations import Target
-from automator.domain.channels import Channel, ChannelDefaults, Privacy
-from automator.domain.model_base import JsonObject
-from automator.domain.publish_plan import plan_uploads, quota_needed
-from automator.domain.quota import QuotaPolicy
-from automator.domain.run_enums import ArtifactKind, UploadStatus
-from automator.domain.run_parts import Artifact
-from automator.domain.runs import Run
+from autotube.domain.artifact_selection import best_artifact, caption_tracks, video_metadata
+from autotube.domain.automations import Target
+from autotube.domain.channels import Channel, ChannelDefaults, Privacy
+from autotube.domain.model_base import JsonObject
+from autotube.domain.publish_plan import plan_uploads, quota_needed
+from autotube.domain.quota import QuotaPolicy
+from autotube.domain.run_enums import ArtifactKind, UploadStatus
+from autotube.domain.run_parts import Artifact
+from autotube.domain.runs import Run
 from tests.fixtures.fake_pipeline import FakePipeline, kids_pipeline
 
 NOW = datetime(2026, 1, 5, 10, tzinfo=UTC)

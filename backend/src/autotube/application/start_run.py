@@ -1,0 +1,60 @@
+from __future__ import annotations
+
+from copy import deepcopy
+from dataclasses import dataclass
+
+from autotube.application.lookups import require_automation
+from autotube.application.run_recorder import RunRecorder
+from autotube.domain.automations import Automation
+from autotube.domain.pipeline import pipeline_not_installed
+from autotube.domain.ports import (
+    AutomationRepository,
+    Clock,
+    IdGenerator,
+    PipelineRegistry,
+    RunQueue,
+)
+from autotube.domain.run_enums import RunTrigger
+from autotube.domain.run_parts import StageRun
+from autotube.domain.runs import Run
+from autotube.shared.errors import RuleConflict
+
+
+@dataclass(frozen=True)
+class StartRun:
+    automations: AutomationRepository
+    pipelines: PipelineRegistry
+    recorder: RunRecorder
+    queue: RunQueue
+    ids: IdGenerator
+    clock: Clock
+
+    def execute(self, automation_id: str, trigger: RunTrigger = RunTrigger.MANUAL) -> Run:
+        automation = require_automation(self.automations, automation_id)
+        run = self.recorder.created(self.new_run(automation, trigger))
+        self.queue.enqueue(run.id)
+        return run
+
+    def new_run(self, automation: Automation, trigger: RunTrigger) -> Run:
+        pipeline = self.pipelines.get(automation.pipeline_type)
+        if pipeline is None:
+            raise RuleConflict(
+                "pipeline_unavailable", pipeline_not_installed(automation.pipeline_type)
+            )
+        stages = tuple(
+            StageRun(stage_id=stage.descriptor.id, title=stage.descriptor.title)
+            for stage in pipeline.stages()
+        )
+        return Run(
+            id=self.ids.new(),
+            automation_id=automation.id,
+            automation_name=automation.name,
+            pipeline_type=automation.pipeline_type,
+            trigger=trigger,
+            languages=automation.languages,
+            settings_snapshot=deepcopy(automation.settings),
+            review_policy=automation.review_policy,
+            retry_policy=automation.retry_policy,
+            stages=stages,
+            created_at=self.clock.now(),
+        )

@@ -14,13 +14,13 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError  # type: ignore[import-untyped]
 from oauthlib.oauth2.rfc6749.errors import InvalidClientError, InvalidGrantError
 
-from automator.domain.channels import Privacy
-from automator.domain.youtube import VideoUpload
-from automator.infrastructure.youtube.errors import google_errors
-from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
-from automator.infrastructure.youtube.oauth import GoogleOAuth
-from automator.infrastructure.youtube.settings import YouTubeSettings
-from automator.shared.errors import UpstreamFailure
+from autotube.domain.channels import Privacy
+from autotube.domain.youtube import VideoUpload
+from autotube.infrastructure.youtube.errors import google_errors
+from autotube.infrastructure.youtube.gateway import GoogleYouTubeGateway
+from autotube.infrastructure.youtube.oauth import GoogleOAuth
+from autotube.infrastructure.youtube.settings import YouTubeSettings
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.youtube_fakes import CLIENT, FakeService, auth, media
 
 REDIRECT = "http://127.0.0.1:9000/api/oauth/callback"

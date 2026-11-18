@@ -6,12 +6,12 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from automator.domain.pipeline import Stage, StageContext
-from automator.domain.pipeline_descriptors import PipelineDescriptor
-from automator.domain.quality import ScoreItem
-from automator.domain.run_parts import Artifact, StageRun, Upload
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides
+from autotube.domain.pipeline import Stage, StageContext
+from autotube.domain.pipeline_descriptors import PipelineDescriptor
+from autotube.domain.quality import ScoreItem
+from autotube.domain.run_parts import Artifact, StageRun, Upload
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry
 from tests.fixtures.fake_runtime import RecordingEvents
 from tests.unit.api.client import Api, ok, streamed_events, wired

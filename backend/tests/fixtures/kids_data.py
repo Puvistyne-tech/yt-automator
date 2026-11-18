@@ -4,15 +4,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from automator.domain.capabilities import TextRequest
-from automator.domain.pipeline import Stage, StageContext, StageOutcome
-from automator.domain.run_enums import ArtifactKind
-from automator.domain.run_parts import Artifact
-from automator.pipelines.kids_story.plugin import KidsStoryPipeline
-from automator.pipelines.kids_story.resources import resource_json
-from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.story.model import Story
-from automator.pipelines.kids_story.timeline.voices import VoiceLine
+from autotube.domain.capabilities import TextRequest
+from autotube.domain.pipeline import Stage, StageContext, StageOutcome
+from autotube.domain.run_enums import ArtifactKind
+from autotube.domain.run_parts import Artifact
+from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
+from autotube.pipelines.kids_story.resources import resource_json
+from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.kids_story.story.model import Story
+from autotube.pipelines.kids_story.timeline.voices import VoiceLine
 from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, LogBook, as_json
 
 REFRAIN_EN = "Be kind, be brave, be you!"

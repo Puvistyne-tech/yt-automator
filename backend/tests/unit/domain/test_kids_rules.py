@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from automator.domain.channels import ChannelDefaults, Privacy
-from automator.domain.kids_rules import (
+from autotube.domain.channels import ChannelDefaults, Privacy
+from autotube.domain.kids_rules import (
     effective_made_for_kids,
     effective_privacy,
     enforce_kids_content,

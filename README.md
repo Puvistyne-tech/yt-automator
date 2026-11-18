@@ -1,4 +1,4 @@
-# YouTube Automator
+# AutoTube
 
 A local web app that connects your YouTube channels and runs configurable automations that create
 and publish videos. Each automation combines a pipeline type, its settings, target channels,
@@ -44,7 +44,7 @@ again afterwards.
 The script adds `~/.local/bin` (where `just`, `mflux-generate` and `depthflow` live) to your shell
 profile with `uv tool update-shell`. Open a new terminal afterwards so the commands are on PATH.
 After the backend is installed, the script reads the app's own defaults (data directory, host,
-port, Ollama model and URL, music folders) from `python -m automator.doctor --print-defaults`.
+port, Ollama model and URL, music folders) from `python -m autotube.doctor --print-defaults`.
 
 Start the app:
 
@@ -53,8 +53,8 @@ Start the app:
 
 Open <http://127.0.0.1:8000>. Then add your free API keys (Groq from console.groq.com, Gemini from
 aistudio.google.com) under Providers, Secrets. The host, port and data directory come from the
-environment: `AUTOMATOR_HOST`, `AUTOMATOR_PORT`, `AUTOMATOR_DATA_DIR`,
-`AUTOMATOR_REDIRECT_BASE_URL`. The service bakes in the values present when you install it.
+environment: `AUTOTUBE_HOST`, `AUTOTUBE_PORT`, `AUTOTUBE_DATA_DIR`,
+`AUTOTUBE_REDIRECT_BASE_URL`. The service bakes in the values present when you install it.
 
 ## Check the installation
 
@@ -81,11 +81,11 @@ Each credential in the app is one Google Cloud project with its own daily quota.
    the channel then shows as expired and you reconnect it in one click.
 5. Clients: create an OAuth client of type **Web application**. Under Authorised redirect URIs add
    exactly `http://127.0.0.1:8000/api/oauth/callback`. The redirect URI follows the port: with
-   `AUTOMATOR_PORT=9000` register `http://127.0.0.1:9000/api/oauth/callback` instead. It is
+   `AUTOTUBE_PORT=9000` register `http://127.0.0.1:9000/api/oauth/callback` instead. It is
    `http://<host>:<port>` (127.0.0.1 when the host is `0.0.0.0` or `::`) followed by
-   `/api/oauth/callback`, unless `AUTOMATOR_REDIRECT_BASE_URL` sets the base explicitly. If you
+   `/api/oauth/callback`, unless `AUTOTUBE_REDIRECT_BASE_URL` sets the base explicitly. If you
    change the port later, update the URI in Google Cloud too. To see the base in use, run
-   `cd backend && uv run python -m automator.doctor --print-defaults` and read `REDIRECT_BASE_URL`.
+   `cd backend && uv run python -m autotube.doctor --print-defaults` and read `REDIRECT_BASE_URL`.
 6. Copy the client id and client secret.
 
 Quota: each project gets 10,000 units per day, reset at midnight Pacific time. One upload costs
@@ -122,11 +122,11 @@ refuses to publish when the remaining quota is too low.
 
 ## Where files live
 
-Everything is under the data directory, `~/.yt-automator` by default (`AUTOMATOR_DATA_DIR`):
+Everything is under the data directory, `~/.autotube` by default (`AUTOTUBE_DATA_DIR`):
 
 | Path | Contents |
 | --- | --- |
-| `automator.db` | SQLite database: credentials, channels, automations, runs |
+| `autotube.db` | SQLite database: credentials, channels, automations, runs |
 | `runs/<run id>/` | every artifact of a run: video, subtitles, thumbnail, metadata |
 | `assets/music/` | your CC0 tracks for the music library provider |
 | `tools/ace-step/` | the ACE-Step virtual environment |

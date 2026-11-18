@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.run_enums import ArtifactKind
-from automator.domain.run_parts import Artifact
-from automator.pipelines.kids_story.artifacts import MissingArtifactError, Role, latest, required
+from autotube.domain.run_enums import ArtifactKind
+from autotube.domain.run_parts import Artifact
+from autotube.pipelines.kids_story.artifacts import MissingArtifactError, Role, latest, required
 from tests.fixtures.kids_data import STAGES, StageRig, meta_of, run_chain, stage_named
 from tests.fixtures.kids_fakes import FakeProviders
 

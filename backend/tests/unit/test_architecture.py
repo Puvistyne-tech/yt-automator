@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-PACKAGE = "automator"
+PACKAGE = "autotube"
 PACKAGE_ROOT = Path(__file__).resolve().parents[2] / "src" / PACKAGE
 
 ALLOWED_IMPORTS: dict[str, frozenset[str]] = {

@@ -5,8 +5,8 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from automator.domain.cron import cron_error, next_cron_time, parse_cron
-from automator.domain.cron_fields import CronSyntaxError
+from autotube.domain.cron import cron_error, next_cron_time, parse_cron
+from autotube.domain.cron_fields import CronSyntaxError
 
 UTC_ZONE = ZoneInfo("UTC")
 

@@ -6,9 +6,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from automator.domain.capabilities import TextRequest
-from automator.infrastructure.providers.llm.json_sample import sample_document
-from automator.infrastructure.providers.llm.offline_text import OfflineText, OfflineTextOptions
+from autotube.domain.capabilities import TextRequest
+from autotube.infrastructure.providers.llm.json_sample import sample_document
+from autotube.infrastructure.providers.llm.offline_text import OfflineText, OfflineTextOptions
 from tests.unit.infrastructure.providers.fakes import make_context
 
 

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from automator.domain.run_enums import ArtifactKind, RunStatus
-from automator.domain.runs import Run
-from automator.domain.settings import AppSettingsInput
+from autotube.domain.run_enums import ArtifactKind, RunStatus
+from autotube.domain.runs import Run
+from autotube.domain.settings import AppSettingsInput
 from tests.fixtures.fake_runtime import START
 from tests.fixtures.fake_storage import artifact_path, workspace_path
 from tests.fixtures.harness import Harness

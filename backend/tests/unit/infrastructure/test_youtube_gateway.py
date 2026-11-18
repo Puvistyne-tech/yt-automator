@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.channels import Privacy
-from automator.domain.youtube import Playlist, VideoUpload
-from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
-from automator.shared.errors import UpstreamFailure
+from autotube.domain.channels import Privacy
+from autotube.domain.youtube import Playlist, VideoUpload
+from autotube.infrastructure.youtube.gateway import GoogleYouTubeGateway
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.youtube_fakes import EXPIRED_TOKEN, FakeService, auth
 
 

@@ -4,15 +4,15 @@ from dataclasses import replace
 
 import pytest
 
-from automator.domain.quality import ReviewMode, ReviewPolicy
-from automator.domain.run_enums import (
+from autotube.domain.quality import ReviewMode, ReviewPolicy
+from autotube.domain.run_enums import (
     ArtifactKind,
     RunEventKind,
     RunStatus,
     RunTrigger,
     StageStatus,
 )
-from automator.shared.errors import NotFound, RuleConflict
+from autotube.shared.errors import NotFound, RuleConflict
 from tests.fixtures.builders import add_automation, execute_run, finished_run, started_run
 from tests.fixtures.fake_pipeline import FakePipelineRegistry
 from tests.fixtures.harness import Harness

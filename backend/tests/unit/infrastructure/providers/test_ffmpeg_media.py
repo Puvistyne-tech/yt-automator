@@ -6,11 +6,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.capabilities import SubtitleStyle, TimedClip, VideoComposition
-from automator.infrastructure.providers.media.ffmpeg_media import FfmpegMedia
-from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
-from automator.infrastructure.providers.process import ProcessResult
-from automator.shared.errors import UpstreamFailure
+from autotube.domain.capabilities import SubtitleStyle, TimedClip, VideoComposition
+from autotube.infrastructure.providers.media.ffmpeg_media import FfmpegMedia
+from autotube.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
+from autotube.infrastructure.providers.process import ProcessResult
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.fakes import RecordingRunner, host, make_context
 
 MEASURED = """[Parsed_loudnorm_0 @ 0x1]

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from automator.domain.publish_outcome import NO_UPLOAD_SUCCEEDED, publish_outcome
-from automator.domain.run_enums import RunStatus, UploadStatus
-from automator.domain.run_parts import Upload
+from autotube.domain.publish_outcome import NO_UPLOAD_SUCCEEDED, publish_outcome
+from autotube.domain.run_enums import RunStatus, UploadStatus
+from autotube.domain.run_parts import Upload
 
 U = UploadStatus
 

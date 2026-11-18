@@ -4,9 +4,9 @@ from datetime import timedelta
 
 import pytest
 
-from automator.domain.automations import TargetFields
-from automator.domain.channels import Privacy
-from automator.domain.retention import (
+from autotube.domain.automations import TargetFields
+from autotube.domain.channels import Privacy
+from autotube.domain.retention import (
     CleanupAction,
     CleanupItem,
     RetentionPolicy,
@@ -18,8 +18,8 @@ from automator.domain.retention import (
     retention_policy,
     without_intermediate,
 )
-from automator.domain.run_enums import ArtifactKind, RunStatus, UploadStatus
-from automator.domain.settings import AppSettingsInput
+from autotube.domain.run_enums import ArtifactKind, RunStatus, UploadStatus
+from autotube.domain.settings import AppSettingsInput
 from tests.fixtures.retention_data import artifact, days_later, finished, upload
 from tests.unit.infrastructure.records import run
 

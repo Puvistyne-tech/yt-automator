@@ -16,7 +16,7 @@ describe("Settings groups", () => {
     expect(level.closest(".field")).toHaveTextContent("Applies after restart");
     const caption = screen.getByLabelText(/^Caption track name/);
     expect(caption).toBeDisabled();
-    expect(caption.closest(".field")).toHaveTextContent("AUTOMATOR_YOUTUBE_CAPTION_TRACK_NAME");
+    expect(caption.closest(".field")).toHaveTextContent("AUTOTUBE_YOUTUBE_CAPTION_TRACK_NAME");
     expect(screen.getByLabelText(/^Keep working files/).closest(".field")).toHaveTextContent(
       "videos, thumbnails, captions and metadata stay",
     );

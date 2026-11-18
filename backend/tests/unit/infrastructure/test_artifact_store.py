@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.pipeline import NewArtifact
-from automator.domain.run_enums import ArtifactKind
-from automator.domain.run_parts import Artifact
-from automator.infrastructure.storage.artifact_store import FileArtifactStore
-from automator.shared.errors import NotFound, ValidationFailed
+from autotube.domain.pipeline import NewArtifact
+from autotube.domain.run_enums import ArtifactKind
+from autotube.domain.run_parts import Artifact
+from autotube.infrastructure.storage.artifact_store import FileArtifactStore
+from autotube.shared.errors import NotFound, ValidationFailed
 
 
 @pytest.fixture

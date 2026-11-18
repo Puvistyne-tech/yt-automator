@@ -5,10 +5,10 @@ from pathlib import Path
 import httpx
 import pytest
 
-from automator.domain.capabilities import TextRequest
-from automator.domain.model_base import JsonObject
-from automator.infrastructure.providers.llm.groq import GroqOptions, GroqText
-from automator.shared.errors import UpstreamFailure
+from autotube.domain.capabilities import TextRequest
+from autotube.domain.model_base import JsonObject
+from autotube.infrastructure.providers.llm.groq import GroqOptions, GroqText
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.fakes import make_context
 from tests.unit.infrastructure.providers.http_fakes import Recorder, chat_reply, groq_context
 

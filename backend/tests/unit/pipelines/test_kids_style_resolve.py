@@ -5,16 +5,16 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.capabilities import CameraMove
-from automator.domain.image_style import Outline, Texture
-from automator.pipelines.kids_story.settings.legacy_look import (
+from autotube.domain.capabilities import CameraMove
+from autotube.domain.image_style import Outline, Texture
+from autotube.pipelines.kids_story.settings.legacy_look import (
     LEGACY_ART_STYLE,
     LEGACY_NEGATIVE_PROMPT,
 )
-from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.styles.colour_names import colour_name, colour_words
-from automator.pipelines.kids_story.styles.library import style_named
-from automator.pipelines.kids_story.styles.modifiers import (
+from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.kids_story.styles.colour_names import colour_name, colour_words
+from autotube.pipelines.kids_story.styles.library import style_named
+from autotube.pipelines.kids_story.styles.modifiers import (
     BACKGROUND_PROMPTS,
     DETAIL_PROMPTS,
     LIGHTING_PROMPTS,
@@ -23,8 +23,8 @@ from automator.pipelines.kids_story.styles.modifiers import (
     STYLE_DEFAULT,
     ColourMood,
 )
-from automator.pipelines.kids_story.styles.palette_mood import mood_palette, to_hsv
-from automator.pipelines.kids_story.styles.resolve import (
+from autotube.pipelines.kids_story.styles.palette_mood import mood_palette, to_hsv
+from autotube.pipelines.kids_story.styles.resolve import (
     ResolvedStyle,
     joined_terms,
     resolve_style,

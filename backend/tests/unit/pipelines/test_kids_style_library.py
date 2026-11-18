@@ -6,11 +6,11 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.ui_schema import CHOICE_GROUP_KEY, CHOICE_SWATCHES_KEY
-from automator.pipelines.kids_story.plugin import KidsStoryPipeline
-from automator.pipelines.kids_story.resources import resource_json
-from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.styles.library import (
+from autotube.domain.ui_schema import CHOICE_GROUP_KEY, CHOICE_SWATCHES_KEY
+from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
+from autotube.pipelines.kids_story.resources import resource_json
+from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.kids_story.styles.library import (
     FAMILY_TITLES,
     StyleFamily,
     parsed_library,

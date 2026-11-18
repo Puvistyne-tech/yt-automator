@@ -3,10 +3,10 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from automator.infrastructure.providers.media.composition_audio import audio_graph
-from automator.infrastructure.providers.media.composition_inputs import plan_inputs
-from automator.infrastructure.providers.media.composition_video import video_graph
-from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
+from autotube.infrastructure.providers.media.composition_audio import audio_graph
+from autotube.infrastructure.providers.media.composition_inputs import plan_inputs
+from autotube.infrastructure.providers.media.composition_video import video_graph
+from autotube.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 from tests.unit.infrastructure.providers.media_fixtures import OPTIONS, clip, composition
 
 MIX = ":duration=longest:normalize=0[mix]"

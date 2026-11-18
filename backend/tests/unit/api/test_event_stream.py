@@ -4,11 +4,11 @@ import asyncio
 import inspect
 from collections.abc import AsyncGenerator, AsyncIterator
 
-from automator.api.event_stream import CONNECTED_LINE, HEARTBEAT_LINE, event_stream
-from automator.domain.run_enums import RunEventKind
-from automator.domain.runs import RunEvent
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides
+from autotube.api.event_stream import CONNECTED_LINE, HEARTBEAT_LINE, event_stream
+from autotube.domain.run_enums import RunEventKind
+from autotube.domain.runs import RunEvent
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides
 from tests.fixtures.fake_runtime import START, RecordingEvents
 from tests.unit.api.client import data_payloads, wired
 

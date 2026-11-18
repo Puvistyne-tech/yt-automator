@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from automator.infrastructure.config import RuntimeConfig
-from automator.infrastructure.db.database import Database
-from automator.infrastructure.runtime.worker_pool import WorkerPoolQueue
-from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
-from automator.infrastructure.youtube.settings import YouTubeSettings
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.infrastructure.db.database import Database
+from autotube.infrastructure.runtime.worker_pool import WorkerPoolQueue
+from autotube.infrastructure.youtube.gateway import GoogleYouTubeGateway
+from autotube.infrastructure.youtube.settings import YouTubeSettings
 from tests.unit.infrastructure.worker_pool_support import TIMEOUT, BlockingExecutor
 from tests.unit.infrastructure.youtube_fakes import FakeService, media
 

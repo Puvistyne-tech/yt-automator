@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-from automator.domain.youtube import ChannelAuth, OAuthClient
+from autotube.domain.youtube import ChannelAuth, OAuthClient
 
 CLIENT = OAuthClient(client_id="cid", client_secret="csecret")
 VALID_TOKEN = {"token": "at", "refresh_token": "rt", "expiry": "2999-01-01T00:00:00Z"}

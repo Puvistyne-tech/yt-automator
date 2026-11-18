@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from automator.domain.channels import Privacy
-from automator.domain.youtube import VideoUpload
-from automator.infrastructure.youtube.request_bodies import video_body
+from autotube.domain.channels import Privacy
+from autotube.domain.youtube import VideoUpload
+from autotube.infrastructure.youtube.request_bodies import video_body
 
 
 def test_the_video_language_is_both_the_metadata_and_the_audio_language() -> None:

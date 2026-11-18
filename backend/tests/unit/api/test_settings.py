@@ -5,9 +5,9 @@ from typing import Any
 
 import pytest
 
-from automator.domain.settings import ServerLogLevel
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides
+from autotube.domain.settings import ServerLogLevel
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides
 from tests.unit.api.client import Api, error_of, ok, wired
 
 DEFAULT_SETTINGS: dict[str, Any] = {
@@ -69,7 +69,7 @@ def test_environment_values_win_and_lock_their_fields(
         current = ok(client.get("/api/settings"))
         assert (current["log_level"], current["max_run_log_entries"]) == ("debug", 7)
         assert set(current["locked"]) == {"log_level", "max_run_log_entries"}
-        assert "AUTOMATOR_LOG_LEVEL" in current["locked"]["log_level"]
+        assert "AUTOTUBE_LOG_LEVEL" in current["locked"]["log_level"]
         saved = ok(client.put("/api/settings", json=current | {"timezone": "Asia/Kolkata"}))
         assert saved["timezone"] == "Asia/Kolkata" and saved["max_run_log_entries"] == 7
         refused = error_of(client.put("/api/settings", json=current | {"log_level": "error"}), 400)
@@ -113,7 +113,7 @@ def test_the_doctor_follows_the_saved_free_space_threshold(api: Api) -> None:
 def test_the_server_log_level_is_applied_at_the_next_start(
     config: RuntimeConfig, overrides: Overrides
 ) -> None:
-    logger = logging.getLogger("automator")
+    logger = logging.getLogger("autotube")
     try:
         with wired(config, overrides) as client:
             ok(client.put("/api/settings", json={"log_level": "warning"}))

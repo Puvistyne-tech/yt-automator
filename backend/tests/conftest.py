@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from automator.domain.automations import Automation
-from automator.domain.channels import Channel
-from automator.domain.credentials import Credential
+from autotube.domain.automations import Automation
+from autotube.domain.channels import Channel
+from autotube.domain.credentials import Credential
 from tests.fixtures.builders import add_automation, add_channel, add_credential
 from tests.fixtures.harness import Harness
 

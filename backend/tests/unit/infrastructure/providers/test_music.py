@@ -7,16 +7,16 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from automator.domain.capabilities import MusicRequest
-from automator.infrastructure.providers.music.ace_step import AceStepMusic, AceStepOptions
-from automator.infrastructure.providers.music.audio_fit import fade_filter
-from automator.infrastructure.providers.music.library_music import (
+from autotube.domain.capabilities import MusicRequest
+from autotube.infrastructure.providers.music.ace_step import AceStepMusic, AceStepOptions
+from autotube.infrastructure.providers.music.audio_fit import fade_filter
+from autotube.infrastructure.providers.music.library_music import (
     LibraryMusic,
     LibraryMusicOptions,
     pick_track,
 )
-from automator.infrastructure.providers.music.synth_music import SynthMusic, SynthMusicOptions
-from automator.shared.errors import UpstreamFailure
+from autotube.infrastructure.providers.music.synth_music import SynthMusic, SynthMusicOptions
+from autotube.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.fakes import FFMPEG_ONLY, RecordingRunner, make_context
 
 

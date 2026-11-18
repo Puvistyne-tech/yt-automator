@@ -3,11 +3,11 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from automator.application.run_due_automations import marked_skip, skip_message
-from automator.domain.retries import RetryPolicy
-from automator.domain.run_enums import LogLevel, RunStatus
-from automator.domain.runs import Run
-from automator.domain.schedules import Schedule, ScheduleKind
+from autotube.application.run_due_automations import marked_skip, skip_message
+from autotube.domain.retries import RetryPolicy
+from autotube.domain.run_enums import LogLevel, RunStatus
+from autotube.domain.runs import Run
+from autotube.domain.schedules import Schedule, ScheduleKind
 from tests.fixtures.builders import add_automation, execute_run, started_run
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import run_due

@@ -3,10 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from automator.domain.capabilities import Capability
-from automator.domain.providers import ProviderChoice, provider_config_errors
-from automator.infrastructure.providers.catalog import build_provider_catalog
-from automator.infrastructure.providers.registry import ALL_SPECS, default_order
+from autotube.domain.capabilities import Capability
+from autotube.domain.providers import ProviderChoice, provider_config_errors
+from autotube.infrastructure.providers.catalog import build_provider_catalog
+from autotube.infrastructure.providers.registry import ALL_SPECS, default_order
 from tests.fixtures.fake_runtime import InMemorySecrets
 from tests.unit.infrastructure.providers.fakes import chain_config, local_catalog
 

@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from automator.domain.run_enums import ArtifactKind
-from automator.pipelines.kids_story.stages.package import PackageStage
-from automator.pipelines.kids_story.stages.run_settings import kids_settings
-from automator.pipelines.kids_story.stages.story import StoryStage
+from autotube.domain.run_enums import ArtifactKind
+from autotube.pipelines.kids_story.stages.package import PackageStage
+from autotube.pipelines.kids_story.stages.run_settings import kids_settings
+from autotube.pipelines.kids_story.stages.story import StoryStage
 from tests.fixtures.kids_data import (
     BOTH,
     StageRig,

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from automator.domain.run_parts import Artifact
+from autotube.domain.run_parts import Artifact
 
 
 def single_colour(image: Image.Image) -> bool:

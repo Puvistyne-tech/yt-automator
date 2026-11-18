@@ -12,13 +12,13 @@ dev:
     just dev-api & just dev-web & wait
 
 dev-api:
-    cd backend && DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m automator.main
+    cd backend && DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m autotube.main
 
 dev-web:
     cd web && pnpm dev
 
 doctor:
-    cd backend && DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m automator.doctor
+    cd backend && DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m autotube.doctor
 
 fmt:
     cd backend && uv run ruff format . && uv run ruff check --fix .

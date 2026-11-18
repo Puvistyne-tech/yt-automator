@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
-from automator.shared.clock import (
+from autotube.shared.clock import (
     find_zone,
     is_valid_timezone,
     local_date,
@@ -14,10 +14,10 @@ from automator.shared.clock import (
     to_utc,
     utc_now,
 )
-from automator.shared.errors import NotFound, RuleConflict, UpstreamFailure, ValidationFailed
-from automator.shared.hashing import hmac_sha256_hex, same_digest, sha256_hex, stable_hash
-from automator.shared.ids import is_opaque_id, random_id
-from automator.shared.signed_tokens import read_unverified, sign_payload, verify_signature
+from autotube.shared.errors import NotFound, RuleConflict, UpstreamFailure, ValidationFailed
+from autotube.shared.hashing import hmac_sha256_hex, same_digest, sha256_hex, stable_hash
+from autotube.shared.ids import is_opaque_id, random_id
+from autotube.shared.signed_tokens import read_unverified, sign_payload, verify_signature
 
 
 def test_error_hierarchy_carries_code_message_and_fields() -> None:

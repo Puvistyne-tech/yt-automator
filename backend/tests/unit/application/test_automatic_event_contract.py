@@ -7,13 +7,13 @@ from typing import Any
 
 import pytest
 
-from automator.application.auto_publish import STARTING, stopped_message
-from automator.application.retry_due_runs import retry_message
-from automator.application.run_due_automations import skip_message
-from automator.domain.quality import ReviewPolicy, auto_rejection
-from automator.domain.retries import RetryPolicy
-from automator.domain.run_enums import RunStatus
-from automator.domain.schedules import Schedule, ScheduleKind
+from autotube.application.auto_publish import STARTING, stopped_message
+from autotube.application.retry_due_runs import retry_message
+from autotube.application.run_due_automations import skip_message
+from autotube.domain.quality import ReviewPolicy, auto_rejection
+from autotube.domain.retries import RetryPolicy
+from autotube.domain.run_enums import RunStatus
+from autotube.domain.schedules import Schedule, ScheduleKind
 from tests.fixtures.builders import add_automation, finished_run, started_run
 from tests.fixtures.harness import Harness
 

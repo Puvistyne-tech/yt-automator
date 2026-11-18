@@ -8,10 +8,10 @@ from typing import Any
 
 import pytest
 
-from automator.domain.pipeline import StageContext
-from automator.domain.pipeline_descriptors import StageDescriptor
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides
+from autotube.domain.pipeline import StageContext
+from autotube.domain.pipeline_descriptors import StageDescriptor
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides
 from tests.fixtures.fake_pipeline import (
     FakePipeline,
     FakePipelineRegistry,

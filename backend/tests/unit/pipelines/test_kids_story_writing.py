@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.kids_story.story.authoring import StoryAuthor, WriterUnavailableError
-from automator.pipelines.kids_story.story.model import Story, StoryDraft
-from automator.pipelines.kids_story.story.parsing import StoryFormatError, parse_model
-from automator.pipelines.kids_story.story.prompts import story_request, translation_request
-from automator.pipelines.kids_story.story.shaping import shaped
+from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.kids_story.story.authoring import StoryAuthor, WriterUnavailableError
+from autotube.pipelines.kids_story.story.model import Story, StoryDraft
+from autotube.pipelines.kids_story.story.parsing import StoryFormatError, parse_model
+from autotube.pipelines.kids_story.story.prompts import story_request, translation_request
+from autotube.pipelines.kids_story.story.shaping import shaped
 from tests.fixtures.kids_data import draft_dict, quick_settings, story, tamil_text
 from tests.fixtures.kids_fakes import LogBook, as_json, failing_writer, scripted_writer
 

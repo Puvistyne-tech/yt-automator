@@ -5,19 +5,19 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from automator.application.list_channels import ListChannels
-from automator.application.update_channel_defaults import UpdateChannelDefaults
-from automator.domain.automations import Automation
-from automator.domain.channels import (
+from autotube.application.list_channels import ListChannels
+from autotube.application.update_channel_defaults import UpdateChannelDefaults
+from autotube.domain.automations import Automation
+from autotube.domain.channels import (
     Channel,
     ChannelDefaults,
     ChannelStatus,
     Privacy,
     channel_token_secret_name,
 )
-from automator.domain.credentials import Credential, credential_secret_name
-from automator.domain.youtube import ChannelProfile
-from automator.shared.errors import NotFound, RuleConflict, ValidationFailed
+from autotube.domain.credentials import Credential, credential_secret_name
+from autotube.domain.youtube import ChannelProfile
+from autotube.shared.errors import NotFound, RuleConflict, ValidationFailed
 from tests.fixtures.builders import add_channel, add_credential
 from tests.fixtures.harness import Harness
 from tests.fixtures.use_cases import complete_connect, delete_channel, list_playlists, start_connect

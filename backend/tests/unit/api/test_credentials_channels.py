@@ -5,10 +5,10 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from automator.domain.channels import channel_token_secret_name
-from automator.domain.credentials import credential_secret_name
-from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides
+from autotube.domain.channels import channel_token_secret_name
+from autotube.domain.credentials import credential_secret_name
+from autotube.infrastructure.config import RuntimeConfig
+from autotube.main import Overrides
 from tests.fixtures.fake_runtime import FakeClock, InMemorySecrets
 from tests.fixtures.fake_youtube import FakeYouTube
 from tests.unit.api.client import Api, error_of, ok, send, wired
