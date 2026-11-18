@@ -14,7 +14,7 @@ EXPECTED_ORDER = {
     Capability.LLM: ["groq", "gemini", "ollama", "offline_text"],
     Capability.IMAGE: ["mflux", "offline_image"],
     Capability.MOTION: ["depthflow", "ffmpeg_pan_zoom"],
-    Capability.TTS: ["edge_tts", "kokoro", "espeak", "offline_speech"],
+    Capability.TTS: ["mlx_audio", "edge_tts", "kokoro", "espeak", "offline_speech"],
     Capability.MUSIC: ["ace_step", "library_music", "synth_music"],
     Capability.MEDIA: ["ffmpeg"],
 }

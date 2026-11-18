@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os.path
 import platform
 import shutil
 from collections.abc import Callable
@@ -18,11 +19,15 @@ def module_installed(name: str) -> bool:
 class HostProbe:
     which: Callable[[str], str | None] = shutil.which
     has_module: Callable[[str], bool] = module_installed
+    has_path: Callable[[str], bool] = os.path.exists
     system: str = platform.system()
     machine: str = platform.machine()
 
     def missing_binary(self, name: str) -> str | None:
         return None if self.which(name) else f"{name} is not installed or not on PATH"
+
+    def missing_path(self, path: str, title: str) -> str | None:
+        return None if self.has_path(path) else f"{title} not found at {path}"
 
     def missing_module(self, module: str, extra: str) -> str | None:
         if self.has_module(module):
