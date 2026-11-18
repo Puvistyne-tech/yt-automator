@@ -64,8 +64,8 @@ def character(
 def default_cast() -> list[Character]:
     return [
         character(
-            "kutty",
-            ("Kutty", "குட்டி"),
+            "raju",
+            ("Raju", "ராஜு"),
             "baby elephant",
             "a small round baby elephant with soft blue-grey skin, big floppy ears with pink "
             "insides, a short curly trunk, bright curious eyes and a red-and-yellow striped scarf",

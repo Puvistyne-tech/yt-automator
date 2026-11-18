@@ -35,6 +35,26 @@ def test_lines_to_speak_follow_settings(
     assert [line.segment for line in lines] == segments
 
 
+@pytest.mark.parametrize(
+    ("series", "language", "intro"),
+    [
+        ({}, "en", "Hello, little friends! Welcome to Story Time. Let's begin!"),
+        ({"name": {"en": "Bedtime tales", "ta": "இரவுக் கதைகள்"}}, "ta", "இரவுக் கதைகள் உங்களை"),
+        ({"intro_line": {"en": "Hi from {series} and {nope}", "ta": ""}}, "en", "{nope}"),
+    ],
+)
+def test_intro_line_fills_in_the_series_name(
+    series: dict[str, Any], language: str, intro: str
+) -> None:
+    lines = lines_to_speak(story(language), quick_settings(series=series))
+    assert lines[0].segment == "intro" and intro in lines[0].text
+
+
+def test_outro_line_fills_in_the_series_name() -> None:
+    settings = quick_settings(series={"outro_line": {"en": "Bye from {series}!", "ta": ""}})
+    assert lines_to_speak(story(), settings)[-2].text == "Bye from Story Time!"
+
+
 def test_voice_for_prefers_a_character_override_then_the_narrator() -> None:
     cast = [member.model_dump() for member in quick_settings().cast]
     cast[1]["voice_override"] = {"en": "parrot", "ta": ""}

@@ -29,7 +29,7 @@ const castMember = {
 
 const settingsSchema = {
   type: "object",
-  title: "Kutty Stories settings",
+  title: "Kids story videos settings",
   required: ["series_name", "cast", "art_style", "story_length_minutes"],
   properties: {
     series_name: {
@@ -38,7 +38,7 @@ const settingsSchema = {
       description: "Appears in every title and on the intro card.",
       minLength: 1,
       maxLength: 60,
-      default: "Kutty Stories",
+      default: "Story Time",
     },
     premise: {
       type: "string",
@@ -72,7 +72,7 @@ const settingsSchema = {
       minItems: 1,
       items: castMember,
       default: [
-        { name: "Kutty", role: "hero", description: "A curious elephant calf", color: "#f59e0b" },
+        { name: "Raju", role: "hero", description: "A curious elephant calf", color: "#f59e0b" },
         { name: "Mynah", role: "friend", description: "A chatty bird", color: "#10b981" },
       ],
     },
@@ -135,16 +135,17 @@ const uiSchema = {
     { title: "Characters", fields: ["cast"] },
     { title: "Look and sound", fields: ["art_style", "voices", "music", "subtitles"] },
   ],
-  premise: { "ui:widget": "textarea" },
+  premise: { "ui:widget": "textarea", "ui:options": { rows: 3 } },
   story_length_minutes: { "ui:widget": "range" },
   moral_themes: { "ui:widget": "checkboxes" },
   cast: {
     items: {
-      description: { "ui:widget": "textarea" },
+      "ui:order": ["name", "role", "description", "color"],
+      description: { "ui:widget": "textarea", "ui:options": { rows: 2 } },
       color: { "ui:widget": "color" },
     },
   },
-  music: { volume: { "ui:widget": "range" } },
+  music: { volume: { "ui:widget": "range", "ui:options": { step: 0.05 } } },
   subtitles: {
     text_color: { "ui:widget": "color" },
     font_size: { "ui:widget": "range" },
@@ -162,8 +163,8 @@ function defaultsOf(schema: JsonObject): JsonObject {
 }
 
 export const kidsStoryPipeline: PipelineDescriptor = {
-  type_id: "kutty_stories",
-  name: "Kutty Stories",
+  type_id: "kids_story",
+  name: "Kids story videos",
   description:
     "Illustrated moral stories for young children, narrated in several languages, with a long episode and a vertical short cut from the same story.",
   version: "1.0.0",

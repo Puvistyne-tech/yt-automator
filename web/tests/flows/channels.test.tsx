@@ -32,7 +32,7 @@ describe("Channels page", () => {
     const spare = await findCredential("Spare project");
     expect(spare.getByText("No secret")).toBeInTheDocument();
     expect(spare.getByRole("button", { name: "Connect channel" })).toBeDisabled();
-    const row = await findRow("Channels", "Kutty Kathaigal");
+    const row = await findRow("Channels", "Kathai Neram");
     expect(row.getByText("Unlisted")).toBeInTheDocument();
     expect(row.getByText("Main Google project")).toBeInTheDocument();
   });
@@ -52,10 +52,10 @@ describe("Channels page", () => {
 
   it("offers reconnect for an expired channel through the same connect flow", async () => {
     const { user, navigateExternal } = renderApp("/channels");
-    const row = await findRow("Channels", "Kutty Classics");
+    const row = await findRow("Channels", "Story Classics");
     expect(row.getByText("Token expired")).toBeInTheDocument();
 
-    await user.click(row.getByRole("button", { name: "Reconnect Kutty Classics" }));
+    await user.click(row.getByRole("button", { name: "Reconnect Story Classics" }));
 
     await waitFor(() =>
       expect(navigateExternal).toHaveBeenCalledWith(expect.stringContaining("connected=chan-old")),
@@ -65,12 +65,12 @@ describe("Channels page", () => {
 
   it("offers no reconnect for a connected channel", async () => {
     renderApp("/channels");
-    const row = await findRow("Channels", "Kutty Stories");
+    const row = await findRow("Channels", "Bedtime tales");
     expect(row.queryByRole("button", { name: /Reconnect/ })).not.toBeInTheDocument();
   });
 
   it.each([
-    ["Reconnect Kutty Classics", () => findRow("Channels", "Kutty Classics")],
+    ["Reconnect Story Classics", () => findRow("Channels", "Story Classics")],
     ["Connect channel", () => findCredential("Main Google project")],
   ])("reports when %s cannot start", async (button, findScope) => {
     failWith("post", "/channels/connect", 409, {
@@ -87,7 +87,7 @@ describe("Channels page", () => {
   });
 
   it.each([
-    ["?connected=chan-ta", "Connected Kutty Kathaigal."],
+    ["?connected=chan-ta", "Connected Kathai Neram."],
     ["?error=access_denied", "Google sign-in was cancelled, so no channel was connected."],
   ])("shows a toast when returning with %s and cleans the url", async (query, message) => {
     const { router } = renderApp(`/channels${query}`);
@@ -100,13 +100,13 @@ describe("Channels page", () => {
 
 describe("Channel defaults and disconnect", () => {
   it("edits a channel's upload defaults", async () => {
-    const { user, dialog } = await openDefaults("Kutty Stories");
+    const { user, dialog } = await openDefaults("Bedtime tales");
 
     await user.selectOptions(dialog.getByLabelText("Privacy"), "unlisted");
     await user.click(dialog.getByRole("switch", { name: "Notify subscribers on upload" }));
     await user.click(dialog.getByRole("button", { name: "Save defaults" }));
 
-    await findToast("Saved defaults for Kutty Stories.");
+    await findToast("Saved defaults for Bedtime tales.");
     expect(channel("chan-en")?.defaults).toMatchObject({
       privacy: "unlisted",
       notify_subscribers: true,
@@ -115,39 +115,39 @@ describe("Channel defaults and disconnect", () => {
 
   it("keeps the dialog open when saving defaults fails", async () => {
     failWith("patch", "/channels/:id", 502, { message: "YouTube rejected the category." });
-    const { user, dialog } = await openDefaults("Kutty Stories");
+    const { user, dialog } = await openDefaults("Bedtime tales");
 
     await user.selectOptions(dialog.getByLabelText("Privacy"), "public");
     await user.click(dialog.getByRole("button", { name: "Save defaults" }));
 
     await findToast("YouTube rejected the category.");
-    expect(screen.getByRole("dialog", { name: "Upload defaults for Kutty Stories" })).toBeVisible();
+    expect(screen.getByRole("dialog", { name: "Upload defaults for Bedtime tales" })).toBeVisible();
     expect(channel("chan-en")?.defaults.privacy).toBe("private");
   });
 
   it("disconnects a channel after confirmation and reports conflicts", async () => {
     const { user } = renderApp("/channels");
-    const row = await findRow("Channels", "Kutty Stories");
+    const row = await findRow("Channels", "Bedtime tales");
 
-    await user.click(row.getByRole("button", { name: "Disconnect Kutty Stories" }));
+    await user.click(row.getByRole("button", { name: "Disconnect Bedtime tales" }));
     await confirmDialog(user, "Disconnect channel?", "Disconnect");
     await findToast("channel is targeted by enabled automations: Bedtime stories");
 
     db.state.automations = [];
-    await user.click(row.getByRole("button", { name: "Disconnect Kutty Stories" }));
+    await user.click(row.getByRole("button", { name: "Disconnect Bedtime tales" }));
     await confirmDialog(user, "Disconnect channel?", "Disconnect");
-    await findToast("Disconnected Kutty Stories.");
+    await findToast("Disconnected Bedtime tales.");
     expect(db.state.channels.map((c) => c.id)).toEqual(["chan-ta", "chan-old"]);
   });
 
   it("keeps a channel when disconnecting is cancelled", async () => {
     const { user } = renderApp("/channels");
-    const row = await findRow("Channels", "Kutty Stories");
+    const row = await findRow("Channels", "Bedtime tales");
 
-    await user.click(row.getByRole("button", { name: "Disconnect Kutty Stories" }));
+    await user.click(row.getByRole("button", { name: "Disconnect Bedtime tales" }));
     await cancelDialog(user, "Disconnect channel?");
 
-    expect(row.getByText("Kutty Stories")).toBeInTheDocument();
+    expect(row.getByText("Bedtime tales")).toBeInTheDocument();
     expect(db.state.channels.map((c) => c.id)).toEqual(["chan-en", "chan-ta", "chan-old"]);
   });
 });

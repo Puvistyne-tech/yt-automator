@@ -16,9 +16,9 @@ from tests.fixtures.fonts import embedded_font, embedded_font_family
 from tests.fixtures.kids_data import quick_settings
 
 NARRATION = {
-    "en": "Kutty the little elephant lifted his long trunk high into the warm morning air and "
+    "en": "Raju the little elephant lifted his long trunk high into the warm morning air and "
     "reached for the biggest, sweetest, most wonderfully golden mango on the whole tree.",
-    "ta": "குட்டி தன் தும்பிக்கையை உயர்த்தி, மிகப் பெரிய, மிக இனிப்பான மாம்பழத்தைப் பறித்தான். "
+    "ta": "ராஜு தன் தும்பிக்கையை உயர்த்தி, மிகப் பெரிய, மிக இனிப்பான மாம்பழத்தைப் பறித்தான். "
     "மிட்டு கிளி மகிழ்ச்சியுடன் பாட்டுப் பாடியது, சின்னு அணில் கைதட்டிச் சிரித்தது.",
 }
 VARIANTS = ("episode", "short")
@@ -65,7 +65,7 @@ def test_estimated_widths_grow_with_letters_and_language() -> None:
     english = subtitle_font(settings.subtitles, "en", 50)
     tamil = subtitle_font(settings.subtitles, "ta", 50)
     assert english.measure("abcd") == pytest.approx(4 * 50 * ESTIMATE.en)
-    assert tamil.measure("குட்டி") == pytest.approx(3 * 50 * ESTIMATE.ta)
+    assert tamil.measure("சின்னு") == pytest.approx(3 * 50 * ESTIMATE.ta)
     assert (english.family, tamil.family, english.file) == ("Noto Sans", "Noto Sans Tamil", None)
 
 
@@ -88,7 +88,7 @@ def test_tamil_without_shaping_keeps_the_file_but_measures_by_estimate(
     settings = settings_with([str(file)])
     tamil = subtitle_font(settings.subtitles, "ta", 40)
     assert (tamil.file, tamil.family) == (file, embedded_font_family())
-    assert tamil.measure("குட்டி") == pytest.approx(3 * 40 * ESTIMATE.ta)
+    assert tamil.measure("சின்னு") == pytest.approx(3 * 40 * ESTIMATE.ta)
     english = subtitle_font(settings.subtitles, "en", 40)
     assert english.file == file and english.measure("ab") != pytest.approx(2 * 40 * ESTIMATE.en)
 

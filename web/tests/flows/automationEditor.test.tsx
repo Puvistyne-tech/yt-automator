@@ -36,7 +36,7 @@ describe("Automation editor: create", () => {
     await findToast("Saved “Morning tales”.");
     const saved = byName("Morning tales");
     expect(saved).toMatchObject({
-      pipeline_type: "kutty_stories",
+      pipeline_type: "kids_story",
       languages: ["en", "ta"],
       schedule: { kind: "cron", cron: "30 7 * * 1-5", every_hours: null, timezone: "Asia/Kolkata" },
     });
@@ -114,7 +114,7 @@ describe("Automation editor: edit", () => {
 
     const series = content.getByLabelText(/^Series name/);
     await user.clear(series);
-    await user.type(series, "Kutty Shorts");
+    await user.type(series, "Moonlight tales");
     const hours = sectionByName("Schedule").getByLabelText(/^Every \(hours\)/);
     await user.clear(hours);
     await user.type(hours, "12");
@@ -123,7 +123,7 @@ describe("Automation editor: edit", () => {
 
     await findToast("Saved “Tamil shorts”.");
     const saved = db.state.automations.find((a) => a.id === "auto-shorts");
-    expect(saved?.settings.series_name).toBe("Kutty Shorts");
+    expect(saved?.settings.series_name).toBe("Moonlight tales");
     expect(saved?.schedule.every_hours).toBe(12);
     expect(saved?.targets[0]?.id).toBe("target-ta-short");
     expect(screen.getByText("All changes saved")).toBeInTheDocument();

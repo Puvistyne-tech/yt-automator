@@ -16,7 +16,7 @@ from automator.pipelines.kids_story.story.words import contains_phrase
 from tests.fixtures.kids_data import bundled_raw
 
 NAMES = ("golden_mango", "leaf_boat", "lost_song")
-CAST = {"kutty", "mittu", "chinnu", "aamai_thatha"}
+CAST = {"raju", "mittu", "chinnu", "aamai_thatha"}
 
 
 def tamil_letter_share(text: str) -> float:
@@ -76,7 +76,7 @@ def test_pick_bundled_prefers_the_theme_then_avoids_recent_themes() -> None:
 
 def test_pick_bundled_needs_a_compatible_cast() -> None:
     with pytest.raises(LookupError):
-        pick_bundled(choice("sharing", cast={"kutty"}))
+        pick_bundled(choice("sharing", cast={"raju"}))
 
 
 def test_bundled_structure_is_checked() -> None:

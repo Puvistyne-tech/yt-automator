@@ -8,7 +8,10 @@ import {
 } from "@rjsf/utils";
 import type { ChangeEvent } from "react";
 import { offersNotSet } from "@/shared/schema-form/choices";
+import { numberOption } from "@/shared/schema-form/options";
 import { Switch } from "@/shared/ui/Switch";
+
+const DEFAULT_TEXTAREA_ROWS = 4;
 
 function common(props: WidgetProps) {
   return {
@@ -45,7 +48,7 @@ export function BaseInputTemplate(props: BaseInputTemplateProps) {
 }
 
 function TextareaWidget(props: WidgetProps) {
-  const rows = typeof props.options.rows === "number" ? props.options.rows : 4;
+  const rows = numberOption(props.options, "rows") ?? DEFAULT_TEXTAREA_ROWS;
   return (
     <textarea
       className="input textarea"
@@ -130,7 +133,9 @@ function CheckboxWidget(props: WidgetProps) {
 }
 
 function RangeWidget(props: WidgetProps) {
-  const { min, max, step } = getInputProps(props.schema, "range", props.options);
+  const spec = getInputProps(props.schema, "range", props.options);
+  const { min, max } = spec;
+  const step = numberOption(props.options, "step") ?? spec.step;
   const value = typeof props.value === "number" ? props.value : Number(min ?? 0);
   return (
     <div className="range">

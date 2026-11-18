@@ -27,10 +27,10 @@ def test_render_template_fills_known_and_keeps_unknown_placeholders() -> None:
 
 def test_template_values_are_localised() -> None:
     values = template_values(story("ta"), quick_settings())
-    assert values["series"] == "குட்டி கதைகள்"
+    assert values["series"] == "கதை நேரம்"
     assert values["questions"].startswith("• ")
-    assert "#KuttyStories" in values["hashtags"]
-    assert values["characters"].startswith("குட்டி")
+    assert "#MoralStories" in values["hashtags"]
+    assert values["characters"].startswith("ராஜு")
 
 
 @pytest.mark.parametrize(("length", "kept"), [(99, True), (100, True), (101, False)])
@@ -87,12 +87,12 @@ def test_upload_metadata_uses_templates_per_variant() -> None:
         }
     )
     episode = upload_metadata(story(), settings, "episode")
-    assert episode.title == "Kutty Stories: Kutty and the Golden Mango"
+    assert episode.title == "Story Time: Raju and the Golden Mango"
     assert episode.description.startswith("Moral: Sharing makes everyone happier.")
     assert episode.category_id == "27"
-    assert episode.default_language == "en" and episode.playlist_title == "Kutty Stories"
+    assert episode.default_language == "en" and episode.playlist_title == "Story Time"
     short = upload_metadata(story(), settings, "short")
-    assert short.title == "Kutty and the Golden Mango #Shorts"
+    assert short.title == "Raju and the Golden Mango #Shorts"
 
 
 @pytest.mark.parametrize("language", ["en", "ta"])

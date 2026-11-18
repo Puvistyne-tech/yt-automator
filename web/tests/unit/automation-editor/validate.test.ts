@@ -74,7 +74,7 @@ describe("validateDraft", () => {
       targets: [makeTarget({ channel_id: "gone", language: "ta", variants: ["reel"] })],
     });
     expect(validateDraft(draftFromAutomation(automation), context)).toEqual({
-      languages: "Kutty Stories does not offer: fr.",
+      languages: "Kids story videos does not offer: fr.",
       "targets.0.channel_id": "This channel no longer exists.",
       "targets.0.language": "This language is not selected for the automation.",
       "targets.0.variants": "One of the outputs is not offered by this pipeline.",

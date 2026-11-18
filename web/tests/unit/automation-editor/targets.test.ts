@@ -39,7 +39,7 @@ describe("target options", () => {
   it("offers channels with status, only selected languages and every variant", () => {
     const channels = [makeChannel(), makeChannel({ id: "c2", title: "Old", status: "expired" })];
     const options = targetOptions(kidsStoryPipeline, twoTargets(), channels);
-    expect(options.channels.map((o) => o.label)).toEqual(["Kutty Stories", "Old (Token expired)"]);
+    expect(options.channels.map((o) => o.label)).toEqual(["Bedtime tales", "Old (Token expired)"]);
     expect(options.languages).toEqual([{ value: "en", label: "English" }]);
     expect(options.variants.map((o) => o.label)).toEqual(["Episode · 16:9", "Short · 9:16"]);
     expect(options.kidsLocked).toBe(true);

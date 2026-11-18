@@ -1,19 +1,19 @@
 {
   "id": "leaf_boat",
   "theme": "trying again",
-  "cast": ["kutty", "mittu", "chinnu", "aamai_thatha"],
-  "thumbnail": "Chinnu the squirrel cheering at the edge of a lily pond as a tiny leaf boat carrying a yellow flower floats across, Kutty the little elephant smiling beside her",
+  "cast": ["raju", "mittu", "chinnu", "aamai_thatha"],
+  "thumbnail": "Chinnu the squirrel cheering at the edge of a lily pond as a tiny leaf boat carrying a yellow flower floats across, Raju the little elephant smiling beside her",
   "short_scenes": [1, 3, 7, 8],
   "scenes": [
     {"visual": "Chinnu the squirrel sits at the edge of a calm lily pond with a bright idea, Grandpa Tortoise resting far away on the other side", "characters": ["chinnu", "aamai_thatha"], "setting": "a calm lily pond in the afternoon", "mood": "bright and hopeful", "camera": "pull_out", "hero": false, "sound_effects": ["frogs croaking softly"]},
     {"visual": "Chinnu places a round green leaf with a tiny yellow flower on the water, and the leaf tips over with a small splash", "characters": ["chinnu"], "setting": "the edge of the lily pond", "mood": "playful surprise", "camera": "push_in", "hero": false, "sound_effects": ["tiny water plip"]},
-    {"visual": "Kutty the little elephant gently lifts the floating flower out of the water with his trunk and hands it to a sad Chinnu", "characters": ["kutty", "chinnu"], "setting": "the edge of the lily pond", "mood": "tender", "camera": "still", "hero": false, "sound_effects": []},
-    {"visual": "Chinnu folds a thin soft leaf into a boat, and it slowly turns soggy and sinks while Kutty watches kindly", "characters": ["chinnu", "kutty"], "setting": "the edge of the lily pond", "mood": "gentle", "camera": "push_in", "hero": false, "sound_effects": ["soft bubbling"]},
-    {"visual": "Mittu the parrot flutters down beside Chinnu, wings open in encouragement", "characters": ["mittu", "chinnu", "kutty"], "setting": "reeds beside the lily pond", "mood": "encouraging", "camera": "pan_right", "hero": false, "sound_effects": ["wing flutter"]},
-    {"visual": "Chinnu thinks hard, holding up a round leaf and a thin leaf side by side with a tiny twig nearby", "characters": ["chinnu", "mittu", "kutty"], "setting": "a flat rock by the pond", "mood": "thoughtful", "camera": "still", "hero": false, "sound_effects": []},
+    {"visual": "Raju the little elephant gently lifts the floating flower out of the water with his trunk and hands it to a sad Chinnu", "characters": ["raju", "chinnu"], "setting": "the edge of the lily pond", "mood": "tender", "camera": "still", "hero": false, "sound_effects": []},
+    {"visual": "Chinnu folds a thin soft leaf into a boat, and it slowly turns soggy and sinks while Raju watches kindly", "characters": ["chinnu", "raju"], "setting": "the edge of the lily pond", "mood": "gentle", "camera": "push_in", "hero": false, "sound_effects": ["soft bubbling"]},
+    {"visual": "Mittu the parrot flutters down beside Chinnu, wings open in encouragement", "characters": ["mittu", "chinnu", "raju"], "setting": "reeds beside the lily pond", "mood": "encouraging", "camera": "pan_right", "hero": false, "sound_effects": ["wing flutter"]},
+    {"visual": "Chinnu thinks hard, holding up a round leaf and a thin leaf side by side with a tiny twig nearby", "characters": ["chinnu", "mittu", "raju"], "setting": "a flat rock by the pond", "mood": "thoughtful", "camera": "still", "hero": false, "sound_effects": []},
     {"visual": "Across the pond Grandpa Tortoise waves warmly while Chinnu picks a strong leaf and a tiny twig", "characters": ["aamai_thatha", "chinnu"], "setting": "both sides of the lily pond", "mood": "warm", "camera": "pan_left", "hero": false, "sound_effects": []},
-    {"visual": "A small leaf boat with a twig mast and a yellow flower bobs proudly across the sparkling pond", "characters": ["chinnu", "kutty", "mittu"], "setting": "the sparkling lily pond", "mood": "joyful and proud", "camera": "pan_right", "hero": true, "sound_effects": ["gentle water ripples"]},
-    {"visual": "Grandpa Tortoise holds the yellow flower and smiles while Chinnu claps her paws and her friends cheer", "characters": ["aamai_thatha", "chinnu", "kutty", "mittu"], "setting": "the far side of the lily pond in golden light", "mood": "happy and proud", "camera": "rise", "hero": true, "sound_effects": ["soft cheering"]}
+    {"visual": "A small leaf boat with a twig mast and a yellow flower bobs proudly across the sparkling pond", "characters": ["chinnu", "raju", "mittu"], "setting": "the sparkling lily pond", "mood": "joyful and proud", "camera": "pan_right", "hero": true, "sound_effects": ["gentle water ripples"]},
+    {"visual": "Grandpa Tortoise holds the yellow flower and smiles while Chinnu claps her paws and her friends cheer", "characters": ["aamai_thatha", "chinnu", "raju", "mittu"], "setting": "the far side of the lily pond in golden light", "mood": "happy and proud", "camera": "rise", "hero": true, "sound_effects": ["soft cheering"]}
   ],
   "text": {
     "en": {
@@ -22,8 +22,8 @@
       "narrations": [
         "One bright afternoon, Chinnu the squirrel had a happy idea. \"I will make a little leaf boat,\" she said, \"and float a flower across the pond to Grandpa Tortoise.\"",
         "Chinnu picked a wide green leaf and placed a tiny yellow flower on top. She set the boat on the water. Plip! The leaf tipped over, and the flower floated away.",
-        "Chinnu's tail drooped. \"I made a mistake,\" she said in a small voice. Kutty the little elephant gently caught the flower with his trunk and gave it back to her.",
-        "\"Everybody makes mistakes,\" said Kutty. \"Let's try again.\" So Chinnu folded a new leaf, but it was thin and soft. Soon it was soggy, and it sank to the bottom.",
+        "Chinnu's tail drooped. \"I made a mistake,\" she said in a small voice. Raju the little elephant gently caught the flower with his trunk and gave it back to her.",
+        "\"Everybody makes mistakes,\" said Raju. \"Let's try again.\" So Chinnu folded a new leaf, but it was thin and soft. Soon it was soggy, and it sank to the bottom.",
         "Mittu the parrot fluttered down beside her. \"Do not give up, Chinnu!\" she sang. \"Each try teaches you something new. What did the leaves tell you?\"",
         "Chinnu thought hard. \"The first leaf was too round. The second leaf was too thin,\" she said. \"I need a strong leaf, and a little stick to keep it steady.\"",
         "Across the pond, Grandpa Tortoise waved. \"Mistakes are like stepping stones,\" he called. \"Each one helps you get closer.\" Chinnu found a strong leaf and a tiny twig.",
@@ -40,21 +40,21 @@
       "title": "சின்னுவும் இலைப் படகும்",
       "moral": "தவறு செய்தாலும் பரவாயில்லை, மீண்டும் முயற்சி செய்தால் போதும்.",
       "narrations": [
-        "ஒரு வெளிச்சமான மதிய நேரம், சின்னு அணிலுக்கு ஒரு அழகான யோசனை வந்தது. \"நான் ஒரு குட்டி இலைப் படகு செய்வேன். அதில் ஒரு பூவை வைத்து, குளத்தின் அந்தப் பக்கம் இருக்கும் ஆமை தாத்தாவுக்கு அனுப்புவேன்,\" என்றது.",
-        "சின்னு ஒரு அகலமான பச்சை இலையைப் பறித்து, அதன் மேல் ஒரு குட்டி மஞ்சள் பூவை வைத்தது. படகைத் தண்ணீரில் விட்டது. ப்ளிப்! இலை கவிழ்ந்தது. பூ மிதந்து போனது.",
-        "சின்னுவின் வால் தொங்கிப் போனது. \"நான் தவறு செய்துவிட்டேன்,\" என்று சின்னக் குரலில் சொன்னது. குட்டி யானை தன் தும்பிக்கையால் பூவை மெதுவாக எடுத்து அதனிடம் கொடுத்தான்.",
-        "\"எல்லோரும் தவறு செய்வார்கள்,\" என்றான் குட்டி. \"மீண்டும் முயற்சி செய்வோம்.\" சின்னு ஒரு புது இலையை மடித்தது. ஆனால் அது மெல்லியதாக இருந்தது. சீக்கிரமே நனைந்து, தண்ணீருக்குள் மூழ்கிப் போனது.",
+        "ஒரு வெளிச்சமான மதிய நேரம், சின்னு அணிலுக்கு ஒரு அழகான யோசனை வந்தது. \"நான் ஒரு சின்ன இலைப் படகு செய்வேன். அதில் ஒரு பூவை வைத்து, குளத்தின் அந்தப் பக்கம் இருக்கும் ஆமை தாத்தாவுக்கு அனுப்புவேன்,\" என்றது.",
+        "சின்னு ஒரு அகலமான பச்சை இலையைப் பறித்து, அதன் மேல் ஒரு சின்ன மஞ்சள் பூவை வைத்தது. படகைத் தண்ணீரில் விட்டது. ப்ளிப்! இலை கவிழ்ந்தது. பூ மிதந்து போனது.",
+        "சின்னுவின் வால் தொங்கிப் போனது. \"நான் தவறு செய்துவிட்டேன்,\" என்று சின்னக் குரலில் சொன்னது. ராஜு யானை தன் தும்பிக்கையால் பூவை மெதுவாக எடுத்து அதனிடம் கொடுத்தான்.",
+        "\"எல்லோரும் தவறு செய்வார்கள்,\" என்றான் ராஜு. \"மீண்டும் முயற்சி செய்வோம்.\" சின்னு ஒரு புது இலையை மடித்தது. ஆனால் அது மெல்லியதாக இருந்தது. சீக்கிரமே நனைந்து, தண்ணீருக்குள் மூழ்கிப் போனது.",
         "மிட்டு கிளி பறந்து வந்து அதன் அருகில் அமர்ந்தது. \"விட்டுவிடாதே, சின்னு!\" என்று பாடியது. \"ஒவ்வொரு முயற்சியும் ஒரு புதிய விஷயத்தைக் கற்றுத் தரும். இலைகள் உனக்கு என்ன சொல்லித் தந்தன?\"",
         "சின்னு நன்றாக யோசித்தது. \"முதல் இலை ரொம்ப உருண்டையாக இருந்தது. இரண்டாவது இலை ரொம்ப மெல்லியதாக இருந்தது. எனக்கு ஒரு வலுவான இலையும், அதை நிமிர்த்தி வைக்க ஒரு குச்சியும் வேண்டும்,\" என்றது.",
-        "குளத்தின் அந்தப் பக்கத்திலிருந்து ஆமை தாத்தா அன்புடன் கையசைத்தார். \"தவறுகள் படிக்கற்கள் மாதிரி. ஒவ்வொன்றும் உன்னை இன்னும் அருகில் கொண்டு போகும்,\" என்றார். சின்னு ஒரு வலுவான இலையையும் ஒரு குட்டிக் குச்சியையும் கண்டுபிடித்தது.",
-        "சின்னு மூன்றாவது படகை மிகக் கவனமாகச் செய்தது. அதைத் தண்ணீரில் வைத்து மெதுவாகத் தள்ளியது. குட்டிப் படகு ஆடி அசைந்து, குளத்தின் அந்தப் பக்கம் வரை மிதந்து போனது!",
+        "குளத்தின் அந்தப் பக்கத்திலிருந்து ஆமை தாத்தா அன்புடன் கையசைத்தார். \"தவறுகள் படிக்கற்கள் மாதிரி. ஒவ்வொன்றும் உன்னை இன்னும் அருகில் கொண்டு போகும்,\" என்றார். சின்னு ஒரு வலுவான இலையையும் ஒரு சின்னக் குச்சியையும் கண்டுபிடித்தது.",
+        "சின்னு மூன்றாவது படகை மிகக் கவனமாகச் செய்தது. அதைத் தண்ணீரில் வைத்து மெதுவாகத் தள்ளியது. சின்னப் படகு ஆடி அசைந்து, குளத்தின் அந்தப் பக்கம் வரை மிதந்து போனது!",
         "ஆமை தாத்தா பூவை எடுத்துப் புன்னகைத்தார். \"நன்றி, சின்னு.\" சின்னு மகிழ்ச்சியில் கைதட்டியது. \"தவறு செய்தாலும் பரவாயில்லை, மீண்டும் முயற்சி செய்தால் போதும்!\" {refrain}"
       ],
       "questions": [
-        "குட்டி இலைப் படகு அடுத்து எங்கே போகும் என்று நினைக்கிறாய்?",
+        "சின்ன இலைப் படகு அடுத்து எங்கே போகும் என்று நினைக்கிறாய்?",
         "நாளை சின்னு என்ன செய்யும் என்று நினைக்கிறாய்?"
       ],
-      "hook_line": "ஒரு குட்டி இலை, பூவைக் குளத்தின் அந்தப் பக்கம் வரை கொண்டு போகுமா?"
+      "hook_line": "ஒரு சின்ன இலை, பூவைக் குளத்தின் அந்தப் பக்கம் வரை கொண்டு போகுமா?"
     }
   }
 }

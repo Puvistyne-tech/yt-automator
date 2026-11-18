@@ -63,9 +63,9 @@ describe("Run detail", () => {
     await openRun("run-published");
 
     const rows = uploadRows(await screen.findByRole("table", { name: "Uploads" }));
-    expect(audienceOf(rows, "Kutty Stories", "Episode")).toEqual(["Private", "Yes"]);
-    expect(audienceOf(rows, "Kutty Stories", "Short")).toEqual(["Private", "Yes"]);
-    expect(audienceOf(rows, "Kutty Kathaigal", "Episode")).toEqual(["Unlisted", "Yes"]);
+    expect(audienceOf(rows, "Bedtime tales", "Episode")).toEqual(["Private", "Yes"]);
+    expect(audienceOf(rows, "Bedtime tales", "Short")).toEqual(["Private", "Yes"]);
+    expect(audienceOf(rows, "Kathai Neram", "Episode")).toEqual(["Unlisted", "Yes"]);
   });
 
   it("shows a dash for uploads stored before privacy was recorded", async () => {
@@ -76,7 +76,7 @@ describe("Run detail", () => {
     await openRun("run-published");
 
     const rows = uploadRows(await screen.findByRole("table", { name: "Uploads" }));
-    expect(audienceOf(rows, "Kutty Kathaigal", "Episode")).toEqual(["—", "—"]);
+    expect(audienceOf(rows, "Kathai Neram", "Episode")).toEqual(["—", "—"]);
   });
 
   it("shows an empty log for a run without log lines", async () => {

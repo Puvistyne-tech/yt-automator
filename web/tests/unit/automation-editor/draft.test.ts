@@ -36,7 +36,7 @@ describe("draft model", () => {
 
   it("applies a pipeline's defaults and first language", () => {
     const draft = applyPipeline(emptyDraft(), kidsStoryPipeline);
-    expect(draft.pipeline_type).toBe("kutty_stories");
+    expect(draft.pipeline_type).toBe("kids_story");
     expect(draft.settings).toEqual(kidsStoryPipeline.default_settings);
     expect(draft.settings).not.toBe(kidsStoryPipeline.default_settings);
     expect(draft.languages).toEqual(["en"]);
@@ -44,7 +44,7 @@ describe("draft model", () => {
   });
 
   it("chooses the only pipeline for a new automation and copies an existing one", () => {
-    expect(initialDraft([kidsStoryPipeline], undefined).pipeline_type).toBe("kutty_stories");
+    expect(initialDraft([kidsStoryPipeline], undefined).pipeline_type).toBe("kids_story");
     expect(initialDraft([kidsStoryPipeline, plainPipeline], undefined).pipeline_type).toBe("");
     const automation = makeAutomation();
     const draft = initialDraft([], automation);

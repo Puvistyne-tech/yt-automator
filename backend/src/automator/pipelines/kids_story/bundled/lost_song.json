@@ -1,19 +1,19 @@
 {
   "id": "lost_song",
   "theme": "helping a friend",
-  "cast": ["kutty", "mittu", "chinnu", "aamai_thatha"],
-  "thumbnail": "Mittu the parrot singing joyfully on a bamboo branch with musical swirls of leaves around her, Kutty the little elephant and Chinnu the squirrel listening happily below",
+  "cast": ["raju", "mittu", "chinnu", "aamai_thatha"],
+  "thumbnail": "Mittu the parrot singing joyfully on a bamboo branch with musical swirls of leaves around her, Raju the little elephant and Chinnu the squirrel listening happily below",
   "short_scenes": [0, 1, 6, 7, 8],
   "scenes": [
     {"visual": "Mittu the parrot sits on a branch at sunrise, beak open, looking surprised that no song comes out", "characters": ["mittu"], "setting": "a sunrise forest with soft pink sky", "mood": "curious", "camera": "push_in", "hero": false, "sound_effects": ["morning breeze"]},
-    {"visual": "Mittu flaps her wings in a fluster while Kutty the little elephant walks over with his big ears swaying", "characters": ["mittu", "kutty"], "setting": "a forest clearing at sunrise", "mood": "lively", "camera": "pan_right", "hero": false, "sound_effects": ["wings flapping"]},
-    {"visual": "Kutty offers a gentle idea while Mittu chatters with her wings waving, not noticing him", "characters": ["kutty", "mittu"], "setting": "a forest clearing", "mood": "playful", "camera": "still", "hero": false, "sound_effects": []},
-    {"visual": "Chinnu the squirrel taps a rhythm on a hollow log with her paws while Mittu keeps talking", "characters": ["chinnu", "mittu", "kutty"], "setting": "a mossy log in the forest clearing", "mood": "playful", "camera": "push_in", "hero": false, "sound_effects": ["wooden tapping"]},
-    {"visual": "Grandpa Tortoise sits on a soft patch of green moss, smiling kindly at Mittu", "characters": ["aamai_thatha", "mittu", "kutty", "chinnu"], "setting": "a soft mossy corner of the forest", "mood": "calm and warm", "camera": "pull_out", "hero": false, "sound_effects": []},
-    {"visual": "All four friends sit very still with eyes closed, a sparkling river flowing over smooth stones behind them", "characters": ["kutty", "mittu", "chinnu", "aamai_thatha"], "setting": "a riverbank in the forest", "mood": "peaceful and quiet", "camera": "pan_left", "hero": true, "sound_effects": ["river flowing over stones"]},
-    {"visual": "Wind sways tall green bamboo, and Mittu's eyes pop open with a big happy smile", "characters": ["mittu", "kutty", "chinnu"], "setting": "a bamboo grove beside the river", "mood": "joyful surprise", "camera": "push_in", "hero": false, "sound_effects": ["wind through bamboo", "distant bird chirp"]},
-    {"visual": "Mittu sings on a bamboo branch while Kutty hums, Chinnu taps and Grandpa Tortoise nods, flowers opening all around", "characters": ["mittu", "kutty", "chinnu", "aamai_thatha"], "setting": "the forest waking up in morning light", "mood": "happy and musical", "camera": "rise", "hero": true, "sound_effects": ["cheerful birdsong"]},
-    {"visual": "Mittu hugs Kutty's trunk with her wing as the friends smile together in warm morning sunlight", "characters": ["mittu", "kutty", "chinnu", "aamai_thatha"], "setting": "a sunny forest clearing", "mood": "warm and grateful", "camera": "pull_out", "hero": false, "sound_effects": []}
+    {"visual": "Mittu flaps her wings in a fluster while Raju the little elephant walks over with his big ears swaying", "characters": ["mittu", "raju"], "setting": "a forest clearing at sunrise", "mood": "lively", "camera": "pan_right", "hero": false, "sound_effects": ["wings flapping"]},
+    {"visual": "Raju offers a gentle idea while Mittu chatters with her wings waving, not noticing him", "characters": ["raju", "mittu"], "setting": "a forest clearing", "mood": "playful", "camera": "still", "hero": false, "sound_effects": []},
+    {"visual": "Chinnu the squirrel taps a rhythm on a hollow log with her paws while Mittu keeps talking", "characters": ["chinnu", "mittu", "raju"], "setting": "a mossy log in the forest clearing", "mood": "playful", "camera": "push_in", "hero": false, "sound_effects": ["wooden tapping"]},
+    {"visual": "Grandpa Tortoise sits on a soft patch of green moss, smiling kindly at Mittu", "characters": ["aamai_thatha", "mittu", "raju", "chinnu"], "setting": "a soft mossy corner of the forest", "mood": "calm and warm", "camera": "pull_out", "hero": false, "sound_effects": []},
+    {"visual": "All four friends sit very still with eyes closed, a sparkling river flowing over smooth stones behind them", "characters": ["raju", "mittu", "chinnu", "aamai_thatha"], "setting": "a riverbank in the forest", "mood": "peaceful and quiet", "camera": "pan_left", "hero": true, "sound_effects": ["river flowing over stones"]},
+    {"visual": "Wind sways tall green bamboo, and Mittu's eyes pop open with a big happy smile", "characters": ["mittu", "raju", "chinnu"], "setting": "a bamboo grove beside the river", "mood": "joyful surprise", "camera": "push_in", "hero": false, "sound_effects": ["wind through bamboo", "distant bird chirp"]},
+    {"visual": "Mittu sings on a bamboo branch while Raju hums, Chinnu taps and Grandpa Tortoise nods, flowers opening all around", "characters": ["mittu", "raju", "chinnu", "aamai_thatha"], "setting": "the forest waking up in morning light", "mood": "happy and musical", "camera": "rise", "hero": true, "sound_effects": ["cheerful birdsong"]},
+    {"visual": "Mittu hugs Raju's trunk with her wing as the friends smile together in warm morning sunlight", "characters": ["mittu", "raju", "chinnu", "aamai_thatha"], "setting": "a sunny forest clearing", "mood": "warm and grateful", "camera": "pull_out", "hero": false, "sound_effects": []}
   ],
   "text": {
     "en": {
@@ -21,14 +21,14 @@
       "moral": "Good friends listen to each other.",
       "narrations": [
         "Every morning, Mittu the parrot sang a bright little song to wake up the forest. But one morning, Mittu opened her beak and no song came out. She had forgotten it!",
-        "\"Oh no, oh no!\" cried Mittu, flapping her wings. \"My song is gone!\" Kutty the little elephant heard her and came walking over, his big ears swaying.",
-        "\"Let us help you find it,\" said Kutty. \"Maybe it started with a hum.\" But Mittu was too busy talking. \"Was it high? Was it low? Was it fast?\" she chattered.",
+        "\"Oh no, oh no!\" cried Mittu, flapping her wings. \"My song is gone!\" Raju the little elephant heard her and came walking over, his big ears swaying.",
+        "\"Let us help you find it,\" said Raju. \"Maybe it started with a hum.\" But Mittu was too busy talking. \"Was it high? Was it low? Was it fast?\" she chattered.",
         "Chinnu the squirrel tapped a gentle rhythm on a hollow log. Tap, tap, tap-tap. \"Maybe it went like this,\" she said. But Mittu kept talking and did not listen.",
         "Grandpa Tortoise smiled and sat down on a soft patch of moss. \"Mittu,\" he said kindly, \"your friends have good ideas. Let us all be quiet and listen.\"",
-        "So everyone sat very still. Mittu closed her eyes. She heard Chinnu's soft tapping. She heard Kutty humming low. She heard the river singing over the stones.",
+        "So everyone sat very still. Mittu closed her eyes. She heard Chinnu's soft tapping. She heard Raju humming low. She heard the river singing over the stones.",
         "Then the wind whistled through the bamboo, and a little bird chirped far away. Mittu's eyes popped open. \"That's it! That's my song!\" she said with joy.",
-        "Mittu sang her bright morning song, and her friends joined in. Kutty hummed, Chinnu tapped, and Grandpa Tortoise nodded along. The whole forest woke up smiling.",
-        "\"Thank you for helping me,\" said Mittu. \"I found my song because I listened.\" Kutty smiled. \"Good friends listen to each other.\" {refrain}"
+        "Mittu sang her bright morning song, and her friends joined in. Raju hummed, Chinnu tapped, and Grandpa Tortoise nodded along. The whole forest woke up smiling.",
+        "\"Thank you for helping me,\" said Mittu. \"I found my song because I listened.\" Raju smiled. \"Good friends listen to each other.\" {refrain}"
       ],
       "questions": [
         "What song do you think the friends will sing tomorrow?",
@@ -40,15 +40,15 @@
       "title": "மிட்டுவின் காணாமல் போன பாட்டு",
       "moral": "நல்ல நண்பர்கள் ஒருவர் சொல்வதை ஒருவர் கேட்பார்கள்.",
       "narrations": [
-        "ஒவ்வொரு காலையும் மிட்டு கிளி ஒரு இனிய குட்டிப் பாட்டுப் பாடி காட்டை எழுப்பும். ஆனால் ஒரு நாள் காலையில், மிட்டு அலகைத் திறந்தபோது பாட்டே வரவில்லை. அது பாட்டை மறந்துவிட்டது!",
-        "\"ஐயோ, ஐயோ!\" என்று சிறகுகளை அடித்தபடி சொன்னது மிட்டு. \"என் பாட்டு காணாமல் போய்விட்டது!\" அதைக் கேட்ட குட்டி யானை, பெரிய காதுகளை ஆட்டியபடி நடந்து வந்தான்.",
-        "\"உன் பாட்டைக் கண்டுபிடிக்க நாங்கள் உதவுகிறோம்,\" என்றான் குட்டி. \"ஒருவேளை அது ம்ம்ம் என்று தொடங்குமோ?\" ஆனால் மிட்டு பேசிக்கொண்டே இருந்தது. \"உயரமாகவா? தாழ்வாகவா? வேகமாகவா?\" என்று கேட்டுக்கொண்டே இருந்தது.",
+        "ஒவ்வொரு காலையும் மிட்டு கிளி ஒரு இனிய சின்னப் பாட்டுப் பாடி காட்டை எழுப்பும். ஆனால் ஒரு நாள் காலையில், மிட்டு அலகைத் திறந்தபோது பாட்டே வரவில்லை. அது பாட்டை மறந்துவிட்டது!",
+        "\"ஐயோ, ஐயோ!\" என்று சிறகுகளை அடித்தபடி சொன்னது மிட்டு. \"என் பாட்டு காணாமல் போய்விட்டது!\" அதைக் கேட்ட ராஜு யானை, பெரிய காதுகளை ஆட்டியபடி நடந்து வந்தான்.",
+        "\"உன் பாட்டைக் கண்டுபிடிக்க நாங்கள் உதவுகிறோம்,\" என்றான் ராஜு. \"ஒருவேளை அது ம்ம்ம் என்று தொடங்குமோ?\" ஆனால் மிட்டு பேசிக்கொண்டே இருந்தது. \"உயரமாகவா? தாழ்வாகவா? வேகமாகவா?\" என்று கேட்டுக்கொண்டே இருந்தது.",
         "சின்னு அணில் ஒரு உள்ளீடற்ற மரக்கட்டையில் மெதுவாகத் தட்டியது. டக், டக், டக்-டக். \"ஒருவேளை இப்படி இருக்குமோ?\" என்றது சின்னு. ஆனால் மிட்டு பேசிக்கொண்டே இருந்தது, கேட்கவே இல்லை.",
         "ஆமை தாத்தா புன்னகைத்தபடி மென்மையான பாசியின் மேல் உட்கார்ந்தார். \"மிட்டு,\" என்று அன்பாகச் சொன்னார், \"உன் நண்பர்களிடம் நல்ல யோசனைகள் இருக்கின்றன. நாம் எல்லோரும் அமைதியாக இருந்து கேட்போம்.\"",
-        "எல்லோரும் அசையாமல் உட்கார்ந்தார்கள். மிட்டு கண்களை மூடியது. சின்னுவின் மெல்லிய தட்டல் கேட்டது. குட்டியின் மெதுவான முணுமுணுப்பு கேட்டது. கற்களின் மேல் ஓடும் ஆற்றின் பாட்டும் கேட்டது.",
+        "எல்லோரும் அசையாமல் உட்கார்ந்தார்கள். மிட்டு கண்களை மூடியது. சின்னுவின் மெல்லிய தட்டல் கேட்டது. ராஜுவின் மெதுவான முணுமுணுப்பு கேட்டது. கற்களின் மேல் ஓடும் ஆற்றின் பாட்டும் கேட்டது.",
         "அப்போது மூங்கில்களுக்கு இடையே காற்று விசில் அடித்தது. தூரத்தில் ஒரு சின்னப் பறவை கீச்சிட்டது. மிட்டுவின் கண்கள் சட்டென்று திறந்தன. \"இதுதான்! இதுதான் என் பாட்டு!\" என்று மகிழ்ச்சியுடன் சொன்னது.",
-        "மிட்டு தன் இனிய காலைப் பாட்டைப் பாடியது. நண்பர்களும் சேர்ந்து பாடினார்கள். குட்டி முணுமுணுத்தான், சின்னு தட்டியது, ஆமை தாத்தா தலையாட்டினார். காடு முழுவதும் புன்னகையுடன் விழித்தது.",
-        "\"எனக்கு உதவியதற்கு நன்றி,\" என்றது மிட்டு. \"நான் கவனமாகக் கேட்டதால்தான் என் பாட்டு கிடைத்தது.\" குட்டி சிரித்தான். \"நல்ல நண்பர்கள் ஒருவர் சொல்வதை ஒருவர் கேட்பார்கள்.\" {refrain}"
+        "மிட்டு தன் இனிய காலைப் பாட்டைப் பாடியது. நண்பர்களும் சேர்ந்து பாடினார்கள். ராஜு முணுமுணுத்தான், சின்னு தட்டியது, ஆமை தாத்தா தலையாட்டினார். காடு முழுவதும் புன்னகையுடன் விழித்தது.",
+        "\"எனக்கு உதவியதற்கு நன்றி,\" என்றது மிட்டு. \"நான் கவனமாகக் கேட்டதால்தான் என் பாட்டு கிடைத்தது.\" ராஜு சிரித்தான். \"நல்ல நண்பர்கள் ஒருவர் சொல்வதை ஒருவர் கேட்பார்கள்.\" {refrain}"
       ],
       "questions": [
         "நாளை நண்பர்கள் என்ன பாட்டுப் பாடுவார்கள் என்று நினைக்கிறாய்?",

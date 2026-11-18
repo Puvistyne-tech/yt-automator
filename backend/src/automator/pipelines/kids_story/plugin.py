@@ -31,11 +31,12 @@ from automator.pipelines.kids_story.stages.voice import VoiceStage
 
 TYPE_ID = "kids_story"
 VERSION = "1.0.0"
-NAME = "Kutty Stories"
+NAME = "Kids story videos"
 DESCRIPTION = (
-    "Short, gentle animated stories for young children, in English and Tamil. Each run makes a "
-    "2 to 3 minute 16:9 episode and a vertical Short per language, with exact subtitles, a "
-    "thumbnail and upload details."
+    "Short, gentle illustrated story videos for young children, narrated in each chosen "
+    "language. Each run makes a 2 to 3 minute 16:9 episode and a vertical Short per language, "
+    "with exact subtitles, a thumbnail and upload details. Set your own series name, cast and "
+    "branding in the settings."
 )
 VARIANTS = (
     VariantOption(

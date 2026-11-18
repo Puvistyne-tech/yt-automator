@@ -74,7 +74,7 @@ function Harness({
 }
 
 function setup(
-  initial: Value = { title: "Moon", cast: [{ name: "Kutty" }] },
+  initial: Value = { title: "Moon", cast: [{ name: "Raju" }] },
   errors?: Record<string, string>,
 ) {
   const onValue = vi.fn<(value: Value) => void>();
@@ -153,10 +153,10 @@ describe("SchemaForm", () => {
     const names = cast.getAllByLabelText("Name");
     await user.type(names[1] as HTMLElement, "Mynah");
     await user.click(cast.getAllByRole("button", { name: "Move up" })[1] as HTMLElement);
-    expect(last()?.cast).toEqual([{ name: "Mynah" }, { name: "Kutty" }]);
+    expect(last()?.cast).toEqual([{ name: "Mynah" }, { name: "Raju" }]);
 
     await user.click(cast.getAllByRole("button", { name: "Remove" })[0] as HTMLElement);
-    expect(last()?.cast).toEqual([{ name: "Kutty" }]);
+    expect(last()?.cast).toEqual([{ name: "Raju" }]);
   });
 
   it("shows external errors next to their fields, including nested ones", () => {

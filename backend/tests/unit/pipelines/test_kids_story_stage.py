@@ -22,7 +22,7 @@ from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, LogBook, as_jso
 
 def tamil_without_moral() -> dict[str, Any]:
     text = tamil_text()
-    return {**text, "narrations": [*text["narrations"][:-1], "குட்டி சிரித்தான்."]}
+    return {**text, "narrations": [*text["narrations"][:-1], "ராஜு சிரித்தான்."]}
 
 
 def tamil_with_banned_word() -> dict[str, Any]:

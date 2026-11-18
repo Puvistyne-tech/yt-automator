@@ -1,34 +1,34 @@
 {
   "id": "golden_mango",
   "theme": "sharing",
-  "cast": ["kutty", "mittu", "chinnu", "aamai_thatha"],
-  "thumbnail": "Kutty the little elephant holding a big golden mango with his trunk under a mango tree, Mittu the parrot and Chinnu the squirrel smiling beside him",
+  "cast": ["raju", "mittu", "chinnu", "aamai_thatha"],
+  "thumbnail": "Raju the little elephant holding a big golden mango with his trunk under a mango tree, Mittu the parrot and Chinnu the squirrel smiling beside him",
   "short_scenes": [0, 2, 6, 7, 8],
   "scenes": [
-    {"visual": "Kutty walks happily towards a huge mango tree heavy with golden mangoes and lifts his trunk to pick the biggest one", "characters": ["kutty"], "setting": "a sunny green meadow with a big mango tree", "mood": "bright and cheerful", "camera": "push_in", "hero": true, "sound_effects": ["birds chirping"]},
-    {"visual": "Kutty sits under the mango tree hugging a big golden mango while Mittu the parrot flutters down to a low branch", "characters": ["kutty", "mittu"], "setting": "the shade under the mango tree", "mood": "playful", "camera": "pan_right", "hero": false, "sound_effects": ["soft wing flutter"]},
-    {"visual": "Mittu on the low branch looks hopefully at the mango while Kutty holds it close to his chest", "characters": ["kutty", "mittu"], "setting": "the shade under the mango tree", "mood": "quiet and thoughtful", "camera": "still", "hero": false, "sound_effects": []},
-    {"visual": "Chinnu the squirrel runs along a dusty path towards the tree, holding her tummy", "characters": ["chinnu", "kutty", "mittu"], "setting": "a winding path beside the mango tree", "mood": "gentle", "camera": "pan_left", "hero": false, "sound_effects": ["tiny tummy rumble"]},
-    {"visual": "Kutty looks at his two quiet friends, the big mango in his trunk, his ears drooping a little", "characters": ["kutty", "mittu", "chinnu"], "setting": "the shade under the mango tree", "mood": "soft and thoughtful", "camera": "push_in", "hero": false, "sound_effects": []},
-    {"visual": "Grandpa Tortoise walks slowly up a small grassy hill towards the friends, smiling kindly", "characters": ["aamai_thatha", "kutty", "mittu", "chinnu"], "setting": "a small grassy hill near the mango tree", "mood": "warm and calm", "camera": "pull_out", "hero": false, "sound_effects": ["gentle footsteps on grass"]},
-    {"visual": "Kutty smiles widely and breaks the golden mango into four equal pieces with his trunk", "characters": ["kutty", "mittu", "chinnu", "aamai_thatha"], "setting": "the shade under the mango tree", "mood": "joyful", "camera": "push_in", "hero": true, "sound_effects": []},
-    {"visual": "The four friends sit together in the cool shade eating mango pieces, Mittu singing and Chinnu dancing", "characters": ["kutty", "mittu", "chinnu", "aamai_thatha"], "setting": "the cool shade under the mango tree", "mood": "happy and lively", "camera": "pan_right", "hero": false, "sound_effects": ["happy chirping song"]},
-    {"visual": "Kutty glows with happiness among his friends as the golden afternoon light falls through the leaves", "characters": ["kutty", "mittu", "chinnu", "aamai_thatha"], "setting": "the mango tree in golden afternoon light", "mood": "warm and peaceful", "camera": "rise", "hero": false, "sound_effects": ["soft wind chimes"]}
+    {"visual": "Raju walks happily towards a huge mango tree heavy with golden mangoes and lifts his trunk to pick the biggest one", "characters": ["raju"], "setting": "a sunny green meadow with a big mango tree", "mood": "bright and cheerful", "camera": "push_in", "hero": true, "sound_effects": ["birds chirping"]},
+    {"visual": "Raju sits under the mango tree hugging a big golden mango while Mittu the parrot flutters down to a low branch", "characters": ["raju", "mittu"], "setting": "the shade under the mango tree", "mood": "playful", "camera": "pan_right", "hero": false, "sound_effects": ["soft wing flutter"]},
+    {"visual": "Mittu on the low branch looks hopefully at the mango while Raju holds it close to his chest", "characters": ["raju", "mittu"], "setting": "the shade under the mango tree", "mood": "quiet and thoughtful", "camera": "still", "hero": false, "sound_effects": []},
+    {"visual": "Chinnu the squirrel runs along a dusty path towards the tree, holding her tummy", "characters": ["chinnu", "raju", "mittu"], "setting": "a winding path beside the mango tree", "mood": "gentle", "camera": "pan_left", "hero": false, "sound_effects": ["tiny tummy rumble"]},
+    {"visual": "Raju looks at his two quiet friends, the big mango in his trunk, his ears drooping a little", "characters": ["raju", "mittu", "chinnu"], "setting": "the shade under the mango tree", "mood": "soft and thoughtful", "camera": "push_in", "hero": false, "sound_effects": []},
+    {"visual": "Grandpa Tortoise walks slowly up a small grassy hill towards the friends, smiling kindly", "characters": ["aamai_thatha", "raju", "mittu", "chinnu"], "setting": "a small grassy hill near the mango tree", "mood": "warm and calm", "camera": "pull_out", "hero": false, "sound_effects": ["gentle footsteps on grass"]},
+    {"visual": "Raju smiles widely and breaks the golden mango into four equal pieces with his trunk", "characters": ["raju", "mittu", "chinnu", "aamai_thatha"], "setting": "the shade under the mango tree", "mood": "joyful", "camera": "push_in", "hero": true, "sound_effects": []},
+    {"visual": "The four friends sit together in the cool shade eating mango pieces, Mittu singing and Chinnu dancing", "characters": ["raju", "mittu", "chinnu", "aamai_thatha"], "setting": "the cool shade under the mango tree", "mood": "happy and lively", "camera": "pan_right", "hero": false, "sound_effects": ["happy chirping song"]},
+    {"visual": "Raju glows with happiness among his friends as the golden afternoon light falls through the leaves", "characters": ["raju", "mittu", "chinnu", "aamai_thatha"], "setting": "the mango tree in golden afternoon light", "mood": "warm and peaceful", "camera": "rise", "hero": false, "sound_effects": ["soft wind chimes"]}
   ],
   "text": {
     "en": {
-      "title": "Kutty and the Golden Mango",
+      "title": "Raju and the Golden Mango",
       "moral": "Sharing makes everyone happier.",
       "narrations": [
-        "One sunny morning, Kutty the little elephant walked to the big mango tree. The mangoes glowed like little suns. Kutty lifted his trunk up high and picked the biggest, sweetest mango of all.",
-        "\"This mango is all mine,\" Kutty said with a happy smile. He sat down under the tree. Just then, Mittu the parrot flew down and landed on a low branch.",
-        "\"What a lovely mango!\" said Mittu. \"I am so hungry today.\" Kutty held the mango close. He did not want to share. Mittu looked down at her little feet and said nothing more.",
+        "One sunny morning, Raju the little elephant walked to the big mango tree. The mangoes glowed like little suns. Raju lifted his trunk up high and picked the biggest, sweetest mango of all.",
+        "\"This mango is all mine,\" Raju said with a happy smile. He sat down under the tree. Just then, Mittu the parrot flew down and landed on a low branch.",
+        "\"What a lovely mango!\" said Mittu. \"I am so hungry today.\" Raju held the mango close. He did not want to share. Mittu looked down at her little feet and said nothing more.",
         "Then Chinnu the squirrel came running along the path. Her tummy made a funny rumbling sound. \"I could not find any nuts this morning,\" Chinnu said softly.",
-        "Kutty looked at his friends. Mittu was quiet. Chinnu was quiet too. The big mango felt heavy in his trunk, and somehow Kutty did not feel happy anymore.",
-        "Grandpa Tortoise walked slowly up the hill. \"Hello, little ones,\" he said. \"Kutty, a mango tastes sweet. But do you know what tastes even sweeter?\"",
-        "Kutty thought and thought. Then he smiled a big smile. He broke the mango into four pieces, one for Mittu, one for Chinnu, one for Grandpa Tortoise and one for himself.",
+        "Raju looked at his friends. Mittu was quiet. Chinnu was quiet too. The big mango felt heavy in his trunk, and somehow Raju did not feel happy anymore.",
+        "Grandpa Tortoise walked slowly up the hill. \"Hello, little ones,\" he said. \"Raju, a mango tastes sweet. But do you know what tastes even sweeter?\"",
+        "Raju thought and thought. Then he smiled a big smile. He broke the mango into four pieces, one for Mittu, one for Chinnu, one for Grandpa Tortoise and one for himself.",
         "The friends sat together in the cool shade. They ate their mango pieces and laughed and laughed. Mittu sang a happy song, and Chinnu did a little dance.",
-        "Kutty felt warm and bright inside. \"Sharing makes everyone happier,\" he said. Grandpa Tortoise nodded and smiled. {refrain}"
+        "Raju felt warm and bright inside. \"Sharing makes everyone happier,\" he said. Grandpa Tortoise nodded and smiled. {refrain}"
       ],
       "questions": [
         "What do you think the friends will do with the mango seed?",
@@ -37,18 +37,18 @@
       "hook_line": "What could be sweeter than the sweetest mango?"
     },
     "ta": {
-      "title": "குட்டியும் தங்க மாம்பழமும்",
+      "title": "ராஜுவும் தங்க மாம்பழமும்",
       "moral": "பகிர்ந்தால் எல்லோருக்கும் மகிழ்ச்சி.",
       "narrations": [
-        "ஒரு வெயில் காலையில், குட்டி யானை பெரிய மாமரத்தை நோக்கி நடந்தான். மாம்பழங்கள் குட்டிக் குட்டி சூரியன்கள் போல மின்னின. குட்டி தன் தும்பிக்கையை உயர்த்தி, மிகப் பெரிய, மிக இனிப்பான மாம்பழத்தைப் பறித்தான்.",
-        "\"இந்த மாம்பழம் எனக்கு மட்டும்தான்!\" என்று குட்டி சிரித்தபடி சொன்னான். அவன் மரத்தின் கீழ் உட்கார்ந்தான். அப்போது மிட்டு கிளி பறந்து வந்து ஒரு தாழ்ந்த கிளையில் அமர்ந்தது.",
-        "\"ஆஹா, எவ்வளவு அழகான மாம்பழம்!\" என்றது மிட்டு. \"எனக்கு இன்று ரொம்பப் பசிக்கிறது.\" குட்டி மாம்பழத்தை இறுக்கமாகப் பிடித்துக்கொண்டான். அவனுக்குப் பகிர மனமில்லை. மிட்டு அமைதியாகத் தலை குனிந்தது.",
+        "ஒரு வெயில் காலையில், ராஜு யானை பெரிய மாமரத்தை நோக்கி நடந்தான். மாம்பழங்கள் சின்னச் சின்ன சூரியன்கள் போல மின்னின. ராஜு தன் தும்பிக்கையை உயர்த்தி, மிகப் பெரிய, மிக இனிப்பான மாம்பழத்தைப் பறித்தான்.",
+        "\"இந்த மாம்பழம் எனக்கு மட்டும்தான்!\" என்று ராஜு சிரித்தபடி சொன்னான். அவன் மரத்தின் கீழ் உட்கார்ந்தான். அப்போது மிட்டு கிளி பறந்து வந்து ஒரு தாழ்ந்த கிளையில் அமர்ந்தது.",
+        "\"ஆஹா, எவ்வளவு அழகான மாம்பழம்!\" என்றது மிட்டு. \"எனக்கு இன்று ரொம்பப் பசிக்கிறது.\" ராஜு மாம்பழத்தை இறுக்கமாகப் பிடித்துக்கொண்டான். அவனுக்குப் பகிர மனமில்லை. மிட்டு அமைதியாகத் தலை குனிந்தது.",
         "அப்போது சின்னு அணில் பாதையில் ஓடி வந்தது. அதன் வயிறு குர் குர் என்று சத்தம் போட்டது. \"இன்று காலையில் எனக்கு ஒரு கொட்டை கூடக் கிடைக்கவில்லை,\" என்று சின்னு மெதுவாகச் சொன்னது.",
-        "குட்டி தன் நண்பர்களைப் பார்த்தான். மிட்டு அமைதியாக இருந்தது. சின்னுவும் அமைதியாக இருந்தது. தும்பிக்கையில் இருந்த பெரிய மாம்பழம் கனமாகத் தோன்றியது. ஏனோ குட்டிக்கு இப்போது மகிழ்ச்சியாக இல்லை.",
-        "ஆமை தாத்தா மெதுவாக மேட்டில் ஏறி வந்தார். \"வணக்கம், குழந்தைகளே,\" என்றார். \"குட்டி, மாம்பழம் இனிக்கும்தான். ஆனால் அதைவிட இனிப்பானது எது தெரியுமா?\"",
-        "குட்டி யோசித்தான், யோசித்தான். பிறகு பெரிதாகச் சிரித்தான். மாம்பழத்தை நான்கு துண்டுகளாக்கினான். ஒன்று மிட்டுவுக்கு, ஒன்று சின்னுவுக்கு, ஒன்று ஆமை தாத்தாவுக்கு, ஒன்று தனக்கு.",
-        "நண்பர்கள் எல்லோரும் குளிர்ந்த நிழலில் சேர்ந்து உட்கார்ந்தார்கள். மாம்பழத் துண்டுகளைச் சாப்பிட்டு, சிரித்துச் சிரித்து மகிழ்ந்தார்கள். மிட்டு ஒரு இனிய பாட்டுப் பாடியது. சின்னு குட்டி நடனம் ஆடியது.",
-        "குட்டியின் மனம் நிறைந்து ஒளிர்ந்தது. \"பகிர்ந்தால் எல்லோருக்கும் மகிழ்ச்சி,\" என்றான் குட்டி. ஆமை தாத்தா புன்னகையுடன் தலையசைத்தார். {refrain}"
+        "ராஜு தன் நண்பர்களைப் பார்த்தான். மிட்டு அமைதியாக இருந்தது. சின்னுவும் அமைதியாக இருந்தது. தும்பிக்கையில் இருந்த பெரிய மாம்பழம் கனமாகத் தோன்றியது. ஏனோ ராஜுவுக்கு இப்போது மகிழ்ச்சியாக இல்லை.",
+        "ஆமை தாத்தா மெதுவாக மேட்டில் ஏறி வந்தார். \"வணக்கம், குழந்தைகளே,\" என்றார். \"ராஜு, மாம்பழம் இனிக்கும்தான். ஆனால் அதைவிட இனிப்பானது எது தெரியுமா?\"",
+        "ராஜு யோசித்தான், யோசித்தான். பிறகு பெரிதாகச் சிரித்தான். மாம்பழத்தை நான்கு துண்டுகளாக்கினான். ஒன்று மிட்டுவுக்கு, ஒன்று சின்னுவுக்கு, ஒன்று ஆமை தாத்தாவுக்கு, ஒன்று தனக்கு.",
+        "நண்பர்கள் எல்லோரும் குளிர்ந்த நிழலில் சேர்ந்து உட்கார்ந்தார்கள். மாம்பழத் துண்டுகளைச் சாப்பிட்டு, சிரித்துச் சிரித்து மகிழ்ந்தார்கள். மிட்டு ஒரு இனிய பாட்டுப் பாடியது. சின்னு சின்ன நடனம் ஆடியது.",
+        "ராஜுவின் மனம் நிறைந்து ஒளிர்ந்தது. \"பகிர்ந்தால் எல்லோருக்கும் மகிழ்ச்சி,\" என்றான் ராஜு. ஆமை தாத்தா புன்னகையுடன் தலையசைத்தார். {refrain}"
       ],
       "questions": [
         "நண்பர்கள் மாங்கொட்டையை என்ன செய்வார்கள் என்று நினைக்கிறாய்?",

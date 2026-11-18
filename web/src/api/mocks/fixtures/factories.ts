@@ -34,8 +34,8 @@ export function makeChannel(overrides: Partial<Channel> = {}): Channel {
   return {
     id: "chan-en",
     credential_id: "cred-main",
-    youtube_channel_id: "UC_kutty_en_001",
-    title: "Kutty Stories",
+    youtube_channel_id: "UC_bedtime_en_001",
+    title: "Bedtime tales",
     thumbnail_url: "",
     status: "connected",
     defaults: {

@@ -24,7 +24,7 @@ const SCORE_DETAILS: ScoreItem[] = [
     title: "Visual consistency",
     score: 86,
     weight: 0.25,
-    detail: "Kutty looks the same in 11 of 12 scenes.",
+    detail: "Raju looks the same in 11 of 12 scenes.",
   },
   {
     id: "audio",
