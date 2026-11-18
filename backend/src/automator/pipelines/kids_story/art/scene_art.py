@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 from automator.domain.capabilities import ImageGenerator, ImageRequest, TextGenerator
+from automator.domain.pipeline import StageLog
+from automator.domain.run_enums import LogLevel
 from automator.pipelines.kids_story.art.prompts import judge_request, parse_choice, scene_prompt
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import StoryScene
@@ -27,7 +29,7 @@ class ScenePainter:
     judge: TextGenerator | None
     settings: KidsStorySettings
     out: Path
-    log: Callable[[str], None]
+    log: StageLog
 
     def draw(self, drawing: Drawing) -> Path:
         request = ImageRequest(
@@ -66,6 +68,9 @@ class ScenePainter:
         try:
             answer = self.judge.generate(judge_request(self.settings, scene, paths))
         except Exception as error:
-            self.log(f"picture judge failed, using the first picture: {error}")
+            self.log(
+                f"picture judge failed, using the first picture: {error}",
+                LogLevel.WARNING,
+            )
             return 0
         return parse_choice(answer, len(paths))

@@ -17,7 +17,7 @@ from tests.fixtures.kids_data import (
     tamil_draft,
     tamil_text,
 )
-from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, as_json, scripted_writer
+from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, LogBook, as_json, scripted_writer
 
 
 def tamil_without_moral() -> dict[str, Any]:
@@ -33,24 +33,24 @@ def tamil_with_banned_word() -> dict[str, Any]:
 def test_translation_missing_the_moral_is_retried_then_dropped() -> None:
     settings = quick_settings(story={"max_attempts": 2})
     writer = scripted_writer([as_json(tamil_without_moral())] * 2)
-    logs: list[str] = []
-    assert StoryAuthor(writer, settings, logs.append).translated(story(), "ta") is None
+    logs = LogBook()
+    assert StoryAuthor(writer, settings, logs).translated(story(), "ta") is None
     assert len(writer.requests) == 2
-    assert logs[0].startswith("translation to ta attempt 1 failed: say the moral")
+    assert logs.lines[0].startswith("translation to ta attempt 1 failed: say the moral")
 
 
 def test_translation_runs_the_safety_gates() -> None:
     writer = scripted_writer([as_json(tamil_with_banned_word()), as_json(tamil_text())])
-    logs: list[str] = []
-    translated = StoryAuthor(writer, quick_settings(), logs.append).translated(story(), "ta")
+    logs = LogBook()
+    translated = StoryAuthor(writer, quick_settings(), logs).translated(story(), "ta")
     assert translated is not None and len(writer.requests) == 2
-    assert "remove these words: monster" in logs[0]
+    assert "remove these words: monster" in logs.lines[0]
 
 
 def test_a_single_translation_attempt_asks_once() -> None:
     settings = quick_settings(story={"max_attempts": 1})
     writer = scripted_writer([as_json(tamil_without_moral()), as_json(tamil_text())])
-    assert StoryAuthor(writer, settings, print).translated(story(), "ta") is None
+    assert StoryAuthor(writer, settings, LogBook()).translated(story(), "ta") is None
     assert len(writer.requests) == 1
 
 

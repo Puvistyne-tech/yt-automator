@@ -48,8 +48,10 @@ def test_failing_writer_falls_back_to_a_bundled_story(tmp_path: Path) -> None:
     outcome = rig.run(StoryStage())
     assert outcome.provider == "bundled"
     assert {item.meta["source"] for item in meta_of(rig, "story")} == {"bundled"}
-    assert any("story writer unavailable" in line for line in rig.logs)
-    assert any("falling back" in line for line in rig.logs)
+    warnings = rig.book.warnings()
+    assert any("story writer unavailable" in line for line in warnings)
+    assert any("falling back" in line for line in warnings)
+    assert not any("using bundled story" in line for line in warnings)
 
 
 def test_missing_writer_logs_and_uses_a_bundled_story(tmp_path: Path) -> None:

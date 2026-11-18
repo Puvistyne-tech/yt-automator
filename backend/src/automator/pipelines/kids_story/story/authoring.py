@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from functools import partial
 
 from automator.domain.capabilities import TextGenerator
+from automator.domain.pipeline import StageLog
+from automator.domain.run_enums import LogLevel
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.gates import story_problems, translation_problems
 from automator.pipelines.kids_story.story.model import Story, StoryDraft, StoryText, with_text
@@ -20,7 +22,7 @@ class WriterUnavailableError(RuntimeError):
 class StoryAuthor:
     llm: TextGenerator
     settings: KidsStorySettings
-    log: Callable[[str], None]
+    log: StageLog
 
     def answer(self, request_text: Callable[[], str]) -> str:
         try:
@@ -44,7 +46,9 @@ class StoryAuthor:
                 feedback = story_problems(story, self.settings)
                 if not feedback:
                     return story
-            self.log(f"story attempt {attempt} failed checks: {'; '.join(feedback)}")
+            self.log(
+                f"story attempt {attempt} failed checks: {'; '.join(feedback)}", LogLevel.WARNING
+            )
         return None
 
     def translated(self, story: Story, target: str) -> Story | None:
@@ -59,5 +63,8 @@ class StoryAuthor:
                 problems = translation_problems(result, self.settings)
                 if not problems:
                     return result
-            self.log(f"translation to {target} attempt {attempt} failed: {'; '.join(problems)}")
+            self.log(
+                f"translation to {target} attempt {attempt} failed: {'; '.join(problems)}",
+                LogLevel.WARNING,
+            )
         return None

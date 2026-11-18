@@ -13,7 +13,7 @@ from automator.pipelines.kids_story.resources import resource_json
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import Story
 from automator.pipelines.kids_story.timeline.voices import VoiceLine
-from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, as_json
+from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, LogBook, as_json
 
 REFRAIN_EN = "Be kind, be brave, be you!"
 STAGES: tuple[Stage, ...] = tuple(KidsStoryPipeline().stages())
@@ -121,8 +121,12 @@ class StageRig:
     languages: tuple[str, ...] = ("en", "ta")
     providers: FakeProviders = field(default_factory=FakeProviders)
     artifacts: list[Artifact] = field(default_factory=list)
-    logs: list[str] = field(default_factory=list)
+    book: LogBook = field(default_factory=LogBook)
     run_id: str = "run-1"
+
+    @property
+    def logs(self) -> list[str]:
+        return self.book.lines
 
     def context(self) -> StageContext:
         self.root.mkdir(parents=True, exist_ok=True)
@@ -133,7 +137,7 @@ class StageRig:
             workspace=self.root,
             artifacts=tuple(self.artifacts),
             providers=self.providers,
-            log=self.logs.append,
+            log=self.book,
         )
 
     def run(self, stage: Stage) -> StageOutcome:

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from automator.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from automator.domain.pipeline_descriptors import StageDescriptor
-from automator.domain.run_enums import ArtifactKind
+from automator.domain.run_enums import ArtifactKind, LogLevel
 from automator.pipelines.kids_story.art.cards import lettered_or_plain, lettering_for
 from automator.pipelines.kids_story.art.imaging import JpegBudget, saved_jpeg
 from automator.pipelines.kids_story.artifacts import (
@@ -84,12 +84,18 @@ class PackageStage:
         )
         has_title = lettered_or_plain(path_of(context, art), lettered, lettering)
         if lines and not has_title:
-            context.log(f"thumbnail for {story.language} {variant} has no title: no usable font")
+            context.log(
+                f"thumbnail for {story.language} {variant} has no title: no usable font",
+                LogLevel.WARNING,
+            )
         output = lettered.with_name(f"{name}.jpg")
         size = saved_jpeg(lettered, output, jpeg_budget(settings.thumbnail))
         lettered.unlink()
         if size > settings.thumbnail.max_bytes:
-            context.log(f"{output.name} is still {size} bytes at the narrowest allowed width")
+            context.log(
+                f"{output.name} is still {size} bytes at the narrowest allowed width",
+                LogLevel.WARNING,
+            )
         return artifact(
             ArtifactKind.THUMBNAIL,
             output,
@@ -124,7 +130,10 @@ class PackageStage:
             return []
         source = path_of(context, required(context.artifacts, Role.CAPTIONS, language, variant))
         if not has_cues(source):
-            context.log(f"no caption track for {language} {variant}: the subtitles are empty")
+            context.log(
+                f"no caption track for {language} {variant}: the subtitles are empty",
+                LogLevel.WARNING,
+            )
             return []
         output = folder(context, "package") / f"captions-{language}-{variant}.srt"
         shutil.copyfile(source, output)

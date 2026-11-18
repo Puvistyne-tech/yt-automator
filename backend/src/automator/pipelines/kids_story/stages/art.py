@@ -5,7 +5,7 @@ from pathlib import Path
 from automator.domain.capabilities import Capability, TextGenerator
 from automator.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from automator.domain.pipeline_descriptors import StageDescriptor
-from automator.domain.run_enums import ArtifactKind
+from automator.domain.run_enums import ArtifactKind, LogLevel
 from automator.pipelines.kids_story.art.cards import badged_copy
 from automator.pipelines.kids_story.art.prompts import character_prompt, scene_prompt
 from automator.pipelines.kids_story.art.scene_art import Drawing, ScenePainter
@@ -59,7 +59,10 @@ class ArtStage:
         try:
             return context.providers.resolve(Capability.LLM)
         except LookupError:
-            context.log("no language model for picking pictures; using the first candidate")
+            context.log(
+                "no language model for picking pictures; using the first candidate",
+                LogLevel.WARNING,
+            )
             return None
 
     def sheets(

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 
 from automator.domain.capabilities import Capability, MediaToolkit, VideoComposition
-from automator.domain.pipeline import NewArtifact, StageContext, StageOutcome
+from automator.domain.pipeline import NewArtifact, StageContext, StageLog, StageOutcome
 from automator.domain.pipeline_descriptors import StageDescriptor
-from automator.domain.run_enums import ArtifactKind
+from automator.domain.run_enums import ArtifactKind, LogLevel
 from automator.pipelines.kids_story.artifacts import (
     Role,
     artifact,
@@ -34,13 +33,14 @@ def keyed_paths(context: StageContext, role: Role, key: str) -> dict[str, Path]:
     }
 
 
-def measured(
-    media: MediaToolkit, video: Path, planned_seconds: float, log: Callable[[str], None]
-) -> float:
+def measured(media: MediaToolkit, video: Path, planned_seconds: float, log: StageLog) -> float:
     try:
         return media.duration_seconds(video)
     except (OSError, ValueError) as error:
-        log(f"could not measure {video.name}, using the planned length: {error}")
+        log(
+            f"could not measure {video.name}, using the planned length: {error}",
+            LogLevel.WARNING,
+        )
         return planned_seconds
 
 

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import shutil
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from pathlib import Path
 
+from automator.domain.pipeline import StageLog
+from automator.domain.run_enums import LogLevel
 from automator.pipelines.kids_story.art.imaging import covered_copy
 from automator.pipelines.kids_story.art.lettering import Lettering, lettered
 from automator.pipelines.kids_story.settings.base import Placement
@@ -61,9 +63,7 @@ def wants_badge(visuals: VisualSettings) -> bool:
     return visuals.overlay_series_badge and bool(visuals.badge_text.strip())
 
 
-def badged_copy(
-    source: Path, output: Path, settings: KidsStorySettings, log: Callable[[str], None]
-) -> Path:
+def badged_copy(source: Path, output: Path, settings: KidsStorySettings, log: StageLog) -> Path:
     visuals = settings.visuals
     if not wants_badge(visuals):
         return source
@@ -73,5 +73,8 @@ def badged_copy(
     )
     if lettered(source, output, lettering):
         return output
-    log(f"brand mark skipped on {source.name}: no usable font or text shaping")
+    log(
+        f"brand mark skipped on {source.name}: no usable font or text shaping",
+        LogLevel.WARNING,
+    )
     return source

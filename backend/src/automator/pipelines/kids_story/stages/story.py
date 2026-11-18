@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from automator.domain.capabilities import Capability
 from automator.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from automator.domain.pipeline_descriptors import StageDescriptor
-from automator.domain.run_enums import ArtifactKind
+from automator.domain.run_enums import ArtifactKind, LogLevel
 from automator.pipelines.kids_story.artifacts import Role, artifact, folder, write_json
 from automator.pipelines.kids_story.languages import ordered_languages, primary_language
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
@@ -53,7 +53,10 @@ class StoryStage:
             written = self.from_writer(context, settings, order, theme)
             if written is not None:
                 return written
-            context.log("falling back to a bundled story")
+            context.log(
+                "falling back to a bundled story",
+                LogLevel.WARNING,
+            )
         return self.from_bundle(context, settings, order, theme)
 
     def from_writer(
@@ -72,7 +75,10 @@ class StoryStage:
                     return None
                 stories[language] = translated
         except (LookupError, WriterUnavailableError) as error:
-            context.log(f"story writer unavailable: {error}")
+            context.log(
+                f"story writer unavailable: {error}",
+                LogLevel.WARNING,
+            )
             return None
         return stories, llm.provider_id
 

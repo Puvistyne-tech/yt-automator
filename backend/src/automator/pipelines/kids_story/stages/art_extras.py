@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from automator.domain.pipeline import NewArtifact, StageContext
-from automator.domain.run_enums import ArtifactKind
+from automator.domain.run_enums import ArtifactKind, LogLevel
 from automator.pipelines.kids_story.art.cards import (
     badged_copy,
     card_lines,
@@ -62,7 +62,9 @@ class ExtraArt:
             )
             if cropped is not None:
                 return cropped
-            self.context.log(f"could not crop {source.name}; drawing a vertical picture")
+            self.context.log(
+                f"could not crop {source.name}; drawing a vertical picture", LogLevel.WARNING
+            )
         return self.painter.draw(drawing)
 
     def short_visual(self, index: int) -> NewArtifact:

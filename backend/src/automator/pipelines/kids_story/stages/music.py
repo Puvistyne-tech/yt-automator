@@ -3,7 +3,7 @@ from __future__ import annotations
 from automator.domain.capabilities import Capability, MusicGenerator, MusicRequest
 from automator.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from automator.domain.pipeline_descriptors import StageDescriptor
-from automator.domain.run_enums import ArtifactKind
+from automator.domain.run_enums import ArtifactKind, LogLevel
 from automator.pipelines.kids_story.artifacts import Role, artifact, folder
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.stages.media_types import WAV
@@ -47,7 +47,10 @@ class MusicStage:
         try:
             composer = context.providers.resolve(Capability.MUSIC)
         except LookupError as error:
-            context.log(f"no music provider, continuing without music: {error}")
+            context.log(
+                f"no music provider, continuing without music: {error}",
+                LogLevel.WARNING,
+            )
             return StageOutcome(message="no music provider")
         stories = load_stories(context)
         made = self.beds(context, composer, settings, stories) if settings.music.enabled else []

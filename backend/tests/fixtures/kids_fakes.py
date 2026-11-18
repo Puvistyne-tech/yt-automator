@@ -20,9 +20,25 @@ from automator.domain.capabilities import (
     VideoComposition,
     WordTiming,
 )
+from automator.domain.run_enums import LogLevel
 
 WORD_SECONDS = {"en": 0.5, "ta": 0.75}
 TAIL_SECONDS = 0.2
+
+
+class LogBook:
+    def __init__(self) -> None:
+        self.entries: list[tuple[LogLevel, str]] = []
+
+    def __call__(self, message: str, level: LogLevel = LogLevel.INFO) -> None:
+        self.entries.append((level, message))
+
+    @property
+    def lines(self) -> list[str]:
+        return [message for _, message in self.entries]
+
+    def warnings(self) -> list[str]:
+        return [message for level, message in self.entries if level is LogLevel.WARNING]
 
 
 class FakeWriter:

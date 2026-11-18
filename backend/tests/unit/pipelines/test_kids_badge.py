@@ -63,7 +63,7 @@ def test_tamil_brand_mark_is_skipped_without_shaping(
 def test_brand_mark_without_a_font_is_skipped_and_logged(tmp_path: Path) -> None:
     rig = badge_run(tmp_path, {"en": [], "ta": []})
     assert all("badge" not in path.name for path in visual_files(rig, "episode"))
-    assert any("brand mark skipped" in line for line in rig.logs)
+    assert any("brand mark skipped" in line for line in rig.book.warnings())
 
 
 @pytest.mark.parametrize("visuals", [{"overlay_series_badge": False}, {"badge_text": "  "}])

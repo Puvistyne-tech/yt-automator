@@ -143,7 +143,7 @@ def test_music_and_effects_follow_their_prompts(tmp_path: Path) -> None:
 def test_missing_music_provider_logs_and_adds_nothing(tmp_path: Path) -> None:
     missing = run_chain(StageRig(tmp_path, providers=FakeProviders(music=None)))
     assert meta_of(missing, "music") == []
-    assert any("no music provider" in line for line in missing.logs)
+    assert any("no music provider" in line for line in missing.book.warnings())
 
 
 def test_effect_cues_are_unique_and_never_empty() -> None:
