@@ -20,6 +20,7 @@ Dependencies flow in one direction. A layer may import only from the layers list
 - `domain` performs no I/O and imports no framework: no FastAPI, SQLModel, httpx, subprocess, or filesystem access.
 - `application` reaches the outside world only through `domain/ports.py` interfaces.
 - `infrastructure` implements ports. Nothing imports `infrastructure` except `main.py`.
+- A class that implements a port lives in `infrastructure`, even when it only delegates to a pure `domain` function.
 - `pipelines` receive providers through ports. A pipeline never imports a concrete adapter or another pipeline.
 - `pipelines/registry.py` is the plugin index: it may import each plugin, and no plugin imports it.
 - `api` translates HTTP to use-case calls. No business rules, no database queries, no provider calls.
@@ -53,3 +54,4 @@ Dependencies flow in one direction. A layer may import only from the layers list
 - No circular imports. No `utils.py` or `helpers.py` grab-bags: name a module after what it does.
 - Secrets never enter the repository, logs, or API responses.
 - Every external tool sits behind a port with a fake implementation for tests.
+- `docs/spec/platform.md` is the contract. Code and spec change in the same pull request and never disagree.

@@ -62,6 +62,9 @@ def test_python_lines(source: str, count: int) -> None:
         ("// biome-ignore lint/style/noNonNullAssertion\nx!;\n", 1),
         ("// biome-ignore format: reason\nx;\n", 1),
         ("// @ts-ignore\nx;\n", 1),
+        ("// @ts-expect-error legacy typing\nlet a: number = 'x';\n", 0),
+        ("// @ts-expect-errors\nx;\n", 1),
+        ('/// <reference types="vite/client"\n', 1),
     ],
 )
 def test_script_lines(source: str, count: int) -> None:
