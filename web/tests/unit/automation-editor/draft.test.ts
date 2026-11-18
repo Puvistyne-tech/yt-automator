@@ -1,20 +1,23 @@
+import { DEFAULT_SCHEDULE_LIMITS } from "@/api/automationDefaults";
 import { makeAutomation, makeChannel, makeTarget } from "@/api/mocks/fixtures/factories";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import type { PipelineDescriptor } from "@/api/types";
 import {
   applyPipeline,
-  DEFAULT_CRON,
-  DEFAULT_INTERVAL_HOURS,
   draftFromAutomation,
   draftSignature,
   draftToInput,
   emptyDraft,
   initialDraft,
   newTarget,
+} from "@/features/automation-editor/model/draft";
+import {
+  DEFAULT_CRON,
+  DEFAULT_INTERVAL_HOURS,
   normalizeSchedule,
   withEveryHours,
   withScheduleKind,
-} from "@/features/automation-editor/model/draft";
+} from "@/features/automation-editor/model/schedule";
 
 const plainPipeline: PipelineDescriptor = {
   ...kidsStoryPipeline,
@@ -70,7 +73,13 @@ describe("draft model", () => {
     const automation = makeAutomation({
       name: "  Night  ",
       targets: [makeTarget({ made_for_kids: false })],
-      schedule: { kind: "interval", every_hours: 6, cron: "0 1 * * *", timezone: "UTC" },
+      schedule: {
+        kind: "interval",
+        every_hours: 6,
+        cron: "0 1 * * *",
+        timezone: "UTC",
+        ...DEFAULT_SCHEDULE_LIMITS,
+      },
     });
     const input = draftToInput(draftFromAutomation(automation), kidsStoryPipeline);
     expect(input.name).toBe("Night");
@@ -80,6 +89,7 @@ describe("draft model", () => {
       every_hours: 6,
       cron: null,
       timezone: "UTC",
+      ...DEFAULT_SCHEDULE_LIMITS,
     });
   });
 
@@ -110,12 +120,18 @@ describe("draft model", () => {
 });
 
 describe("schedule model", () => {
-  const manual = { kind: "manual" as const, every_hours: null, cron: null, timezone: "UTC" };
+  const manual = {
+    kind: "manual" as const,
+    every_hours: null,
+    cron: null,
+    timezone: "UTC",
+    ...DEFAULT_SCHEDULE_LIMITS,
+  };
 
   it("trims cron text and drops the interval for cron schedules", () => {
     expect(
-      normalizeSchedule({ kind: "cron", cron: " 0 8 * * * ", every_hours: 3, timezone: "UTC" }),
-    ).toEqual({ kind: "cron", cron: "0 8 * * *", every_hours: null, timezone: "UTC" });
+      normalizeSchedule({ ...manual, kind: "cron", cron: " 0 8 * * * ", every_hours: 3 }),
+    ).toEqual({ ...manual, kind: "cron", cron: "0 8 * * *", every_hours: null });
     expect(normalizeSchedule({ ...manual, kind: "cron" }).cron).toBe("");
   });
 

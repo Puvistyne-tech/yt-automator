@@ -5,6 +5,7 @@ from functools import partial
 
 from pydantic import BaseModel
 
+from automator.application.auto_publish import AutoPublish
 from automator.application.lookups import require_run
 from automator.application.run_progress import RunProgress
 from automator.application.run_recorder import RunRecorder
@@ -22,8 +23,9 @@ from automator.domain.ports import (
     ProviderConfigRepository,
     RunRepository,
 )
-from automator.domain.quality import status_after_scoring, weighted_score
-from automator.domain.run_enums import RunStatus
+from automator.domain.quality import auto_rejection, status_after_scoring, weighted_score
+from automator.domain.run_enums import LogLevel, ReviewDecision, RunStatus
+from automator.domain.run_parts import Review
 from automator.domain.runs import Run
 from automator.domain.validation import validated_settings
 from automator.shared.errors import describe_error
@@ -39,11 +41,12 @@ class ExecuteRun:
     recorder: RunRecorder
     progress: RunProgress
     stage_runner: StageRunner
+    auto_publish: AutoPublish
 
     def execute(self, run_id: str) -> Run:
         run = require_run(self.runs, run_id)
         if run.status is not RunStatus.QUEUED:
-            return run
+            return self.auto_publish.after_approval(run)
         pipeline = self.pipelines.get(run.pipeline_type)
         if pipeline is None:
             return self.settled(
@@ -88,9 +91,20 @@ class ExecuteRun:
             failure = f"scoring failed: {describe_error(error)}"
             return self.settled(run, self.progress.fail(run, failure))
         score = weighted_score(items)
+        rejection = auto_rejection(run.review_policy, score)
+        updates: dict[str, object] = {"score": score, "score_details": items}
+        if rejection is not None:
+            updates["review"] = self.automatic_review(rejection)
         status = status_after_scoring(run.review_policy, score)
-        scores = {"score": score, "score_details": items}
-        return self.settled(run, self.progress.advance(run, status, updates=scores))
+        result = self.progress.advance(run, status, updates=updates)
+        if result is not None and rejection is not None:
+            self.recorder.log(run.id, rejection, LogLevel.WARNING)
+            result = self.progress.synced(result)
+        return self.auto_publish.after_approval(self.settled(run, result))
+
+    def automatic_review(self, notes: str) -> Review:
+        decided_at = self.progress.clock.now()
+        return Review(decision=ReviewDecision.REJECTED, notes=notes, decided_at=decided_at)
 
     def settled(self, run: Run, result: Run | None) -> Run:
         return result if result is not None else self.progress.synced(run)

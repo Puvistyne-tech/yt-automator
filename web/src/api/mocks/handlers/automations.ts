@@ -1,4 +1,5 @@
 import { HttpResponse, http } from "msw";
+import { automationRuleErrors } from "@/api/mocks/automationRules";
 import { db, EMPTY_VALUE_MESSAGE, noContent, notFound, validationFailed } from "@/api/mocks/db";
 import { makeRun, stagesWith } from "@/api/mocks/fixtures/factories";
 import type { Automation, AutomationInput } from "@/api/types";
@@ -17,7 +18,7 @@ function inputErrors(input: AutomationInput): Record<string, string> {
       errors[`targets.${index}.channel_id`] = `channel '${target.channel_id}' does not exist`;
     }
   });
-  return errors;
+  return { ...errors, ...automationRuleErrors(input) };
 }
 
 function nextRunAt(input: AutomationInput): string | null {
@@ -113,6 +114,7 @@ export const automationHandlers = [
       languages: automation.languages,
       settings_snapshot: structuredClone(automation.settings),
       review_policy: { ...automation.review_policy },
+      retry_policy: { ...automation.retry_policy },
       stages: stagesWith([]),
       artifacts: [],
       score: null,

@@ -62,8 +62,8 @@ export function AutomationEditor(props: AutomationEditorProps) {
         <ContentSection {...common} pipeline={pipeline} />
         {pipeline && <LanguagesSection {...common} pipeline={pipeline} />}
         {pipeline && <TargetsSection {...common} pipeline={pipeline} channels={props.channels} />}
-        <ScheduleSection {...common} />
-        <ReviewSection {...common} />
+        <ScheduleSection {...common} channels={props.channels} />
+        <ReviewSection {...common} channels={props.channels} />
         <SaveBar
           dirty={editor.dirty}
           saving={editor.saving}

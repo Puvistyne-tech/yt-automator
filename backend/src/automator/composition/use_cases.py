@@ -7,6 +7,7 @@ from automator.api.container import (
     RunUseCases,
     UseCases,
 )
+from automator.application.auto_publish import AutoPublish
 from automator.application.cancel_run import CancelRun
 from automator.application.complete_channel_connect import CompleteChannelConnect
 from automator.application.create_automation import CreateAutomation
@@ -34,12 +35,14 @@ from automator.application.list_secrets import ListSecrets
 from automator.application.open_run_artifact import OpenRunArtifact
 from automator.application.publish_run import PublishRun
 from automator.application.recover_interrupted_runs import RecoverInterruptedRuns
+from automator.application.retry_due_runs import RetryDueRuns
 from automator.application.retry_run import RetryRun
 from automator.application.review_run import ReviewRun
 from automator.application.run_doctor import RunDoctor
 from automator.application.run_due_automations import RunDueAutomations
 from automator.application.save_provider_config import SaveProviderConfig
 from automator.application.save_settings import SaveSettings
+from automator.application.scheduler_tick import SchedulerTick
 from automator.application.set_automation_enabled import SetAutomationEnabled
 from automator.application.set_secret import SetSecret
 from automator.application.stage_runner import StageRunner
@@ -71,6 +74,14 @@ def channel_use_cases(p: Ports, c: Collaborators) -> ChannelUseCases:
     )
 
 
+def scheduler_tick(p: Ports, c: Collaborators, starter: StartRun) -> SchedulerTick:
+    retry = RetryRun(p.runs, p.store, c.progress, p.queue)
+    return SchedulerTick(
+        retry_due=RetryDueRuns(p.runs, retry, c.recorder),
+        run_due=RunDueAutomations(p.automations, c.presenter, starter, p.runs, c.recorder),
+    )
+
+
 def automation_use_cases(p: Ports, c: Collaborators) -> AutomationUseCases:
     starter = StartRun(p.automations, p.pipelines, c.recorder, p.queue, p.ids, p.clock)
     return AutomationUseCases(
@@ -82,11 +93,11 @@ def automation_use_cases(p: Ports, c: Collaborators) -> AutomationUseCases:
         delete=DeleteAutomation(p.automations),
         duplicate=DuplicateAutomation(p.automations, c.presenter, p.ids, p.clock),
         start_run=starter,
-        run_due=RunDueAutomations(p.automations, c.presenter, starter),
+        scheduler=scheduler_tick(p, c, starter),
     )
 
 
-def execute_run(p: Ports, c: Collaborators) -> ExecuteRun:
+def execute_run(p: Ports, c: Collaborators, publisher: PublishRun) -> ExecuteRun:
     runner = StageRunner(p.store, c.recorder, c.progress, p.ids, p.clock)
     return ExecuteRun(
         p.runs,
@@ -97,6 +108,7 @@ def execute_run(p: Ports, c: Collaborators) -> ExecuteRun:
         c.recorder,
         c.progress,
         runner,
+        AutoPublish(p.runs, publisher, c.recorder),
     )
 
 
@@ -117,16 +129,17 @@ def publish_run(p: Ports, c: Collaborators) -> PublishRun:
 
 
 def run_use_cases(p: Ports, c: Collaborators) -> RunUseCases:
+    publisher = publish_run(p, c)
     return RunUseCases(
         list_runs=ListRuns(p.runs),
         get=GetRun(p.runs),
         retry=RetryRun(p.runs, p.store, c.progress, p.queue),
         cancel=CancelRun(p.runs, c.progress, p.queue),
-        review=ReviewRun(p.runs, c.progress, p.clock),
-        publish=publish_run(p, c),
+        review=ReviewRun(p.runs, c.progress, p.clock, p.queue),
+        publish=publisher,
         delete=DeleteRun(p.runs, p.store),
         open_artifact=OpenRunArtifact(p.runs, p.store),
-        execute=execute_run(p, c),
+        execute=execute_run(p, c, publisher),
         recover=RecoverInterruptedRuns(p.runs, c.recorder, c.progress, p.queue, p.clock),
     )
 

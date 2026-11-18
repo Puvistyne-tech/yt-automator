@@ -15,6 +15,7 @@ const UPLOAD_COLUMNS = [
   "Output",
   "Privacy",
   "Made for kids",
+  "Goes public",
   "Status",
   "Quota",
   { label: "Link", hidden: true },
@@ -41,6 +42,7 @@ function UploadRow({ upload, channelTitle }: { upload: Upload; channelTitle: str
       <td>{humanizeId(upload.variant)}</td>
       <td>{audience.privacy}</td>
       <td>{audience.madeForKids}</td>
+      <td>{audience.goesPublic}</td>
       <td className="cell-wrap">
         <UploadStatus upload={upload} />
       </td>

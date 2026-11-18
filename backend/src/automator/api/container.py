@@ -35,9 +35,9 @@ from automator.application.recover_interrupted_runs import RecoverInterruptedRun
 from automator.application.retry_run import RetryRun
 from automator.application.review_run import ReviewRun
 from automator.application.run_doctor import RunDoctor
-from automator.application.run_due_automations import RunDueAutomations
 from automator.application.save_provider_config import SaveProviderConfig
 from automator.application.save_settings import SaveSettings
+from automator.application.scheduler_tick import SchedulerTick
 from automator.application.set_automation_enabled import SetAutomationEnabled
 from automator.application.set_secret import SetSecret
 from automator.application.start_channel_connect import StartChannelConnect
@@ -80,7 +80,7 @@ class AutomationUseCases:
     delete: DeleteAutomation
     duplicate: DuplicateAutomation
     start_run: StartRun
-    run_due: RunDueAutomations
+    scheduler: SchedulerTick
 
 
 @dataclass(frozen=True)

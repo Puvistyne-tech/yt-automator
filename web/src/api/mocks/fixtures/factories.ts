@@ -1,3 +1,8 @@
+import {
+  DEFAULT_RETRY_POLICY,
+  DEFAULT_REVIEW_POLICY,
+  DEFAULT_SCHEDULE_LIMITS,
+} from "@/api/automationDefaults";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import type {
   Artifact,
@@ -60,6 +65,8 @@ export function makeTarget(overrides: Partial<Target> = {}): Target {
     made_for_kids: true,
     playlist_id: null,
     publish_delay_minutes: 0,
+    publish_time_of_day: null,
+    publish_timezone: "Asia/Kolkata",
     ...overrides,
   };
 }
@@ -73,8 +80,15 @@ export function makeAutomation(overrides: Partial<Automation> = {}): Automation 
     settings: structuredClone(kidsStoryPipeline.default_settings),
     languages: ["en"],
     targets: [makeTarget()],
-    schedule: { kind: "cron", every_hours: null, cron: "0 18 * * *", timezone: "Asia/Kolkata" },
-    review_policy: { mode: "always", min_score: 85 },
+    schedule: {
+      kind: "cron",
+      every_hours: null,
+      cron: "0 18 * * *",
+      timezone: "Asia/Kolkata",
+      ...DEFAULT_SCHEDULE_LIMITS,
+    },
+    review_policy: { ...DEFAULT_REVIEW_POLICY },
+    retry_policy: { ...DEFAULT_RETRY_POLICY },
     enabled: true,
     created_at: hoursAgo(24 * 14),
     updated_at: hoursAgo(24 * 2),
@@ -125,7 +139,11 @@ export function makeRun(overrides: Partial<Run> = {}): Run {
     trigger: "schedule",
     languages: ["en"],
     settings_snapshot: structuredClone(kidsStoryPipeline.default_settings),
-    review_policy: { mode: "always", min_score: 85 },
+    review_policy: { ...DEFAULT_REVIEW_POLICY },
+    retry_policy: { ...DEFAULT_RETRY_POLICY },
+    auto_retries: 0,
+    retry_at: null,
+    skipped_start_at: null,
     stages: stagesWith(["done", "done", "done", "done", "done", "done"]),
     artifacts: [makeArtifact()],
     score: 88,
@@ -154,6 +172,7 @@ export function makeUpload(overrides: Partial<Upload> = {}): Upload {
     quota_units: 2050,
     privacy: "private",
     made_for_kids: true,
+    publish_at: null,
     ...overrides,
   };
 }

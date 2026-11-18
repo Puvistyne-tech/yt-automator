@@ -19,7 +19,18 @@ def test_automation_crud(api: Api) -> None:
         "every_hours": None,
         "cron": None,
         "timezone": "UTC",
+        "skip_if_unfinished": True,
+        "max_runs_per_day": None,
+        "active_from": None,
+        "active_until": None,
     }
+    assert created["review_policy"] == {
+        "mode": "always",
+        "min_score": 85.0,
+        "reject_below": None,
+        "auto_publish": False,
+    }
+    assert created["retry_policy"] == {"auto_retry_count": 0, "retry_delay_minutes": 10}
     assert [item["id"] for item in ok(client.get("/api/automations"))] == [automation_id]
     assert ok(client.get(f"/api/automations/{automation_id}"))["name"] == "Bedtime"
     schedule = {"kind": "interval", "every_hours": 6}

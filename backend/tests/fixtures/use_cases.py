@@ -45,7 +45,7 @@ def cancel_run(h: Harness) -> CancelRun:
 
 
 def review_run(h: Harness) -> ReviewRun:
-    return ReviewRun(h.runs, h.progress, h.clock)
+    return ReviewRun(h.runs, h.progress, h.clock, h.queue)
 
 
 def delete_run(h: Harness) -> DeleteRun:
@@ -53,18 +53,7 @@ def delete_run(h: Harness) -> DeleteRun:
 
 
 def publish_run(h: Harness) -> PublishRun:
-    return PublishRun(
-        h.runs,
-        h.automations,
-        h.channels,
-        h.credentials,
-        h.pipelines,
-        h.quota_report,
-        h.performer,
-        h.recorder,
-        h.progress,
-        h.clock,
-    )
+    return h.publisher
 
 
 def get_dashboard(h: Harness) -> GetDashboard:
@@ -74,7 +63,7 @@ def get_dashboard(h: Harness) -> GetDashboard:
 
 
 def run_due(h: Harness) -> RunDueAutomations:
-    return RunDueAutomations(h.automations, h.presenter, h.start_run)
+    return RunDueAutomations(h.automations, h.presenter, h.start_run, h.runs, h.recorder)
 
 
 def update_automation(h: Harness) -> UpdateAutomation:

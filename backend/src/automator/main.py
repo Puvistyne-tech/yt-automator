@@ -144,7 +144,7 @@ def build_runtime(config: RuntimeConfig, overrides: Overrides) -> Runtime:
     ports = build_ports(config, database, queue, overrides)
     use_cases = build_use_cases(ports)
     scheduler = SchedulerTicker(
-        use_cases.automations.run_due.execute, ports.clock, config.scheduler_tick_seconds
+        use_cases.automations.scheduler.execute, ports.clock, config.scheduler_tick_seconds
     )
     return Runtime(config, database, ports, queue, scheduler, use_cases)
 

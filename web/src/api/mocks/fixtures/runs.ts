@@ -1,3 +1,4 @@
+import { autoRejectMessage, autoRetryMessage, skippedStartMessage } from "@/api/automaticEvents";
 import { artifactsFor, FULL_ARTIFACTS, STORY_ARTIFACT } from "@/api/mocks/fixtures/artifacts";
 import { hoursAgo, makeRun, makeUpload, stagesWith } from "@/api/mocks/fixtures/factories";
 import type { LogLevel, ReviewPolicy, Run, RunLog, ScoreItem } from "@/api/types";
@@ -42,13 +43,19 @@ const SCORE_DETAILS: ScoreItem[] = [
   },
 ];
 
-const SHORTS_POLICY: ReviewPolicy = { mode: "auto_when_score_at_least", min_score: 90 };
+const SHORTS_POLICY: ReviewPolicy = {
+  mode: "auto_when_score_at_least",
+  min_score: 90,
+  reject_below: 60,
+  auto_publish: true,
+};
 
 const SHORTS = {
   automation_id: "auto-shorts",
   automation_name: "Tamil shorts",
   languages: ["ta"],
   review_policy: SHORTS_POLICY,
+  retry_policy: { auto_retry_count: 2, retry_delay_minutes: 15 },
   artifacts: [],
   score: null,
 };
@@ -64,7 +71,14 @@ const RUN_LIVE = makeRun({
     log(0.29, "story", "Story written in English and Tamil"),
     log(0.25, "images", "Scene 4 needed a second attempt", "warning"),
     log(0.2, "motion", "Animating 8 scenes"),
+    log(
+      0.1,
+      null,
+      skippedStartMessage("2026-01-05 18:00 Asia/Kolkata", "run-live", "running"),
+      "warning",
+    ),
   ],
+  skipped_start_at: hoursAgo(0.1),
   score: null,
   created_at: hoursAgo(0.3),
   started_at: hoursAgo(0.3),
@@ -116,13 +130,18 @@ const RUN_PUBLISHED = makeRun({
   finished_at: hoursAgo(25),
 });
 
+const VOICE_ERROR = "Narrate: the Tamil voice model is not installed.";
+
 const RUN_FAILED = makeRun({
   ...SHORTS,
   id: "run-failed",
   status: "failed",
   stages: stagesWith(["done", "done", "done", "failed", "pending", "pending"]),
-  error: "Narrate: the Tamil voice model is not installed.",
+  error: VOICE_ERROR,
+  auto_retries: 1,
+  retry_at: hoursAgo(-0.2),
   logs: [
+    log(8.4, null, autoRetryMessage(1, 2, "voice", VOICE_ERROR)),
     log(7.95, "voice", "Kokoro has no Tamil voice, trying the next provider", "warning"),
     log(7.9, "voice", "No text-to-speech provider can speak Tamil", "error"),
     log(7.8, null, "Run failed"),
@@ -142,7 +161,29 @@ const RUN_QUEUED = makeRun({
   finished_at: null,
 });
 
-const SEED_RUNS: Run[] = [RUN_LIVE, RUN_REVIEW, RUN_PUBLISHED, RUN_FAILED, RUN_QUEUED];
+const REJECTION = autoRejectMessage(52.5, 60);
+
+const RUN_REJECTED = makeRun({
+  ...SHORTS,
+  id: "run-rejected",
+  status: "rejected",
+  score: 52.5,
+  score_details: SCORE_DETAILS,
+  review: { decision: "rejected", notes: REJECTION, decided_at: hoursAgo(13) },
+  logs: [log(13, null, REJECTION, "warning")],
+  created_at: hoursAgo(14),
+  started_at: hoursAgo(14),
+  finished_at: hoursAgo(13),
+});
+
+const SEED_RUNS: Run[] = [
+  RUN_LIVE,
+  RUN_REVIEW,
+  RUN_PUBLISHED,
+  RUN_FAILED,
+  RUN_QUEUED,
+  RUN_REJECTED,
+];
 
 export function seedRuns(): Run[] {
   return structuredClone(SEED_RUNS);

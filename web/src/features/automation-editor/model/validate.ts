@@ -1,8 +1,12 @@
 import type { FieldErrors } from "@/api/errors";
-import type { Channel, PipelineDescriptor, ReviewPolicy, Schedule } from "@/api/types";
+import type { Channel, PipelineDescriptor } from "@/api/types";
 import type { AutomationDraft, TargetDraft } from "@/features/automation-editor/model/draft";
-import { cronError } from "@/shared/format/cron";
-import { isIntegerAtLeast } from "@/shared/format/numbers";
+import {
+  publishTimeErrors,
+  retryErrors,
+  reviewErrors,
+  scheduleErrors,
+} from "@/features/automation-editor/model/ruleErrors";
 
 export interface ValidationContext {
   pipeline: PipelineDescriptor | undefined;
@@ -63,35 +67,7 @@ function targetErrors(
   } else if (target.variants.some((v) => !variants.has(v))) {
     errors[at("variants")] = "One of the outputs is not offered by this pipeline.";
   }
-  if (!isIntegerAtLeast(target.publish_delay_minutes, 0)) {
-    errors[at("publish_delay_minutes")] = "Use a whole number of minutes, 0 or more.";
-  }
-  return errors;
-}
-
-export function scheduleErrors(schedule: Schedule): FieldErrors {
-  const errors: FieldErrors = {};
-  if (schedule.kind === "interval" && !isIntegerAtLeast(schedule.every_hours, 1)) {
-    errors["schedule.every_hours"] = "Run at least every 1 hour, in whole hours.";
-  }
-  if (schedule.kind === "cron") {
-    const problem = cronError(schedule.cron ?? "");
-    if (problem !== null) {
-      errors["schedule.cron"] = problem;
-    }
-  }
-  if (schedule.timezone.trim() === "") {
-    errors["schedule.timezone"] = "Choose a timezone.";
-  }
-  return errors;
-}
-
-export function reviewErrors(policy: ReviewPolicy): FieldErrors {
-  const score = policy.min_score;
-  const invalid = !Number.isFinite(score) || score < 0 || score > 100;
-  return policy.mode === "auto_when_score_at_least" && invalid
-    ? { "review_policy.min_score": "Use a score between 0 and 100." }
-    : {};
+  return { ...errors, ...publishTimeErrors(target, at) };
 }
 
 function settingsErrors(errors: Record<string, string>): FieldErrors {
@@ -117,5 +93,6 @@ export function validateDraft(draft: AutomationDraft, context: ValidationContext
     ...Object.assign({}, ...draft.targets.map((t, i) => targetErrors(t, i, draft, scoped))),
     ...scheduleErrors(draft.schedule),
     ...reviewErrors(draft.review_policy),
+    ...retryErrors(draft.retry_policy),
   };
 }

@@ -1,5 +1,6 @@
+import { afterApproval, autoRejected, scoredStatus } from "@/api/mocks/autoRules";
 import { db } from "@/api/mocks/db";
-import type { JsonObject, Run, RunEventKind, RunLog, RunStatus, StageRun } from "@/api/types";
+import type { JsonObject, Run, RunEventKind, RunLog, StageRun } from "@/api/types";
 
 function emit(run: Run, kind: RunEventKind, payload: JsonObject) {
   db.emit({ run_id: run.id, kind, at: db.now(), payload });
@@ -21,15 +22,13 @@ function startRun(run: Run): Run {
 
 const SIMULATED_SCORE = 87.5;
 
-function scoredStatus(run: Run, score: number): RunStatus {
-  const { mode, min_score } = run.review_policy;
-  return mode === "auto_when_score_at_least" && score >= min_score ? "approved" : "awaiting_review";
-}
-
 function finishRun(run: Run): Run {
   const status = scoredStatus(run, SIMULATED_SCORE);
-  emit(run, "status", { status });
-  return { ...run, status, score: SIMULATED_SCORE, finished_at: db.now() };
+  const scored: Run = { ...run, status, score: SIMULATED_SCORE, finished_at: db.now() };
+  const finished =
+    status === "rejected" ? autoRejected(scored, SIMULATED_SCORE) : afterApproval(scored);
+  emit(run, "status", { status: finished.status });
+  return finished;
 }
 
 function stageUpdate(stage: StageRun, status: StageRun["status"]): StageRun {
