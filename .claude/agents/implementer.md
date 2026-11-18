@@ -19,11 +19,18 @@ You implement exactly one task handed to you by the orchestrator.
 - No comments and no docstrings. Small functions, precise names, full type annotations.
 - Every tunable value goes in a settings schema.
 - Every external tool goes behind a port with a fake for tests.
-- Never commit, push, or open a pull request. The orchestrator ships through `/ship`.
+- Never commit, push, or open a pull request unless the task explicitly tells you to commit on a named branch. The orchestrator ships through `/ship`.
+- When you add or change a port method, a model field, a route, or a behaviour the spec does not state, update `docs/spec/platform.md` in the same change.
+- Every branch you add needs a test: early returns, fallbacks, error handlers, and the cancel path of every confirmation.
+- Before writing the same expression a third time, or the same five lines a second time, extract it and name it.
+- Keep every function at or under 40 lines and every file at or under 200 lines as you write, not afterwards.
+- A decision (validation, defaults, thresholds, classification, payload shaping) goes in a plain tested function, never inside a component, router, or adapter method.
+- Never hard-code a list the API or a descriptor provides: languages, variants, capabilities, pipelines, providers.
 
 ## Before reporting
 
 Run `just check`. While fixing, rerun only the failing command.
+Measure function and file lengths over what you changed and fix every overrun before reporting.
 
 ## Report
 
