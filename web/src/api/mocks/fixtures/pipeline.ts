@@ -31,7 +31,7 @@ const castMember = {
 const settingsSchema = {
   type: "object",
   title: "Kids story videos settings",
-  required: ["series_name", "cast", "art_style", "story_length_minutes"],
+  required: ["series_name", "cast", "story_length_minutes"],
   properties: {
     series_name: {
       type: "string",
@@ -77,12 +77,18 @@ const settingsSchema = {
         { name: "Mynah", role: "friend", description: "A chatty bird", color: "#10b981" },
       ],
     },
-    art_style: {
-      type: "string",
+    look: {
+      type: "object",
       title: "Visual style",
       description: "The look of every picture.",
-      oneOf: STYLE_CHOICES,
-      default: "watercolour_storybook",
+      properties: {
+        visual_style: {
+          type: "string",
+          title: "Style",
+          oneOf: STYLE_CHOICES,
+          default: "watercolour_storybook",
+        },
+      },
     },
     voices: {
       type: "object",
@@ -130,10 +136,11 @@ const uiSchema = {
   "ui:sections": [
     { title: "Story", fields: ["series_name", "premise", "story_length_minutes", "moral_themes"] },
     { title: "Characters", fields: ["cast"] },
-    { title: "Look and sound", fields: ["art_style", "voices", "music", "subtitles"] },
+    { title: "Visual style", fields: ["look"] },
+    { title: "Sound", fields: ["voices", "music", "subtitles"] },
   ],
   premise: { "ui:widget": "textarea", "ui:options": { rows: 3 } },
-  art_style: { "ui:widget": "cards" },
+  look: { visual_style: { "ui:widget": "cards" } },
   story_length_minutes: { "ui:widget": "range" },
   moral_themes: { "ui:widget": "checkboxes" },
   cast: {

@@ -23,24 +23,10 @@ export const STYLE_CHOICES = [
     "#3F9B55",
     "#FFB84D",
   ]),
-  styleCard("crayon_drawing", "Crayon drawing", "Hand-drawn", [
-    "#FFFFFF",
-    "#8AC926",
-    "#FFB703",
-    "#219EBC",
-    "#E63946",
-  ]),
-  styleCard("claymation", "Claymation", "Crafted", [
-    "#BFE0E8",
-    "#E9C46A",
-    "#8AB17D",
-    "#2A9D8F",
-    "#E76F51",
-  ]),
   {
     const: "custom",
     title: "Custom style",
-    description: "Write your own art direction.",
+    description: "Write your own art direction, colours, outlines and texture below.",
     "x-group": "Your own",
   },
 ];

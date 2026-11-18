@@ -43,14 +43,12 @@ def colour_list(title: str, description: str) -> Any:
 class CustomStyle(SettingsSection):
     prompt: str = Field(
         default="",
-        max_length=800,
         title="Art direction",
         description="Describes the look of every picture, for example "
         "'bright paper collage with soft shadows'.",
     )
     negative_prompt: str = Field(
         default="",
-        max_length=800,
         title="Keep out of this style",
         description="Looks the image model should avoid, added to the safety list in Safety.",
     )

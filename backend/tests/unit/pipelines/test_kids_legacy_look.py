@@ -13,7 +13,7 @@ from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.styles.resolve import resolve_style
 
 
-def old_series(**values: str) -> dict[str, Any]:
+def old_series(**values: object) -> dict[str, Any]:
     return {"series": {"name": {"en": "Tales", "ta": "கதை"}, **values}}
 
 
@@ -24,6 +24,37 @@ def test_old_default_art_style_migrates_to_watercolour_keeping_motion_and_letter
     assert settings.look.visual_style == "watercolour_storybook"
     assert not settings.look.use_style_motion and not settings.look.use_style_lettering
     assert settings.series.name.en == "Tales"
+    assert resolve_style(settings).prompt == LEGACY_ART_STYLE
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [
+        {"art_style": LEGACY_ART_STYLE},
+        {"negative_prompt": LEGACY_NEGATIVE_PROMPT},
+        {"art_style": ""},
+        {"art_style": "   "},
+        {"art_style": None},
+        {"art_style": 7, "negative_prompt": LEGACY_NEGATIVE_PROMPT},
+        {"art_style": "  ", "negative_prompt": None},
+    ],
+)
+def test_default_blank_or_unusable_old_values_fall_back_to_watercolour(
+    stored: dict[str, object],
+) -> None:
+    settings = KidsStorySettings.model_validate(old_series(**stored))
+    assert settings.look.visual_style == "watercolour_storybook"
+    assert resolve_style(settings).prompt == LEGACY_ART_STYLE
+
+
+def test_an_old_art_style_of_any_length_still_loads() -> None:
+    long_style = "soft crayon hills, " * 200
+    negative = "rain, " * 400
+    settings = KidsStorySettings.model_validate(
+        old_series(art_style=long_style, negative_prompt=negative)
+    )
+    assert settings.look.custom_style.prompt == long_style
+    assert settings.look.custom_style.negative_prompt == negative
 
 
 def test_an_old_custom_art_style_keeps_its_look_as_a_custom_style() -> None:
@@ -41,7 +72,13 @@ def test_an_old_custom_negative_prompt_alone_is_kept_too() -> None:
 
 
 def test_an_existing_look_wins_over_old_series_keys() -> None:
-    data = {**old_series(art_style="crayons"), "look": {"visual_style": "anime"}}
+    data = {
+        **old_series(art_style="crayons", negative_prompt="x"),
+        "look": {"visual_style": "anime"},
+    }
+    migrated = migrated_look(data)
+    assert isinstance(migrated, dict)
+    assert set(migrated["series"]) == {"name"}
     assert KidsStorySettings.model_validate(data).look.visual_style == "anime"
 
 

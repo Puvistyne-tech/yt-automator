@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from enum import StrEnum
 
 from pydantic.config import JsonDict
 
@@ -17,6 +18,14 @@ def titled_choices(titles: Mapping[str, str]) -> ChoiceSchema:
         schema["oneOf"] = [{"const": value, "title": title} for value, title in titles.items()]
 
     return apply
+
+
+def enum_choices(enum: type[StrEnum], titles: Mapping[str, str]) -> ChoiceSchema:
+    members = {member.value for member in enum}
+    if set(titles) != members:
+        missing, extra = sorted(members - set(titles)), sorted(set(titles) - members)
+        raise ValueError(f"{enum.__name__} titles differ; missing {missing}, extra {extra}")
+    return titled_choices(titles)
 
 
 LANGUAGE_CHOICES = titled_choices(LANGUAGE_NAMES)

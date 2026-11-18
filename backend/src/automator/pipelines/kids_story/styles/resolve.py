@@ -17,6 +17,7 @@ from automator.pipelines.kids_story.styles.library import (
     VisualStyle,
     style_named,
 )
+from automator.pipelines.kids_story.styles.modifiers import ColourMood, Lighting
 from automator.pipelines.kids_story.styles.palette_mood import mood_palette
 from automator.pipelines.kids_story.styles.style_prompt import modifier_prompts
 
@@ -42,8 +43,16 @@ class ResolvedStyle(DomainModel):
     motion: ResolvedMotion
     lettering: StyleLettering
 
-    def hints(self) -> ImageStyleHints:
-        return ImageStyleHints(palette=self.palette, outline=self.outline, texture=self.texture)
+    night: bool = False
+
+    def hints(self, scene_text: str = "") -> ImageStyleHints:
+        return ImageStyleHints(
+            palette=self.palette,
+            outline=self.outline,
+            texture=self.texture,
+            night=self.night,
+            scene_text=scene_text,
+        )
 
 
 def joined_text(parts: Iterable[str]) -> str:
@@ -116,4 +125,9 @@ def resolve_style(settings: KidsStorySettings) -> ResolvedStyle:
         texture=base.texture,
         motion=resolved_motion(settings, style),
         lettering=resolved_lettering(settings, style),
+        night=asks_for_night(look),
     )
+
+
+def asks_for_night(look: LookSettings) -> bool:
+    return look.lighting is Lighting.MOONLIGHT or look.colour_mood is ColourMood.NIGHT

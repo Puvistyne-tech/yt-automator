@@ -4,7 +4,7 @@ import random
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from automator.domain.image_style import ImageStyleHints, Outline, Texture
+from automator.domain.image_style import ImageStyleHints, Outline, Texture, rgb_of_hex
 from automator.infrastructure.providers.image.scene_palette import Palette, Rgb, palette_for
 
 WHITE: Rgb = (255, 255, 255)
@@ -19,10 +19,6 @@ NIGHT_DARKENING = 0.55
 class Ink:
     color: Rgb
     units: float
-
-
-def rgb(colour: str) -> Rgb:
-    return int(colour[1:3], 16), int(colour[3:5], 16), int(colour[5:7], 16)
 
 
 def mixed(left: Rgb, right: Rgb, share: float) -> Rgb:
@@ -40,7 +36,7 @@ def land_layers(land: Sequence[Rgb]) -> tuple[Rgb, Rgb, Rgb]:
 
 
 def hinted_palette(hints: ImageStyleHints, night: bool) -> Palette:
-    colours = [rgb(colour) for colour in hints.palette]
+    colours = [rgb_of_hex(colour) for colour in hints.palette]
     if night:
         colours = [mixed(colour, NIGHT_SKY, NIGHT_DARKENING) for colour in colours]
     sky, land, accent = colours[0], colours[1:-1] or colours[:1], colours[-1]
@@ -77,9 +73,9 @@ class SceneStyle:
 
 
 def scene_style(prompt: str, rng: random.Random, hints: ImageStyleHints | None) -> SceneStyle:
-    palette = palette_for(prompt, rng)
     if hints is None:
-        return SceneStyle(palette, None, Texture.SMOOTH)
+        return SceneStyle(palette_for(prompt, rng), None, Texture.SMOOTH)
+    palette = palette_for(hints.scene_text, rng, hints.night)
     if hints.palette:
         palette = hinted_palette(hints, palette.night)
     return SceneStyle(palette, ink_for(hints.outline, palette), hints.texture)

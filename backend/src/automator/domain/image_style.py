@@ -29,3 +29,9 @@ class ImageStyleHints(DomainModel):
     palette: tuple[HexColour, ...] = Field(default=(), max_length=12)
     outline: Outline = Outline.NONE
     texture: Texture = Texture.SMOOTH
+    night: bool = False
+    scene_text: str = ""
+
+
+def rgb_of_hex(colour: str) -> tuple[int, int, int]:
+    return int(colour[1:3], 16), int(colour[3:5], 16), int(colour[5:7], 16)

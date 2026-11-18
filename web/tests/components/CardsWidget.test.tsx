@@ -24,7 +24,17 @@ const MANY = [
   { const: "own", title: "Your own", description: "Write it yourself." },
 ];
 
-function renderCards(oneOf: unknown[] = MANY, disabled = false, onChange = vi.fn()) {
+interface RenderOptions {
+  oneOf?: unknown[];
+  disabled?: boolean;
+  readonly?: boolean;
+  value?: string;
+}
+
+function renderCards(
+  { oneOf = MANY, disabled = false, readonly = false, value = "sunny" }: RenderOptions = {},
+  onChange = vi.fn(),
+) {
   const schema = {
     type: "object",
     properties: { look: { type: "string", title: "Look", oneOf, default: "sunny" } },
@@ -32,8 +42,8 @@ function renderCards(oneOf: unknown[] = MANY, disabled = false, onChange = vi.fn
   render(
     <SchemaForm
       schema={schema}
-      uiSchema={{ look: { "ui:widget": "cards" } }}
-      value={{ look: "sunny" }}
+      uiSchema={{ look: { "ui:widget": "cards", "ui:readonly": readonly } }}
+      value={{ look: value }}
       idPrefix="cards"
       onChange={onChange}
       disabled={disabled}
@@ -121,21 +131,61 @@ describe("cards widget", () => {
   });
 
   it("offers no search or chips for a short list without groups", () => {
-    renderCards([
-      { const: "a", title: "A" },
-      { const: "b", title: "B" },
-    ]);
+    renderCards({
+      oneOf: [
+        { const: "a", title: "A" },
+        { const: "b", title: "B" },
+      ],
+    });
 
     expect(screen.queryByRole("searchbox")).toBeNull();
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.getAllByRole("radio")).toHaveLength(2);
   });
 
-  it("locks every card when the form is disabled", () => {
-    renderCards(MANY, true);
+  it.each([
+    ["disabled", { disabled: true }],
+    ["read-only", { readonly: true }],
+  ])("ignores clicks when the form is %s", async (_name, options) => {
+    const onChange = renderCards(options);
+
+    await userEvent.setup().click(screen.getByText("inky look"));
 
     expect(
       screen.getAllByRole("radio").every((radio) => (radio as HTMLInputElement).disabled),
     ).toBe(true);
+    expect(onChange).not.toHaveBeenCalledWith(expect.objectContaining({ look: "inky" }));
+    expect(screen.getByRole("radio", { name: /sunny look/ })).toBeChecked();
+  });
+
+  it("moves back with ArrowUp and wraps from the first card to the last", async () => {
+    const onChange = renderCards({ value: "misty" });
+    const user = userEvent.setup();
+
+    screen.getByRole("radio", { name: /misty look/ }).focus();
+    await user.keyboard("{ArrowUp}");
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ look: "sunny" }));
+
+    screen.getByRole("radio", { name: /sunny look/ }).focus();
+    await user.keyboard("{ArrowUp}");
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ look: "own" }));
+  });
+
+  it("wraps from the last card to the first with ArrowDown", async () => {
+    const onChange = renderCards({ value: "own" });
+
+    screen.getByRole("radio", { name: /Your own/ }).focus();
+    await userEvent.setup().keyboard("{ArrowDown}");
+
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ look: "sunny" }));
+  });
+
+  it("shows nothing selected for a value that is not an option", () => {
+    renderCards({ value: "gone" });
+
+    expect(screen.getAllByRole("radio").some((radio) => (radio as HTMLInputElement).checked)).toBe(
+      false,
+    );
+    expect(screen.queryByText(/^Selected:/)).toBeNull();
   });
 });

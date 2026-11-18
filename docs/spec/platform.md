@@ -158,7 +158,13 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
   - Stored settings that still hold `series.art_style` or `series.negative_prompt` are migrated before
     validation: the keys are removed; when `look` is absent it is added with both switches off (so stored
     motion and lettering are kept), and a non-default art style or negative prompt becomes
-    `visual_style: custom` with those texts as the custom prompt and negative prompt.
+    `visual_style: custom` with those texts as the custom prompt and negative prompt. Any previously valid
+    text loads: the custom prompts have no length limit. A missing, blank or non-string art style, or a
+    missing or non-string negative prompt, counts as the old default, and both defaults give
+    `watercolour_storybook`. When `look` is present the old keys are only removed.
+  - `ResolvedStyle.night` is true only for lighting `moonlight` or colour mood `night`. Pictures send it in
+    their hints with the scene's visual, setting and mood as `scene_text` (character sheets send none; a
+    thumbnail sends its thumbnail text or the first scene's).
 - Every automation language must be one the pipeline offers. Every target language must be in the automation's languages. Every target variant must be one the pipeline offers. Every target channel must exist.
 - An automation with schedule `interval` needs `every_hours >= 1`. With `cron` it needs a valid 5-field expression.
 - A run snapshots the automation's settings, languages and review policy at creation. Editing or deleting the automation never changes a past or queued run.
@@ -314,8 +320,11 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   provider-neutral hint. Prompt-driven models may ignore it. The offline image provider paints with it: sky from
   the first colour, three land layers from the middle colours, flowers and sun from the last; outlines in a
   colour that contrasts with the sky (thin or bold); and a texture pass (paper wash, film grain, soft clay
-  relief, or pixels quantised to the palette). A night prompt darkens the hinted palette. The same seed gives
-  the same picture; hints without colours keep the prompt-derived palette.
+  relief, or pixels quantised to the palette). Hints also carry `night` (bool, default false) and `scene_text`
+  (the scene's own words, default empty). With hints, the offline provider paints night only when `night` is
+  set or `scene_text` reads as night; the art direction in the prompt never decides it. Without hints, the
+  prompt words decide as before. Night darkens the hinted palette. The same seed gives the same picture; hints
+  without colours keep the scene-derived palette.
 - `MotionRequest.held_frame_rate` (nullable, at least 1): when below `fps` the clip changes picture only that
   many times a second (a held, stop-motion feel) while keeping `fps`. The ffmpeg pan-and-zoom provider honours
   it; DepthFlow ignores it.

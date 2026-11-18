@@ -3,6 +3,7 @@ from __future__ import annotations
 import colorsys
 from collections.abc import Callable, Sequence
 
+from automator.domain.image_style import rgb_of_hex
 from automator.pipelines.kids_story.styles.modifiers import ColourMood
 
 Hsv = tuple[float, float, float]
@@ -13,7 +14,7 @@ NIGHT_HUE = 0.64
 
 
 def to_hsv(colour: str) -> Hsv:
-    red, green, blue = (int(colour[index : index + 2], 16) / 255 for index in (1, 3, 5))
+    red, green, blue = (channel / 255 for channel in rgb_of_hex(colour))
     return colorsys.rgb_to_hsv(red, green, blue)
 
 

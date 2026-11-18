@@ -25,11 +25,16 @@ DARK_SKY = ("#2F4F3F", "#46685A", "#06D6A0", "#FFD166", "#EF476F")
 
 
 def drawn(
-    tmp_path: Path, name: str, hints: ImageStyleHints | None, seed: int = 3, width: int = 160
+    tmp_path: Path,
+    name: str,
+    hints: ImageStyleHints | None,
+    seed: int = 3,
+    width: int = 160,
+    prompt: str = "a fox by the river",
 ) -> np.ndarray:
     adapter = OfflineImage(OfflineImageOptions(supersample=1), make_context(tmp_path))
     request = ImageRequest(
-        prompt="a fox by the river", width=width, height=width * 9 // 16, seed=seed, style=hints
+        prompt=prompt, width=width, height=width * 9 // 16, seed=seed, style=hints
     )
     with Image.open(adapter.generate(request, tmp_path / f"{name}.png")) as image:
         return np.asarray(image.convert("RGB"), dtype=np.int32)
@@ -69,10 +74,18 @@ def test_outline_weight_draws_more_ink(tmp_path: Path) -> None:
     assert shares[0] < shares[1] < shares[2]
 
 
+@pytest.fixture(scope="module")
+def smooth_picture(tmp_path_factory: pytest.TempPathFactory) -> np.ndarray:
+    return drawn(tmp_path_factory.mktemp("smooth"), "smooth", hints())
+
+
 @pytest.mark.parametrize("texture", [Texture.PAPER, Texture.GRAIN, Texture.CLAY, Texture.PIXEL])
-def test_every_texture_changes_the_smooth_picture(tmp_path: Path, texture: Texture) -> None:
-    smooth = drawn(tmp_path, "smooth", hints())
-    assert not np.array_equal(smooth, drawn(tmp_path, texture.value, hints(texture=texture)))
+def test_every_texture_changes_the_smooth_picture(
+    tmp_path: Path, texture: Texture, smooth_picture: np.ndarray
+) -> None:
+    assert not np.array_equal(
+        smooth_picture, drawn(tmp_path, texture.value, hints(texture=texture))
+    )
 
 
 def test_pixel_texture_keeps_only_palette_colours(tmp_path: Path) -> None:
@@ -80,9 +93,34 @@ def test_pixel_texture_keeps_only_palette_colours(tmp_path: Path) -> None:
     assert len(np.unique(picture.reshape(-1, 3), axis=0)) <= 8
 
 
-def test_hints_without_colours_keep_the_prompt_palette(tmp_path: Path) -> None:
+def test_hints_without_colours_keep_the_derived_palette(tmp_path: Path) -> None:
     plain = drawn(tmp_path, "plain", None)
     assert np.array_equal(plain, drawn(tmp_path, "empty", ImageStyleHints()))
+
+
+def brightness(picture: np.ndarray) -> float:
+    return float(picture.mean())
+
+
+def test_with_hints_night_comes_from_the_scene_not_the_art_direction(tmp_path: Path) -> None:
+    day = drawn(tmp_path, "day", hints(), prompt="a fox")
+    styled = hints().model_copy(update={"scene_text": "a fox in a sunny meadow"})
+    art_night_words = "moonlight, stars, dream, sleep, bedtime. a fox"
+    art = drawn(tmp_path, "art", styled, prompt=art_night_words)
+    assert brightness(art) > brightness(day) * 0.9
+    starry = hints().model_copy(update={"scene_text": "a fox under the stars"})
+    assert brightness(drawn(tmp_path, "scene", starry)) < brightness(day) * 0.7
+
+
+def test_a_night_hint_paints_night_whatever_the_scene(tmp_path: Path) -> None:
+    day = drawn(tmp_path, "day", hints())
+    asked = hints().model_copy(update={"night": True, "scene_text": "a sunny meadow"})
+    assert brightness(drawn(tmp_path, "asked", asked)) < brightness(day) * 0.7
+
+
+def test_without_hints_night_still_comes_from_the_prompt(tmp_path: Path) -> None:
+    day = drawn(tmp_path, "day", None)
+    assert brightness(drawn(tmp_path, "moon", None, prompt="a fox by moonlight")) < brightness(day)
 
 
 def test_a_dark_backdrop_gets_light_ink_and_a_light_one_dark_ink() -> None:

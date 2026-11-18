@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from automator.domain.image_style import rgb_of_hex
+
 NAMED_COLOURS: dict[str, tuple[int, int, int]] = {
     "black": (20, 20, 20),
     "charcoal grey": (70, 70, 75),
@@ -30,16 +32,12 @@ NAMED_COLOURS: dict[str, tuple[int, int, int]] = {
 }
 
 
-def rgb_of(colour: str) -> tuple[int, int, int]:
-    return int(colour[1:3], 16), int(colour[3:5], 16), int(colour[5:7], 16)
-
-
 def distance(left: tuple[int, int, int], right: tuple[int, int, int]) -> int:
     return sum((a - b) ** 2 for a, b in zip(left, right, strict=True))
 
 
 def colour_name(colour: str) -> str:
-    rgb = rgb_of(colour)
+    rgb = rgb_of_hex(colour)
     return min(NAMED_COLOURS, key=lambda name: distance(NAMED_COLOURS[name], rgb))
 
 

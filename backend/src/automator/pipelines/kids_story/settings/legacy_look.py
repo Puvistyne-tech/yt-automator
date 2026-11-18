@@ -18,7 +18,13 @@ LEGACY_KEYS = frozenset({ART_STYLE_KEY, NEGATIVE_PROMPT_KEY})
 KEPT_MOTION_AND_LETTERING = {"use_style_motion": False, "use_style_lettering": False}
 
 
-def legacy_look(art_style: object, negative_prompt: object) -> dict[str, Any]:
+def usable_text(value: object, fallback: str, allow_blank: bool) -> str:
+    if not isinstance(value, str) or (not allow_blank and not value.strip()):
+        return fallback
+    return value
+
+
+def legacy_look(art_style: str, negative_prompt: str) -> dict[str, Any]:
     if (art_style, negative_prompt) == (LEGACY_ART_STYLE, LEGACY_NEGATIVE_PROMPT):
         return dict(KEPT_MOTION_AND_LETTERING)
     custom = {"prompt": art_style, "negative_prompt": negative_prompt}
@@ -34,7 +40,9 @@ def migrated_look(data: object) -> object:
     kept = {key: value for key, value in series.items() if key not in LEGACY_KEYS}
     migrated = {**data, "series": kept}
     if "look" not in data:
-        art_style = series.get(ART_STYLE_KEY, LEGACY_ART_STYLE)
-        negative = series.get(NEGATIVE_PROMPT_KEY, LEGACY_NEGATIVE_PROMPT)
+        art_style = usable_text(series.get(ART_STYLE_KEY), LEGACY_ART_STYLE, allow_blank=False)
+        negative = usable_text(
+            series.get(NEGATIVE_PROMPT_KEY), LEGACY_NEGATIVE_PROMPT, allow_blank=True
+        )
         migrated["look"] = legacy_look(art_style, negative)
     return migrated

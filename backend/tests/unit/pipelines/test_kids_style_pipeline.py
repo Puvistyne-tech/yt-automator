@@ -7,6 +7,7 @@ from typing import Any
 from automator.domain.image_style import Texture
 from automator.pipelines.kids_story.art.cards import lettering_for
 from automator.pipelines.kids_story.art.prompts import judge_request, motion_prompt
+from automator.pipelines.kids_story.resources import resource_text
 from automator.pipelines.kids_story.settings.base import Placement
 from automator.pipelines.kids_story.stages.motion import held_rate
 from automator.pipelines.kids_story.story.model import StoryScene
@@ -36,14 +37,23 @@ def test_every_picture_prompt_carries_the_resolved_style(tmp_path: Path) -> None
         assert request.prompt.startswith(style_prompt("pixel_art"))
         assert "gentle silvery moonlight" in request.prompt
         assert request.style is not None and request.style.texture is Texture.PIXEL
+        assert request.style.night
         assert "smooth gradients" in request.negative_prompt
+    sheets = [r for r in requests if (r.width, r.height) == (256, 256)]
+    scenes = [r for r in requests if (r.width, r.height) == (1280, 720)]
+    assert {r.style.scene_text for r in sheets if r.style} == {""}
+    texts = [r.style.scene_text for r in scenes if r.style]
+    assert len(texts) == len(scenes) and all(texts)
+    assert not any("moonlight" in text or "pixel" in text for text in texts)
 
 
 def test_realistic_styles_keep_the_child_safety_wording(tmp_path: Path) -> None:
     rig = styled_run(tmp_path, "art", visual_style="realistic_photo")
     scenes = [r for r in rig.providers.images.requests if (r.width, r.height) == (1280, 720)]
-    assert scenes and all("Child-friendly composition" in r.prompt for r in scenes)
-    assert all("violence, weapons" in r.negative_prompt for r in scenes)
+    safety_tail = resource_text("prompts", "image_scene.txt").split("$characters ", 1)[1].strip()
+    exclusions = rig.settings.safety.picture_exclusions
+    assert scenes and all(r.prompt.endswith(safety_tail) for r in scenes)
+    assert all(r.negative_prompt.startswith(exclusions) for r in scenes)
 
 
 def test_the_resolved_style_is_saved_and_logged_once(tmp_path: Path) -> None:

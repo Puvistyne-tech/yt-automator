@@ -12,24 +12,23 @@ const options = [
   cardOption({
     value: "a",
     label: "Apple",
-    schema: { description: "Crisp fruit", "x-group": "Fruit", "x-swatches": ["#ff0000", 3] },
+    schema: { description: "Crisp fruit", "x-group": "Fruit" },
   }),
   cardOption({ value: "b", label: "Basil", schema: { "x-group": "Herb" } }),
-  cardOption({ value: "c", label: "Cherry", schema: { "x-group": "Fruit", "x-swatches": "red" } }),
+  cardOption({ value: "c", label: "Cherry", schema: { "x-group": "Fruit" } }),
   cardOption({ value: 4, label: "Plain", schema: null }),
   cardOption({ value: "e", label: "Empty", schema: { "x-group": "", description: 7 } }),
 ];
 
 describe("card options", () => {
-  it("reads description, group and only hex swatches from each entry", () => {
+  it("reads the description and group from each entry", () => {
     expect(options[0]).toEqual({
       value: "a",
       label: "Apple",
       description: "Crisp fruit",
       group: "Fruit",
-      swatches: ["#ff0000"],
+      swatches: [],
     });
-    expect(options[2]?.swatches).toEqual([]);
     expect(options[3]).toMatchObject({ description: "", group: null, swatches: [] });
     expect(options[4]).toMatchObject({ description: "", group: null });
   });

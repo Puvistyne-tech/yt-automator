@@ -24,6 +24,14 @@ def characters_text(settings: KidsStorySettings, ids: Sequence[str]) -> str:
     return " ".join(descriptor_line(member) for member in settings.characters(ids))
 
 
+def scene_subject(scene: StoryScene) -> str:
+    return " ".join(part for part in (scene.visual, scene.setting, scene.mood) if part)
+
+
+def thumbnail_subject(story: Story) -> str:
+    return story.thumbnail or scene_subject(story.scenes[0])
+
+
 def scene_prompt(settings: KidsStorySettings, scene: StoryScene) -> str:
     return render_prompt(
         "image_scene.txt",

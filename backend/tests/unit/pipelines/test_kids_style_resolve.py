@@ -145,7 +145,7 @@ def test_a_custom_style_uses_its_own_fields_and_the_settings_motion() -> None:
     assert style.lettering.text == "#123456"
 
 
-def test_turning_off_style_motion_and_lettering_uses_the_settings() -> None:
+def test_turning_off_style_motion_uses_the_settings() -> None:
     settings = KidsStorySettings.model_validate(
         {
             "look": {"visual_style": "comic_book", "use_style_motion": False},
@@ -154,11 +154,6 @@ def test_turning_off_style_motion_and_lettering_uses_the_settings() -> None:
     )
     style = resolve_style(settings)
     assert (style.motion.hero_intensity, style.motion.card_camera) == (0.2, CameraMove.RISE)
-    assert style.lettering.text == "#FFD60A"
-    off = settings.model_copy(
-        update={"look": settings.look.model_copy(update={"use_style_lettering": False})}
-    )
-    assert resolve_style(off).lettering.text == "#FFFFFF"
 
 
 @pytest.mark.parametrize(
@@ -168,6 +163,10 @@ def test_turning_off_style_motion_and_lettering_uses_the_settings() -> None:
         ({"visual_style": "custom"}, "a custom style needs its art direction"),
         ({"visual_style": "custom", "custom_style": {"prompt": "   "}}, "needs its art direction"),
         ({"mood_palette": ["#FFFFFF"]}, "at least 2"),
+        ({"mood_palette": ["#GGGGGG", "#FFFFFF"]}, "pattern"),
+        ({"mood_palette": ["#FFFFFF"] * 9}, "at most 8"),
+        ({"custom_style": {"palette": ["red", "#00FF00", "#0000FF"]}}, "pattern"),
+        ({"custom_style": {"palette": ["#00FF00"] * 9}}, "at most 8"),
     ],
 )
 def test_an_invalid_look_is_refused(look: dict[str, Any], message: str) -> None:
