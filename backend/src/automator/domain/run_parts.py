@@ -5,6 +5,7 @@ from pydantic import AwareDatetime, Field
 from automator.domain.model_base import DomainModel, JsonObject
 from automator.domain.run_enums import (
     ArtifactKind,
+    LogLevel,
     ReviewDecision,
     StageStatus,
     UploadStatus,
@@ -49,3 +50,20 @@ class Upload(DomainModel):
     url: str | None = None
     error: str | None = None
     quota_units: int = Field(default=0, ge=0)
+
+
+class RunLog(DomainModel):
+    at: AwareDatetime
+    level: LogLevel = LogLevel.INFO
+    stage_id: str | None = None
+    message: str
+
+
+DEFAULT_MAX_RUN_LOGS = 2000
+
+
+class RunLogPolicy(DomainModel):
+    max_entries: int = Field(default=DEFAULT_MAX_RUN_LOGS, ge=1)
+
+    def appended(self, logs: tuple[RunLog, ...], entry: RunLog) -> tuple[RunLog, ...]:
+        return (*logs, entry)[-self.max_entries :]

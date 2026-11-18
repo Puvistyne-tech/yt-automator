@@ -15,7 +15,10 @@ ALLOWED_IMPORTS: dict[str, frozenset[str]] = {
     "pipelines": frozenset({"domain", "shared"}),
     "infrastructure": frozenset({"domain", "shared"}),
     "api": frozenset({"application", "domain", "shared"}),
+    "composition": frozenset({"api", "application", "domain", "shared"}),
 }
+COMPOSITION_API_MODULES = frozenset({f"{PACKAGE}.api.container"})
+ROOT_ONLY_LAYERS = ("infrastructure", "composition")
 FRAMEWORK_FREE_LAYERS = ("shared", "domain", "application")
 FORBIDDEN_FRAMEWORKS = frozenset(
     {
@@ -118,3 +121,25 @@ def test_no_file_exceeds_line_limit() -> None:
         if (count := len(file.read_text(encoding="utf-8").splitlines())) > MAX_FILE_LINES
     }
     assert oversized == {}
+
+
+def test_composition_uses_only_the_api_container() -> None:
+    api_imports = {
+        display(file): sorted(api_modules - COMPOSITION_API_MODULES)
+        for file in layer_files("composition")
+        if (api_modules := {m for m in imported_modules(file) if m.startswith(f"{PACKAGE}.api")})
+        - COMPOSITION_API_MODULES
+    }
+    assert api_imports == {}
+
+
+@pytest.mark.parametrize("layer", ROOT_ONLY_LAYERS)
+def test_root_only_layers_are_imported_only_by_main(layer: str) -> None:
+    importers = sorted(
+        display(file)
+        for file in all_files()
+        if layer in imported_layers(file)
+        and file != PACKAGE_ROOT / "main.py"
+        and file.relative_to(PACKAGE_ROOT).parts[0] != layer
+    )
+    assert importers == []

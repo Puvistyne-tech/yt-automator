@@ -65,7 +65,8 @@ def test_execute_publishes_progress_events(harness: Harness) -> None:
     }
     statuses = [e.payload["status"] for e in events if e.kind is RunEventKind.STATUS]
     assert statuses == ["queued", "running", "awaiting_review"]
-    assert {"message": "render running"} in [e.payload for e in events]
+    log = {"level": "info", "stage_id": "render", "message": "render running"}
+    assert log in [e.payload for e in events]
 
 
 @pytest.mark.parametrize(

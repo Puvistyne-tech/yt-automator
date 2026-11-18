@@ -15,5 +15,5 @@ class DeleteRun:
     def execute(self, run_id: str) -> None:
         run = require_run(self.runs, run_id)
         ensure_run_deletable(run)
-        self.store.delete_run(run.id)
         self.runs.delete(run.id)
+        self.store.delete_run(run.id)

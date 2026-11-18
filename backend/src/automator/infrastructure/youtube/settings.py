@@ -1,0 +1,23 @@
+from __future__ import annotations
+
+from pydantic import BaseModel, ConfigDict, Field
+
+UPLOAD_SCOPE = "https://www.googleapis.com/auth/youtube.upload"
+READONLY_SCOPE = "https://www.googleapis.com/auth/youtube.readonly"
+FORCE_SSL_SCOPE = "https://www.googleapis.com/auth/youtube.force-ssl"
+DEFAULT_REDIRECT_URI = "http://127.0.0.1:8000/api/oauth/callback"
+
+
+class YouTubeSettings(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    redirect_uri: str = Field(default=DEFAULT_REDIRECT_URI, description="OAuth redirect URI")
+    scopes: tuple[str, ...] = Field(
+        default=(UPLOAD_SCOPE, READONLY_SCOPE, FORCE_SSL_SCOPE), description="OAuth scopes"
+    )
+    auth_uri: str = Field(default="https://accounts.google.com/o/oauth2/auth")
+    token_uri: str = Field(default="https://oauth2.googleapis.com/token")
+    upload_chunk_bytes: int = Field(default=8 * 1024 * 1024, ge=256 * 1024)
+    playlist_page_size: int = Field(default=50, ge=1, le=50)
+    caption_track_name: str = Field(default="", description="Name shown for uploaded captions")
+    watch_url_prefix: str = Field(default="https://youtu.be/")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import partial
 
 from automator.application.lookups import require_run
 from automator.application.run_progress import RunProgress
@@ -16,6 +17,15 @@ DECIDED_STATUS = {
 }
 
 
+def reviewed(review: Review, stored: Run) -> Run:
+    if stored.status is not RunStatus.AWAITING_REVIEW:
+        raise RuleConflict(
+            "run_not_awaiting_review",
+            f"run {stored.id} is {stored.status.value}, not awaiting review",
+        )
+    return stored.model_copy(update={"review": review})
+
+
 @dataclass(frozen=True)
 class ReviewRun:
     runs: RunRepository
@@ -24,12 +34,7 @@ class ReviewRun:
 
     def execute(self, run_id: str, decision: ReviewDecision, notes: str = "") -> Run:
         run = require_run(self.runs, run_id)
-        if run.status is not RunStatus.AWAITING_REVIEW:
-            raise RuleConflict(
-                "run_not_awaiting_review",
-                f"run {run.id} is {run.status.value}, not awaiting review",
-            )
         review = Review(decision=decision, notes=notes, decided_at=self.clock.now())
         return self.progress.move(
-            run.model_copy(update={"review": review}), DECIDED_STATUS[decision]
+            run.id, DECIDED_STATUS[decision], prepare=partial(reviewed, review)
         )

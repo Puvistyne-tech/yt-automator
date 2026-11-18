@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Protocol, overload
@@ -20,7 +20,7 @@ from automator.domain.capabilities import (
 from automator.domain.model_base import DomainModel, JsonObject
 from automator.domain.pipeline_descriptors import PipelineDescriptor, StageDescriptor
 from automator.domain.quality import ScoreItem
-from automator.domain.run_enums import ArtifactKind
+from automator.domain.run_enums import ArtifactKind, LogLevel
 from automator.domain.run_parts import Artifact
 
 
@@ -56,6 +56,10 @@ class StageOutcome(DomainModel):
     message: str = ""
 
 
+class StageLog(Protocol):
+    def __call__(self, message: str, level: LogLevel = LogLevel.INFO) -> None: ...
+
+
 @dataclass(frozen=True)
 class StageContext:
     run_id: str
@@ -64,7 +68,7 @@ class StageContext:
     workspace: Path
     artifacts: tuple[Artifact, ...]
     providers: ProviderResolver
-    log: Callable[[str], None]
+    log: StageLog
 
 
 class Stage(Protocol):

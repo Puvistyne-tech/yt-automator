@@ -57,3 +57,9 @@ class RunEventKind(StrEnum):
     LOG = "log"
     ARTIFACT = "artifact"
     UPLOAD = "upload"
+
+
+class LogLevel(StrEnum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"

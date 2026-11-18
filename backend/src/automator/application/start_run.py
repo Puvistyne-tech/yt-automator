@@ -31,7 +31,7 @@ class StartRun:
 
     def execute(self, automation_id: str, trigger: RunTrigger = RunTrigger.MANUAL) -> Run:
         automation = require_automation(self.automations, automation_id)
-        run = self.recorder.status(self.new_run(automation, trigger))
+        run = self.recorder.created(self.new_run(automation, trigger))
         self.queue.enqueue(run.id)
         return run
 

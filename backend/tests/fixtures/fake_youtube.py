@@ -26,6 +26,7 @@ class FakeYouTube:
     )
     failing_videos: set[str] = field(default_factory=set)
     failing_operations: set[str] = field(default_factory=set)
+    failure_code: str = "upstream_failure"
     uploads: list[VideoUpload] = field(default_factory=list)
     calls: list[tuple[str, str]] = field(default_factory=list)
     tokens: list[str] = field(default_factory=list)
@@ -36,7 +37,7 @@ class FakeYouTube:
 
     def check(self, operation: str) -> None:
         if operation in self.failing_operations:
-            raise UpstreamFailure(f"{operation} rejected")
+            raise UpstreamFailure(f"{operation} rejected", self.failure_code)
 
     def authorization_url(self, client: OAuthClient, state: str) -> str:
         return f"https://accounts.example/auth?client_id={client.client_id}&state={state}"
@@ -53,7 +54,7 @@ class FakeYouTube:
     def upload_video(self, auth: ChannelAuth, video: VideoUpload) -> UploadedVideo:
         self.record(auth, "upload_video", video.path.name)
         if video.path.name in self.failing_videos:
-            raise UpstreamFailure(f"upload of {video.path.name} rejected")
+            raise UpstreamFailure(f"upload of {video.path.name} rejected", self.failure_code)
         self.uploads.append(video)
         video_id = f"vid-{len(self.uploads)}"
         return UploadedVideo(video_id=video_id, url=f"https://youtu.be/{video_id}")
