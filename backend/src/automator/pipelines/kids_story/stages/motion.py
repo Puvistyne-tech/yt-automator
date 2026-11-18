@@ -17,6 +17,7 @@ from automator.pipelines.kids_story.stages.media_types import MP4
 from automator.pipelines.kids_story.stages.run_settings import kids_settings
 from automator.pipelines.kids_story.stages.story_loading import load_stories
 from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.styles.resolve import resolve_style
 from automator.pipelines.kids_story.timeline.cuts import planned_cuts
 from automator.pipelines.kids_story.timeline.needs import ClipNeed, clip_needs
 
@@ -26,19 +27,24 @@ def motion_request(
 ) -> MotionRequest:
     image = required(context.artifacts, Role.VISUAL, visual_key=need.visual_key)
     scene = story.scenes[need.scene] if need.scene is not None else None
-    visuals = settings.visuals
-    intensity = visuals.hero_motion_intensity if scene and scene.hero else visuals.motion_intensity
+    motion = resolve_style(settings).motion
     width, height = settings.video_size(need.variant)
+    fps = settings.episode.fps
     return MotionRequest(
         image=path_of(context, image),
-        prompt=motion_prompt(scene),
+        prompt=motion_prompt(scene, motion.feel),
         duration_seconds=need.seconds,
         width=width,
         height=height,
-        fps=settings.episode.fps,
-        camera=scene.camera if scene else visuals.card_camera,
-        intensity=intensity,
+        fps=fps,
+        camera=scene.camera if scene else motion.card_camera,
+        intensity=motion.hero_intensity if scene and scene.hero else motion.intensity,
+        held_frame_rate=held_rate(motion.held_frame_rate, fps),
     )
+
+
+def held_rate(style_rate: int | None, fps: int) -> int | None:
+    return style_rate if style_rate is not None and style_rate < fps else None
 
 
 def clip_name(visual_key: str) -> str:
@@ -87,4 +93,5 @@ class MotionStage:
             duration_seconds=need.seconds,
             camera=request.camera.value,
             intensity=request.intensity,
+            held_frame_rate=request.held_frame_rate,
         )

@@ -1,3 +1,4 @@
+import { DEFAULT_REVIEW_POLICY } from "@/api/automationDefaults";
 import { db } from "@/api/mocks/db";
 import { artifactsFor, STORY_ARTIFACT } from "@/api/mocks/fixtures/artifacts";
 import { makeRun, makeTarget, stagesWith } from "@/api/mocks/fixtures/factories";
@@ -86,7 +87,7 @@ describe("mock simulator review policy", () => {
     [{ mode: "auto_when_score_at_least", min_score: 80 }, "approved"],
     [{ mode: "auto_when_score_at_least", min_score: 95 }, "awaiting_review"],
   ] as const)("finishes a run with policy %j as %s", (policy, status) => {
-    db.state.runs = [finishing(policy)];
+    db.state.runs = [finishing({ ...DEFAULT_REVIEW_POLICY, ...policy })];
 
     tick();
 

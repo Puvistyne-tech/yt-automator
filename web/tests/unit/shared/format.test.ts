@@ -1,5 +1,11 @@
 import { formatDateTime, formatDuration, formatRelative } from "@/shared/format/dates";
-import { formatBytes, formatNumber, formatScore, isIntegerAtLeast } from "@/shared/format/numbers";
+import {
+  formatBytes,
+  formatNumber,
+  formatScore,
+  isIntegerAtLeast,
+  toOneDecimal,
+} from "@/shared/format/numbers";
 import {
   describeInterval,
   describeSchedule,
@@ -57,6 +63,17 @@ describe("numbers", () => {
     [2e12, "2.0 TB"],
   ])("formats %d bytes as %s", (bytes, text) => {
     expect(formatBytes(bytes)).toBe(text);
+  });
+
+  it.each([
+    [42.25, "42.2"],
+    [42.75, "42.8"],
+    [0.25, "0.2"],
+    [0.15, "0.1"],
+    [42.24, "42.2"],
+    [40, "40.0"],
+  ])("rounds %d to one decimal like Python, ties to even", (value, text) => {
+    expect(toOneDecimal(value)).toBe(text);
   });
 
   it("formats numbers, scores, plurals and ids", () => {

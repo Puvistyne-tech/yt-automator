@@ -21,7 +21,7 @@ from automator.domain.retention import (
     run_item,
 )
 from automator.domain.runs import Run, RunQuery
-from automator.domain.upload_hold import publish_delays
+from automator.domain.upload_hold import publish_targets
 
 NO_FINALS: frozenset[str] = frozenset()
 
@@ -54,8 +54,8 @@ class CleanupPlanner:
         return RunSnapshot(runs, tuple(sorted(on_disk - known)))
 
     def policy(self) -> RetentionPolicy:
-        delays = publish_delays(self.automations.list())
-        return retention_policy(self.settings.get(), delays)
+        targets = publish_targets(self.automations.list())
+        return retention_policy(self.settings.get(), targets)
 
     def plan(self) -> CleanupPlan:
         now, policy = self.clock.now(), self.policy()

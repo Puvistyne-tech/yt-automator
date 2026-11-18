@@ -35,7 +35,7 @@ const series = {
   type: "object",
   title: "SeriesSettings",
   properties: {
-    art_style: text("Art style prompt"),
+    premise: text("Series premise"),
     tagline: text("Tagline"),
     name: { $ref: "#/$defs/LocalizedText", title: "Series name" },
   },
@@ -95,7 +95,7 @@ const pipelineUiSchema = {
   })),
   series: {
     "ui:order": ["name", "*"],
-    art_style: { "ui:widget": "textarea", "ui:options": { rows: 3 } },
+    premise: { "ui:widget": "textarea", "ui:options": { rows: 3 } },
   },
   cast: { items: { palette: { items: { "ui:widget": "color" } } } },
   music: { volume: { "ui:widget": "range", "ui:options": { step: 0.01 } } },
@@ -129,11 +129,11 @@ describe("SchemaForm with the pipeline ui_schema shape", () => {
     renderPipelineForm();
 
     const seriesName = screen.getByRole("group", { name: "Series name" });
-    const artStyle = screen.getByRole("textbox", { name: "Art style prompt" });
+    const premise = screen.getByRole("textbox", { name: "Series premise" });
     const tagline = screen.getByRole("textbox", { name: "Tagline" });
-    expect(follows(seriesName, artStyle)).toBe(true);
-    expect(follows(artStyle, tagline)).toBe(true);
-    expect(artStyle).toHaveAttribute("rows", "3");
+    expect(follows(seriesName, premise)).toBe(true);
+    expect(follows(premise, tagline)).toBe(true);
+    expect(premise).toHaveAttribute("rows", "3");
     expect(screen.getByRole("slider", { name: "Music volume" })).toHaveAttribute("step", "0.01");
     expect(screen.getByText("#8FA3B8")).toBeInTheDocument();
   });

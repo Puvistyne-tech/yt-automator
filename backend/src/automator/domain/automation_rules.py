@@ -8,7 +8,9 @@ from automator.domain.automations import AutomationInput, TargetInput
 from automator.domain.kids_rules import kids_errors
 from automator.domain.model_base import JsonObject
 from automator.domain.pipeline_descriptors import PipelineDescriptor
-from automator.domain.schedules import schedule_errors
+from automator.domain.publish_time import publish_time_errors
+from automator.domain.quality import review_policy_errors
+from automator.domain.schedule_timing import schedule_start_errors
 from automator.domain.validation import field_path, prefixed, validated_settings
 
 
@@ -44,6 +46,7 @@ def target_errors(
             message = f"channel {target.channel_id!r} does not exist"
             errors[field_path("targets", index, "channel_id")] = message
         errors |= variant_errors(index, target, descriptor)
+        errors |= prefixed(publish_time_errors(target), "targets", index)
     return errors
 
 
@@ -53,7 +56,8 @@ def automation_errors(
     settings_model: type[BaseModel] | None,
     channel_ids: Collection[str],
 ) -> dict[str, str]:
-    errors = prefixed(schedule_errors(data.schedule), "schedule")
+    errors = prefixed(schedule_start_errors(data.schedule), "schedule")
+    errors |= prefixed(review_policy_errors(data.review_policy), "review_policy")
     if descriptor is None or settings_model is None:
         return errors | {"pipeline_type": f"unknown pipeline type {data.pipeline_type!r}"}
     errors |= validated_settings(settings_model, data.settings)[1]

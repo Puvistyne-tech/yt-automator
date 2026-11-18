@@ -42,10 +42,10 @@ def hill_colors(hue: float, saturation: float, value: float) -> tuple[Rgb, Rgb, 
     )
 
 
-def palette_for(prompt: str, rng: random.Random) -> Palette:
+def palette_for(prompt: str, rng: random.Random, night: bool = False) -> Palette:
     base = rng.random()
     accent = hsv(0.85 + base * 0.5, 0.6, 0.98)
-    mood = mood_of(prompt)
+    mood = "night" if night else mood_of(prompt)
     if mood == "night":
         sky = (hsv(0.66, 0.7, 0.22), hsv(0.7, 0.45, 0.45))
         hills = hill_colors(0.5 + base * 0.1, 0.5, 0.35)

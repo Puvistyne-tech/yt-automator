@@ -21,6 +21,7 @@ from automator.pipelines.kids_story.stages.art_extras import ExtraArt
 from automator.pipelines.kids_story.stages.media_types import PNG
 from automator.pipelines.kids_story.stages.run_settings import kids_settings
 from automator.pipelines.kids_story.stages.story_loading import art_story
+from automator.pipelines.kids_story.stages.style_record import recorded_style
 from automator.pipelines.kids_story.story.model import Story
 
 SHEET_SEED_OFFSET = 9000
@@ -37,6 +38,7 @@ class ArtStage:
 
     def run(self, context: StageContext) -> StageOutcome:
         settings = kids_settings(context)
+        style = recorded_style(context, settings)
         story = art_story(context)
         images = context.providers.resolve(Capability.IMAGE)
         painter = ScenePainter(
@@ -50,7 +52,7 @@ class ArtStage:
             made.extend(scene_made)
         made.extend(ExtraArt(context, painter, story, chosen).made())
         return StageOutcome(
-            artifacts=tuple(made), provider=images.provider_id, message=f"{len(made)} pictures"
+            artifacts=(style, *made), provider=images.provider_id, message=f"{len(made)} pictures"
         )
 
     def judge(self, context: StageContext, settings: KidsStorySettings) -> TextGenerator | None:

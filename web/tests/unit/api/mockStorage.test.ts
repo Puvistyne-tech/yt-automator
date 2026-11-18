@@ -6,7 +6,7 @@ import type { AppSettings, CleanupReport, Run, StorageReport } from "@/api/types
 
 const DAY_MS = 86_400_000;
 const NOW = Date.parse("2026-03-01T00:00:00Z");
-const POLICY = { keep_runs_days: 30, keep_intermediate_days: 7, publish_delays: {} };
+const POLICY = { keep_runs_days: 30, keep_intermediate_days: 7, publish_targets: {} };
 
 const failure = (call: Promise<unknown>) =>
   call.then(
@@ -56,20 +56,6 @@ describe("mock retention rules", () => {
     const items = cleanupItems([finalOnly], storage, NOW, POLICY);
     expect(items.map((item) => [item.action, item.bytes])).toEqual([["remove_intermediate", 5]]);
     expect(cleanupItems([finalOnly], { ...storage, workspace: {} }, NOW, POLICY)).toEqual([]);
-  });
-
-  it("holds an older public upload without a publish time for its target delay", () => {
-    const legacy = makeUpload({ privacy: "public", target_id: "target-late" });
-    const run = finishedRun(40, { uploads: [legacy] });
-    expect(cleanupAction(run, NOW, POLICY)).toBeNull();
-    const delays = { "target-late": 50 * 24 * 60 };
-    expect(cleanupAction(run, NOW, { ...POLICY, publish_delays: delays })).toBeNull();
-    expect(cleanupAction(run, NOW + 10 * DAY_MS, { ...POLICY, publish_delays: delays })).toBe(
-      "delete_run",
-    );
-    expect(cleanupAction(finishedRun(40, { uploads: [makeUpload()] }), NOW, POLICY)).toBe(
-      "delete_run",
-    );
   });
 
   it("protects pending and scheduled uploads", () => {

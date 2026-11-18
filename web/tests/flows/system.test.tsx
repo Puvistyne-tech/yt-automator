@@ -48,7 +48,7 @@ describe("Dashboard", () => {
     const review = await findCard("Waiting for your review");
     expect(await review.findByText("Bedtime stories")).toBeInTheDocument();
     const recent = await screen.findByRole("table", { name: "Recent runs" });
-    expect(within(recent).getAllByRole("row")).toHaveLength(6);
+    expect(within(recent).getAllByRole("row")).toHaveLength(7);
     const quota = await findCard("YouTube quota today");
     expect(quota.getByText("Main Google project")).toBeInTheDocument();
     expect(

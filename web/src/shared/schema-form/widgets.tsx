@@ -5,6 +5,7 @@ import {
   type WidgetProps,
 } from "@rjsf/utils";
 import type { ChangeEvent } from "react";
+import { CardsWidget } from "@/shared/schema-form/CardsWidget";
 import { CheckboxesWidget, RadioWidget, SelectWidget } from "@/shared/schema-form/choiceWidgets";
 import { positiveNumberOption } from "@/shared/schema-form/options";
 import { common, isLocked } from "@/shared/schema-form/widgetProps";
@@ -110,4 +111,6 @@ export const widgets: RegistryWidgetsType = {
   CheckboxWidget,
   RangeWidget,
   ColorWidget,
+  CardsWidget,
+  cards: CardsWidget,
 };

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any, Literal, get_args, get_origin
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from automator.pipelines.kids_story.settings.choices import titled_choices
+from automator.pipelines.kids_story.settings.choices import enum_choices, titled_choices
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 
 SCHEMA = KidsStorySettings.model_json_schema()
@@ -114,3 +114,22 @@ def test_titled_choices_replace_the_enum_with_titled_constants() -> None:
         "type": "string",
         "oneOf": [{"const": "a", "title": "Alpha"}, {"const": "b", "title": "Beta"}],
     }
+
+
+class Pace(StrEnum):
+    SLOW = "slow"
+    FAST = "fast"
+
+
+def test_enum_choices_title_every_member() -> None:
+    schema: dict[str, Any] = {"enum": ["slow", "fast"]}
+    enum_choices(Pace, {"slow": "Slow", "fast": "Fast"})(schema)
+    assert [entry["const"] for entry in schema["oneOf"]] == ["slow", "fast"]
+
+
+@pytest.mark.parametrize(
+    "titles", [{"slow": "Slow"}, {"slow": "Slow", "fast": "Fast", "still": "Still"}]
+)
+def test_enum_choices_refuse_titles_that_differ_from_the_members(titles: dict[str, str]) -> None:
+    with pytest.raises(ValueError, match="Pace titles differ"):
+        enum_choices(Pace, titles)

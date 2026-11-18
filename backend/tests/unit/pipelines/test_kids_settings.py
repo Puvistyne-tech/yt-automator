@@ -109,6 +109,7 @@ def test_ui_schema_sections_cover_every_settings_section() -> None:
     assert [section["title"] for section in sections] == [
         "Series",
         "Story",
+        "Visual style",
         "Pictures and motion",
         "Sound",
         "Subtitles",

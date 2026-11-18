@@ -7,7 +7,7 @@ import {
   runUsage,
   withoutIntermediate,
 } from "@/api/mocks/retention";
-import { publishDelays } from "@/api/mocks/uploadHold";
+import { publishTargets } from "@/api/mocks/uploadHold";
 import type { AutomationUsage, CleanupItem, CleanupReport, Run, StorageReport } from "@/api/types";
 
 const MEGABYTE = 1_000_000;
@@ -59,7 +59,7 @@ export function storageReport(): StorageReport {
 
 function policy(): RetentionPolicy {
   const { settings, automations } = db.state;
-  return { ...settings, publish_delays: publishDelays(automations) };
+  return { ...settings, publish_targets: publishTargets(automations) };
 }
 
 function preview(): CleanupItem[] {

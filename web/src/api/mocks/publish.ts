@@ -1,6 +1,7 @@
 import { isKidsPipeline } from "@/api/capabilities";
 import { db } from "@/api/mocks/db";
 import { makeUpload } from "@/api/mocks/fixtures/factories";
+import { scheduledPublish } from "@/api/mocks/publishTime";
 import type { ChannelDefaults, Run, Target, Upload } from "@/api/types";
 
 export const NO_UPLOAD_SUCCEEDED = "no upload succeeded";
@@ -40,26 +41,18 @@ function effectiveAudience(run: Run, target: Target): Pick<Upload, "privacy" | "
   };
 }
 
-export function scheduledPublish(target: Target, privacy: Upload["privacy"]): string | null {
-  if (privacy !== "public" || target.publish_delay_minutes <= 0) {
-    return null;
-  }
-  return new Date(Date.now() + target.publish_delay_minutes * 60_000).toISOString();
-}
-
 function uploadFor(run: Run, target: Target, variant: string): Upload {
   const reason = skipReason(run, target, variant);
+  const audience = effectiveAudience(run, target);
   return makeUpload({
     target_id: target.id,
     channel_id: target.channel_id,
     language: target.language,
     variant,
-    ...effectiveAudience(run, target),
+    ...audience,
+    publish_at: scheduledPublish(target, audience.privacy, new Date(db.now())),
     ...(reason === null
-      ? {
-          youtube_video_id: `vid${Math.random().toString(36).slice(2, 10)}`,
-          publish_at: scheduledPublish(target, effectiveAudience(run, target).privacy),
-        }
+      ? { youtube_video_id: `vid${Math.random().toString(36).slice(2, 10)}` }
       : { status: "skipped", youtube_video_id: null, url: null, error: reason, quota_units: 0 }),
   });
 }

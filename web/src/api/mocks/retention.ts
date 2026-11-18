@@ -1,5 +1,5 @@
 import type { MockStorage } from "@/api/mocks/fixtures/settings";
-import { holdsRun, type PublishDelays } from "@/api/mocks/uploadHold";
+import { holdsRun, type PublishTargets } from "@/api/mocks/uploadHold";
 import type {
   AppSettingsInput,
   Artifact,
@@ -24,7 +24,7 @@ export type RetentionPolicy = Pick<
   AppSettingsInput,
   "keep_runs_days" | "keep_intermediate_days"
 > & {
-  publish_delays: PublishDelays;
+  publish_targets: PublishTargets;
 };
 
 export interface RunUsage {
@@ -54,8 +54,11 @@ function finishedTime(run: Run): number {
 
 function isProtected(run: Run, now: number, policy: RetentionPolicy): boolean {
   const finished = finishedTime(run);
-  const held = run.uploads.some((upload) => holdsRun(upload, finished, now, policy.publish_delays));
-  return PROTECTED.has(run.status) || held;
+  const held = run.uploads.some((upload) =>
+    holdsRun(upload, finished, now, policy.publish_targets),
+  );
+  const retrying = run.status === "failed" && run.retry_at !== null;
+  return PROTECTED.has(run.status) || retrying || held;
 }
 
 function isOlderThan(run: Run, now: number, days: number): boolean {

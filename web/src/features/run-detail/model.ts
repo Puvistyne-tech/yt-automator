@@ -1,6 +1,7 @@
 import { PRIVACY_LABELS } from "@/api/labels";
 import { canCancel, canDelete, canRetry } from "@/api/runRules";
 import type { ReviewPolicy, Run, RunStatus, ScoreItem, Upload } from "@/api/types";
+import { formatDateTime } from "@/shared/format/dates";
 
 export interface RunActions {
   canCancel: boolean;
@@ -61,7 +62,14 @@ export function reviewMessage(decision: Decision): string {
 }
 
 export function reviewRuleText(policy: ReviewPolicy): string {
-  return policy.mode === "always" ? "always" : `auto-approve at ${policy.min_score}+`;
+  const parts = [policy.mode === "always" ? "always" : `auto-approve at ${policy.min_score}+`];
+  if (policy.reject_below !== null) {
+    parts.push(`reject under ${policy.reject_below}`);
+  }
+  if (policy.auto_publish) {
+    parts.push("publish on approval");
+  }
+  return parts.join(", ");
 }
 
 export function reviewRuleLabel(policy: ReviewPolicy): string {
@@ -121,10 +129,17 @@ function yesNo(value: boolean | null): string {
   return value ? "Yes" : "No";
 }
 
-export function uploadAudience(upload: Upload): { privacy: string; madeForKids: string } {
+export interface UploadAudience {
+  privacy: string;
+  madeForKids: string;
+  goesPublic: string;
+}
+
+export function uploadAudience(upload: Upload): UploadAudience {
   return {
     privacy: upload.privacy === null ? UNKNOWN : PRIVACY_LABELS[upload.privacy],
     madeForKids: yesNo(upload.made_for_kids),
+    goesPublic: upload.publish_at === null ? UNKNOWN : formatDateTime(upload.publish_at),
   };
 }
 

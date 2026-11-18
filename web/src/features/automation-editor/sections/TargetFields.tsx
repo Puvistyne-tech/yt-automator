@@ -10,7 +10,7 @@ import {
   privacyOptions,
   type TargetOptions,
 } from "@/features/automation-editor/model/targets";
-import { FormField, NumberInput, Select, Switch } from "@/shared/ui";
+import { FormField, Select, Switch } from "@/shared/ui";
 
 export interface TargetFieldProps {
   target: TargetDraft;
@@ -103,19 +103,6 @@ export function KidsField({ target, options, error, onChange }: TargetFieldProps
         value={kidsValue(target.made_for_kids)}
         options={KIDS_CHOICES}
         onChange={(e) => onChange({ made_for_kids: kidsFromValue(e.target.value) })}
-      />
-    </FormField>
-  );
-}
-
-export function DelayField({ target, error, onChange }: Omit<TargetFieldProps, "options">) {
-  return (
-    <FormField label="Publish delay (minutes)" error={error("publish_delay_minutes")}>
-      <NumberInput
-        min={0}
-        step={1}
-        value={target.publish_delay_minutes}
-        onValueChange={(publish_delay_minutes) => onChange({ publish_delay_minutes })}
       />
     </FormField>
   );

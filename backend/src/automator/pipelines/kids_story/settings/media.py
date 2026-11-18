@@ -18,6 +18,8 @@ from automator.pipelines.kids_story.settings.choices import (
     SHORT_ART_CHOICES,
 )
 
+STYLE_MOTION_NOTE = "Used when Move the way the style suggests is off, or for a custom style."
+
 
 class ShortArtMode(StrEnum):
     NATIVE = "native"
@@ -71,20 +73,22 @@ class VisualSettings(SettingsSection):
         ge=0,
         le=1,
         title="Motion intensity",
-        description="How strongly the camera moves over ordinary scenes: 0 is still, 1 is lively.",
+        description="How strongly the camera moves over ordinary scenes: 0 is still, 1 is lively. "
+        f"{STYLE_MOTION_NOTE}",
     )
     hero_motion_intensity: float = Field(
         default=0.7,
         ge=0,
         le=1,
         title="Hero motion intensity",
-        description="How strongly the camera moves over hero scenes: 0 is still, 1 is lively.",
+        description="How strongly the camera moves over hero scenes: 0 is still, 1 is lively. "
+        f"{STYLE_MOTION_NOTE}",
     )
     card_camera: CameraMove = Field(
         default=CameraMove.PUSH_IN,
         json_schema_extra=CAMERA_MOVE_CHOICES,
         title="Card camera move",
-        description="How the camera moves over the intro and outro cards.",
+        description=f"How the camera moves over the intro and outro cards. {STYLE_MOTION_NOTE}",
     )
     short_art_mode: ShortArtMode = Field(
         default=ShortArtMode.CROP,

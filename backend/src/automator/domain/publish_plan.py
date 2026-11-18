@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from pydantic import AwareDatetime
 
@@ -17,6 +17,7 @@ from automator.domain.channels import Channel, ChannelDefaults, Privacy
 from automator.domain.kids_rules import effective_made_for_kids, effective_privacy
 from automator.domain.model_base import DomainModel
 from automator.domain.pipeline_descriptors import PipelineDescriptor
+from automator.domain.publish_time import scheduled_publish
 from automator.domain.quota import QuotaPolicy, upload_cost
 from automator.domain.run_enums import ArtifactKind, UploadStatus
 from automator.domain.run_parts import Artifact, Upload
@@ -68,13 +69,8 @@ class UploadPlan(DomainModel):
             error=self.skip_reason,
             privacy=self.privacy,
             made_for_kids=self.made_for_kids,
+            publish_at=self.publish_at,
         )
-
-
-def scheduled_publish(target: Target, privacy: Privacy, now: datetime) -> datetime | None:
-    if privacy is not Privacy.PUBLIC or target.publish_delay_minutes <= 0:
-        return None
-    return now + timedelta(minutes=target.publish_delay_minutes)
 
 
 def plan_target_variant(

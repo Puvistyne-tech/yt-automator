@@ -13,6 +13,8 @@ export interface Target {
   made_for_kids: boolean | null;
   playlist_id: string | null;
   publish_delay_minutes: number;
+  publish_time_of_day: string | null;
+  publish_timezone: string;
 }
 
 export type TargetInput = Omit<Target, "id"> & { id?: string };
@@ -22,11 +24,22 @@ export interface Schedule {
   every_hours: number | null;
   cron: string | null;
   timezone: string;
+  skip_if_unfinished: boolean;
+  max_runs_per_day: number | null;
+  active_from: string | null;
+  active_until: string | null;
 }
 
 export interface ReviewPolicy {
   mode: ReviewMode;
   min_score: number;
+  reject_below: number | null;
+  auto_publish: boolean;
+}
+
+export interface RetryPolicy {
+  auto_retry_count: number;
+  retry_delay_minutes: number;
 }
 
 export interface Automation {
@@ -39,6 +52,7 @@ export interface Automation {
   targets: Target[];
   schedule: Schedule;
   review_policy: ReviewPolicy;
+  retry_policy: RetryPolicy;
   enabled: boolean;
   created_at: string;
   updated_at: string;
@@ -55,5 +69,6 @@ export interface AutomationInput {
   targets: TargetInput[];
   schedule: Schedule;
   review_policy: ReviewPolicy;
+  retry_policy: RetryPolicy;
   enabled: boolean;
 }

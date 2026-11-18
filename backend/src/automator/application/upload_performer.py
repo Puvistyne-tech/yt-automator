@@ -64,7 +64,6 @@ class UploadPerformer:
                 "url": uploaded.url,
                 "error": "; ".join(attempt.problems) or None,
                 "quota_units": attempt.units,
-                "publish_at": plan.publish_at,
             }
         )
 

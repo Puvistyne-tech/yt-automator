@@ -19,6 +19,20 @@ export function formatScore(score: number | null | undefined): string {
   return score === null || score === undefined ? "—" : score.toFixed(score % 1 === 0 ? 0 : 1);
 }
 
+function isExactTenthsTie(value: number): boolean {
+  const quarters = value * 4;
+  return Number.isInteger(quarters) && quarters % 2 !== 0;
+}
+
+export function toOneDecimal(value: number): string {
+  if (!isExactTenthsTie(value)) {
+    return value.toFixed(1);
+  }
+  const lower = Math.floor(value * 10);
+  const even = lower % 2 === 0 ? lower : lower + 1;
+  return (even / 10).toFixed(1);
+}
+
 export function isIntegerAtLeast(value: number | null, min: number): boolean {
   return value !== null && Number.isInteger(value) && value >= min;
 }

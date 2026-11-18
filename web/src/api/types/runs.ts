@@ -1,4 +1,4 @@
-import type { ReviewPolicy } from "@/api/types/automations";
+import type { RetryPolicy, ReviewPolicy } from "@/api/types/automations";
 import type { JsonObject, Privacy } from "@/api/types/common";
 
 export type RunStatus =
@@ -94,6 +94,10 @@ export interface Run {
   languages: string[];
   settings_snapshot: JsonObject;
   review_policy: ReviewPolicy;
+  retry_policy: RetryPolicy;
+  auto_retries: number;
+  retry_at: string | null;
+  skipped_start_at: string | null;
   stages: StageRun[];
   artifacts: Artifact[];
   score: number | null;

@@ -140,6 +140,7 @@ def test_scheduled_publish_only_for_public_targets(
 ) -> None:
     plan = plans(target(privacy=privacy, publish_delay_minutes=delay))[0]
     assert plan.publish_at == publish_at
+    assert plan.initial_upload().publish_at == publish_at
 
 
 def test_kids_pipeline_plans_are_made_for_kids() -> None:

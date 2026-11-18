@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 from enum import StrEnum
 
 from pydantic import AwareDatetime, Field
 
+from automator.domain.automations import TargetFields
 from automator.domain.model_base import DomainModel
 from automator.domain.run_enums import ArtifactKind, RunStatus
 from automator.domain.run_parts import Artifact
+from automator.domain.run_state import is_unfinished_run
 from automator.domain.runs import Run
 from automator.domain.settings import AppSettingsInput
-from automator.domain.upload_hold import holds_run
+from automator.domain.upload_hold import PublishTargets, holds_run
 
 S = RunStatus
 FINAL_OUTPUT_KINDS = frozenset(
@@ -30,7 +32,7 @@ class CleanupAction(StrEnum):
 class RetentionPolicy(DomainModel):
     keep_runs_days: int = Field(default=0, ge=0)
     keep_intermediate_days: int = Field(default=0, ge=0)
-    publish_delays: dict[str, int] = Field(default_factory=dict)
+    publish_targets: dict[str, TargetFields] = Field(default_factory=dict)
 
 
 class CleanupItem(DomainModel):
@@ -51,11 +53,11 @@ class CleanupReport(DomainModel):
     total_bytes: int = 0
 
 
-def retention_policy(settings: AppSettingsInput, delays: Mapping[str, int]) -> RetentionPolicy:
+def retention_policy(settings: AppSettingsInput, targets: PublishTargets) -> RetentionPolicy:
     return RetentionPolicy(
         keep_runs_days=settings.keep_runs_days,
         keep_intermediate_days=settings.keep_intermediate_days,
-        publish_delays=dict(delays),
+        publish_targets=dict(targets),
     )
 
 
@@ -72,12 +74,13 @@ def finished_time(run: Run) -> datetime:
 
 
 def has_unpublished_upload(run: Run, now: datetime, policy: RetentionPolicy) -> bool:
-    finished, delays = finished_time(run), policy.publish_delays
-    return any(holds_run(upload, finished, now, delays) for upload in run.uploads)
+    finished, targets = finished_time(run), policy.publish_targets
+    return any(holds_run(upload, finished, now, targets) for upload in run.uploads)
 
 
 def is_protected(run: Run, now: datetime, policy: RetentionPolicy) -> bool:
-    return run.status in PROTECTED_STATUSES or has_unpublished_upload(run, now, policy)
+    busy = run.status in PROTECTED_STATUSES or is_unfinished_run(run)
+    return busy or has_unpublished_upload(run, now, policy)
 
 
 def is_older_than(run: Run, now: datetime, days: int) -> bool:

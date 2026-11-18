@@ -69,6 +69,7 @@ def executed(harness: Harness, targets: tuple[TargetInput, ...] = ALL_TARGETS) -
         harness.recorder,
         harness.progress,
         harness.stage_runner,
+        harness.auto_publish,
     ).execute(run.id)
 
 

@@ -69,6 +69,33 @@ export function cronError(expression: string): string | null {
   return bad === -1 ? null : `The ${FIELDS[bad]?.name} field "${fields[bad]}" is not valid.`;
 }
 
+function partValues(part: string, min: number, max: number): number[] {
+  const [range = "", step = "1"] = part.split("/");
+  const [low = "", high] = range.split("-");
+  const first = range === "*" ? min : Number(low);
+  const wide = range === "*" || (high === undefined && part.includes("/"));
+  const last = wide ? max : Number(high ?? low);
+  const values: number[] = [];
+  for (let value = first; value <= last; value += Number(step)) {
+    values.push(value);
+  }
+  return values;
+}
+
+function fieldValues(field: string, min: number, max: number): number[] {
+  return field.split(",").flatMap((part) => partValues(part, min, max));
+}
+
+export function cronTimesOfDay(expression: string): number[] {
+  if (cronError(expression) !== null) {
+    return [];
+  }
+  const [minute = "", hour = ""] = expression.trim().split(/\s+/);
+  const minutes = fieldValues(minute, 0, 59);
+  const times = fieldValues(hour, 0, 23).flatMap((h) => minutes.map((m) => h * 60 + m));
+  return [...new Set(times)].sort((a, b) => a - b);
+}
+
 const isNumber = (value: string) => /^\d+$/.test(value);
 const pad = (value: string) => value.padStart(2, "0");
 

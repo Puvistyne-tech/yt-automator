@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from automator.domain.retries import next_retry_at
 from automator.domain.run_enums import RunStatus
 from automator.domain.runs import Run
 from automator.shared.errors import RuleConflict
@@ -10,7 +11,7 @@ S = RunStatus
 
 ALLOWED_TRANSITIONS: dict[RunStatus, frozenset[RunStatus]] = {
     S.QUEUED: frozenset({S.RUNNING, S.FAILED, S.CANCELLED}),
-    S.RUNNING: frozenset({S.AWAITING_REVIEW, S.APPROVED, S.FAILED, S.CANCELLED}),
+    S.RUNNING: frozenset({S.AWAITING_REVIEW, S.APPROVED, S.REJECTED, S.FAILED, S.CANCELLED}),
     S.AWAITING_REVIEW: frozenset({S.APPROVED, S.REJECTED, S.QUEUED, S.CANCELLED}),
     S.APPROVED: frozenset({S.PUBLISHING, S.QUEUED, S.CANCELLED}),
     S.REJECTED: frozenset({S.QUEUED}),
@@ -44,10 +45,20 @@ def transition(run: Run, target: RunStatus, at: datetime, error: str | None = No
     if target is S.RUNNING:
         changes["started_at"] = run.started_at or at
     if target is S.QUEUED:
-        changes |= {"started_at": None, "finished_at": None}
+        changes |= {"started_at": None, "finished_at": None, "retry_at": None}
+    if target is S.FAILED:
+        changes["retry_at"] = next_retry_at(run.retry_policy, run.auto_retries, at)
     if target in FINISHED_STATUSES:
         changes["finished_at"] = at
     return run.model_copy(update=changes)
+
+
+def retry_due(run: Run, now: datetime) -> bool:
+    return run.status is S.FAILED and run.retry_at is not None and run.retry_at <= now
+
+
+def is_unfinished_run(run: Run) -> bool:
+    return run.status in ACTIVE_STATUSES or (run.status is S.FAILED and run.retry_at is not None)
 
 
 STAGE_RESULT_STATUSES = frozenset({S.RUNNING, S.CANCELLED})

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 
 import pytest
 
+from automator.domain.automations import TargetFields
 from automator.domain.channels import Privacy
 from automator.domain.retention import (
     CleanupAction,
@@ -19,29 +19,11 @@ from automator.domain.retention import (
     without_intermediate,
 )
 from automator.domain.run_enums import ArtifactKind, RunStatus, UploadStatus
-from automator.domain.run_parts import Upload
-from automator.domain.runs import Run
 from automator.domain.settings import AppSettingsInput
-from tests.fixtures.fake_runtime import START
-from tests.fixtures.retention_data import artifact
+from tests.fixtures.retention_data import artifact, days_later, finished, upload
 from tests.unit.infrastructure.records import run
 
-FINISHED = START
-DAY_MINUTES = 24 * 60
-POLICY = RetentionPolicy(keep_runs_days=30, keep_intermediate_days=7, publish_delays={"t": 0})
-
-
-def upload(**changes: Any) -> Upload:
-    base = Upload(target_id="t", channel_id="c", language="en", variant="v")
-    return base.model_copy(update=changes)
-
-
-def finished(status: RunStatus = RunStatus.PUBLISHED, **changes: Any) -> Run:
-    return run("r1", status=status, finished_at=FINISHED, **changes)
-
-
-def days_later(days: float) -> Any:
-    return FINISHED + timedelta(days=days)
+POLICY = RetentionPolicy(keep_runs_days=30, keep_intermediate_days=7)
 
 
 @pytest.mark.parametrize(
@@ -106,33 +88,18 @@ def test_a_scheduled_upload_protects_the_run_until_it_goes_public() -> None:
 
 
 def test_done_failed_and_skipped_uploads_do_not_protect() -> None:
-    uploads = tuple(upload(status=s) for s in (UploadStatus.DONE, UploadStatus.FAILED))
+    statuses = (UploadStatus.DONE, UploadStatus.FAILED, UploadStatus.SKIPPED)
+    uploads = tuple(upload(status=s, privacy=Privacy.PRIVATE) for s in statuses)
     assert cleanup_action(finished(uploads=uploads), days_later(30), POLICY) is (
         CleanupAction.DELETE_RUN
     )
 
 
-def legacy_upload(privacy: Privacy | None) -> Upload:
-    return upload(status=UploadStatus.DONE, privacy=privacy, target_id="t-delay")
-
-
-@pytest.mark.parametrize("privacy", [Privacy.PUBLIC, None])
-def test_an_older_upload_is_held_for_its_target_publish_delay(privacy: Privacy | None) -> None:
-    policy = POLICY.model_copy(update={"publish_delays": {"t-delay": 60 * DAY_MINUTES}})
-    held = finished(uploads=(legacy_upload(privacy),))
-    assert cleanup_action(held, days_later(60) - timedelta(seconds=1), policy) is None
-    assert cleanup_action(held, days_later(60), policy) is CleanupAction.DELETE_RUN
-
-
-def test_an_older_upload_whose_target_is_gone_is_held() -> None:
-    held = finished(uploads=(legacy_upload(Privacy.PUBLIC),))
-    assert cleanup_action(held, days_later(4000), POLICY) is None
-
-
-@pytest.mark.parametrize("privacy", [Privacy.PRIVATE, Privacy.UNLISTED])
-def test_an_upload_that_never_goes_public_does_not_hold(privacy: Privacy) -> None:
-    kept_private = finished(uploads=(legacy_upload(privacy),))
-    assert cleanup_action(kept_private, days_later(30), POLICY) is CleanupAction.DELETE_RUN
+def test_a_failed_run_waiting_for_an_automatic_retry_is_never_touched() -> None:
+    waiting = finished(RunStatus.FAILED, retry_at=days_later(500))
+    assert cleanup_action(waiting, days_later(400), POLICY) is None
+    given_up = waiting.model_copy(update={"retry_at": None})
+    assert cleanup_action(given_up, days_later(400), POLICY) is CleanupAction.DELETE_RUN
 
 
 def test_final_outputs_are_videos_thumbnails_captions_and_metadata_with_a_language() -> None:
@@ -164,8 +131,9 @@ def test_working_files_are_pending_while_listed_or_on_disk() -> None:
 
 def test_the_policy_comes_from_the_app_settings() -> None:
     settings = AppSettingsInput(keep_runs_days=10, keep_intermediate_days=2)
-    assert retention_policy(settings, {"t": 5}) == RetentionPolicy(
-        keep_runs_days=10, keep_intermediate_days=2, publish_delays={"t": 5}
+    target = TargetFields(channel_id="c", language="en", variants=("v",))
+    assert retention_policy(settings, {"t": target}) == RetentionPolicy(
+        keep_runs_days=10, keep_intermediate_days=2, publish_targets={"t": target}
     )
 
 

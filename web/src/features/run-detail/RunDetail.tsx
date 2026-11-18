@@ -4,6 +4,7 @@ import { usePipeline } from "@/api/catalog";
 import { RUN_STATUSES } from "@/api/labels";
 import type { Run } from "@/api/types";
 import { ArtifactsView } from "@/features/run-detail/ArtifactsView";
+import { AutomaticEvents } from "@/features/run-detail/AutomaticEvents";
 import { AutomationLink } from "@/features/run-detail/AutomationLink";
 import { LogView } from "@/features/run-detail/LogView";
 import { availableActions, reviewRuleText } from "@/features/run-detail/model";
@@ -105,6 +106,7 @@ export function RunDetail({ run }: { run: Run }) {
           )}
           {actions.canReview && <ReviewPanel run={run} />}
           {actions.showPublish && <PublishPanel run={run} canPublish={actions.canPublish} />}
+          <AutomaticEvents run={run} />
           <RunTabs run={run} />
         </div>
         <aside className="stack run-side">
