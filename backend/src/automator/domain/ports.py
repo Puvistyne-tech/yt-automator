@@ -7,6 +7,7 @@ from automator.domain.port_repositories import (
     ChannelRepository,
     CredentialRepository,
     ProviderConfigRepository,
+    RunChange,
     RunRepository,
 )
 from automator.domain.port_runtime import (
@@ -33,6 +34,7 @@ __all__ = [
     "ProviderCatalog",
     "ProviderConfigRepository",
     "QuotaLedger",
+    "RunChange",
     "RunEvents",
     "RunQueue",
     "RunRepository",

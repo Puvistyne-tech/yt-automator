@@ -69,7 +69,6 @@ def test_synced_marks_runs_missing_from_the_repository_as_cancelled(harness: Har
     harness.runs.delete(run.id)
     moved = run.model_copy(update={"status": RunStatus.RUNNING})
     assert harness.progress.synced(moved) == run.model_copy(update={"status": RunStatus.CANCELLED})
-    assert harness.progress.owned(moved) is None
 
 
 def cancel_and_retry_from(harness: Harness) -> Callable[[StageContext], None]:

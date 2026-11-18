@@ -17,6 +17,6 @@ class CancelRun:
 
     def execute(self, run_id: str) -> Run:
         run = require_run(self.runs, run_id)
-        cancelled = self.progress.move(run, RunStatus.CANCELLED)
+        cancelled = self.progress.move(run.id, RunStatus.CANCELLED)
         self.queue.cancel(run.id)
         return cancelled

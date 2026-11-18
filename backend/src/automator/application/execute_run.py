@@ -46,11 +46,16 @@ class ExecuteRun:
             return run
         pipeline = self.pipelines.get(run.pipeline_type)
         if pipeline is None:
-            return self.progress.fail(run, pipeline_not_installed(run.pipeline_type))
+            return self.settled(
+                run, self.progress.fail(run, pipeline_not_installed(run.pipeline_type))
+            )
         settings, errors = validated_settings(pipeline.settings_model, run.settings_snapshot)
         if settings is None:
-            return self.progress.fail(run, f"settings are invalid: {errors}")
-        run = self.progress.move(run, RunStatus.RUNNING)
+            return self.settled(run, self.progress.fail(run, f"settings are invalid: {errors}"))
+        running = self.progress.advance(run, RunStatus.RUNNING)
+        if running is None:
+            return self.progress.synced(run)
+        run = running
         providers = self.catalog.resolver(self.provider_configs.list())
         return self.run_stages(run, pipeline, partial(self.context, settings, providers))
 
@@ -80,10 +85,12 @@ class ExecuteRun:
         try:
             items = tuple(pipeline.score(context))
         except Exception as error:
-            return self.progress.fail(run, f"scoring failed: {describe_error(error)}")
-        run = self.progress.synced(run)
-        if run.status is not RunStatus.RUNNING:
-            return run
+            failure = f"scoring failed: {describe_error(error)}"
+            return self.settled(run, self.progress.fail(run, failure))
         score = weighted_score(items)
-        run = run.model_copy(update={"score": score, "score_details": items})
-        return self.progress.move(run, status_after_scoring(run.review_policy, score))
+        status = status_after_scoring(run.review_policy, score)
+        scores = {"score": score, "score_details": items}
+        return self.settled(run, self.progress.advance(run, status, updates=scores))
+
+    def settled(self, run: Run, result: Run | None) -> Run:
+        return result if result is not None else self.progress.synced(run)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from automator.domain.automations import Automation
@@ -9,6 +9,8 @@ from automator.domain.credentials import Credential
 from automator.domain.providers import ProviderConfig
 from automator.domain.runs import Run, RunQuery
 from automator.domain.settings import AppSettings
+
+RunChange = Callable[[Run], Run | None]
 
 
 class CredentialRepository(Protocol):
@@ -49,6 +51,8 @@ class RunRepository(Protocol):
     def list(self, query: RunQuery) -> list[Run]: ...
 
     def save(self, run: Run) -> None: ...
+
+    def update(self, run_id: str, change: RunChange) -> Run | None: ...
 
     def delete(self, run_id: str) -> None: ...
 

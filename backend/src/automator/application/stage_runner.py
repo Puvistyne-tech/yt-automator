@@ -10,10 +10,24 @@ from automator.domain.pipeline import Stage, StageContext, StageOutcome
 from automator.domain.ports import ArtifactStore, Clock, IdGenerator
 from automator.domain.run_enums import RunStatus, StageStatus
 from automator.domain.run_parts import Artifact, StageRun
+from automator.domain.run_state import accepts_stage_results
 from automator.domain.runs import Run
 from automator.shared.errors import describe_error
 
 ContextFactory = Callable[[Run], StageContext]
+
+
+def is_running(run: Run) -> bool:
+    return run.status is RunStatus.RUNNING
+
+
+def accepts_results(run: Run) -> bool:
+    return accepts_stage_results(run.status)
+
+
+def seen_and_accepted(seen: list[Run], run: Run) -> bool:
+    seen.append(run)
+    return accepts_results(run)
 
 
 @dataclass(frozen=True)
@@ -38,22 +52,19 @@ class StageRunner:
                 "finished_at": None,
             }
         )
-        run = self.recorder.stage(self.with_stage(run, started), started)
+        recorded = self.recorder.stage(run.id, started, is_running)
+        if recorded is None:
+            return self.progress.synced(run)
         try:
-            outcome = stage.run(self.stage_context(run, stage_id, context_for))
+            outcome = stage.run(self.stage_context(recorded, stage_id, context_for))
             saved = self.saved_artifacts(run.id, stage_id, outcome)
         except Exception as error:
-            return self.failed(run, started, error)
-        return self.completed(run, started, outcome, saved)
+            return self.failed(recorded, started, error)
+        return self.completed(recorded, started, outcome, saved)
 
     def stage_context(self, run: Run, stage_id: str, context_for: ContextFactory) -> StageContext:
         log = partial(self.recorder.log, run.id, stage_id=stage_id)
         return replace(context_for(run), log=log)
-
-    def with_stage(self, run: Run, stage: StageRun) -> Run:
-        if run.stage(stage.stage_id) is not None:
-            return run
-        return run.model_copy(update={"stages": (*run.stages, stage)})
 
     def saved_artifacts(
         self, run_id: str, stage_id: str, outcome: StageOutcome
@@ -71,13 +82,11 @@ class StageRunner:
                 "finished_at": self.clock.now(),
             }
         )
-        owned = self.progress.owned(run)
-        if owned is None:
+        recorded = self.recorder.stage(run.id, stage, accepts_results)
+        if recorded is None or recorded.status is not RunStatus.RUNNING:
             return self.progress.synced(run)
-        run = self.recorder.stage(owned, stage)
-        if run.status is not RunStatus.RUNNING:
-            return run
-        return self.progress.fail(run, f"stage {stage.stage_id} failed: {message}")
+        failure = f"stage {stage.stage_id} failed: {message}"
+        return self.progress.fail(recorded, failure) or self.progress.synced(run)
 
     def completed(
         self, run: Run, started: StageRun, outcome: StageOutcome, saved: tuple[Artifact, ...]
@@ -90,14 +99,18 @@ class StageRunner:
                 "finished_at": self.clock.now(),
             }
         )
-        owned = self.progress.owned(run)
-        if owned is None:
-            self.discard_unreferenced(run, saved)
+        seen: list[Run] = []
+        recorded = self.recorder.stage(run.id, stage, partial(seen_and_accepted, seen), saved)
+        if recorded is None:
+            self.discard_unrecorded(run.id, seen, saved)
             return self.progress.synced(run)
-        return self.recorder.stage(self.recorder.artifacts(owned, saved), stage)
+        return recorded
 
-    def discard_unreferenced(self, run: Run, saved: tuple[Artifact, ...]) -> None:
-        kept = self.progress.kept_filenames(run)
+    def discard_unrecorded(self, run_id: str, seen: list[Run], saved: tuple[Artifact, ...]) -> None:
+        if not seen:
+            self.store.delete_run(run_id)
+            return
+        kept = {artifact.filename for artifact in seen[-1].artifacts}
         for artifact in saved:
             if artifact.filename not in kept:
-                self.store.discard(run.id, artifact)
+                self.store.discard(run_id, artifact)

@@ -93,4 +93,5 @@ def test_transition_does_not_mutate_the_original() -> None:
 
 @pytest.mark.parametrize("status", list(RunStatus))
 def test_only_running_and_cancelled_runs_accept_stage_results(status: RunStatus) -> None:
-    assert accepts_stage_results(status) is (status in {S.RUNNING, S.CANCELLED})
+    accepted = {RunStatus("running"), RunStatus("cancelled")}
+    assert accepts_stage_results(status) is (status in accepted)

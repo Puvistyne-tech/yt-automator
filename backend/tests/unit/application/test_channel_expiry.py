@@ -78,3 +78,9 @@ def test_reconnecting_restores_the_connected_status(harness: Harness, channel: C
     state = start_connect(harness).execute(channel.credential_id).state
     assert complete_connect(harness).execute("code", state).id == channel.id
     assert channel_status(harness) is ChannelStatus.CONNECTED
+
+
+def test_other_errors_leave_the_channel_connected(harness: Harness, channel: Channel) -> None:
+    with pytest.raises(RuntimeError), harness.expiry.watching(channel):
+        raise RuntimeError("boom")
+    assert channel_status(harness) is ChannelStatus.CONNECTED

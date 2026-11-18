@@ -86,11 +86,12 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 - Retry is allowed from `failed`, `cancelled`, `awaiting_review`, `approved` and `rejected`. It re-queues the run and clears its score, score details, review and uploads.
 - Cancel is allowed from `queued`, `running`, `awaiting_review` and `approved`. A stage that fails after the run was cancelled is recorded as failed, but the run stays `cancelled` without an error.
 - A worker records a stage result only while the stored run is `running` or `cancelled`, onto the stored run.
-  If the run was retried or deleted meanwhile, the result is dropped and its unreferenced files are discarded.
+  If the run was retried meanwhile, the result is dropped and its unreferenced files are discarded; if the run
+  was deleted, its whole folder is removed. Every run change (status moves, stage results, uploads, logs)
+  is applied to the stored run through `RunRepository.update`, so concurrent cancel and retry are never lost.
   A retry that arrives while the old worker is still busy runs once that worker returns.
 - Every `context.log(message, level)` call is stored on the run as a RunLog and published as a `log` event.
-  A run keeps only its newest `max_run_log_entries` entries (runtime setting, default 2000, the same
-  number the UI keeps); older entries are dropped. Every entry is still published as an event.
+  A run keeps only its newest `max_run_log_entries` entries (runtime setting, default 2000); older entries are dropped. Every entry is still published as an event.
 - Deleting a `queued`, `running` or `publishing` run is refused; cancel it first.
 - After the last stage the run is scored, then becomes `awaiting_review`, or `approved` directly when the policy is `auto_when_score_at_least` and the score reaches `min_score`.
 - Only an `approved` run can publish. Publishing creates one upload per target and variant. A target whose language is not in the run, whose channel no longer exists, or that has no matching video yields a `skipped` upload with the reason in `error`. A failed upload fails only itself; the run is `published` when at least one upload is done and none is pending.
@@ -119,7 +120,9 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 
 ## Ports (`domain/ports.py`)
 
-`CredentialRepository`, `AutomationRepository`, `RunRepository` (get, list, save, delete),
+`CredentialRepository`, `AutomationRepository` (get, list, save, delete),
+`RunRepository` (get, list, save, delete, update(run_id, change) -> the saved run, or None when the run is
+missing or `change` returns None; the read and the write happen in one transaction),
 `ChannelRepository` (get, find_by_youtube_id, list, save, delete), `ProviderConfigRepository` (list, save_all),
 `AppSettingsRepository` (get, save), `QuotaLedger` (used_today(credential_id, day), record(credential_id, units, day)),
 `SecretStore` (get, set, delete, has), `Clock` (now), `IdGenerator` (new), `PipelineRegistry` (list, get),
@@ -195,8 +198,9 @@ Base path `/api`. Errors are `{"error": {"code": str, "message": str, "fields": 
 status 400 (validation), 404 (`not_found` or `<entity>_not_found`), 405 (`method_not_allowed`), 409 (rule
 conflict) or 502 (upstream). Any other failure is 500 with code `internal_error` and the message
 "Unexpected server error"; the exception text is never returned. Lists return bare JSON arrays.
-The secrets file being unreadable (missing key or corrupt file) is 409 `secrets_unreadable`, telling the
-user to remove it and reconnect their channels.
+The secrets file being unreadable (missing key or corrupt file) is 409 `secrets_unreadable`, naming the
+secrets and key files to remove and telling the user to reconnect their channels. The next write after
+removal creates a new key. A 500 carries an `X-Request-Id` header; the log names only the error type and id.
 
 | Method and path | Body | Returns |
 | --- | --- | --- |

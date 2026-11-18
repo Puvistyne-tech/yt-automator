@@ -57,5 +57,14 @@ class Database:
             yield session
             session.commit()
 
+    @contextmanager
+    def immediate_session(self) -> Iterator[Session]:
+        with self.engine.connect() as connection:
+            connection.exec_driver_sql("BEGIN IMMEDIATE")
+            with Session(bind=connection, expire_on_commit=False) as session:
+                yield session
+                session.flush()
+            connection.commit()
+
     def dispose(self) -> None:
         self.engine.dispose()

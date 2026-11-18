@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import builtins
+import threading
 from collections.abc import Sequence
 from typing import Protocol
 
 from automator.domain.automations import Automation
 from automator.domain.channels import Channel
 from automator.domain.credentials import Credential
+from automator.domain.ports import RunChange
 from automator.domain.providers import ProviderConfig
 from automator.domain.runs import Run, RunQuery
 from automator.domain.settings import AppSettings
@@ -62,6 +64,7 @@ class InMemoryRuns:
     def __init__(self) -> None:
         self.items: dict[str, Run] = {}
         self.saves = 0
+        self.lock = threading.RLock()
 
     def get(self, run_id: str) -> Run | None:
         return self.items.get(run_id)
@@ -74,6 +77,14 @@ class InMemoryRuns:
     def save(self, run: Run) -> None:
         self.saves += 1
         self.items[run.id] = run
+
+    def update(self, run_id: str, change: RunChange) -> Run | None:
+        with self.lock:
+            stored = self.items.get(run_id)
+            changed = change(stored) if stored is not None else None
+            if changed is not None:
+                self.save(changed)
+            return changed
 
     def delete(self, run_id: str) -> None:
         self.items.pop(run_id, None)

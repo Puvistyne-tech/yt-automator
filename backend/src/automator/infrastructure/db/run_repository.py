@@ -4,6 +4,7 @@ from typing import Any
 
 from sqlmodel import col, select
 
+from automator.domain.ports import RunChange
 from automator.domain.runs import Run, RunQuery
 from automator.infrastructure.db.codec import sortable_time, to_payload
 from automator.infrastructure.db.database import Database
@@ -44,3 +45,11 @@ class SqlRunRepository(RowStore[Run, RunRow]):
         with self.db.session() as session:
             rows = session.exec(run_statement(query)).all()
             return [self.decode(row) for row in rows]
+
+    def update(self, run_id: str, change: RunChange) -> Run | None:
+        with self.db.immediate_session() as session:
+            row = session.get(RunRow, run_id)
+            changed = change(self.decode(row)) if row is not None else None
+            if changed is not None:
+                session.merge(run_row(changed))
+            return changed

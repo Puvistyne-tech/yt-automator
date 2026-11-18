@@ -37,6 +37,10 @@ def interrupted_upload(upload: Upload) -> Upload:
     )
 
 
+def is_running(run: Run) -> bool:
+    return run.status is RunStatus.RUNNING
+
+
 @dataclass(frozen=True)
 class RecoverInterruptedRuns:
     runs: RunRepository
@@ -59,12 +63,14 @@ class RecoverInterruptedRuns:
     def fail_running(self, run: Run) -> str:
         for stage in run.stages:
             if stage.status is StageStatus.RUNNING:
-                run = self.recorder.stage(run, interrupted_stage(stage, self.clock.now()))
-        return self.progress.fail(run, INTERRUPTED_RUN_ERROR).id
+                stopped = interrupted_stage(stage, self.clock.now())
+                run = self.recorder.stage(run.id, stopped, is_running) or run
+        self.progress.fail(run, INTERRUPTED_RUN_ERROR)
+        return run.id
 
     def settle(self, run: Run) -> str:
         for index, upload in enumerate(run.uploads):
             if is_unfinished(upload):
-                run = self.recorder.upload(run, index, interrupted_upload(upload))
+                run = self.recorder.upload(run.id, index, interrupted_upload(upload))
         status, error = publish_outcome(run.uploads)
-        return self.progress.move(run, status, error).id
+        return self.progress.move(run.id, status, error).id
