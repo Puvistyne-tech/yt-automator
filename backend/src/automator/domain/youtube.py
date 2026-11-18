@@ -45,3 +45,6 @@ class VideoUpload(DomainModel):
 class UploadedVideo(DomainModel):
     video_id: str
     url: str
+
+
+AUTHORIZATION_EXPIRED_CODE = "youtube_invalid_grant"

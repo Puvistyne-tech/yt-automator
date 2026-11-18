@@ -5,6 +5,7 @@ from pydantic import AwareDatetime, Field
 from automator.domain.model_base import DomainModel, JsonObject
 from automator.domain.run_enums import (
     ArtifactKind,
+    LogLevel,
     ReviewDecision,
     StageStatus,
     UploadStatus,
@@ -49,3 +50,10 @@ class Upload(DomainModel):
     url: str | None = None
     error: str | None = None
     quota_units: int = Field(default=0, ge=0)
+
+
+class RunLog(DomainModel):
+    at: AwareDatetime
+    level: LogLevel = LogLevel.INFO
+    stage_id: str | None = None
+    message: str
