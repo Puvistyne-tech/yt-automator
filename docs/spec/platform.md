@@ -331,7 +331,8 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   Languages (multi-select from the pipeline's languages), Targets (rows of channel, language, variants,
   privacy, playlist), Schedule, Review. Client-side validation mirrors the rules; server errors map to fields.
   A saved automation without unsaved changes offers Run now; with unsaved changes it is disabled with the reason.
-  A "Run queued" toast (list or editor) links to the new run. An unknown automation id shows a not-found
+  A "Run queued" toast (list or editor) links to the new run; a toast with an action stays until it is
+  used or dismissed, other toasts close after five seconds. An unknown automation id shows a not-found
   state with a link back to Automations.
 - Run detail: live stage timeline, logs, score breakdown, approve or reject with notes, publish, retry from
   stage. A `status` event refetches the open run so score, score details and timestamps update live.
