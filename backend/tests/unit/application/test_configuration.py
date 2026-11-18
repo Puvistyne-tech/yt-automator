@@ -45,6 +45,21 @@ def test_save_provider_config_validates_then_persists(harness: Harness) -> None:
     assert harness.provider_configs.list() == [LLM_CHAIN]
 
 
+def test_save_provider_config_rejects_invalid_options(harness: Harness) -> None:
+    save = SaveProviderConfig(harness.catalog, harness.provider_configs)
+    blank = ProviderConfig(
+        capability=Capability.LLM,
+        chain=(
+            ProviderChoice(provider_id="fake-llm"),
+            ProviderChoice(provider_id="cloud-llm", options={"model": ""}),
+        ),
+    )
+    with pytest.raises(ValidationFailed) as raised:
+        save.execute([blank])
+    assert raised.value.fields == {"0.chain.1.options.model": "model must not be empty"}
+    assert harness.provider_configs.list() == []
+
+
 def test_secrets_list_set_and_delete(harness: Harness) -> None:
     listing = ListSecrets(harness.catalog, harness.secrets)
     assert [(s.name, s.is_set) for s in listing.execute()] == [("cloud_api_key", False)]

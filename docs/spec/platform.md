@@ -91,6 +91,14 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 - Duplicating an automation creates a disabled copy named with the suffix " (copy)" and new target ids.
 - A scheduled automation's next run is computed from the later of its last scheduled run and its `updated_at`. Manual runs do not move the schedule.
 - Deleting a channel is refused while an enabled automation targets it. Deleting a credential is refused while a channel uses it. Deleting an automation keeps its runs.
+- Saving provider configs (PUT `/providers`) rejects an unknown provider, a provider listed under the
+  wrong capability or twice, a capability configured twice, and options that do not validate against the
+  provider's options schema. Options are checked for every entry, enabled or not. Errors are keyed by
+  position in the request: `<config index>.chain.<position>.provider_id` or
+  `<config index>.chain.<position>.options.<field>` (for example `0.chain.1.options.topic_words`).
+- Descriptor availability (`available`, `unavailable_reason`) is evaluated with each provider's
+  default options, not the saved ones, so a provider that needs a custom path or URL may show as
+  unavailable while the resolver can still use it.
 - Made-for-kids on a target can only be forced on by a pipeline that declares the capability `kids_content`; such a pipeline's targets are always made for kids.
 
 ## Ports (`domain/ports.py`)
@@ -99,7 +107,8 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 `ChannelRepository` (get, find_by_youtube_id, list, save, delete), `ProviderConfigRepository` (list, save_all),
 `AppSettingsRepository` (get, save), `QuotaLedger` (used_today(credential_id, day), record(credential_id, units, day)),
 `SecretStore` (get, set, delete, has), `Clock` (now), `IdGenerator` (new), `PipelineRegistry` (list, get),
-`ProviderCatalog` (descriptors, secrets, resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
+`ProviderCatalog` (descriptors, secrets, option_errors(configs) -> {path: message},
+resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
 exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
 `ArtifactStore` (workspace for a run, save, open, discard one artifact, delete run), `RunQueue` (enqueue, cancel),
 `RunEvents` (publish, subscribe), `ScheduleCalculator` (next_run_at).
@@ -121,8 +130,24 @@ StageContext    run_id, settings (validated model instance), languages, workspac
                 artifacts (those produced so far), providers (ProviderResolver), log(message)
 StageOutcome    artifacts: [NewArtifact], provider: str, message: str
 NewArtifact     kind, path (inside workspace), language, variant, media_type, meta
-ProviderResolver.resolve(capability) -> the first available provider in the configured chain
+ProviderResolver.resolve(capability) -> a provider for the capability (see Provider resolution)
 ```
+
+### Provider resolution
+
+- The chain is the saved `ProviderConfig` for the capability. With no config, or a config whose chain
+  is empty, the chain is every provider of the capability in registry order: hosted or heavy providers
+  first, the always-available offline provider last.
+- An entry is skipped when it is unknown, offers another capability, is disabled, has options that no
+  longer validate, or reports itself unavailable. The resolver records the reason for every skipped
+  entry. When no entry remains, `resolve` raises a 409 rule conflict `provider_unavailable` whose
+  message lists every reason.
+- `resolve` returns a failover proxy over the remaining entries in order. Each call tries them in turn
+  and moves to the next only on an upstream failure (502 class). A provider's own file errors and
+  output that fails validation count as upstream failures; any other error propagates at once. When
+  every entry fails, the call raises an upstream failure listing each provider's message.
+- The proxy's `provider_id` is the first remaining entry before any call, and afterwards the provider
+  that served the most recent successful call; a stage reads it after the call to report who served it.
 
 Capability interfaces live in `domain/capabilities.py`. There are six capabilities; pipelines depend on these only.
 
@@ -137,6 +162,13 @@ music  MusicGenerator.compose(MusicRequest, output) -> Path
 media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, output) -> Path,
        extract_frame(video, at_seconds, output) -> Path, loudness_lufs(media)
 ```
+
+- `VideoComposition` width and height are rounded down to the nearest even number (minimum 2), as
+  H.264 with 4:2:0 chroma needs even sizes.
+- Ducking lowers the music only while narration plays; the music continues at its set volume after
+  the last narration clip.
+- `extract_frame` fails with an upstream failure when no frame was written, for example past the end.
+- Speech synthesizers refuse blank text with an upstream failure.
 
 ## HTTP API
 
@@ -177,7 +209,7 @@ status 400 (validation), 404, 409 (rule conflict) or 502 (upstream). Lists retur
 | GET `/runs/{id}/artifacts/{artifact_id}` | | the file, with range support |
 | GET `/events` | | server-sent events, each `data:` a RunEvent |
 | GET `/providers` | | `{descriptors: [ProviderDescriptor], config: [ProviderConfig]}` |
-| PUT `/providers` | `[ProviderConfig]` | `[ProviderConfig]` |
+| PUT `/providers` | `[ProviderConfig]` | `[ProviderConfig]`, 400 with field errors (see Rules) |
 | GET `/secrets` | | `[{name, title, description, is_set}]` |
 | PUT `/secrets/{name}` | `{value}` | 204 |
 | DELETE `/secrets/{name}` | | 204 |

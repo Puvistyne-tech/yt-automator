@@ -6,6 +6,7 @@ from typing import Any
 from automator.domain.capabilities import Capability, TextRequest
 from automator.domain.providers import ProviderConfig, ProviderDescriptor
 from automator.domain.secrets import SecretDefinition
+from automator.domain.validation import field_path
 
 DESCRIPTORS = (
     ProviderDescriptor(provider_id="fake-llm", capability=Capability.LLM, name="Fake LLM"),
@@ -55,6 +56,14 @@ class FakeProviderCatalog:
 
     def secrets(self) -> list[SecretDefinition]:
         return list(SECRETS)
+
+    def option_errors(self, configs: Sequence[ProviderConfig]) -> dict[str, str]:
+        return {
+            field_path(index, "chain", position, "options", "model"): "model must not be empty"
+            for index, config in enumerate(configs)
+            for position, choice in enumerate(config.chain)
+            if choice.options.get("model") == ""
+        }
 
     def resolver(self, configs: Sequence[ProviderConfig]) -> FakeResolver:
         self.resolved_with.append(list(configs))
