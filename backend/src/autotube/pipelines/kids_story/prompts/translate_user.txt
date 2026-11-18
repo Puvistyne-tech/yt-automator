@@ -2,9 +2,7 @@ Translate this story from $source_language into $language.
 
 Rules:
 - Keep exactly $scene_count narrations, in the same order, one translated narration per original narration.
-- Keep exactly $question_count questions.
-- The moral must appear word for word, as you translate it, inside the last narration.
-- The last narration must end with this exact refrain: "$refrain"
+- Keep exactly $question_count questions.$ending_rules
 - Character names in $language: $names
 
 Story:

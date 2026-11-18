@@ -1,8 +1,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.kids_story.settings.story_choices import (
+    StoryCheck,
+    says_moral,
+    says_refrain,
+)
+from autotube.pipelines.kids_story.story.casting import episode_cast
 from autotube.pipelines.kids_story.story.model import Story
 from autotube.pipelines.kids_story.story.reading import (
     estimated_seconds,
@@ -51,12 +58,13 @@ def closing_scenes(count: int) -> str:
 
 def ending_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     problems = []
+    style = settings.story.ending_style
     count = settings.story.ending_scenes
     ending = ending_text(story, count)
-    if not contains_phrase(ending, story.moral):
+    if says_moral(style) and not contains_phrase(ending, story.moral):
         problems.append(f"say the moral, word for word, in {closing_scenes(count)}")
     refrain = settings.series.refrain.for_language(story.language)
-    if refrain and not contains_phrase(ending, refrain):
+    if says_refrain(style) and refrain and not contains_phrase(ending, refrain):
         problems.append(f'say the refrain "{refrain}" in {closing_scenes(count)}')
     return problems
 
@@ -94,33 +102,52 @@ def reading_level_problems(story: Story, settings: KidsStorySettings) -> list[st
     return problems
 
 
-def cast_problems(story: Story, settings: KidsStorySettings) -> list[str]:
-    known = {member.id for member in settings.cast}
+def cast_problems(story: Story, settings: KidsStorySettings, seed: str = "") -> list[str]:
+    known = {member.id for member in episode_cast(settings, seed)}
     unknown = sorted(set(story.character_ids) - known)
     return [f"only use cast ids; unknown: {', '.join(unknown)}"] if unknown else []
 
 
-GATES: tuple[Gate, ...] = (
-    scene_count_problems,
-    words_per_scene_problems,
-    duration_problems,
-    ending_problems,
-    banned_word_problems,
-    brand_problems,
-    reading_level_problems,
-    cast_problems,
+CheckedGate = tuple[StoryCheck | None, Gate]
+
+
+def story_gates(seed: str) -> tuple[CheckedGate, ...]:
+    return (
+        (StoryCheck.SCENE_COUNT, scene_count_problems),
+        (StoryCheck.WORDS_PER_SCENE, words_per_scene_problems),
+        (StoryCheck.DURATION, duration_problems),
+        (StoryCheck.ENDING, ending_problems),
+        (None, banned_word_problems),
+        (None, brand_problems),
+        (StoryCheck.READING_LEVEL, reading_level_problems),
+        (StoryCheck.CAST, partial(cast_problems, seed=seed)),
+    )
+
+
+TRANSLATION_GATES: tuple[CheckedGate, ...] = (
+    (StoryCheck.ENDING, ending_problems),
+    (None, banned_word_problems),
+    (None, brand_problems),
 )
 
 
-TRANSLATION_GATES: tuple[Gate, ...] = (ending_problems, banned_word_problems, brand_problems)
+def switched_on(check: StoryCheck | None, settings: KidsStorySettings) -> bool:
+    return check is None or check in settings.story.enabled_checks
 
 
-def problems_of(gates: tuple[Gate, ...], story: Story, settings: KidsStorySettings) -> list[str]:
-    return [problem for gate in gates for problem in gate(story, settings)]
+def problems_of(
+    gates: tuple[CheckedGate, ...], story: Story, settings: KidsStorySettings
+) -> list[str]:
+    return [
+        problem
+        for check, gate in gates
+        if switched_on(check, settings)
+        for problem in gate(story, settings)
+    ]
 
 
-def story_problems(story: Story, settings: KidsStorySettings) -> list[str]:
-    return problems_of(GATES, story, settings)
+def story_problems(story: Story, settings: KidsStorySettings, seed: str = "") -> list[str]:
+    return problems_of(story_gates(seed), story, settings)
 
 
 def translation_problems(story: Story, settings: KidsStorySettings) -> list[str]:

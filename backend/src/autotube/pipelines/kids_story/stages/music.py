@@ -4,7 +4,7 @@ from autotube.domain.capabilities import Capability, MusicGenerator, MusicReques
 from autotube.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from autotube.domain.pipeline_descriptors import StageDescriptor
 from autotube.domain.run_enums import ArtifactKind, LogLevel
-from autotube.pipelines.kids_story.artifacts import Role, artifact, folder
+from autotube.pipelines.kids_story.artifacts import SHORT, Role, artifact, folder
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from autotube.pipelines.kids_story.stages.media_types import WAV
 from autotube.pipelines.kids_story.stages.run_settings import kids_settings
@@ -25,6 +25,11 @@ def effect_cues(stories: dict[str, Story]) -> list[str]:
 
 def effect_prompt(settings: KidsStorySettings, cue: str) -> str:
     return render_template(settings.sound_effects.prompt_template, {"cue": cue})
+
+
+def bed_prompt(settings: KidsStorySettings, variant: str) -> str:
+    short_mood = settings.music.short_mood_prompt
+    return short_mood if variant == SHORT and short_mood.strip() else settings.music.mood_prompt
 
 
 def effect_name(index: int) -> str:
@@ -75,7 +80,7 @@ class MusicStage:
     ) -> NewArtifact:
         seconds = total_seconds(cut.segments)
         context.log(f"composing {seconds:.0f} s of music for {cut.language} {cut.variant}")
-        request = MusicRequest(prompt=settings.music.mood_prompt, duration_seconds=seconds)
+        request = MusicRequest(prompt=bed_prompt(settings, cut.variant), duration_seconds=seconds)
         path = composer.compose(request, folder(context, "music") / f"music-{cut.name}.wav")
         return artifact(
             ArtifactKind.AUDIO,
