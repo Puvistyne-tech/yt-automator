@@ -19,6 +19,7 @@ from automator.domain.port_runtime import (
     RunQueue,
     ScheduleCalculator,
     SecretStore,
+    SystemInspector,
 )
 from automator.domain.port_youtube import YouTubeGateway
 
@@ -40,5 +41,6 @@ __all__ = [
     "RunRepository",
     "ScheduleCalculator",
     "SecretStore",
+    "SystemInspector",
     "YouTubeGateway",
 ]

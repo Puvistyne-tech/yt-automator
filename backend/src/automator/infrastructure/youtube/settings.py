@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from automator.infrastructure.config import RuntimeConfig
+
 UPLOAD_SCOPE = "https://www.googleapis.com/auth/youtube.upload"
 READONLY_SCOPE = "https://www.googleapis.com/auth/youtube.readonly"
 FORCE_SSL_SCOPE = "https://www.googleapis.com/auth/youtube.force-ssl"
@@ -21,3 +23,12 @@ class YouTubeSettings(BaseModel):
     playlist_page_size: int = Field(default=50, ge=1, le=50)
     caption_track_name: str = Field(default="", description="Name shown for uploaded captions")
     watch_url_prefix: str = Field(default="https://youtu.be/")
+
+
+def youtube_settings(config: RuntimeConfig) -> YouTubeSettings:
+    return YouTubeSettings(
+        redirect_uri=config.oauth_redirect_uri,
+        upload_chunk_bytes=config.upload_chunk_bytes,
+        caption_track_name=config.youtube_caption_track_name,
+        playlist_page_size=config.youtube_playlist_page_size,
+    )

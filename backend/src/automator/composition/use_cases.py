@@ -36,6 +36,7 @@ from automator.application.publish_run import PublishRun
 from automator.application.recover_interrupted_runs import RecoverInterruptedRuns
 from automator.application.retry_run import RetryRun
 from automator.application.review_run import ReviewRun
+from automator.application.run_doctor import RunDoctor
 from automator.application.run_due_automations import RunDueAutomations
 from automator.application.save_provider_config import SaveProviderConfig
 from automator.application.save_settings import SaveSettings
@@ -150,6 +151,7 @@ def config_use_cases(p: Ports, c: Collaborators) -> ConfigUseCases:
         delete_secret=DeleteSecret(p.catalog, p.secrets),
         get_settings=GetSettings(p.app_settings),
         save_settings=SaveSettings(p.app_settings),
+        doctor=RunDoctor(p.catalog, p.secrets, p.inspector, p.doctor_policy),
     )
 
 

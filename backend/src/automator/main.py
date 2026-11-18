@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from importlib.metadata import PackageNotFoundError, version
 
 import uvicorn
 from fastapi import FastAPI
@@ -14,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from automator.api.app import build_api
 from automator.api.container import ApiOptions, UseCases
 from automator.api.spa import mount_web_ui
+from automator.application.run_doctor import RunDoctor
 from automator.composition.ports import Ports
 from automator.composition.use_cases import build_use_cases
 from automator.domain.ports import (
@@ -39,16 +39,17 @@ from automator.infrastructure.db.settings_repositories import (
     SqlProviderConfigRepository,
     SqlQuotaLedger,
 )
+from automator.infrastructure.diagnostics.system_inspector import build_system_inspector
 from automator.infrastructure.providers.catalog import build_provider_catalog
 from automator.infrastructure.runtime.events import InProcessRunEvents
 from automator.infrastructure.runtime.scheduler import SchedulerTicker
-from automator.infrastructure.runtime.system import RandomIds, SystemClock
+from automator.infrastructure.runtime.system import RandomIds, SystemClock, package_version
 from automator.infrastructure.runtime.worker_pool import WorkerPoolQueue
 from automator.infrastructure.scheduling.schedule_calculator import StandardScheduleCalculator
 from automator.infrastructure.secrets.selection import build_secret_store
 from automator.infrastructure.storage.artifact_store import FileArtifactStore
 from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
-from automator.infrastructure.youtube.settings import YouTubeSettings
+from automator.infrastructure.youtube.settings import youtube_settings
 from automator.pipelines.registry import build_pipeline_registry
 
 logger = logging.getLogger("automator")
@@ -88,29 +89,25 @@ class Runtime:
         self.database.dispose()
 
 
-def package_version() -> str:
-    try:
-        return version("automator")
-    except PackageNotFoundError:
-        return "0.0.0"
-
-
 def youtube_gateway(config: RuntimeConfig) -> GoogleYouTubeGateway:
-    settings = YouTubeSettings(
-        redirect_uri=config.oauth_redirect_uri,
-        upload_chunk_bytes=config.upload_chunk_bytes,
-        caption_track_name=config.youtube_caption_track_name,
-        playlist_page_size=config.youtube_playlist_page_size,
-    )
-    return GoogleYouTubeGateway(settings)
+    return GoogleYouTubeGateway(youtube_settings(config))
+
+
+def secret_store(config: RuntimeConfig) -> SecretStore:
+    return build_secret_store(config.secret_backend, config.data_dir, config.keyring_service)
+
+
+def build_doctor(environ: Mapping[str, str]) -> RunDoctor:
+    config = load_config(environ)
+    secrets = secret_store(config)
+    catalog = build_provider_catalog(secrets, config.data_dir)
+    return RunDoctor(catalog, secrets, build_system_inspector(config), config.doctor_policy)
 
 
 def build_ports(
     config: RuntimeConfig, database: Database, queue: WorkerPoolQueue, overrides: Overrides
 ) -> Ports:
-    secrets = overrides.secrets or build_secret_store(
-        config.secret_backend, config.data_dir, config.keyring_service
-    )
+    secrets = overrides.secrets or secret_store(config)
     return Ports(
         credentials=SqlCredentialRepository(database),
         channels=SqlChannelRepository(database),
@@ -129,7 +126,9 @@ def build_ports(
         pipelines=overrides.pipelines or build_pipeline_registry(),
         catalog=overrides.catalog or build_provider_catalog(secrets, config.data_dir),
         youtube=overrides.youtube or youtube_gateway(config),
+        inspector=build_system_inspector(config),
         run_logs=RunLogPolicy(max_entries=config.max_run_log_entries),
+        doctor_policy=config.doctor_policy,
     )
 
 

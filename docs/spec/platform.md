@@ -74,6 +74,15 @@ ProviderChoice  provider_id, enabled, options (object)
 ProviderDescriptor  provider_id, capability, name, description, options_schema, required_secrets: [name],
                     offline: bool, available: bool, unavailable_reason
 AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, data_dir (read-only)
+
+DoctorReport    can_start: bool, checks: [HealthCheck], capabilities: [HealthCheck],
+                providers: [ProviderHealth], missing_secrets: [SecretDefinition]
+HealthCheck     name, status: ok | warning | error, detail
+ProviderHealth  provider_id, capability, name, available, reason
+SystemFacts     python_version, data_dir, data_dir_writable, free_bytes (nullable), ffmpeg_version,
+                ffprobe_version ("" when missing), database_path, database_revision (nullable),
+                database_head (nullable), database_revision_known, database_error, web_dist_dir, ui_built
+DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_min_free_gb`)
 ```
 
 ### Rules
@@ -116,6 +125,17 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 - Descriptor availability (`available`, `unavailable_reason`) is evaluated with each provider's
   default options, not the saved ones, so a provider that needs a custom path or URL may show as
   unavailable while the resolver can still use it.
+- The doctor turns `SystemFacts` into checks, in this order: `python`, `data_dir`, `disk_space`,
+  `ffmpeg`, `ffprobe`, `database`, `web_ui`, then `secrets` when the secret store cannot be read.
+  Only three conditions are errors: Python below `min_python`, a data directory that cannot be created
+  or written, and a database that cannot be read or whose revision is unknown to this app (newer).
+  Low disk space, a missing ffmpeg or ffprobe, a missing UI build and unreadable secrets are warnings.
+  A database that does not exist yet, or is behind the newest migration, is ok: startup migrates it.
+- The doctor reports one capability check per capability: ok with the available providers in
+  registry order, or a warning listing every provider's reason (offline fallbacks exist, so a
+  capability without a provider never stops the app). `can_start` is false only when a check is an error.
+- `python -m automator.doctor` (`just doctor`) prints the report and exits 1 when `can_start` is false
+  or the data directory cannot be opened, else 0. It does not migrate or create the database.
 - Made-for-kids on a target can only be forced on by a pipeline that declares the capability `kids_content`; such a pipeline's targets are always made for kids.
 
 ## Ports (`domain/ports.py`)
@@ -130,7 +150,9 @@ missing or `change` returns None; the read and the write happen in one transacti
 resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
 exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
 `ArtifactStore` (workspace for a run, save, open, discard one artifact, delete run), `RunQueue` (enqueue, cancel),
-`RunEvents` (publish, subscribe), `ScheduleCalculator` (next_run_at).
+`RunEvents` (publish, subscribe), `ScheduleCalculator` (next_run_at),
+`SystemInspector` (facts() -> SystemFacts: Python, data directory, free space, ffmpeg and ffprobe
+versions, migration state and UI build, read without changing anything).
 
 A YouTube failure whose code is `youtube_invalid_grant` means the channel's authorization expired.
 
@@ -205,6 +227,7 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | Method and path | Body | Returns |
 | --- | --- | --- |
 | GET `/health` | | `{status, version}` |
+| GET `/doctor` | | DoctorReport |
 | GET `/dashboard` | | `{automations, enabled_automations, channels, runs_awaiting_review, runs_today, recent_runs: [RunSummary + automation_name], quota: [{credential_id, name, used, limit}]}` |
 | GET `/pipelines` | | `[PipelineDescriptor]` |
 | GET `/pipelines/{type_id}` | | `PipelineDescriptor` |

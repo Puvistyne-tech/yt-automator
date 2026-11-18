@@ -36,6 +36,8 @@ OVERRIDES: list[tuple[str, str, Any]] = [
     ("youtube_playlist_page_size", "10", 10),
     ("max_run_log_entries", "50", 50),
     ("log_level", "debug", "debug"),
+    ("doctor_min_free_gb", "2.5", 2.5),
+    ("doctor_tool_timeout_seconds", "1.5", 1.5),
 ]
 DEFAULTS: dict[str, Any] = {
     "data_dir": default_data_dir(),
@@ -60,6 +62,8 @@ DEFAULTS: dict[str, Any] = {
     "youtube_playlist_page_size": 50,
     "max_run_log_entries": 2000,
     "log_level": "info",
+    "doctor_min_free_gb": 10.0,
+    "doctor_tool_timeout_seconds": 5.0,
 }
 
 
@@ -89,6 +93,11 @@ def test_defaults_and_derived_paths(tmp_path: Path) -> None:
     assert moved.oauth_redirect_uri == "http://h:1/api/oauth/callback"
 
 
+def test_doctor_policy_follows_the_config() -> None:
+    policy = load_config({env("doctor_min_free_gb"): "3"}).doctor_policy
+    assert policy.min_free_gb == 3.0
+
+
 def test_empty_cors_origins_allow_none() -> None:
     assert load_config({env("cors_origins"): ""}).cors_origins == ()
 
@@ -109,6 +118,8 @@ def test_empty_cors_origins_allow_none() -> None:
         ("database_busy_timeout_ms", "-1"),
         ("youtube_playlist_page_size", "51"),
         ("max_run_log_entries", "0"),
+        ("doctor_min_free_gb", "-1"),
+        ("doctor_tool_timeout_seconds", "0"),
     ],
 )
 def test_invalid_values_are_rejected(field: str, raw: str) -> None:

@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from automator.domain.diagnostics import DoctorPolicy
 from automator.domain.run_parts import DEFAULT_MAX_RUN_LOGS
 
 ENV_PREFIX = "AUTOMATOR_"
@@ -80,6 +81,12 @@ class RuntimeConfig(BaseModel):
         default=DEFAULT_MAX_RUN_LOGS, ge=1, description="Newest log entries kept on each run"
     )
     log_level: str = Field(default="info", description="Server log level")
+    doctor_min_free_gb: float = Field(
+        default=10.0, ge=0, description="Free disk space below which the doctor warns, in GB"
+    )
+    doctor_tool_timeout_seconds: float = Field(
+        default=5.0, gt=0, description="Seconds the doctor waits for ffmpeg -version"
+    )
 
     @property
     def oauth_redirect_uri(self) -> str:
@@ -88,6 +95,10 @@ class RuntimeConfig(BaseModel):
     @property
     def database_path(self) -> Path:
         return self.data_dir / "automator.db"
+
+    @property
+    def doctor_policy(self) -> DoctorPolicy:
+        return DoctorPolicy(min_free_gb=self.doctor_min_free_gb)
 
 
 def env_value(name: str, raw: str) -> Any:
