@@ -6,9 +6,13 @@ const PALETTES: Record<string, [string, string]> = {
   ta: ["#ec4899", "#10b981"],
 };
 
+function isTall(artifact: Artifact): boolean {
+  return Number(artifact.meta.height) > Number(artifact.meta.width);
+}
+
 function thumbnailSvg(artifact: Artifact): string {
   const [from, to] = PALETTES[artifact.language ?? "en"] ?? ["#6366f1", "#f59e0b"];
-  const tall = artifact.variant === "short";
+  const tall = isTall(artifact);
   const [width, height] = tall ? [540, 960] : [1280, 720];
   const title = artifact.language === "ta" ? "குட்டி கதைகள்" : "Kutty and the Lost Shell";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
@@ -40,7 +44,7 @@ Moral: returning what is not ours is a kind of kindness.
 
 function metadataFor(artifact: Artifact) {
   return {
-    title: `Kutty and the Lost Shell | ${artifact.variant === "short" ? "#shorts" : "Bedtime Story"}`,
+    title: `Kutty and the Lost Shell | ${isTall(artifact) ? "#shorts" : "Bedtime Story"}`,
     description: "A gentle story about honesty and kindness for children aged 3 to 7.",
     tags: ["kids stories", "bedtime", "moral stories", "kutty"],
     category_id: "1",

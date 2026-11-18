@@ -1,4 +1,4 @@
-import { type KeyboardEvent, type ReactNode, useId, useRef } from "react";
+import { type KeyboardEvent, type ReactNode, type RefObject, useId, useRef } from "react";
 
 export interface TabItem {
   id: string;
@@ -29,55 +29,85 @@ function nextIndex(key: string, current: number, total: number): number | null {
   }
 }
 
-export function Tabs({ label, tabs, value, onChange }: TabsProps) {
-  const baseId = useId();
+const tabId = (baseId: string, id: string) => `${baseId}-${id}`;
+
+function useTabKeyboard(
+  tabs: TabItem[],
+  activeId: string | undefined,
+  baseId: string,
+  onChange: (id: string) => void,
+): { listRef: RefObject<HTMLDivElement | null>; onKeyDown: (event: KeyboardEvent) => void } {
   const listRef = useRef<HTMLDivElement>(null);
-  const active = tabs.find((tab) => tab.id === value) ?? tabs[0];
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const index = nextIndex(
-      event.key,
-      tabs.findIndex((tab) => tab.id === active?.id),
-      tabs.length,
-    );
+  const onKeyDown = (event: KeyboardEvent) => {
+    const current = tabs.findIndex((tab) => tab.id === activeId);
+    const index = nextIndex(event.key, current, tabs.length);
     const target = index === null ? undefined : tabs[index];
     if (target !== undefined) {
       event.preventDefault();
       onChange(target.id);
-      listRef.current?.ownerDocument.getElementById(`${baseId}-${target.id}`)?.focus();
+      listRef.current?.ownerDocument.getElementById(tabId(baseId, target.id))?.focus();
     }
   };
+  return { listRef, onKeyDown };
+}
+
+function TabButton({
+  tab,
+  baseId,
+  selected,
+  onSelect,
+}: {
+  tab: TabItem;
+  baseId: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      id={tabId(baseId, tab.id)}
+      type="button"
+      role="tab"
+      className="tab"
+      aria-selected={selected}
+      aria-controls={`${tabId(baseId, tab.id)}-panel`}
+      tabIndex={selected ? 0 : -1}
+      onClick={onSelect}
+    >
+      {tab.label}
+      {tab.count !== undefined && <span className="tab-count">{tab.count}</span>}
+    </button>
+  );
+}
+
+export function Tabs({ label, tabs, value, onChange }: TabsProps) {
+  const baseId = useId();
+  const active = tabs.find((tab) => tab.id === value) ?? tabs[0];
+  const keyboard = useTabKeyboard(tabs, active?.id, baseId, onChange);
   return (
     <div className="tabs">
       <div
         className="tab-list"
         role="tablist"
         aria-label={label}
-        ref={listRef}
-        onKeyDown={onKeyDown}
+        ref={keyboard.listRef}
+        onKeyDown={keyboard.onKeyDown}
       >
         {tabs.map((tab) => (
-          <button
+          <TabButton
             key={tab.id}
-            id={`${baseId}-${tab.id}`}
-            type="button"
-            role="tab"
-            className="tab"
-            aria-selected={tab.id === active?.id}
-            aria-controls={`${baseId}-${tab.id}-panel`}
-            tabIndex={tab.id === active?.id ? 0 : -1}
-            onClick={() => onChange(tab.id)}
-          >
-            {tab.label}
-            {tab.count !== undefined && <span className="tab-count">{tab.count}</span>}
-          </button>
+            tab={tab}
+            baseId={baseId}
+            selected={tab.id === active?.id}
+            onSelect={() => onChange(tab.id)}
+          />
         ))}
       </div>
       {active && (
         <div
           className="tab-panel"
           role="tabpanel"
-          id={`${baseId}-${active.id}-panel`}
-          aria-labelledby={`${baseId}-${active.id}`}
+          id={`${tabId(baseId, active.id)}-panel`}
+          aria-labelledby={tabId(baseId, active.id)}
         >
           {active.content}
         </div>

@@ -7,6 +7,7 @@ import type {
   Privacy,
   ReviewPolicy,
   Schedule,
+  ScheduleKind,
   Target,
 } from "@/api/types";
 
@@ -35,6 +36,9 @@ export interface AutomationDraft {
 }
 
 export const KIDS_CAPABILITY = "kids_content";
+export const DEFAULT_INTERVAL_HOURS = 24;
+export const DEFAULT_CRON = "0 18 * * *";
+export const DEFAULT_MIN_SCORE = 85;
 
 let keySeed = 0;
 
@@ -56,7 +60,7 @@ export function emptyDraft(timezone = "UTC"): AutomationDraft {
     languages: [],
     targets: [],
     schedule: { kind: "manual", every_hours: null, cron: null, timezone },
-    review_policy: { mode: "always", min_score: 85 },
+    review_policy: { mode: "always", min_score: DEFAULT_MIN_SCORE },
     enabled: true,
   };
 }
@@ -127,7 +131,21 @@ export function newTarget(
   };
 }
 
-function normalizeSchedule(schedule: Schedule): Schedule {
+export function withScheduleKind(schedule: Schedule, kind: ScheduleKind): Schedule {
+  return {
+    ...schedule,
+    kind,
+    every_hours:
+      kind === "interval" ? (schedule.every_hours ?? DEFAULT_INTERVAL_HOURS) : schedule.every_hours,
+    cron: kind === "cron" ? (schedule.cron ?? DEFAULT_CRON) : schedule.cron,
+  };
+}
+
+export function withEveryHours(schedule: Schedule, hours: number): Schedule {
+  return { ...schedule, every_hours: Number.isNaN(hours) ? null : hours };
+}
+
+export function normalizeSchedule(schedule: Schedule): Schedule {
   return {
     kind: schedule.kind,
     every_hours: schedule.kind === "interval" ? schedule.every_hours : null,

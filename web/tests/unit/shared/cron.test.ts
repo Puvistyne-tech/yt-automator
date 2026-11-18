@@ -41,6 +41,9 @@ describe("describeCron", () => {
     ["15 */2 * * *", "Every 2 hours at minute 15"],
     ["30 * * * *", "Every hour at minute 30"],
     ["0 9 * 1 *", "Custom schedule (0 9 * 1 *)"],
+    ["0 9 * * MON,WED", "Custom schedule (0 9 * * MON,WED)"],
+    ["0 9 * * 0", "Every Sunday at 09:00"],
+    ["0 9 * * 7", "Every Sunday at 09:00"],
     ["nonsense", "Invalid cron expression"],
   ])("describes %s as %s", (expression, text) => {
     expect(describeCron(expression)).toBe(text);

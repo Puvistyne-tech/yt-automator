@@ -10,6 +10,7 @@ beforeEach(() => db.reset());
 afterEach(() => {
   cleanup();
   server.resetHandlers();
+  db.reset();
 });
 
 afterAll(() => server.close());

@@ -3,6 +3,8 @@ import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import type { PipelineDescriptor } from "@/api/types";
 import {
   applyPipeline,
+  DEFAULT_CRON,
+  DEFAULT_INTERVAL_HOURS,
   draftFromAutomation,
   draftSignature,
   draftToInput,
@@ -10,6 +12,9 @@ import {
   initialDraft,
   isKidsPipeline,
   newTarget,
+  normalizeSchedule,
+  withEveryHours,
+  withScheduleKind,
 } from "@/features/automation-editor/model/draft";
 
 const plainPipeline: PipelineDescriptor = {
@@ -93,10 +98,44 @@ describe("draft model", () => {
     expect(input.targets[0]?.made_for_kids).toBe(false);
   });
 
-  it("ignores draft keys in the signature", () => {
+  it("ignores draft keys in the signature but tracks real changes", () => {
     const automation = makeAutomation();
-    expect(draftSignature(draftFromAutomation(automation))).toBe(
-      draftSignature(draftFromAutomation(automation)),
-    );
+    const draft = draftFromAutomation(automation);
+    expect(draftSignature(draft)).toBe(draftSignature(draftFromAutomation(automation)));
+    expect(draftSignature({ ...draft, name: "x" })).not.toBe(draftSignature(draft));
+  });
+
+  it("falls back to the first channel when every channel already has the language", () => {
+    const draft = draftFromAutomation(makeAutomation({ languages: ["en"] }));
+    expect(newTarget(draft, kidsStoryPipeline, [makeChannel()]).channel_id).toBe("chan-en");
+  });
+
+  it("leaves channel and language empty without channels or languages", () => {
+    const draft = { ...draftFromAutomation(makeAutomation()), languages: [] };
+    expect(newTarget(draft, kidsStoryPipeline, [])).toMatchObject({ channel_id: "", language: "" });
+  });
+});
+
+describe("schedule model", () => {
+  const manual = { kind: "manual" as const, every_hours: null, cron: null, timezone: "UTC" };
+
+  it("trims cron text and drops the interval for cron schedules", () => {
+    expect(
+      normalizeSchedule({ kind: "cron", cron: " 0 8 * * * ", every_hours: 3, timezone: "UTC" }),
+    ).toEqual({ kind: "cron", cron: "0 8 * * *", every_hours: null, timezone: "UTC" });
+    expect(normalizeSchedule({ ...manual, kind: "cron" }).cron).toBe("");
+  });
+
+  it("fills named defaults when switching kind and keeps typed values", () => {
+    expect(withScheduleKind(manual, "interval").every_hours).toBe(DEFAULT_INTERVAL_HOURS);
+    expect(withScheduleKind(manual, "cron").cron).toBe(DEFAULT_CRON);
+    expect(withScheduleKind({ ...manual, every_hours: 6 }, "interval").every_hours).toBe(6);
+    expect(DEFAULT_INTERVAL_HOURS).toBe(24);
+    expect(DEFAULT_CRON).toBe("0 18 * * *");
+  });
+
+  it("stores an empty interval as null", () => {
+    expect(withEveryHours(manual, Number.NaN).every_hours).toBeNull();
+    expect(withEveryHours(manual, 3).every_hours).toBe(3);
   });
 });

@@ -2,6 +2,7 @@ import type { FieldErrors } from "@/api/errors";
 import type { Channel, PipelineDescriptor, ReviewPolicy, Schedule } from "@/api/types";
 import type { AutomationDraft, TargetDraft } from "@/features/automation-editor/model/draft";
 import { cronError } from "@/shared/format/cron";
+import { isIntegerAtLeast } from "@/shared/format/numbers";
 
 export interface ValidationContext {
   pipeline: PipelineDescriptor | undefined;
@@ -62,7 +63,7 @@ function targetErrors(
   } else if (target.variants.some((v) => !variants.has(v))) {
     errors[at("variants")] = "One of the outputs is not offered by this pipeline.";
   }
-  if (!Number.isInteger(target.publish_delay_minutes) || target.publish_delay_minutes < 0) {
+  if (!isIntegerAtLeast(target.publish_delay_minutes, 0)) {
     errors[at("publish_delay_minutes")] = "Use a whole number of minutes, 0 or more.";
   }
   return errors;
@@ -70,8 +71,7 @@ function targetErrors(
 
 export function scheduleErrors(schedule: Schedule): FieldErrors {
   const errors: FieldErrors = {};
-  const hours = schedule.every_hours;
-  if (schedule.kind === "interval" && (hours === null || !Number.isInteger(hours) || hours < 1)) {
+  if (schedule.kind === "interval" && !isIntegerAtLeast(schedule.every_hours, 1)) {
     errors["schedule.every_hours"] = "Run at least every 1 hour, in whole hours.";
   }
   if (schedule.kind === "cron") {

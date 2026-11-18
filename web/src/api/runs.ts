@@ -1,6 +1,6 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, apiUrl, requestText } from "@/api/client";
-import { keys } from "@/api/keys";
+import { invalidateWithDashboard, keys } from "@/api/keys";
 import type { LogLine, Run, RunFilters } from "@/api/types";
 
 const path = (id: string) => `/runs/${encodeURIComponent(id)}`;
@@ -48,11 +48,7 @@ export function useArtifactText(runId: string, artifactId: string) {
 
 function storeRun(client: QueryClient, run: Run) {
   client.setQueryData(keys.run(run.id), run);
-  return Promise.all([
-    client.invalidateQueries({ queryKey: ["runs", "list"] }),
-    client.invalidateQueries({ queryKey: keys.dashboard }),
-    client.invalidateQueries({ queryKey: keys.automations }),
-  ]);
+  return invalidateWithDashboard(client, keys.runLists, keys.automations);
 }
 
 function useRunAction<V>(call: (id: string, vars: V) => Promise<Run>) {
@@ -83,10 +79,7 @@ export function useDeleteRun() {
     mutationFn: (id: string) => api.delete(path(id)),
     onSuccess: (_result, id) => {
       client.removeQueries({ queryKey: keys.run(id) });
-      return Promise.all([
-        client.invalidateQueries({ queryKey: ["runs", "list"] }),
-        client.invalidateQueries({ queryKey: keys.dashboard }),
-      ]);
+      return invalidateWithDashboard(client, keys.runLists);
     },
   });
 }

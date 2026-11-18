@@ -5,7 +5,8 @@ import { useRuns } from "@/api/runs";
 import type { Run } from "@/api/types";
 import { hasActiveFilters, readFilters, withFilter } from "@/features/runs-list/filters";
 import { formatDuration, formatRelative } from "@/shared/format/dates";
-import { formatScore, humanizeId } from "@/shared/format/numbers";
+import { formatScore } from "@/shared/format/numbers";
+import { humanizeId } from "@/shared/format/text";
 import {
   Button,
   Card,
@@ -17,39 +18,41 @@ import {
   Table,
 } from "@/shared/ui";
 
+const RUN_COLUMNS = [
+  "Automation",
+  "Status",
+  "Trigger",
+  "Languages",
+  "Score",
+  "Started",
+  "Duration",
+];
+
+const RUN_STATUS_OPTIONS = RUN_STATUS_ORDER.map((status) => ({
+  value: status,
+  label: RUN_STATUSES[status].label,
+}));
+
 function RunsTable({ runs }: { runs: Run[] }) {
   return (
-    <Table label="Runs">
-      <thead>
-        <tr>
-          <th scope="col">Automation</th>
-          <th scope="col">Status</th>
-          <th scope="col">Trigger</th>
-          <th scope="col">Languages</th>
-          <th scope="col">Score</th>
-          <th scope="col">Started</th>
-          <th scope="col">Duration</th>
+    <Table label="Runs" columns={RUN_COLUMNS}>
+      {runs.map((run) => (
+        <tr key={run.id}>
+          <td>
+            <Link to={`/runs/${run.id}`} className="cell-title">
+              {run.automation_name}
+            </Link>
+          </td>
+          <td>
+            <StatusBadge {...RUN_STATUSES[run.status]} />
+          </td>
+          <td>{humanizeId(run.trigger)}</td>
+          <td className="mono">{run.languages.join(", ").toUpperCase()}</td>
+          <td>{formatScore(run.score)}</td>
+          <td>{formatRelative(run.created_at)}</td>
+          <td>{formatDuration(run.started_at, run.finished_at)}</td>
         </tr>
-      </thead>
-      <tbody>
-        {runs.map((run) => (
-          <tr key={run.id}>
-            <td>
-              <Link to={`/runs/${run.id}`} className="cell-title">
-                {run.automation_name}
-              </Link>
-            </td>
-            <td>
-              <StatusBadge {...RUN_STATUSES[run.status]} />
-            </td>
-            <td>{humanizeId(run.trigger)}</td>
-            <td className="mono">{run.languages.join(", ").toUpperCase()}</td>
-            <td>{formatScore(run.score)}</td>
-            <td>{formatRelative(run.created_at)}</td>
-            <td>{formatDuration(run.started_at, run.finished_at)}</td>
-          </tr>
-        ))}
-      </tbody>
+      ))}
     </Table>
   );
 }
@@ -59,10 +62,6 @@ function Filters() {
   const filters = readFilters(params);
   const automations = useAutomations();
   const automationOptions = (automations.data ?? []).map((a) => ({ value: a.id, label: a.name }));
-  const statusOptions = RUN_STATUS_ORDER.map((status) => ({
-    value: status,
-    label: RUN_STATUSES[status].label,
-  }));
   return (
     <div className="filters">
       <FormField label="Automation">
@@ -77,7 +76,7 @@ function Filters() {
         <Select
           value={filters.status ?? ""}
           placeholder="Any status"
-          options={statusOptions}
+          options={RUN_STATUS_OPTIONS}
           onChange={(e) => setParams(withFilter(params, "status", e.target.value))}
         />
       </FormField>

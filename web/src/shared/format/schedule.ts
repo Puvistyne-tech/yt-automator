@@ -41,3 +41,7 @@ export function timezoneOptions(current: string): string[] {
   }
   return [...all];
 }
+
+export function timezoneSelectOptions(current: string): { value: string; label: string }[] {
+  return timezoneOptions(current).map((zone) => ({ value: zone, label: zone }));
+}

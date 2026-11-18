@@ -12,7 +12,7 @@ import { ReviewSection } from "@/features/automation-editor/sections/ReviewSecti
 import { ScheduleSection } from "@/features/automation-editor/sections/ScheduleSection";
 import { TargetsSection } from "@/features/automation-editor/sections/TargetsSection";
 import { useAutomationEditor } from "@/features/automation-editor/useAutomationEditor";
-import { Button, ButtonLink, UnsavedChangesPrompt } from "@/shared/ui";
+import { ButtonLink, SaveBar } from "@/shared/ui";
 import "@/features/automation-editor/editor.css";
 
 interface AutomationEditorProps {
@@ -63,17 +63,15 @@ export function AutomationEditor(props: AutomationEditorProps) {
         {pipeline && <TargetsSection {...common} pipeline={pipeline} channels={props.channels} />}
         <ScheduleSection {...common} />
         <ReviewSection {...common} />
-        <div className="action-bar">
-          <span className="action-bar-status" aria-live="polite">
-            {editor.dirty ? "Unsaved changes" : "All changes saved"}
-          </span>
+        <SaveBar
+          dirty={editor.dirty}
+          saving={editor.saving}
+          saveLabel={props.automationId === undefined ? "Create automation" : "Save changes"}
+          onSave={editor.submit}
+        >
           <ButtonLink to="/automations">Cancel</ButtonLink>
-          <Button variant="primary" icon="check" loading={editor.saving} onClick={editor.submit}>
-            {props.automationId === undefined ? "Create automation" : "Save changes"}
-          </Button>
-        </div>
+        </SaveBar>
       </div>
-      <UnsavedChangesPrompt when={editor.dirty && !editor.saving} />
     </div>
   );
 }

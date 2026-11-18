@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import type { RunFilters } from "@/api/types";
 
 export const keys = {
@@ -10,6 +11,7 @@ export const keys = {
   automations: ["automations"] as const,
   automation: (id: string) => ["automations", id] as const,
   runs: ["runs"] as const,
+  runLists: ["runs", "list"] as const,
   runList: (filters: RunFilters) => ["runs", "list", filters] as const,
   run: (id: string) => ["runs", "detail", id] as const,
   runLogs: (id: string) => ["run-logs", id] as const,
@@ -19,3 +21,12 @@ export const keys = {
   secrets: ["secrets"] as const,
   settings: ["settings"] as const,
 };
+
+export function invalidateWithDashboard(
+  client: QueryClient,
+  ...queryKeys: (readonly string[])[]
+): Promise<unknown> {
+  return Promise.all(
+    [...queryKeys, keys.dashboard].map((queryKey) => client.invalidateQueries({ queryKey })),
+  );
+}

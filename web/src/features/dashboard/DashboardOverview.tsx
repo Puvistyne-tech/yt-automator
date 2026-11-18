@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { useDashboard } from "@/api/catalog";
 import { RUN_STATUSES } from "@/api/labels";
 import { useRuns } from "@/api/runs";
-import type { Dashboard, DashboardRun, QuotaUsage } from "@/api/types";
+import type { Dashboard, DashboardRun, QuotaUsage, Run } from "@/api/types";
 import { formatRelative } from "@/shared/format/dates";
 import { formatNumber, formatScore } from "@/shared/format/numbers";
 import {
@@ -17,6 +17,8 @@ import {
 } from "@/shared/ui";
 import "@/features/dashboard/dashboard.css";
 
+const RECENT_COLUMNS = ["Automation", "Status", "Score", "Started"];
+
 function Stats({ data }: { data: Dashboard }) {
   return (
     <div className="stat-grid">
@@ -29,6 +31,26 @@ function Stats({ data }: { data: Dashboard }) {
       <StatCard label="Awaiting review" value={data.runs_awaiting_review} />
       <StatCard label="Runs today" value={data.runs_today} />
     </div>
+  );
+}
+
+function ReviewQueueList({ runs }: { runs: Run[] }) {
+  return (
+    <ul className="list-reset divided-list">
+      {runs.map((run) => (
+        <li key={run.id}>
+          <Link to={`/runs/${run.id}`} className="review-item">
+            <span className="cell-stack">
+              <span className="cell-title">{run.automation_name}</span>
+              <span className="subtle">
+                {formatRelative(run.created_at)} · score {formatScore(run.score)}
+              </span>
+            </span>
+            <span className="btn btn-secondary btn-sm">Review</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -55,23 +77,7 @@ function ReviewQueue() {
           />
         }
       >
-        {(list) => (
-          <ul className="review-queue">
-            {list.map((run) => (
-              <li key={run.id}>
-                <Link to={`/runs/${run.id}`} className="review-item">
-                  <span className="cell-stack">
-                    <span className="cell-title">{run.automation_name}</span>
-                    <span className="subtle">
-                      {formatRelative(run.created_at)} · score {formatScore(run.score)}
-                    </span>
-                  </span>
-                  <span className="btn btn-secondary btn-sm">Review</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        {(list) => <ReviewQueueList runs={list} />}
       </QueryState>
     </Card>
   );
@@ -88,31 +94,21 @@ function RecentRuns({ runs }: { runs: DashboardRun[] }) {
     );
   }
   return (
-    <Table label="Recent runs">
-      <thead>
-        <tr>
-          <th scope="col">Automation</th>
-          <th scope="col">Status</th>
-          <th scope="col">Score</th>
-          <th scope="col">Started</th>
+    <Table label="Recent runs" columns={RECENT_COLUMNS}>
+      {runs.map((run) => (
+        <tr key={run.id}>
+          <td>
+            <Link to={`/runs/${run.id}`} className="cell-title">
+              {run.automation_name}
+            </Link>
+          </td>
+          <td>
+            <StatusBadge {...RUN_STATUSES[run.status]} />
+          </td>
+          <td>{formatScore(run.score)}</td>
+          <td>{formatRelative(run.created_at)}</td>
         </tr>
-      </thead>
-      <tbody>
-        {runs.map((run) => (
-          <tr key={run.id}>
-            <td>
-              <Link to={`/runs/${run.id}`} className="cell-title">
-                {run.automation_name}
-              </Link>
-            </td>
-            <td>
-              <StatusBadge {...RUN_STATUSES[run.status]} />
-            </td>
-            <td>{formatScore(run.score)}</td>
-            <td>{formatRelative(run.created_at)}</td>
-          </tr>
-        ))}
-      </tbody>
+      ))}
     </Table>
   );
 }

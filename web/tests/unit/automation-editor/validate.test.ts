@@ -15,6 +15,7 @@ import {
 } from "@/features/automation-editor/model/validate";
 
 const context = { pipeline: kidsStoryPipeline, channels: [makeChannel()], settingsErrors: {} };
+const HOURS_ERROR = "Run at least every 1 hour, in whole hours.";
 const schedule = (patch: Partial<Schedule>): Schedule => ({
   kind: "manual",
   every_hours: null,
@@ -33,6 +34,13 @@ describe("validateDraft", () => {
     expect(validateDraft(draft, { ...context, pipeline: undefined })).toEqual({
       name: "Give the automation a name.",
       pipeline_type: 'Unknown pipeline type "gone".',
+    });
+  });
+
+  it("asks for a pipeline type when none is chosen", () => {
+    const draft = { ...draftFromAutomation(makeAutomation()), pipeline_type: "" };
+    expect(validateDraft(draft, { ...context, pipeline: undefined })).toEqual({
+      pipeline_type: "Choose a pipeline type.",
     });
   });
 
@@ -76,14 +84,9 @@ describe("validateDraft", () => {
 
 describe("schedule and review rules", () => {
   it.each([
-    [
-      schedule({ kind: "interval", every_hours: 0 }),
-      { "schedule.every_hours": expect.any(String) },
-    ],
-    [
-      schedule({ kind: "interval", every_hours: 1.5 }),
-      { "schedule.every_hours": expect.any(String) },
-    ],
+    [schedule({ kind: "interval", every_hours: 0 }), { "schedule.every_hours": HOURS_ERROR }],
+    [schedule({ kind: "interval", every_hours: 1.5 }), { "schedule.every_hours": HOURS_ERROR }],
+    [schedule({ kind: "interval", every_hours: null }), { "schedule.every_hours": HOURS_ERROR }],
     [schedule({ kind: "interval", every_hours: 6 }), {}],
     [
       schedule({ kind: "cron", cron: "0 25 * * *" }),

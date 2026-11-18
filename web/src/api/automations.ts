@@ -1,16 +1,9 @@
-import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api/client";
-import { keys } from "@/api/keys";
+import { invalidateWithDashboard, keys } from "@/api/keys";
 import type { Automation, AutomationInput, Run } from "@/api/types";
 
 const path = (id: string) => `/automations/${encodeURIComponent(id)}`;
-
-function refreshAutomations(client: QueryClient) {
-  return Promise.all([
-    client.invalidateQueries({ queryKey: keys.automations }),
-    client.invalidateQueries({ queryKey: keys.dashboard }),
-  ]);
-}
 
 export function useAutomations() {
   return useQuery({
@@ -36,7 +29,7 @@ export function useSaveAutomation(id: string | undefined) {
         : api.put<Automation>(path(id), input),
     onSuccess: (saved) => {
       client.setQueryData(keys.automation(saved.id), saved);
-      return refreshAutomations(client);
+      return invalidateWithDashboard(client, keys.automations);
     },
   });
 }
@@ -57,7 +50,7 @@ export function useToggleAutomation() {
     onError: (_error, _vars, context) => {
       client.setQueryData(keys.automations, context?.previous);
     },
-    onSettled: () => refreshAutomations(client),
+    onSettled: () => invalidateWithDashboard(client, keys.automations),
   });
 }
 
@@ -65,7 +58,7 @@ export function useDeleteAutomation() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete(path(id)),
-    onSuccess: () => refreshAutomations(client),
+    onSuccess: () => invalidateWithDashboard(client, keys.automations),
   });
 }
 
@@ -73,7 +66,7 @@ export function useDuplicateAutomation() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.post<Automation>(`${path(id)}/duplicate`),
-    onSuccess: () => refreshAutomations(client),
+    onSuccess: () => invalidateWithDashboard(client, keys.automations),
   });
 }
 
@@ -81,7 +74,6 @@ export function useRunAutomation() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.post<Run>(`${path(id)}/runs`),
-    onSuccess: () =>
-      Promise.all([refreshAutomations(client), client.invalidateQueries({ queryKey: keys.runs })]),
+    onSuccess: () => invalidateWithDashboard(client, keys.automations, keys.runs),
   });
 }

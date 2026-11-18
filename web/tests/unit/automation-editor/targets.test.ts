@@ -2,9 +2,12 @@ import { makeAutomation, makeChannel, makeTarget } from "@/api/mocks/fixtures/fa
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import { draftFromAutomation } from "@/features/automation-editor/model/draft";
 import {
+  kidsFromValue,
+  kidsValue,
   languageName,
   languageOptionsWithOrphan,
   orphanTargets,
+  privacyOptions,
   targetOptions,
   updateTarget,
   withoutOrphanTargets,
@@ -52,6 +55,9 @@ describe("target options", () => {
     expect(
       languageOptionsWithOrphan(options, { ...orphan, language: "en" }, kidsStoryPipeline),
     ).toBe(options);
+    expect(languageOptionsWithOrphan(options, { ...orphan, language: "" }, kidsStoryPipeline)).toBe(
+      options,
+    );
   });
 });
 
@@ -70,5 +76,26 @@ describe("target edits", () => {
     expect(same.targets[1]).toMatchObject({ playlist_id: "pl-1", publish_delay_minutes: 5 });
     expect(moved.targets[1]).toMatchObject({ channel_id: "chan-ta", playlist_id: null });
     expect(moved.targets[0]).toBe(draft.targets[0]);
+  });
+});
+
+describe("target choices", () => {
+  it.each([
+    [null, "default"],
+    [true, "yes"],
+    [false, "no"],
+  ] as const)("maps made for kids %s to %s and back", (value, choice) => {
+    expect(kidsValue(value)).toBe(choice);
+    expect(kidsFromValue(choice)).toBe(value);
+  });
+
+  it("offers the channel default privacy first", () => {
+    expect(privacyOptions(makeChannel()).map((o) => o.label)).toEqual([
+      "Channel default (Private)",
+      "Private",
+      "Unlisted",
+      "Public",
+    ]);
+    expect(privacyOptions(undefined)[0]).toEqual({ value: "", label: "Channel default" });
   });
 });

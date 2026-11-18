@@ -5,15 +5,15 @@ import { RUN_STATUSES } from "@/api/labels";
 import type { Run } from "@/api/types";
 import { ArtifactsView } from "@/features/run-detail/ArtifactsView";
 import { LogView } from "@/features/run-detail/LogView";
-import { availableActions } from "@/features/run-detail/model";
+import { availableActions, reviewRuleText } from "@/features/run-detail/model";
 import { PublishPanel } from "@/features/run-detail/PublishPanel";
 import { ReviewPanel } from "@/features/run-detail/ReviewPanel";
 import { RunActionsBar } from "@/features/run-detail/RunActionsBar";
 import { ScoreBreakdown } from "@/features/run-detail/ScoreBreakdown";
 import { StageTimeline } from "@/features/run-detail/StageTimeline";
 import { formatDateTime, formatDuration } from "@/shared/format/dates";
-import { humanizeId } from "@/shared/format/numbers";
-import { Card, Icon, PageHeader, StatusBadge, Tabs } from "@/shared/ui";
+import { humanizeId } from "@/shared/format/text";
+import { Callout, Card, Icon, PageHeader, StatusBadge, Tabs } from "@/shared/ui";
 import "@/features/run-detail/run-detail.css";
 
 function Details({ run }: { run: Run }) {
@@ -22,6 +22,7 @@ function Details({ run }: { run: Run }) {
     ["Languages", run.languages.join(", ").toUpperCase()],
     ["Created", formatDateTime(run.created_at)],
     ["Duration", formatDuration(run.started_at, run.finished_at)],
+    ["Review rule", reviewRuleText(run.review_policy)],
   ];
   return (
     <Card title="Details">
@@ -61,7 +62,11 @@ function RunTabs({ run }: { run: Run }) {
     {
       id: "settings",
       label: "Settings snapshot",
-      content: <pre className="text-preview">{JSON.stringify(run.settings_snapshot, null, 2)}</pre>,
+      content: (
+        <pre className="text-preview panel-inset panel-inset-muted">
+          {JSON.stringify(run.settings_snapshot, null, 2)}
+        </pre>
+      ),
     },
   ];
   return (
@@ -73,7 +78,6 @@ function RunTabs({ run }: { run: Run }) {
 
 export function RunDetail({ run }: { run: Run }) {
   const actions = availableActions(run);
-  const showPublish = actions.canPublish || run.status === "publishing" || run.uploads.length > 0;
   return (
     <>
       <PageHeader
@@ -94,13 +98,13 @@ export function RunDetail({ run }: { run: Run }) {
       <div className="run-layout">
         <div className="stack run-main">
           {run.error && (
-            <div className="banner banner-danger" role="alert">
+            <Callout tone="danger" role="alert">
               <Icon name="alert" />
               <span>{run.error}</span>
-            </div>
+            </Callout>
           )}
           {actions.canReview && <ReviewPanel run={run} />}
-          {showPublish && <PublishPanel run={run} canPublish={actions.canPublish} />}
+          {actions.showPublish && <PublishPanel run={run} canPublish={actions.canPublish} />}
           <RunTabs run={run} />
         </div>
         <aside className="stack run-side">

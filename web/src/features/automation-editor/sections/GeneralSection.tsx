@@ -4,7 +4,7 @@ import {
   EditorSection,
   type SectionProps,
 } from "@/features/automation-editor/sections/EditorSection";
-import { pluralize } from "@/shared/format/numbers";
+import { pluralize } from "@/shared/format/text";
 import { Badge, FormField, Input, RadioCards, Switch, Textarea } from "@/shared/ui";
 
 interface GeneralSectionProps extends SectionProps {
@@ -54,7 +54,7 @@ function PipelineSummary({ pipeline }: { pipeline: PipelineDescriptor | undefine
   return (
     <div className="pipeline-summary">
       <span className="field-label">Pipeline type</span>
-      <div className="pipeline-summary-body">
+      <div className="panel-inset panel-inset-muted">
         <strong>{pipeline.name}</strong>
         <p className="muted">{pipeline.description}</p>
         <PipelineMeta pipeline={pipeline} />

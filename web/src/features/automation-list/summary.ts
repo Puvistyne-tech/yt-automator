@@ -1,4 +1,5 @@
 import type { Automation, Channel, PipelineDescriptor } from "@/api/types";
+import { formatRelative } from "@/shared/format/dates";
 
 export function pipelineName(pipelines: PipelineDescriptor[], typeId: string): string {
   return pipelines.find((p) => p.type_id === typeId)?.name ?? typeId;
@@ -30,4 +31,8 @@ export function sortAutomations(automations: Automation[]): Automation[] {
   return [...automations].sort(
     (a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name),
   );
+}
+
+export function nextRunLabel(automation: Automation): string {
+  return automation.enabled ? `Next ${formatRelative(automation.next_run_at)}` : "Paused";
 }

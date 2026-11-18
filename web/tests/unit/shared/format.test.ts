@@ -1,12 +1,12 @@
 import { formatDateTime, formatDuration, formatRelative } from "@/shared/format/dates";
+import { formatBytes, formatNumber, formatScore, isIntegerAtLeast } from "@/shared/format/numbers";
 import {
-  formatBytes,
-  formatNumber,
-  formatScore,
-  humanizeId,
-  pluralize,
-} from "@/shared/format/numbers";
-import { describeInterval, describeSchedule, timezoneOptions } from "@/shared/format/schedule";
+  describeInterval,
+  describeSchedule,
+  timezoneOptions,
+  timezoneSelectOptions,
+} from "@/shared/format/schedule";
+import { humanizeId, pluralize } from "@/shared/format/text";
 
 const NOW = new Date("2026-03-01T12:00:00Z");
 const offset = (ms: number) => new Date(NOW.getTime() + ms).toISOString();
@@ -53,6 +53,8 @@ describe("numbers", () => {
     [48_000_000, "48.0 MB"],
     [250_000_000, "250 MB"],
     [-3, "0 B"],
+    [1_500_000_000, "1.5 GB"],
+    [2e12, "2.0 TB"],
   ])("formats %d bytes as %s", (bytes, text) => {
     expect(formatBytes(bytes)).toBe(text);
   });
@@ -66,6 +68,19 @@ describe("numbers", () => {
     expect(pluralize(3, "run")).toBe("3 runs");
     expect(pluralize(2, "child", "children")).toBe("2 children");
     expect(humanizeId("text_to_speech-v2")).toBe("Text to speech v2");
+  });
+});
+
+describe("isIntegerAtLeast", () => {
+  it.each([
+    [1, 1, true],
+    [0, 0, true],
+    [0, 1, false],
+    [1.5, 1, false],
+    [Number.NaN, 0, false],
+    [null, 0, false],
+  ])("checks %s against minimum %s", (value, min, ok) => {
+    expect(isIntegerAtLeast(value, min)).toBe(ok);
   });
 });
 
@@ -97,5 +112,9 @@ describe("schedule", () => {
     expect(zones[0]).toBe("UTC");
     expect(zones).toContain("Mars/Olympus");
     expect(new Set(zones).size).toBe(zones.length);
+  });
+
+  it("wraps zones as select options", () => {
+    expect(timezoneSelectOptions("UTC")[0]).toEqual({ value: "UTC", label: "UTC" });
   });
 });

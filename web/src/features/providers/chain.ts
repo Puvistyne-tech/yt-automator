@@ -4,20 +4,6 @@ import type {
   ProviderDescriptor,
   ProvidersResponse,
 } from "@/api/types";
-import { humanizeId } from "@/shared/format/numbers";
-
-const CAPABILITY_TITLES: Record<string, string> = {
-  llm: "Text generation",
-  image: "Images",
-  motion: "Motion",
-  tts: "Narration",
-  music: "Music",
-};
-
-export function capabilityTitle(capability: string): string {
-  return CAPABILITY_TITLES[capability] ?? humanizeId(capability);
-}
-
 export function capabilitiesOf(response: ProvidersResponse): string[] {
   const ordered = response.config.map((c) => c.capability);
   const extra = response.descriptors.map((d) => d.capability).filter((c) => !ordered.includes(c));
@@ -92,4 +78,18 @@ export function hasOptions(descriptor: ProviderDescriptor | undefined): boolean 
   return (
     typeof properties === "object" && properties !== null && Object.keys(properties).length > 0
   );
+}
+
+export function chainDescription(active: ProviderDescriptor | undefined): string {
+  return active
+    ? `Runs use ${active.name}, then fall back down the list.`
+    : "No available provider is enabled. Runs that need this will fail.";
+}
+
+export function chainChanged(config: ProviderConfig[], saved: ProviderConfig[]): boolean {
+  return JSON.stringify(config) !== JSON.stringify(saved);
+}
+
+export function newChoice(providerId: string): ProviderChoice {
+  return { provider_id: providerId, enabled: true, options: {} };
 }

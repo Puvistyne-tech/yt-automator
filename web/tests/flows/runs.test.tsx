@@ -1,6 +1,14 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { db } from "@/api/mocks/db";
-import { findDialog, findToast, pathOf, renderApp } from "../helpers/renderApp";
+import {
+  cancelDialog,
+  confirmDialog,
+  findDialog,
+  findToast,
+  pathOf,
+  renderApp,
+} from "../helpers/renderApp";
+import { failWith } from "../helpers/server";
 
 const run = (id: string) => db.state.runs.find((r) => r.id === id);
 
@@ -48,6 +56,22 @@ describe("Run detail", () => {
     expect(screen.getByText("Tamil — Episode · 16:9")).toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "Score" }));
     expect(screen.getByRole("tabpanel")).toHaveTextContent("91.4");
+    expect(screen.getByRole("tabpanel")).toHaveTextContent("Review rule: always");
+  });
+
+  it("shows the auto-approve review rule next to the score", async () => {
+    await openRun("run-failed");
+
+    expect(screen.getByText("auto-approve at 90+")).toBeInTheDocument();
+  });
+
+  it("shows why an upload was skipped", async () => {
+    await openRun("run-published");
+
+    const uploads = await screen.findByRole("table", { name: "Uploads" });
+    expect(within(uploads).getByText("Skipped")).toBeInTheDocument();
+    expect(within(uploads).getByText("Language ta is not in this run.")).toBeInTheDocument();
+    expect(screen.getByText("1 uploaded · 1 failed · 0 pending · 1 skipped")).toBeInTheDocument();
   });
 
   it("approves a run, then publishes it and lists the uploads", async () => {
@@ -59,9 +83,7 @@ describe("Run detail", () => {
     expect(run("run-review")?.review).toMatchObject({ decision: "approved", notes: "Looks great" });
 
     await user.click(await screen.findByRole("button", { name: "Publish" }));
-    await user.click(
-      (await findDialog("Publish this run?")).getByRole("button", { name: "Publish now" }),
-    );
+    await confirmDialog(user, "Publish this run?", "Publish now");
 
     await findToast("Publishing started.");
     const uploads = await screen.findByRole("table", { name: "Uploads" });
@@ -115,13 +137,107 @@ describe("Run detail", () => {
     const { user, router } = await openRun("run-published");
 
     await user.click(screen.getByRole("button", { name: "Delete" }));
-    await user.click(
-      (await findDialog("Delete this run?")).getByRole("button", { name: "Delete run" }),
-    );
+    await confirmDialog(user, "Delete this run?", "Delete run");
 
     await findToast("Run deleted.");
     expect(run("run-published")).toBeUndefined();
     await waitFor(() => expect(pathOf(router)).toBe("/runs"));
+  });
+
+  it.each([
+    ["Approve", "/runs/:id/review"],
+    ["Reject", "/runs/:id/review"],
+  ])("reports a failed %s and keeps the run awaiting review", async (button, path) => {
+    failWith("post", path, 409, { message: "The run changed meanwhile." });
+    const { user } = await openRun("run-review");
+
+    await user.click(screen.getByRole("button", { name: button }));
+
+    await findToast("The run changed meanwhile.");
+    expect(run("run-review")?.status).toBe("awaiting_review");
+    expect(screen.getByRole("button", { name: "Approve" })).toBeEnabled();
+  });
+
+  it("reports a failed publish and closes the dialog", async () => {
+    failWith("post", "/runs/:id/publish", 409, { message: "Not enough quota left today." });
+    db.state.runs = db.state.runs.map((r) =>
+      r.id === "run-review" ? { ...r, status: "approved" } : r,
+    );
+    const { user } = await openRun("run-review");
+
+    await user.click(screen.getByRole("button", { name: "Publish" }));
+    await confirmDialog(user, "Publish this run?", "Publish now");
+
+    await findToast("Not enough quota left today.");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Publish this run?" })).not.toBeInTheDocument(),
+    );
+    expect(run("run-review")?.status).toBe("approved");
+  });
+
+  it.each([
+    ["run-failed", "Retry…", "Retry run", "Retry from stage", "post", "/runs/:id/retry", "failed"],
+    [
+      "run-live",
+      "Cancel run",
+      "Cancel this run?",
+      "Cancel run",
+      "post",
+      "/runs/:id/cancel",
+      "running",
+    ],
+    [
+      "run-published",
+      "Delete",
+      "Delete this run?",
+      "Delete run",
+      "delete",
+      "/runs/:id",
+      "published",
+    ],
+  ] as const)(
+    "reports a failed action on %s and leaves it unchanged",
+    async (id, trigger, title, confirm, method, path, status) => {
+      failWith(method, path, 500, { message: "The worker is busy." });
+      const { user } = await openRun(id);
+
+      await user.click(screen.getByRole("button", { name: trigger }));
+      await confirmDialog(user, title, confirm);
+
+      await findToast("The worker is busy.");
+      expect(run(id)?.status).toBe(status);
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog", { name: title })).not.toBeInTheDocument(),
+      );
+    },
+  );
+
+  it.each([
+    ["run-failed", "Retry…", "Retry run", "Cancel", "failed"],
+    ["run-live", "Cancel run", "Cancel this run?", "Keep running", "running"],
+    ["run-published", "Delete", "Delete this run?", "Cancel", "published"],
+  ] as const)(
+    "dismisses the %s dialog without changing the run",
+    async (id, trigger, title, dismiss, status) => {
+      const { user } = await openRun(id);
+
+      await user.click(screen.getByRole("button", { name: trigger }));
+      await cancelDialog(user, title, dismiss);
+
+      expect(run(id)?.status).toBe(status);
+    },
+  );
+
+  it("dismisses the publish dialog without publishing", async () => {
+    db.state.runs = db.state.runs.map((r) =>
+      r.id === "run-review" ? { ...r, status: "approved" } : r,
+    );
+    const { user } = await openRun("run-review");
+
+    await user.click(screen.getByRole("button", { name: "Publish" }));
+    await cancelDialog(user, "Publish this run?");
+
+    expect(run("run-review")).toMatchObject({ status: "approved", uploads: [] });
   });
 
   it("shows an error state for an unknown run", async () => {

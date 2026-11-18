@@ -1,4 +1,5 @@
 import { act, screen, waitFor } from "@testing-library/react";
+import { keys } from "@/api/keys";
 import { db } from "@/api/mocks/db";
 import type { JsonObject, RunEvent } from "@/api/types";
 import { renderApp } from "../helpers/renderApp";
@@ -89,5 +90,66 @@ describe("Live run events", () => {
     act(() => vi.advanceTimersByTime(1000));
 
     await waitFor(() => expect(FakeEventSource.instances).toHaveLength(2));
+  });
+
+  it("refreshes runs and shows live again once the stream reopens", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { client } = renderApp("/");
+    act(() => latest().onerror?.());
+    act(() => vi.advanceTimersByTime(1000));
+    await waitFor(() => expect(FakeEventSource.instances).toHaveLength(2));
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+
+    act(() => latest().onopen?.());
+
+    expect(await screen.findByText("Live updates on")).toBeInTheDocument();
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: keys.runs });
+  });
+
+  it("does not refresh runs on the first open", async () => {
+    const { client } = renderApp("/");
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+
+    act(() => latest().onopen?.());
+
+    expect(await screen.findByText("Live updates on")).toBeInTheDocument();
+    expect(invalidate).not.toHaveBeenCalledWith({ queryKey: keys.runs });
+  });
+
+  it("keeps only the newest log lines", async () => {
+    const { client } = renderApp("/runs/run-live");
+    await screen.findByRole("heading", { level: 1 });
+    const source = latest();
+
+    act(() => {
+      for (let index = 0; index <= 2000; index += 1) {
+        source.onmessage?.(
+          new MessageEvent("message", {
+            data: JSON.stringify(event("log", { message: `line ${index}` })),
+          }),
+        );
+      }
+    });
+
+    const lines = client.getQueryData<{ message: string }[]>(keys.runLogs("run-live")) ?? [];
+    expect(lines).toHaveLength(2000);
+    expect(lines[0]?.message).toBe("line 1");
+  });
+
+  it("closes the stream when the app unmounts", () => {
+    const { unmount } = renderApp("/");
+    const source = latest();
+
+    unmount();
+
+    expect(source.closed).toBe(true);
+  });
+
+  it("reports when the browser has no event stream support", async () => {
+    vi.stubGlobal("EventSource", undefined);
+    renderApp("/");
+
+    expect(await screen.findByText("Live updates unavailable")).toBeInTheDocument();
+    expect(FakeEventSource.instances).toHaveLength(0);
   });
 });

@@ -1,57 +1,32 @@
-import { useState } from "react";
-import {
-  useDeleteAutomation,
-  useDuplicateAutomation,
-  useRunAutomation,
-  useToggleAutomation,
-} from "@/api/automations";
-import { errorMessage } from "@/api/errors";
+import { useDuplicateAutomation, useRunAutomation, useToggleAutomation } from "@/api/automations";
 import type { Automation } from "@/api/types";
-import { useToast } from "@/shared/ui";
+import { useMutationNotifier } from "@/api/useMutationNotifier";
+import { useDeleteFlow } from "@/features/automation-list/useDeleteFlow";
 
 export function useListActions() {
-  const toast = useToast();
+  const notifier = useMutationNotifier();
   const toggle = useToggleAutomation();
   const run = useRunAutomation();
   const duplicate = useDuplicateAutomation();
-  const remove = useDeleteAutomation();
-  const [pendingDelete, setPendingDelete] = useState<Automation | null>(null);
-  const fail = (error: unknown) => toast.error(errorMessage(error));
-
+  const deleteFlow = useDeleteFlow();
   return {
-    pendingDelete,
-    deleting: remove.isPending,
-    askDelete: setPendingDelete,
-    cancelDelete: () => setPendingDelete(null),
-    confirmDelete: () => {
-      const target = pendingDelete;
-      if (target === null) {
-        return;
-      }
-      remove.mutate(target.id, {
-        onSuccess: () => toast.success(`Deleted “${target.name}”. Its runs are kept.`),
-        onError: fail,
-        onSettled: () => setPendingDelete(null),
-      });
-    },
+    deleteFlow,
+    askDelete: deleteFlow.confirm.ask,
     setEnabled: (automation: Automation, enabled: boolean) =>
       toggle.mutate(
         { id: automation.id, enabled },
-        {
-          onSuccess: () => toast.success(`${automation.name} ${enabled ? "enabled" : "paused"}.`),
-          onError: fail,
-        },
+        notifier.handlers({ success: `${automation.name} ${enabled ? "enabled" : "paused"}.` }),
       ),
     runNow: (automation: Automation) =>
-      run.mutate(automation.id, {
-        onSuccess: () => toast.success(`Run queued for ${automation.name}.`),
-        onError: fail,
-      }),
+      run.mutate(
+        automation.id,
+        notifier.handlers({ success: `Run queued for ${automation.name}.` }),
+      ),
     duplicate: (automation: Automation) =>
-      duplicate.mutate(automation.id, {
-        onSuccess: (copy) => toast.success(`Created “${copy.name}”.`),
-        onError: fail,
-      }),
+      duplicate.mutate(
+        automation.id,
+        notifier.handlers({ success: (copy: Automation) => `Created “${copy.name}”.` }),
+      ),
   };
 }
 

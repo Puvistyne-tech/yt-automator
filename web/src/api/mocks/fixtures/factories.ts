@@ -8,6 +8,7 @@ import type {
   StageRun,
   StageStatus,
   Target,
+  Upload,
 } from "@/api/types";
 
 export const FIXED_NOW = new Date().toISOString();
@@ -124,6 +125,7 @@ export function makeRun(overrides: Partial<Run> = {}): Run {
     trigger: "schedule",
     languages: ["en"],
     settings_snapshot: structuredClone(kidsStoryPipeline.default_settings),
+    review_policy: { mode: "always", min_score: 85 },
     stages: stagesWith(["done", "done", "done", "done", "done", "done"]),
     artifacts: [makeArtifact()],
     score: 88,
@@ -134,6 +136,21 @@ export function makeRun(overrides: Partial<Run> = {}): Run {
     created_at: hoursAgo(2),
     started_at: hoursAgo(2),
     finished_at: hoursAgo(1),
+    ...overrides,
+  };
+}
+
+export function makeUpload(overrides: Partial<Upload> = {}): Upload {
+  return {
+    target_id: "target-en",
+    channel_id: "chan-en",
+    language: "en",
+    variant: "episode",
+    status: "done",
+    youtube_video_id: "dQw4w9WgXcQ",
+    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    error: null,
+    quota_units: 2050,
     ...overrides,
   };
 }

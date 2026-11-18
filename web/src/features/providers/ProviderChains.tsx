@@ -1,85 +1,99 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
 import { useProviders, useSaveProviders } from "@/api/system";
-import type { ProviderChoice, ProviderConfig, ProvidersResponse } from "@/api/types";
+import type {
+  ProviderChoice,
+  ProviderConfig,
+  ProviderDescriptor,
+  ProvidersResponse,
+} from "@/api/types";
+import { useMutationNotifier } from "@/api/useMutationNotifier";
 import { ChainRow } from "@/features/providers/ChainRow";
 import {
   activeProvider,
   addableProviders,
   capabilitiesOf,
-  capabilityTitle,
+  chainChanged,
+  chainDescription,
   chainFor,
   moveChoice,
+  newChoice,
   patchChoice,
   removeChoice,
   withChain,
 } from "@/features/providers/chain";
-import {
-  Button,
-  Card,
-  EmptyState,
-  QueryState,
-  Select,
-  UnsavedChangesPrompt,
-  useToast,
-} from "@/shared/ui";
+import { humanizeId } from "@/shared/format/text";
+import { Card, EmptyState, QueryState, SaveBar, Select } from "@/shared/ui";
 import "@/features/providers/providers.css";
 
-interface CapabilityProps {
-  capability: string;
+interface ChainProps {
   chain: ProviderChoice[];
-  data: ProvidersResponse;
+  descriptors: ProviderDescriptor[];
   onChange: (chain: ProviderChoice[]) => void;
 }
 
-function CapabilityCard({ capability, chain, data, onChange }: CapabilityProps) {
-  const addable = addableProviders(data.descriptors, capability, chain);
-  const active = activeProvider(chain, data.descriptors);
-  const title = capabilityTitle(capability);
-  const add = (providerId: string) =>
-    providerId && onChange([...chain, { provider_id: providerId, enabled: true, options: {} }]);
+function AddProviderSelect({
+  title,
+  addable,
+  onAdd,
+}: {
+  title: string;
+  addable: ProviderDescriptor[];
+  onAdd: (providerId: string) => void;
+}) {
+  return (
+    <Select
+      aria-label={`Add a ${title} provider`}
+      value=""
+      placeholder="Add provider…"
+      options={addable.map((d) => ({ value: d.provider_id, label: d.name }))}
+      onChange={(e) => e.target.value && onAdd(e.target.value)}
+    />
+  );
+}
+
+function ChainList({ chain, descriptors, onChange }: ChainProps) {
+  if (chain.length === 0) {
+    return (
+      <EmptyState
+        icon="providers"
+        title="No providers in this chain"
+        description="Add one from the menu above."
+      />
+    );
+  }
+  return (
+    <ol className="list-stack list-stack-sm">
+      {chain.map((choice, index) => (
+        <ChainRow
+          key={choice.provider_id}
+          index={index}
+          total={chain.length}
+          choice={choice}
+          descriptor={descriptors.find((d) => d.provider_id === choice.provider_id)}
+          onChange={(patch) => onChange(patchChoice(chain, index, patch))}
+          onMove={(delta) => onChange(moveChoice(chain, index, delta))}
+          onRemove={() => onChange(removeChoice(chain, index))}
+        />
+      ))}
+    </ol>
+  );
+}
+
+function CapabilityCard({ capability, ...props }: ChainProps & { capability: string }) {
+  const addable = addableProviders(props.descriptors, capability, props.chain);
+  const title = humanizeId(capability);
+  const add = (providerId: string) => props.onChange([...props.chain, newChoice(providerId)]);
   return (
     <Card
       title={title}
-      description={
-        active
-          ? `Runs use ${active.name}, then fall back down the list.`
-          : "No available provider is enabled. Runs that need this will fail."
-      }
+      description={chainDescription(activeProvider(props.chain, props.descriptors))}
       actions={
         addable.length > 0 ? (
-          <Select
-            aria-label={`Add a ${title} provider`}
-            value=""
-            placeholder="Add provider…"
-            options={addable.map((d) => ({ value: d.provider_id, label: d.name }))}
-            onChange={(e) => add(e.target.value)}
-          />
+          <AddProviderSelect title={title} addable={addable} onAdd={add} />
         ) : undefined
       }
     >
-      {chain.length === 0 ? (
-        <EmptyState
-          icon="providers"
-          title="No providers in this chain"
-          description="Add one from the menu above."
-        />
-      ) : (
-        <ol className="chain">
-          {chain.map((choice, index) => (
-            <ChainRow
-              key={choice.provider_id}
-              index={index}
-              total={chain.length}
-              choice={choice}
-              descriptor={data.descriptors.find((d) => d.provider_id === choice.provider_id)}
-              onChange={(patch) => onChange(patchChoice(chain, index, patch))}
-              onMove={(delta) => onChange(moveChoice(chain, index, delta))}
-              onRemove={() => onChange(removeChoice(chain, index))}
-            />
-          ))}
-        </ol>
-      )}
+      <ChainList {...props} />
     </Card>
   );
 }
@@ -87,13 +101,10 @@ function CapabilityCard({ capability, chain, data, onChange }: CapabilityProps) 
 function ChainsEditor({ data }: { data: ProvidersResponse }) {
   const [config, setConfig] = useState<ProviderConfig[]>(data.config);
   const save = useSaveProviders();
-  const toast = useToast();
-  const dirty = JSON.stringify(config) !== JSON.stringify(data.config);
+  const notifier = useMutationNotifier();
+  const dirty = chainChanged(config, data.config);
   const submit = () =>
-    save.mutateAsync(config).then(
-      () => toast.success("Provider chains saved."),
-      (error: unknown) => toast.error(errorMessage(error)),
-    );
+    notifier.track(save.mutateAsync(config), { success: "Provider chains saved." });
   return (
     <div className="stack">
       {capabilitiesOf(data).map((capability) => (
@@ -101,26 +112,18 @@ function ChainsEditor({ data }: { data: ProvidersResponse }) {
           key={capability}
           capability={capability}
           chain={chainFor(config, capability)}
-          data={data}
+          descriptors={data.descriptors}
           onChange={(chain) => setConfig(withChain(config, capability, chain))}
         />
       ))}
-      <div className="action-bar providers-footer">
-        <span className="action-bar-status">{dirty ? "Unsaved changes" : "All changes saved"}</span>
-        <Button disabled={!dirty} onClick={() => setConfig(data.config)}>
-          Reset
-        </Button>
-        <Button
-          variant="primary"
-          icon="check"
-          disabled={!dirty}
-          loading={save.isPending}
-          onClick={submit}
-        >
-          Save chains
-        </Button>
-      </div>
-      <UnsavedChangesPrompt when={dirty && !save.isPending} />
+      <SaveBar
+        dirty={dirty}
+        saving={save.isPending}
+        saveLabel="Save chains"
+        saveDisabled={!dirty}
+        onSave={submit}
+        onReset={() => setConfig(data.config)}
+      />
     </div>
   );
 }

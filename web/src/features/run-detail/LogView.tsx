@@ -1,28 +1,7 @@
 import { useRunLogs } from "@/api/runs";
-import type { LogLine, Run } from "@/api/types";
+import type { Run } from "@/api/types";
+import { mergeLogLines, stageLines } from "@/features/run-detail/logLines";
 import { EmptyState } from "@/shared/ui";
-
-function stageLines(run: Run): LogLine[] {
-  return run.stages.flatMap((stage) =>
-    stage.message && stage.finished_at
-      ? [
-          {
-            at: stage.finished_at,
-            message: stage.message,
-            level: stage.status === "failed" ? "error" : "info",
-            stage_id: stage.stage_id,
-          },
-        ]
-      : [],
-  );
-}
-
-export function mergeLogLines(stage: LogLine[], live: LogLine[]): LogLine[] {
-  const seen = new Set(live.map((line) => `${line.stage_id}|${line.message}`));
-  return [...stage.filter((line) => !seen.has(`${line.stage_id}|${line.message}`)), ...live].sort(
-    (a, b) => a.at.localeCompare(b.at),
-  );
-}
 
 const timeFormat = new Intl.DateTimeFormat("en-GB", {
   hour: "2-digit",

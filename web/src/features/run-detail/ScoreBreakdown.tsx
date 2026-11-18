@@ -1,5 +1,5 @@
 import type { Run } from "@/api/types";
-import { weightedScore } from "@/features/run-detail/model";
+import { reviewRuleLabel, scoreTone, weightedScore } from "@/features/run-detail/model";
 import { formatScore } from "@/shared/format/numbers";
 import { EmptyState, ProgressMeter } from "@/shared/ui";
 
@@ -19,15 +19,16 @@ export function ScoreBreakdown({ run }: { run: Run }) {
       <div className="score-overall">
         <span className="score-value">{formatScore(overall)}</span>
         <span className="muted">overall score out of 100</span>
+        <span className="score-rule">{reviewRuleLabel(run.review_policy)}</span>
       </div>
-      <ul className="score-list">
+      <ul className="list-stack">
         {run.score_details.map((item) => (
           <li key={item.id} className="score-item">
             <ProgressMeter
               label={item.title}
               value={item.score}
               max={100}
-              tone={item.score >= 85 ? "success" : item.score >= 60 ? "warning" : "danger"}
+              tone={scoreTone(item.score)}
               detail={`${formatScore(item.score)} · weight ${Math.round(item.weight * 100)}%`}
             />
             {item.detail && <p className="subtle">{item.detail}</p>}

@@ -35,6 +35,17 @@ describe("applyRunEvent", () => {
     expect(next).toMatchObject({ status: "failed", error: "No GPU" });
   });
 
+  it.each([[{ status: "failed" }], [{ status: "failed", error: 5 }]])(
+    "keeps the previous error when the status payload %j has no text error",
+    (payload) => {
+      const run = makeRun({ status: "running", error: "old" });
+      expect(applyRunEvent(run, event("status", payload))).toMatchObject({
+        status: "failed",
+        error: "old",
+      });
+    },
+  );
+
   it("keeps the run when a status event has no status", () => {
     const run = makeRun();
     expect(applyRunEvent(run, event("status", {}))).toBe(run);

@@ -19,11 +19,6 @@ export function formatScore(score: number | null | undefined): string {
   return score === null || score === undefined ? "—" : score.toFixed(score % 1 === 0 ? 0 : 1);
 }
 
-export function pluralize(count: number, singular: string, plural = `${singular}s`): string {
-  return `${count} ${count === 1 ? singular : plural}`;
-}
-
-export function humanizeId(id: string): string {
-  const spaced = id.replace(/[_-]+/g, " ").trim();
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+export function isIntegerAtLeast(value: number | null, min: number): boolean {
+  return value !== null && Number.isInteger(value) && value >= min;
 }

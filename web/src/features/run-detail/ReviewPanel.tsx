@@ -1,60 +1,69 @@
 import { useState } from "react";
-import { errorMessage } from "@/api/errors";
 import { useReviewRun } from "@/api/runs";
 import type { Run } from "@/api/types";
+import { useMutationNotifier } from "@/api/useMutationNotifier";
+import {
+  type Decision,
+  reviewMessage,
+  reviewPayload,
+  reviewRuleLabel,
+} from "@/features/run-detail/model";
 import { formatScore } from "@/shared/format/numbers";
-import { Button, Card, FormField, Textarea, useToast } from "@/shared/ui";
+import { Button, Card, FormField, Textarea } from "@/shared/ui";
 
-type Decision = "approved" | "rejected";
+function DecisionButtons({
+  pending,
+  busy,
+  onDecide,
+}: {
+  pending: Decision | undefined;
+  busy: boolean;
+  onDecide: (decision: Decision) => void;
+}) {
+  return (
+    <div className="row">
+      <Button
+        variant="primary"
+        icon="check"
+        loading={pending === "approved"}
+        disabled={busy}
+        onClick={() => onDecide("approved")}
+      >
+        Approve
+      </Button>
+      <Button
+        variant="danger"
+        icon="x"
+        loading={pending === "rejected"}
+        disabled={busy}
+        onClick={() => onDecide("rejected")}
+      >
+        Reject
+      </Button>
+    </div>
+  );
+}
 
 export function ReviewPanel({ run }: { run: Run }) {
   const [notes, setNotes] = useState("");
   const review = useReviewRun();
-  const toast = useToast();
+  const notifier = useMutationNotifier();
   const decide = (decision: Decision) =>
-    review
-      .mutateAsync({
-        id: run.id,
-        vars: notes.trim() === "" ? { decision } : { decision, notes: notes.trim() },
-      })
-      .then(
-        () =>
-          toast.success(
-            decision === "approved" ? "Run approved. You can publish it now." : "Run rejected.",
-          ),
-        (error: unknown) => toast.error(errorMessage(error)),
-      );
-  const pendingDecision = review.isPending ? review.variables?.vars.decision : undefined;
+    notifier.track(review.mutateAsync({ id: run.id, vars: reviewPayload(decision, notes) }), {
+      success: reviewMessage(decision),
+    });
+  const pending = review.isPending ? review.variables?.vars.decision : undefined;
   return (
     <Card
       className="review-panel"
       title="Review this run"
-      description={`Watch the videos below, then approve or reject. Score ${formatScore(run.score)}.`}
+      description={`Watch the videos below, then approve or reject. Score ${formatScore(run.score)} · ${reviewRuleLabel(run.review_policy)}.`}
     >
       <div className="stack">
         <FormField label="Review notes" hint="Optional. Saved with your decision.">
           <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </FormField>
-        <div className="row">
-          <Button
-            variant="primary"
-            icon="check"
-            loading={pendingDecision === "approved"}
-            disabled={review.isPending}
-            onClick={() => decide("approved")}
-          >
-            Approve
-          </Button>
-          <Button
-            variant="danger"
-            icon="x"
-            loading={pendingDecision === "rejected"}
-            disabled={review.isPending}
-            onClick={() => decide("rejected")}
-          >
-            Reject
-          </Button>
-        </div>
+        <DecisionButtons pending={pending} busy={review.isPending} onDecide={decide} />
       </div>
     </Card>
   );

@@ -4,10 +4,12 @@ import {
   activeProvider,
   addableProviders,
   capabilitiesOf,
-  capabilityTitle,
+  chainChanged,
+  chainDescription,
   chainFor,
   hasOptions,
   moveChoice,
+  newChoice,
   patchChoice,
   removeChoice,
   withChain,
@@ -23,12 +25,25 @@ const chain = [choice("a"), choice("b"), choice("c")];
 const ids = (items: ProviderChoice[]) => items.map((c) => c.provider_id);
 
 describe("provider chains", () => {
-  it.each([
-    ["llm", "Text generation"],
-    ["tts", "Narration"],
-    ["sound_fx", "Sound fx"],
-  ])("titles the %s capability", (capability, title) => {
-    expect(capabilityTitle(capability)).toBe(title);
+  it("describes the active provider or the lack of one", () => {
+    expect(chainDescription(itemAt(providerDescriptors, 0))).toBe(
+      "Runs use Ollama, then fall back down the list.",
+    );
+    expect(chainDescription(undefined)).toBe(
+      "No available provider is enabled. Runs that need this will fail.",
+    );
+  });
+
+  it("creates enabled choices and detects unsaved chain changes", () => {
+    expect(newChoice("x")).toEqual({ provider_id: "x", enabled: true, options: {} });
+    expect(chainChanged(providerConfig, structuredClone(providerConfig))).toBe(false);
+    expect(chainChanged(withChain(providerConfig, "llm", []), providerConfig)).toBe(true);
+  });
+
+  it("includes the media capability from the catalog", () => {
+    expect(capabilitiesOf({ config: providerConfig, descriptors: providerDescriptors })).toContain(
+      "media",
+    );
   });
 
   it("orders capabilities by config, then descriptors, without duplicates", () => {

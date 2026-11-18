@@ -1,19 +1,8 @@
-.credential-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
 .credential {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(180px, 1fr) auto;
   align-items: center;
   gap: var(--space-5);
-  padding: var(--space-4) var(--space-5);
-}
-
-.credential + .credential {
-  border-top: 1px solid var(--color-border);
 }
 
 .credential-main {

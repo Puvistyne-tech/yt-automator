@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { useChannels } from "@/api/channels";
 import { keys } from "@/api/keys";
-import { oauthReturnMessage } from "@/features/channels/credentialForm";
+import { oauthReturnMessage, withoutOAuthParams } from "@/features/channels/oauthReturn";
 import { useToast } from "@/shared/ui";
 
 export function useOAuthReturn() {
@@ -26,10 +26,6 @@ export function useOAuthReturn() {
     handled.current = signature;
     toast[result.tone](result.message);
     void client.invalidateQueries({ queryKey: keys.channels });
-    const next = new URLSearchParams(params);
-    next.delete("connected");
-    next.delete("error");
-    next.delete("credential");
-    setParams(next, { replace: true });
+    setParams(withoutOAuthParams(params), { replace: true });
   }, [params, signature, channels.data, channels.isPending, client, setParams, toast]);
 }

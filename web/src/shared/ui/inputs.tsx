@@ -53,3 +53,23 @@ export function Select({ className, id, options, placeholder, ...rest }: SelectP
     </select>
   );
 }
+
+type NumberInputProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "value" | "onChange" | "type"
+> & {
+  value: number | null;
+  onValueChange: (value: number) => void;
+};
+
+export function NumberInput({ value, onValueChange, ...rest }: NumberInputProps) {
+  const shown = value === null || Number.isNaN(value) ? "" : value;
+  return (
+    <Input
+      type="number"
+      value={shown}
+      onChange={(event) => onValueChange(event.target.valueAsNumber)}
+      {...rest}
+    />
+  );
+}

@@ -1,7 +1,7 @@
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/api/client";
-import { keys } from "@/api/keys";
+import { invalidateWithDashboard, keys } from "@/api/keys";
 import { applyRunEvent, logLineFromEvent, parseRunEvent, reconnectDelayMs } from "@/api/runEvents";
 import type { LogLine, Run, RunEvent } from "@/api/types";
 
@@ -20,9 +20,7 @@ function handleRunEvent(client: QueryClient, event: RunEvent) {
     );
   }
   if (event.kind === "status") {
-    void client.invalidateQueries({ queryKey: ["runs", "list"] });
-    void client.invalidateQueries({ queryKey: keys.dashboard });
-    void client.invalidateQueries({ queryKey: keys.automations });
+    void invalidateWithDashboard(client, keys.runLists, keys.automations);
   }
 }
 

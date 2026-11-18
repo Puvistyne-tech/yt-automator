@@ -1,16 +1,24 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { db } from "@/api/mocks/db";
-import { findDialog, findToast, renderApp } from "../helpers/renderApp";
+import {
+  cancelDialog,
+  confirmDialog,
+  findDialog,
+  findToast,
+  findWithin,
+  renderApp,
+} from "../helpers/renderApp";
 import { failWith } from "../helpers/server";
 
-async function findCard(title: string) {
-  const heading = await screen.findByRole("heading", { level: 2, name: title });
-  const card = heading.closest("section");
-  if (card === null) {
-    throw new Error(`No card ${title}`);
-  }
-  return within(card);
+const findCard = (title: string) => findWithin(title, "section", { selector: "h2" });
+
+async function findSecret(title: string) {
+  const secrets = await findCard("Secrets");
+  await secrets.findByText(title);
+  return findWithin(title, "li", { selector: ".cell-title" });
 }
+
+const secret = (name: string) => db.state.secrets.find((s) => s.name === name);
 
 const chainIds = (capability: string) =>
   db.state.providerConfig.find((c) => c.capability === capability)?.chain.map((c) => c.provider_id);
@@ -18,7 +26,7 @@ const chainIds = (capability: string) =>
 describe("Providers page", () => {
   it("shows each chain in order with availability", async () => {
     renderApp("/providers");
-    const text = await findCard("Text generation");
+    const text = await findCard("Llm");
 
     expect(text.getAllByRole("listitem").map((li) => li.getAttribute("aria-label"))).toEqual([
       "Ollama",
@@ -27,7 +35,7 @@ describe("Providers page", () => {
     ]);
     expect(text.getByText("Secret gemini_api_key is not set.")).toBeInTheDocument();
     expect(text.getByText("Runs use Ollama, then fall back down the list.")).toBeInTheDocument();
-    const narration = await findCard("Narration");
+    const narration = await findCard("Tts");
     expect(
       narration.getByText("Runs use Offline fake, then fall back down the list."),
     ).toBeInTheDocument();
@@ -35,7 +43,7 @@ describe("Providers page", () => {
 
   it("reorders, toggles, edits options and saves the chains", async () => {
     const { user } = renderApp("/providers");
-    const text = await findCard("Text generation");
+    const text = await findCard("Llm");
 
     await user.click(text.getByRole("button", { name: "Move Offline fake up" }));
     await user.click(text.getByRole("switch", { name: "Use Ollama" }));
@@ -51,6 +59,13 @@ describe("Providers page", () => {
     expect(chainIds("llm")).toEqual(["ollama", "fake-llm", "gemini"]);
     const saved = db.state.providerConfig.find((c) => c.capability === "llm")?.chain[0];
     expect(saved).toMatchObject({ enabled: false, options: { model: "qwen2.5:7b" } });
+  });
+
+  it("renders the media capability with a humanized title", async () => {
+    renderApp("/providers");
+    const media = await findCard("Media");
+
+    expect(media.getByRole("listitem", { name: "FFmpeg" })).toBeInTheDocument();
   });
 
   it("adds and removes providers, and resets unsaved edits", async () => {
@@ -71,7 +86,7 @@ describe("Providers page", () => {
   it("reports a failed save", async () => {
     failWith("put", "/providers", 400, { message: "Unknown provider." });
     const { user } = renderApp("/providers");
-    const text = await findCard("Text generation");
+    const text = await findCard("Llm");
 
     await user.click(text.getByRole("button", { name: "Move Google Gemini up" }));
     await user.click(screen.getByRole("button", { name: "Save chains" }));
@@ -84,10 +99,7 @@ describe("Providers page", () => {
 describe("Secrets panel", () => {
   it("sets a secret write-only and refreshes provider availability", async () => {
     const { user } = renderApp("/providers");
-    const secrets = await findCard("Secrets");
-    const gemini = within(
-      (await secrets.findByText("Gemini API key")).closest("li") as HTMLElement,
-    );
+    const gemini = await findSecret("Gemini API key");
 
     await user.click(gemini.getByRole("button", { name: "Set" }));
     const dialog = await findDialog("Set Gemini API key");
@@ -99,7 +111,7 @@ describe("Secrets panel", () => {
 
     await findToast("Gemini API key saved.");
     expect(await gemini.findByText("Set")).toBeInTheDocument();
-    const text = await findCard("Text generation");
+    const text = await findCard("Llm");
     await waitFor(() =>
       expect(text.queryByText("Secret gemini_api_key is not set.")).not.toBeInTheDocument(),
     );
@@ -107,18 +119,62 @@ describe("Secrets panel", () => {
 
   it("clears a secret after confirmation", async () => {
     const { user } = renderApp("/providers");
-    const secrets = await findCard("Secrets");
-    const pixabay = within(
-      (await secrets.findByText("Pixabay API key")).closest("li") as HTMLElement,
-    );
+    const pixabay = await findSecret("Pixabay API key");
 
     await user.click(pixabay.getByRole("button", { name: "Clear" }));
-    await user.click(
-      (await findDialog("Clear secret?")).getByRole("button", { name: "Clear secret" }),
-    );
+    await confirmDialog(user, "Clear secret?", "Clear secret");
 
     await findToast("Pixabay API key cleared.");
-    expect(db.state.secrets.find((s) => s.name === "pixabay_api_key")?.is_set).toBe(false);
+    expect(secret("pixabay_api_key")?.is_set).toBe(false);
+  });
+
+  it("keeps a secret when clearing is cancelled", async () => {
+    const { user } = renderApp("/providers");
+    const pixabay = await findSecret("Pixabay API key");
+
+    await user.click(pixabay.getByRole("button", { name: "Clear" }));
+    await cancelDialog(user, "Clear secret?");
+
+    expect(pixabay.getByText("Set")).toBeInTheDocument();
+    expect(secret("pixabay_api_key")?.is_set).toBe(true);
+  });
+
+  it("reports a failed clear and keeps the secret", async () => {
+    failWith("delete", "/secrets/:name", 500, { message: "Keychain is locked." });
+    const { user } = renderApp("/providers");
+    const pixabay = await findSecret("Pixabay API key");
+
+    await user.click(pixabay.getByRole("button", { name: "Clear" }));
+    await confirmDialog(user, "Clear secret?", "Clear secret");
+
+    await findToast("Keychain is locked.");
+    expect(secret("pixabay_api_key")?.is_set).toBe(true);
+    expect(pixabay.getByText("Set")).toBeInTheDocument();
+  });
+
+  it("keeps the set dialog open when saving fails", async () => {
+    failWith("put", "/secrets/:name", 500, { message: "Keychain is locked." });
+    const { user } = renderApp("/providers");
+    const gemini = await findSecret("Gemini API key");
+
+    await user.click(gemini.getByRole("button", { name: "Set" }));
+    const dialog = await findDialog("Set Gemini API key");
+    await user.type(dialog.getByLabelText(/^Value/), "AIza-secret");
+    await user.click(dialog.getByRole("button", { name: "Save secret" }));
+
+    await findToast("Keychain is locked.");
+    expect(screen.getByRole("dialog", { name: "Set Gemini API key" })).toBeInTheDocument();
+    expect(secret("gemini_api_key")?.is_set).toBe(false);
+  });
+
+  it("closes the set dialog on cancel without saving", async () => {
+    const { user } = renderApp("/providers");
+    const gemini = await findSecret("Gemini API key");
+
+    await user.click(gemini.getByRole("button", { name: "Set" }));
+    await cancelDialog(user, "Set Gemini API key");
+
+    expect(secret("gemini_api_key")?.is_set).toBe(false);
   });
 });
 
@@ -140,6 +196,21 @@ describe("Settings page", () => {
 
     await findToast("Settings saved.");
     expect(db.state.settings).toMatchObject({ max_parallel_runs: 3, timezone: "UTC" });
+  });
+
+  it("shows server field errors on the matching setting", async () => {
+    failWith("put", "/settings", 400, {
+      message: "The settings are not valid.",
+      fields: { "body.timezone": "Unknown timezone." },
+    });
+    const { user } = renderApp("/settings");
+    await user.selectOptions(await screen.findByLabelText(/^Timezone/), "UTC");
+    await user.click(screen.getByRole("button", { name: "Save settings" }));
+
+    await findToast("The settings are not valid.");
+    expect(screen.getByText("Unknown timezone.")).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Timezone/)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
   });
 });
 

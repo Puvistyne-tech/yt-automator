@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Button } from "@/shared/ui/Button";
 import { Dialog } from "@/shared/ui/Dialog";
+import { DialogActions } from "@/shared/ui/DialogActions";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -19,7 +19,7 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel,
-  cancelLabel = "Cancel",
+  cancelLabel,
   tone = "danger",
   busy = false,
   onConfirm,
@@ -32,12 +32,14 @@ export function ConfirmDialog({
       onClose={onCancel}
       size="sm"
       footer={
-        <>
-          <Button onClick={onCancel}>{cancelLabel}</Button>
-          <Button variant={tone} loading={busy} onClick={onConfirm}>
-            {confirmLabel}
-          </Button>
-        </>
+        <DialogActions
+          submitLabel={confirmLabel}
+          cancelLabel={cancelLabel}
+          tone={tone}
+          busy={busy}
+          onSubmit={onConfirm}
+          onCancel={onCancel}
+        />
       }
     >
       <div className="confirm-message">{message}</div>

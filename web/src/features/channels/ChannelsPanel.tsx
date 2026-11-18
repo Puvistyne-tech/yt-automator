@@ -1,22 +1,32 @@
 import { useState } from "react";
 import { useChannels, useCredentials, useDisconnectChannel } from "@/api/channels";
-import { errorMessage } from "@/api/errors";
 import { CHANNEL_STATUSES, PRIVACY_LABELS } from "@/api/labels";
 import type { Channel } from "@/api/types";
+import { useMutationNotifier } from "@/api/useMutationNotifier";
 import { ChannelDefaultsDialog } from "@/features/channels/ChannelDefaultsDialog";
 import { formatDateTime } from "@/shared/format/dates";
 import {
+  ACTIONS_COLUMN,
   Badge,
   Button,
   Card,
   ConfirmDialog,
+  type ConfirmTarget,
   EmptyState,
   IconButton,
   QueryState,
   StatusBadge,
   Table,
-  useToast,
+  useConfirmTarget,
 } from "@/shared/ui";
+
+const COLUMNS = ["Channel", "Status", "Credential", "Defaults", "Connected", ACTIONS_COLUMN];
+
+interface RowHandlers {
+  credentialName: (id: string) => string;
+  onEdit: (channel: Channel) => void;
+  onDisconnect: (channel: Channel) => void;
+}
 
 function Avatar({ channel }: { channel: Channel }) {
   return channel.thumbnail_url ? (
@@ -28,17 +38,17 @@ function Avatar({ channel }: { channel: Channel }) {
   );
 }
 
-function ChannelRow({
-  channel,
-  credentialName,
-  onEdit,
-  onDisconnect,
-}: {
-  channel: Channel;
-  credentialName: string;
-  onEdit: () => void;
-  onDisconnect: () => void;
-}) {
+function ChannelDefaultsBadges({ channel }: { channel: Channel }) {
+  return (
+    <div className="row">
+      <Badge>{PRIVACY_LABELS[channel.defaults.privacy]}</Badge>
+      {channel.defaults.made_for_kids && <Badge tone="accent">Kids</Badge>}
+      <Badge>{channel.defaults.default_language.toUpperCase()}</Badge>
+    </div>
+  );
+}
+
+function ChannelRow({ channel, handlers }: { channel: Channel; handlers: RowHandlers }) {
   return (
     <tr>
       <td>
@@ -53,44 +63,70 @@ function ChannelRow({
       <td>
         <StatusBadge {...CHANNEL_STATUSES[channel.status]} />
       </td>
-      <td>{credentialName}</td>
+      <td>{handlers.credentialName(channel.credential_id)}</td>
       <td>
-        <div className="row">
-          <Badge>{PRIVACY_LABELS[channel.defaults.privacy]}</Badge>
-          {channel.defaults.made_for_kids && <Badge tone="accent">Kids</Badge>}
-          <Badge>{channel.defaults.default_language.toUpperCase()}</Badge>
-        </div>
+        <ChannelDefaultsBadges channel={channel} />
       </td>
       <td>{formatDateTime(channel.connected_at)}</td>
       <td className="cell-actions">
-        <Button size="sm" variant="ghost" icon="settings" onClick={onEdit}>
+        <Button size="sm" variant="ghost" icon="settings" onClick={() => handlers.onEdit(channel)}>
           Defaults
         </Button>
         <IconButton
           icon="trash"
           variant="danger"
           label={`Disconnect ${channel.title}`}
-          onClick={onDisconnect}
+          onClick={() => handlers.onDisconnect(channel)}
         />
       </td>
     </tr>
   );
 }
 
+function ChannelsTable({ list, handlers }: { list: Channel[]; handlers: RowHandlers }) {
+  return (
+    <Table label="Channels" columns={COLUMNS}>
+      {list.map((channel) => (
+        <ChannelRow key={channel.id} channel={channel} handlers={handlers} />
+      ))}
+    </Table>
+  );
+}
+
+function DisconnectDialog({ confirm }: { confirm: ConfirmTarget<Channel> }) {
+  const disconnect = useDisconnectChannel();
+  const notifier = useMutationNotifier();
+  const target = confirm.target;
+  const onConfirm = () => {
+    if (target !== null) {
+      disconnect.mutate(
+        target.id,
+        notifier.handlers({ success: `Disconnected ${target.title}.`, onDone: confirm.cancel }),
+      );
+    }
+  };
+  return (
+    <ConfirmDialog
+      {...confirm.dialogProps}
+      title="Disconnect channel?"
+      message={`The stored token for ${target?.title ?? ""} is deleted. Automations can no longer publish there.`}
+      confirmLabel="Disconnect"
+      busy={disconnect.isPending}
+      onConfirm={onConfirm}
+    />
+  );
+}
+
 export function ChannelsPanel() {
   const channels = useChannels();
   const credentials = useCredentials();
-  const disconnect = useDisconnectChannel();
-  const toast = useToast();
   const [editing, setEditing] = useState<Channel | null>(null);
-  const [removing, setRemoving] = useState<Channel | null>(null);
-  const credentialName = (id: string) => credentials.data?.find((c) => c.id === id)?.name ?? "—";
-  const confirm = (channel: Channel) =>
-    disconnect.mutate(channel.id, {
-      onSuccess: () => toast.success(`Disconnected ${channel.title}.`),
-      onError: (error) => toast.error(errorMessage(error)),
-      onSettled: () => setRemoving(null),
-    });
+  const removing = useConfirmTarget<Channel>();
+  const handlers: RowHandlers = {
+    credentialName: (id) => credentials.data?.find((c) => c.id === id)?.name ?? "—",
+    onEdit: setEditing,
+    onDisconnect: removing.ask,
+  };
   return (
     <Card
       title="Connected channels"
@@ -108,44 +144,10 @@ export function ChannelsPanel() {
           />
         }
       >
-        {(list) => (
-          <Table label="Channels">
-            <thead>
-              <tr>
-                <th scope="col">Channel</th>
-                <th scope="col">Status</th>
-                <th scope="col">Credential</th>
-                <th scope="col">Defaults</th>
-                <th scope="col">Connected</th>
-                <th scope="col" className="cell-actions">
-                  <span className="visually-hidden">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((channel) => (
-                <ChannelRow
-                  key={channel.id}
-                  channel={channel}
-                  credentialName={credentialName(channel.credential_id)}
-                  onEdit={() => setEditing(channel)}
-                  onDisconnect={() => setRemoving(channel)}
-                />
-              ))}
-            </tbody>
-          </Table>
-        )}
+        {(list) => <ChannelsTable list={list} handlers={handlers} />}
       </QueryState>
       {editing && <ChannelDefaultsDialog channel={editing} onClose={() => setEditing(null)} />}
-      <ConfirmDialog
-        open={removing !== null}
-        title="Disconnect channel?"
-        message={`The stored token for ${removing?.title ?? ""} is deleted. Automations can no longer publish there.`}
-        confirmLabel="Disconnect"
-        busy={disconnect.isPending}
-        onConfirm={() => removing && confirm(removing)}
-        onCancel={() => setRemoving(null)}
-      />
+      <DisconnectDialog confirm={removing} />
     </Card>
   );
 }

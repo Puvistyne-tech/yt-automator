@@ -1,45 +1,52 @@
-import { makeArtifact, makeRun, stagesWith } from "@/api/mocks/fixtures/factories";
+import { makeArtifact, makeRun, makeUpload, stagesWith } from "@/api/mocks/fixtures/factories";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
-import type { RunStatus, Upload, UploadStatus } from "@/api/types";
+import type { RunStatus, UploadStatus } from "@/api/types";
+import {
+  groupArtifacts,
+  isTallArtifact,
+  posterFor,
+  splitGroup,
+} from "@/features/run-detail/artifacts";
 import {
   availableActions,
   defaultRetryStage,
-  groupArtifacts,
-  posterFor,
+  publishDescription,
   retryStageOptions,
+  reviewMessage,
+  reviewPayload,
+  reviewRuleLabel,
+  scoreTone,
   stageProgress,
+  uploadNote,
   uploadSummary,
   weightedScore,
 } from "@/features/run-detail/model";
 import { itemAt } from "../../helpers/itemAt";
 
-const upload = (status: UploadStatus): Upload => ({
-  target_id: "t",
-  channel_id: "c",
-  language: "en",
-  variant: "episode",
-  status,
-  youtube_video_id: null,
-  url: null,
-  error: null,
-  quota_units: 0,
-});
+const upload = (status: UploadStatus) => makeUpload({ status });
 
 describe("availableActions", () => {
   it.each<[RunStatus, string[]]>([
     ["queued", ["canCancel"]],
     ["running", ["canCancel"]],
-    ["publishing", []],
-    ["awaiting_review", ["canRetry", "canReview", "canDelete"]],
-    ["approved", ["canRetry", "canPublish", "canDelete"]],
+    ["publishing", ["showPublish"]],
+    ["awaiting_review", ["canCancel", "canRetry", "canReview", "canDelete"]],
+    ["approved", ["canCancel", "canRetry", "canPublish", "canDelete", "showPublish"]],
     ["failed", ["canRetry", "canDelete"]],
-    ["published", ["canRetry", "canDelete"]],
+    ["published", ["canDelete"]],
+    ["rejected", ["canRetry", "canDelete"]],
+    ["cancelled", ["canRetry", "canDelete"]],
   ])("allows the right actions for a %s run", (status, allowed) => {
     const actions = availableActions(makeRun({ status }));
     const enabled = Object.entries(actions)
       .filter(([, on]) => on)
       .map(([name]) => name);
     expect(enabled.sort()).toEqual([...allowed].sort());
+  });
+
+  it("shows the publish panel once a run has uploads", () => {
+    const run = makeRun({ status: "published", uploads: [upload("done")] });
+    expect(availableActions(run).showPublish).toBe(true);
   });
 });
 
@@ -58,6 +65,34 @@ describe("retry stages", () => {
       done: 2,
       total: kidsStoryPipeline.stages.length,
     });
+  });
+});
+
+describe("review", () => {
+  it("sends trimmed notes only when there are some", () => {
+    expect(reviewPayload("approved", "  ")).toEqual({ decision: "approved" });
+    expect(reviewPayload("rejected", " Too dark ")).toEqual({
+      decision: "rejected",
+      notes: "Too dark",
+    });
+  });
+
+  it("words the outcome and the review rule", () => {
+    expect(reviewMessage("approved")).toBe("Run approved. You can publish it now.");
+    expect(reviewMessage("rejected")).toBe("Run rejected.");
+    expect(reviewRuleLabel({ mode: "always", min_score: 85 })).toBe("Review rule: always");
+    expect(reviewRuleLabel({ mode: "auto_when_score_at_least", min_score: 85 })).toBe(
+      "Review rule: auto-approve at 85+",
+    );
+  });
+
+  it.each([
+    [85, "success"],
+    [84.9, "warning"],
+    [60, "warning"],
+    [59, "danger"],
+  ])("tones a score of %d as %s", (score, tone) => {
+    expect(scoreTone(score)).toBe(tone);
   });
 });
 
@@ -87,9 +122,49 @@ describe("groupArtifacts", () => {
     expect(posterFor(itemAt(groups, 1))).toBeUndefined();
   });
 
+  it("names all-language groups and unknown variants, ordering unknowns last", () => {
+    const run = makeRun({
+      languages: ["en"],
+      artifacts: [
+        makeArtifact({ id: "b1", language: "fr", variant: "reel" }),
+        makeArtifact({ id: "b2", language: "en", variant: "reel" }),
+        makeArtifact({ id: "b3", language: null, variant: "episode" }),
+      ],
+    });
+    expect(groupArtifacts(run, kidsStoryPipeline).map((g) => g.title)).toEqual([
+      "All languages — Episode · 16:9",
+      "English — reel",
+      "fr — reel",
+    ]);
+  });
+
   it("falls back to raw codes without a pipeline", () => {
     const run = makeRun({ artifacts: [makeArtifact({ language: "fr", variant: "reel" })] });
     expect(groupArtifacts(run)[0]?.title).toBe("fr — reel");
+  });
+
+  it("splits a group into media, documents, captions and poster", () => {
+    const run = makeRun({
+      artifacts: [
+        makeArtifact({ id: "v" }),
+        makeArtifact({ id: "t", kind: "thumbnail" }),
+        makeArtifact({ id: "s", kind: "subtitle" }),
+        makeArtifact({ id: "m", kind: "metadata" }),
+      ],
+    });
+    const parts = splitGroup(itemAt(groupArtifacts(run, kidsStoryPipeline), 0));
+    expect(parts.media.map((a) => a.id)).toEqual(["v", "t"]);
+    expect(parts.documents.map((a) => a.id)).toEqual(["s", "m"]);
+    expect(parts.captions?.id).toBe("s");
+    expect(parts.poster?.id).toBe("t");
+  });
+
+  it("decides tall previews from the variant aspect, then the frame size", () => {
+    expect(isTallArtifact(makeArtifact({ variant: "short" }), kidsStoryPipeline)).toBe(true);
+    expect(isTallArtifact(makeArtifact({ variant: "episode" }), kidsStoryPipeline)).toBe(false);
+    const portrait = makeArtifact({ variant: "reel", meta: { width: 1080, height: 1920 } });
+    expect(isTallArtifact(portrait, kidsStoryPipeline)).toBe(true);
+    expect(isTallArtifact(makeArtifact({ variant: null, meta: {} }))).toBe(false);
   });
 });
 
@@ -111,6 +186,30 @@ describe("scores and uploads", () => {
     const uploads = ["done", "done", "failed", "uploading", "pending", "skipped"].map((s) =>
       upload(s as UploadStatus),
     );
-    expect(uploadSummary(uploads)).toEqual({ done: 2, failed: 1, pending: 2 });
+    expect(uploadSummary(uploads)).toEqual({ done: 2, failed: 1, pending: 2, skipped: 1 });
+  });
+
+  it("describes publishing before and after uploads", () => {
+    expect(publishDescription(makeRun({ uploads: [] }))).toBe(
+      "Approved and ready. Publishing creates one upload per target and output.",
+    );
+    expect(publishDescription(makeRun({ uploads: [upload("done")] }))).toBe(
+      "1 uploaded · 0 failed · 0 pending",
+    );
+    expect(publishDescription(makeRun({ uploads: [upload("done"), upload("skipped")] }))).toBe(
+      "1 uploaded · 0 failed · 0 pending · 1 skipped",
+    );
+  });
+
+  it("shows failures as errors and skip reasons as notes", () => {
+    expect(uploadNote(upload("done"))).toBeNull();
+    expect(uploadNote(makeUpload({ status: "failed", error: "Quota" }))).toEqual({
+      text: "Quota",
+      tone: "error",
+    });
+    expect(uploadNote(makeUpload({ status: "skipped", error: "Not in run." }))).toEqual({
+      text: "Not in run.",
+      tone: "muted",
+    });
   });
 });

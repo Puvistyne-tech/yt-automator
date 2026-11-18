@@ -62,3 +62,7 @@ export function normalizeFieldErrors(fields: FieldErrors): FieldErrors {
     Object.entries(fields).map(([path, message]) => [normalizeFieldPath(path), message]),
   );
 }
+
+export function hasErrors(errors: FieldErrors): boolean {
+  return Object.keys(errors).length > 0;
+}

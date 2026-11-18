@@ -52,7 +52,7 @@ export function StageTimeline({ run }: { run: Run }) {
           tone={run.status === "failed" ? "danger" : "accent"}
           detail={`${progress.done} of ${progress.total}`}
         />
-        <ol className="timeline" aria-label="Stage timeline">
+        <ol className="timeline list-reset" aria-label="Stage timeline">
           {run.stages.map((stage) => (
             <Stage key={stage.stage_id} stage={stage} />
           ))}

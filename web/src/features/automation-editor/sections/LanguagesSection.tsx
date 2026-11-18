@@ -8,8 +8,8 @@ import {
   EditorSection,
   type SectionProps,
 } from "@/features/automation-editor/sections/EditorSection";
-import { pluralize } from "@/shared/format/numbers";
-import { Button, CheckboxGroup } from "@/shared/ui";
+import { pluralize } from "@/shared/format/text";
+import { Button, Callout, CheckboxGroup } from "@/shared/ui";
 
 interface LanguagesSectionProps extends SectionProps {
   pipeline: PipelineDescriptor;
@@ -22,14 +22,14 @@ function OrphanNotice({ draft, onChange, pipeline }: LanguagesSectionProps) {
   }
   const names = [...new Set(orphans.map((t) => languageName(pipeline, t.language)))].join(", ");
   return (
-    <div className="notice notice-warning" role="status">
+    <Callout tone="warning">
       <span>
         {pluralize(orphans.length, "target")} still publish in {names}, which is no longer selected.
       </span>
       <Button size="sm" variant="danger" onClick={() => onChange(withoutOrphanTargets(draft))}>
         Remove {pluralize(orphans.length, "target")}
       </Button>
-    </div>
+    </Callout>
   );
 }
 

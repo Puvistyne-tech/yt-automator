@@ -22,6 +22,26 @@ function toggle(values: string[], value: string, options: CheckboxOption[]): str
   return options.map((option) => option.value).filter((v) => next.includes(v));
 }
 
+function CheckboxChoice({
+  option,
+  checked,
+  onToggle,
+}: {
+  option: CheckboxOption;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <label className="checkbox-option">
+      <input type="checkbox" checked={checked} disabled={option.disabled} onChange={onToggle} />
+      <span className="checkbox-text">
+        <span>{option.label}</span>
+        {option.description && <span className="subtle">{option.description}</span>}
+      </span>
+    </label>
+  );
+}
+
 export function CheckboxGroup({
   label,
   options,
@@ -43,18 +63,12 @@ export function CheckboxGroup({
       {hint && <p className="field-hint">{hint}</p>}
       <div className="checkbox-options">
         {options.map((option) => (
-          <label key={option.value} className="checkbox-option">
-            <input
-              type="checkbox"
-              checked={value.includes(option.value)}
-              disabled={option.disabled}
-              onChange={() => onChange(toggle(value, option.value, options))}
-            />
-            <span className="checkbox-text">
-              <span>{option.label}</span>
-              {option.description && <span className="subtle">{option.description}</span>}
-            </span>
-          </label>
+          <CheckboxChoice
+            key={option.value}
+            option={option}
+            checked={value.includes(option.value)}
+            onToggle={() => onChange(toggle(value, option.value, options))}
+          />
         ))}
       </div>
       {error && (

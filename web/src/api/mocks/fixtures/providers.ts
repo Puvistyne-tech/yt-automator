@@ -113,6 +113,12 @@ export const providerDescriptors: ProviderDescriptor[] = [
     name: "MusicGen",
     description: "Local music generation.",
   }),
+  descriptor({
+    provider_id: "ffmpeg",
+    capability: "media",
+    name: "FFmpeg",
+    description: "Composes videos, extracts frames and measures loudness.",
+  }),
 ];
 
 export const providerConfig: ProviderConfig[] = [
@@ -140,6 +146,7 @@ export const providerConfig: ProviderConfig[] = [
     ],
   },
   { capability: "music", chain: [] },
+  { capability: "media", chain: [{ provider_id: "ffmpeg", enabled: true, options: {} }] },
 ];
 
 export const secrets: SecretInfo[] = [

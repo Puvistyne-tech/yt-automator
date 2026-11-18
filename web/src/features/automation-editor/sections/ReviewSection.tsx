@@ -3,7 +3,7 @@ import {
   EditorSection,
   type SectionProps,
 } from "@/features/automation-editor/sections/EditorSection";
-import { FormField, Input, RadioCards } from "@/shared/ui";
+import { FormField, NumberInput, RadioCards } from "@/shared/ui";
 
 const MODES = [
   {
@@ -39,17 +39,13 @@ export function ReviewSection({ draft, onChange, errors }: SectionProps) {
             hint="Runs scoring below this still wait for review."
             error={errors["review_policy.min_score"]}
           >
-            <Input
-              type="number"
+            <NumberInput
               min={0}
               max={100}
               step={1}
-              value={Number.isNaN(policy.min_score) ? "" : policy.min_score}
-              onChange={(e) =>
-                onChange({
-                  ...draft,
-                  review_policy: { ...policy, min_score: e.target.valueAsNumber },
-                })
+              value={policy.min_score}
+              onValueChange={(min_score) =>
+                onChange({ ...draft, review_policy: { ...policy, min_score } })
               }
             />
           </FormField>

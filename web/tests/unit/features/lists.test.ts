@@ -1,4 +1,10 @@
-import { makeAutomation, makeChannel, makeTarget } from "@/api/mocks/fixtures/factories";
+import {
+  makeAutomation,
+  makeChannel,
+  makeRun,
+  makeTarget,
+  stagesWith,
+} from "@/api/mocks/fixtures/factories";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import type { LogLine } from "@/api/types";
 import {
@@ -7,8 +13,9 @@ import {
   sortAutomations,
   targetsLabel,
 } from "@/features/automation-list/summary";
-import { mergeLogLines } from "@/features/run-detail/LogView";
+import { mergeLogLines, stageLines } from "@/features/run-detail/logLines";
 import { hasActiveFilters, readFilters, withFilter } from "@/features/runs-list/filters";
+import { itemAt } from "../../helpers/itemAt";
 
 describe("automation summary", () => {
   it("names pipelines and languages, falling back to ids", () => {
@@ -78,15 +85,35 @@ describe("mergeLogLines", () => {
     stage_id,
   });
 
-  it("drops stage lines repeated live and sorts by time", () => {
+  const summary = (lines: LogLine[]) => lines.map((l) => `${l.at.slice(-3, -1)} ${l.message}`);
+
+  it("drops stage lines that also arrived live", () => {
     const merged = mergeLogLines(
-      [line("2026-01-01T00:00:03Z", "done"), line("2026-01-01T00:00:01Z", "start")],
-      [line("2026-01-01T00:00:02Z", "done"), line("2026-01-01T00:00:04Z", "start", null)],
+      [line("2026-01-01T00:00:01Z", "done")],
+      [line("2026-01-01T00:00:02Z", "done"), line("2026-01-01T00:00:03Z", "done", null)],
     );
-    expect(merged.map((l) => `${l.at.slice(-3, -1)} ${l.message}`)).toEqual([
-      "01 start",
-      "02 done",
-      "04 start",
+    expect(summary(merged)).toEqual(["02 done", "03 done"]);
+  });
+
+  it("sorts lines by time", () => {
+    const merged = mergeLogLines(
+      [line("2026-01-01T00:00:03Z", "c"), line("2026-01-01T00:00:01Z", "a")],
+      [line("2026-01-01T00:00:02Z", "b")],
+    );
+    expect(summary(merged)).toEqual(["01 a", "02 b", "03 c"]);
+  });
+
+  it("returns nothing for empty input", () => {
+    expect(mergeLogLines([], [])).toEqual([]);
+  });
+
+  it("turns finished stage messages into lines, failed ones as errors", () => {
+    const stages = stagesWith(["done", "failed", "pending"]);
+    const failed = { ...itemAt(stages, 1), message: "Boom" };
+    const run = makeRun({ stages: [itemAt(stages, 0), failed, itemAt(stages, 2)] });
+    expect(stageLines(run).map((l) => [l.level, l.message])).toEqual([
+      ["info", "Write story finished"],
+      ["error", "Boom"],
     ]);
   });
 });

@@ -1,4 +1,4 @@
-import { CHANNEL_STATUSES } from "@/api/labels";
+import { CHANNEL_STATUSES, PRIVACY_LABELS, PRIVACY_OPTIONS } from "@/api/labels";
 import type { Channel, PipelineDescriptor } from "@/api/types";
 import {
   type AutomationDraft,
@@ -94,4 +94,28 @@ export function updateTarget(
       return { ...target, ...patch, ...(channelChanged ? { playlist_id: null } : {}) };
     }),
   };
+}
+
+export type KidsChoice = "default" | "yes" | "no";
+
+export const KIDS_CHOICES: { value: KidsChoice; label: string }[] = [
+  { value: "default", label: "Channel default" },
+  { value: "yes", label: "Yes" },
+  { value: "no", label: "No" },
+];
+
+export function kidsValue(value: boolean | null): KidsChoice {
+  if (value === null) {
+    return "default";
+  }
+  return value ? "yes" : "no";
+}
+
+export function kidsFromValue(value: string): boolean | null {
+  return value === "default" ? null : value === "yes";
+}
+
+export function privacyOptions(channel: Channel | undefined): SelectOption[] {
+  const fallback = channel ? ` (${PRIVACY_LABELS[channel.defaults.privacy]})` : "";
+  return [{ value: "", label: `Channel default${fallback}` }, ...PRIVACY_OPTIONS];
 }

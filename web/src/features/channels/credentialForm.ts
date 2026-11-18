@@ -1,5 +1,6 @@
 import type { FieldErrors } from "@/api/errors";
 import type { CredentialInput, CredentialPatch, CredentialSummary } from "@/api/types";
+import { isIntegerAtLeast } from "@/shared/format/numbers";
 
 export interface CredentialValues {
   name: string;
@@ -30,7 +31,7 @@ export function validateCredential(values: CredentialValues, isNew: boolean): Fi
   if (isNew && values.client_secret.trim() === "") {
     errors.client_secret = "Paste the OAuth client secret.";
   }
-  if (!Number.isInteger(values.daily_quota_units) || values.daily_quota_units < 1) {
+  if (!isIntegerAtLeast(values.daily_quota_units, 1)) {
     errors.daily_quota_units = "Use a whole number of units, at least 1.";
   }
   return errors;
@@ -52,24 +53,11 @@ export function credentialPayload(
   return secret === "" ? base : { ...base, client_secret: secret };
 }
 
-export function oauthReturnMessage(
-  params: URLSearchParams,
-  channelTitle: (id: string) => string | undefined,
-) {
-  const connected = params.get("connected");
-  const error = params.get("error");
-  if (connected !== null) {
-    const title = channelTitle(connected);
-    return {
-      tone: "success" as const,
-      message: title ? `Connected ${title}.` : "Channel connected.",
-    };
+export function credentialSecretHint(credential: CredentialSummary | undefined): string {
+  if (credential === undefined) {
+    return "Stored in the keychain. It is never shown again.";
   }
-  if (error !== null) {
-    return {
-      tone: "error" as const,
-      message: `Connecting the channel failed: ${error.replace(/_/g, " ")}.`,
-    };
-  }
-  return null;
+  return credential.has_secret
+    ? "A secret is stored. Leave blank to keep it."
+    : "No secret stored yet.";
 }

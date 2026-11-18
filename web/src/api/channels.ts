@@ -1,6 +1,6 @@
-import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api/client";
-import { keys } from "@/api/keys";
+import { invalidateWithDashboard, keys } from "@/api/keys";
 import type {
   Channel,
   ChannelDefaults,
@@ -13,13 +13,6 @@ import type {
 
 const credentialPath = (id: string) => `/credentials/${encodeURIComponent(id)}`;
 const channelPath = (id: string) => `/channels/${encodeURIComponent(id)}`;
-
-function refresh(client: QueryClient, key: readonly string[]) {
-  return Promise.all([
-    client.invalidateQueries({ queryKey: key }),
-    client.invalidateQueries({ queryKey: keys.dashboard }),
-  ]);
-}
 
 export function useCredentials() {
   return useQuery({
@@ -35,7 +28,7 @@ export function useSaveCredential(id: string | undefined) {
       id === undefined
         ? api.post<Credential>("/credentials", input)
         : api.patch<Credential>(credentialPath(id), input),
-    onSuccess: () => refresh(client, keys.credentials),
+    onSuccess: () => invalidateWithDashboard(client, keys.credentials),
   });
 }
 
@@ -43,7 +36,7 @@ export function useDeleteCredential() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete(credentialPath(id)),
-    onSuccess: () => refresh(client, keys.credentials),
+    onSuccess: () => invalidateWithDashboard(client, keys.credentials),
   });
 }
 
@@ -74,7 +67,7 @@ export function useUpdateChannelDefaults() {
   return useMutation({
     mutationFn: ({ id, defaults }: { id: string; defaults: ChannelDefaults }) =>
       api.patch<Channel>(channelPath(id), { defaults }),
-    onSuccess: () => refresh(client, keys.channels),
+    onSuccess: () => invalidateWithDashboard(client, keys.channels),
   });
 }
 
@@ -82,6 +75,6 @@ export function useDisconnectChannel() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete(channelPath(id)),
-    onSuccess: () => refresh(client, keys.channels),
+    onSuccess: () => invalidateWithDashboard(client, keys.channels),
   });
 }

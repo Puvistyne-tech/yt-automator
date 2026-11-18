@@ -48,3 +48,11 @@ export const PRIVACY_LABELS: Record<Privacy, string> = {
 
 export const RUN_STATUS_ORDER = Object.keys(RUN_STATUSES) as RunStatus[];
 export const PRIVACY_ORDER = Object.keys(PRIVACY_LABELS) as Privacy[];
+export const PRIVACY_OPTIONS: { value: Privacy; label: string }[] = PRIVACY_ORDER.map((value) => ({
+  value,
+  label: PRIVACY_LABELS[value],
+}));
+
+export function privacyFromValue(value: string): Privacy | null {
+  return PRIVACY_ORDER.find((privacy) => privacy === value) ?? null;
+}

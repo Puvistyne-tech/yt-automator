@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api/client";
 import { keys } from "@/api/keys";
 import type {
@@ -10,6 +10,13 @@ import type {
 } from "@/api/types";
 
 const secretPath = (name: string) => `/secrets/${encodeURIComponent(name)}`;
+
+function refreshSecrets(client: QueryClient) {
+  return Promise.all([
+    client.invalidateQueries({ queryKey: keys.secrets }),
+    client.invalidateQueries({ queryKey: keys.providers }),
+  ]);
+}
 
 export function useProviders() {
   return useQuery({
@@ -40,11 +47,7 @@ export function useSetSecret() {
   return useMutation({
     mutationFn: ({ name, value }: { name: string; value: string }) =>
       api.put<null>(secretPath(name), { value }),
-    onSuccess: () =>
-      Promise.all([
-        client.invalidateQueries({ queryKey: keys.secrets }),
-        client.invalidateQueries({ queryKey: keys.providers }),
-      ]),
+    onSuccess: () => refreshSecrets(client),
   });
 }
 
@@ -52,11 +55,7 @@ export function useClearSecret() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: (name: string) => api.delete(secretPath(name)),
-    onSuccess: () =>
-      Promise.all([
-        client.invalidateQueries({ queryKey: keys.secrets }),
-        client.invalidateQueries({ queryKey: keys.providers }),
-      ]),
+    onSuccess: () => refreshSecrets(client),
   });
 }
 

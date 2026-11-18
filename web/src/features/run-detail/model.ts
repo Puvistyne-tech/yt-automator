@@ -1,4 +1,4 @@
-import type { Artifact, PipelineDescriptor, Run, RunStatus, ScoreItem, Upload } from "@/api/types";
+import type { ReviewPolicy, Run, RunStatus, ScoreItem, Upload } from "@/api/types";
 
 export interface RunActions {
   canCancel: boolean;
@@ -6,18 +6,27 @@ export interface RunActions {
   canReview: boolean;
   canPublish: boolean;
   canDelete: boolean;
+  showPublish: boolean;
 }
 
-const ACTIVE: RunStatus[] = ["queued", "running", "publishing"];
+export type Decision = "approved" | "rejected";
+
+const CANCELLABLE: RunStatus[] = ["queued", "running", "awaiting_review", "approved"];
+const RETRYABLE: RunStatus[] = ["failed", "cancelled", "awaiting_review", "approved", "rejected"];
+const UNDELETABLE: RunStatus[] = ["queued", "running", "publishing"];
+
+export const GOOD_SCORE = 85;
+export const FAIR_SCORE = 60;
 
 export function availableActions(run: Run): RunActions {
-  const active = ACTIVE.includes(run.status);
+  const canPublish = run.status === "approved";
   return {
-    canCancel: run.status === "queued" || run.status === "running",
-    canRetry: !active,
+    canCancel: CANCELLABLE.includes(run.status),
+    canRetry: RETRYABLE.includes(run.status),
     canReview: run.status === "awaiting_review",
-    canPublish: run.status === "approved",
-    canDelete: !active,
+    canPublish,
+    canDelete: !UNDELETABLE.includes(run.status),
+    showPublish: canPublish || run.status === "publishing" || run.uploads.length > 0,
   };
 }
 
@@ -32,60 +41,31 @@ export function defaultRetryStage(run: Run): string {
   return (run.stages.find((s) => s.status === "failed") ?? run.stages[0])?.stage_id ?? "";
 }
 
-export interface ArtifactGroup {
-  key: string;
-  language: string | null;
-  variant: string | null;
-  title: string;
-  artifacts: Artifact[];
+export function reviewPayload(
+  decision: Decision,
+  notes: string,
+): { decision: Decision; notes?: string } {
+  const trimmed = notes.trim();
+  return trimmed === "" ? { decision } : { decision, notes: trimmed };
 }
 
-function groupTitle(
-  language: string | null,
-  variant: string | null,
-  pipeline?: PipelineDescriptor,
-): string {
-  if (language === null && variant === null) {
-    return "Shared across languages";
+export function reviewMessage(decision: Decision): string {
+  return decision === "approved" ? "Run approved. You can publish it now." : "Run rejected.";
+}
+
+export function reviewRuleText(policy: ReviewPolicy): string {
+  return policy.mode === "always" ? "always" : `auto-approve at ${policy.min_score}+`;
+}
+
+export function reviewRuleLabel(policy: ReviewPolicy): string {
+  return `Review rule: ${reviewRuleText(policy)}`;
+}
+
+export function scoreTone(score: number): "success" | "warning" | "danger" {
+  if (score >= GOOD_SCORE) {
+    return "success";
   }
-  const languageName =
-    language === null
-      ? "All languages"
-      : (pipeline?.languages.find((l) => l.code === language)?.name ?? language);
-  const v = pipeline?.variants.find((item) => item.id === variant);
-  const variantName = variant === null ? "All outputs" : v ? `${v.name} · ${v.aspect}` : variant;
-  return `${languageName} — ${variantName}`;
-}
-
-function orderOf(list: string[], value: string | null): number {
-  const index = value === null ? -1 : list.indexOf(value);
-  return value === null ? -1 : index === -1 ? list.length : index;
-}
-
-export function groupArtifacts(run: Run, pipeline?: PipelineDescriptor): ArtifactGroup[] {
-  const groups = new Map<string, ArtifactGroup>();
-  for (const artifact of run.artifacts) {
-    const key = `${artifact.language ?? "*"}|${artifact.variant ?? "*"}`;
-    const group = groups.get(key) ?? {
-      key,
-      language: artifact.language,
-      variant: artifact.variant,
-      title: groupTitle(artifact.language, artifact.variant, pipeline),
-      artifacts: [],
-    };
-    group.artifacts.push(artifact);
-    groups.set(key, group);
-  }
-  const variants = pipeline?.variants.map((v) => v.id) ?? [];
-  return [...groups.values()].sort(
-    (a, b) =>
-      orderOf(run.languages, a.language) - orderOf(run.languages, b.language) ||
-      orderOf(variants, a.variant) - orderOf(variants, b.variant),
-  );
-}
-
-export function posterFor(group: ArtifactGroup): Artifact | undefined {
-  return group.artifacts.find((a) => a.kind === "thumbnail");
+  return score >= FAIR_SCORE ? "warning" : "danger";
 }
 
 export function weightedScore(items: ScoreItem[]): number | null {
@@ -96,12 +76,33 @@ export function weightedScore(items: ScoreItem[]): number | null {
   return items.reduce((sum, item) => sum + item.score * item.weight, 0) / total;
 }
 
-export function uploadSummary(uploads: Upload[]): Record<"done" | "failed" | "pending", number> {
+export type UploadCounts = Record<"done" | "failed" | "pending" | "skipped", number>;
+
+export function uploadSummary(uploads: Upload[]): UploadCounts {
+  const count = (...statuses: Upload["status"][]) =>
+    uploads.filter((u) => statuses.includes(u.status)).length;
   return {
-    done: uploads.filter((u) => u.status === "done").length,
-    failed: uploads.filter((u) => u.status === "failed").length,
-    pending: uploads.filter((u) => u.status === "pending" || u.status === "uploading").length,
+    done: count("done"),
+    failed: count("failed"),
+    pending: count("pending", "uploading"),
+    skipped: count("skipped"),
   };
+}
+
+export function publishDescription(run: Run): string {
+  if (run.uploads.length === 0) {
+    return "Approved and ready. Publishing creates one upload per target and output.";
+  }
+  const summary = uploadSummary(run.uploads);
+  const base = `${summary.done} uploaded · ${summary.failed} failed · ${summary.pending} pending`;
+  return summary.skipped > 0 ? `${base} · ${summary.skipped} skipped` : base;
+}
+
+export function uploadNote(upload: Upload): { text: string; tone: "error" | "muted" } | null {
+  if (upload.error === null || upload.error === "") {
+    return null;
+  }
+  return { text: upload.error, tone: upload.status === "failed" ? "error" : "muted" };
 }
 
 export function stageProgress(run: Run): { done: number; total: number } {

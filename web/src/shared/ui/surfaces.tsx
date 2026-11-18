@@ -83,16 +83,6 @@ export function PageHeader({
   );
 }
 
-export function Table({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="table-scroll">
-      <table className="table" aria-label={label}>
-        {children}
-      </table>
-    </div>
-  );
-}
-
 export function StatCard({
   label,
   value,
@@ -107,6 +97,22 @@ export function StatCard({
       <span className="stat-label">{label}</span>
       <span className="stat-value">{value}</span>
       {hint !== undefined && <span className="stat-hint">{hint}</span>}
+    </div>
+  );
+}
+
+export function Callout({
+  tone,
+  role = "status",
+  children,
+}: {
+  tone: "warning" | "danger" | "info";
+  role?: "alert" | "status";
+  children: ReactNode;
+}) {
+  return (
+    <div className={`callout callout-${tone}`} role={role}>
+      {children}
     </div>
   );
 }

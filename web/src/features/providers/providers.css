@@ -1,20 +1,7 @@
-.chain {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
 .chain-row {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
 }
 
 .chain-row-off {
@@ -68,8 +55,4 @@
 
 .chain-options > .btn {
   align-self: flex-start;
-}
-
-.providers-footer {
-  position: sticky;
 }

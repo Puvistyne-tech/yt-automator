@@ -1,15 +1,21 @@
-import type { Artifact, PipelineDescriptor, Run } from "@/api/types";
+import type { PipelineDescriptor, Run } from "@/api/types";
 import { ArtifactPreview } from "@/features/run-detail/ArtifactPreview";
-import { type ArtifactGroup, groupArtifacts, posterFor } from "@/features/run-detail/model";
+import {
+  type ArtifactGroup,
+  groupArtifacts,
+  isTallArtifact,
+  splitGroup,
+} from "@/features/run-detail/artifacts";
 import { EmptyState } from "@/shared/ui";
 
-const MEDIA_KINDS = new Set<Artifact["kind"]>(["video", "thumbnail", "image", "audio"]);
+interface GroupProps {
+  run: Run;
+  group: ArtifactGroup;
+  pipeline: PipelineDescriptor | undefined;
+}
 
-function Group({ run, group }: { run: Run; group: ArtifactGroup }) {
-  const poster = posterFor(group);
-  const captions = group.artifacts.find((a) => a.kind === "subtitle");
-  const media = group.artifacts.filter((a) => MEDIA_KINDS.has(a.kind));
-  const documents = group.artifacts.filter((a) => !MEDIA_KINDS.has(a.kind));
+function Group({ run, group, pipeline }: GroupProps) {
+  const { media, documents, captions, poster } = splitGroup(group);
   return (
     <section className="artifact-group" aria-label={group.title}>
       <h3 className="artifact-group-title">{group.title}</h3>
@@ -20,6 +26,7 @@ function Group({ run, group }: { run: Run; group: ArtifactGroup }) {
               key={artifact.id}
               runId={run.id}
               artifact={artifact}
+              tall={isTallArtifact(artifact, pipeline)}
               poster={artifact.kind === "video" ? poster : undefined}
               captions={captions}
             />
@@ -55,9 +62,9 @@ export function ArtifactsView({
     );
   }
   return (
-    <div className="stack artifact-groups">
+    <div className="stack artifact-groups divided-list">
       {groups.map((group) => (
-        <Group key={group.key} run={run} group={group} />
+        <Group key={group.key} run={run} group={group} pipeline={pipeline} />
       ))}
     </div>
   );

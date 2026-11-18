@@ -80,6 +80,9 @@ describe("Automation editor: create", () => {
     await findToast("The automation is not valid.");
     expect(await targetRow(1).findByText("Channel was disconnected.")).toBeInTheDocument();
     expect(targetRow(1).getByLabelText(/^Channel/)).toHaveAttribute("aria-invalid", "true");
+
+    await user.type(general.getByLabelText(/^Name/), "!");
+    expect(targetRow(1).queryByText("Channel was disconnected.")).not.toBeInTheDocument();
   });
 
   it("asks before leaving with unsaved changes", async () => {
@@ -124,6 +127,48 @@ describe("Automation editor: edit", () => {
     expect(saved?.schedule.every_hours).toBe(12);
     expect(saved?.targets[0]?.id).toBe("target-ta-short");
     expect(screen.getByText("All changes saved")).toBeInTheDocument();
+  });
+
+  it("keeps unsaved changes when saving an existing automation fails", async () => {
+    failWith("put", "/automations/:id", 500, { message: "Disk full." });
+    const { user } = renderApp("/automations/auto-shorts");
+    const general = await findSection("General");
+
+    await user.type(general.getByLabelText(/^Name/), " v2");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await findToast("Disk full.");
+    expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
+    expect(byName("Tamil shorts")).toBeDefined();
+  });
+
+  it("resets the saved state after each successful save", async () => {
+    const { user } = renderApp("/automations/auto-shorts");
+    const general = await findSection("General");
+    const name = general.getByLabelText(/^Name/);
+
+    await user.type(name, " v2");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    await findToast("Saved “Tamil shorts v2”.");
+    expect(screen.getByText("All changes saved")).toBeInTheDocument();
+
+    await user.type(name, "3");
+    expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    await findToast("Saved “Tamil shorts v23”.");
+    expect(screen.getByText("All changes saved")).toBeInTheDocument();
+  });
+
+  it("checks the minimum score of the auto-approve review rule", async () => {
+    const { user } = renderApp("/automations/auto-shorts");
+    const review = await findSection("Review");
+    const score = review.getByLabelText(/^Minimum score/);
+
+    await user.clear(score);
+    await user.type(score, "101");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(review.getByText("Use a score between 0 and 100.")).toBeInTheDocument();
   });
 
   it("flags targets whose language is removed and can remove them", async () => {

@@ -1,7 +1,8 @@
 import { HttpResponse, http } from "msw";
 import { artifactResponse } from "@/api/mocks/artifactFiles";
 import { apiError, db, noContent, notFound } from "@/api/mocks/db";
-import type { Run, Upload } from "@/api/types";
+import { makeUpload } from "@/api/mocks/fixtures/factories";
+import type { Run, Target, Upload } from "@/api/types";
 
 const find = (id: unknown) => db.state.runs.find((run) => run.id === id);
 
@@ -19,20 +20,32 @@ function withRun(id: unknown, change: (run: Run) => Run | Response) {
   return result instanceof Response ? result : store(result);
 }
 
+function skipReason(run: Run, target: Target): string | null {
+  if (!run.languages.includes(target.language)) {
+    return `Language ${target.language} is not in this run.`;
+  }
+  return db.state.channels.some((c) => c.id === target.channel_id)
+    ? null
+    : "The channel no longer exists.";
+}
+
+function uploadFor(run: Run, target: Target, variant: string): Upload {
+  const reason = skipReason(run, target);
+  return makeUpload({
+    target_id: target.id,
+    channel_id: target.channel_id,
+    language: target.language,
+    variant,
+    ...(reason === null
+      ? { youtube_video_id: `vid${Math.random().toString(36).slice(2, 10)}` }
+      : { status: "skipped", youtube_video_id: null, url: null, error: reason, quota_units: 0 }),
+  });
+}
+
 function uploadsFor(run: Run): Upload[] {
   const automation = db.state.automations.find((a) => a.id === run.automation_id);
   return (automation?.targets ?? []).flatMap((target) =>
-    target.variants.map((variant) => ({
-      target_id: target.id,
-      channel_id: target.channel_id,
-      language: target.language,
-      variant,
-      status: "done" as const,
-      youtube_video_id: `vid${Math.random().toString(36).slice(2, 10)}`,
-      url: "https://www.youtube.com/watch?v=mock",
-      error: null,
-      quota_units: 2050,
-    })),
+    target.variants.map((variant) => uploadFor(run, target, variant)),
   );
 }
 
@@ -44,7 +57,17 @@ function retry(run: Run, fromStage: string | undefined): Run {
   const stages = run.stages.map((stage, i) =>
     i < index ? stage : { ...stage, status: "pending" as const, message: null, finished_at: null },
   );
-  return { ...run, status: "queued", stages, error: null, review: null, finished_at: null };
+  return {
+    ...run,
+    status: "queued",
+    stages,
+    error: null,
+    score: null,
+    score_details: [],
+    review: null,
+    uploads: [],
+    finished_at: null,
+  };
 }
 
 export const runHandlers = [

@@ -22,70 +22,87 @@ function TextPreview({ runId, artifact }: { runId: string; artifact: Artifact })
   if (text.isError) {
     return <p className="field-error">Could not load {artifact.filename}.</p>;
   }
-  return <pre className="text-preview">{prettify(artifact, text.data)}</pre>;
+  return (
+    <pre className="text-preview panel-inset panel-inset-muted">
+      {prettify(artifact, text.data)}
+    </pre>
+  );
 }
 
 interface PreviewProps {
   runId: string;
   artifact: Artifact;
+  tall?: boolean;
   poster?: Artifact | undefined;
   captions?: Artifact | undefined;
 }
 
-function Media({ runId, artifact, poster, captions }: PreviewProps) {
-  const src = artifactUrl(runId, artifact.id);
-  const tall =
-    artifact.variant === "short" || Number(artifact.meta.height) > Number(artifact.meta.width);
-  switch (artifact.kind) {
+const mediaClass = (tall: boolean) => (tall ? "media media-tall" : "media");
+
+function VideoPreview({ runId, artifact, tall = false, poster, captions }: PreviewProps) {
+  return (
+    <video
+      className={mediaClass(tall)}
+      controls
+      preload="metadata"
+      src={artifactUrl(runId, artifact.id)}
+      poster={poster ? artifactUrl(runId, poster.id) : undefined}
+      aria-label={artifact.filename}
+    >
+      <track
+        kind="captions"
+        src={captions ? artifactUrl(runId, captions.id) : undefined}
+        srcLang={captions?.language ?? undefined}
+        label={captions ? (captions.language ?? "subtitles").toUpperCase() : undefined}
+      />
+    </video>
+  );
+}
+
+function AudioPreview({ runId, artifact }: PreviewProps) {
+  return (
+    <audio
+      className="media-audio"
+      controls
+      preload="none"
+      src={artifactUrl(runId, artifact.id)}
+      aria-label={artifact.filename}
+    >
+      <track kind="captions" />
+    </audio>
+  );
+}
+
+function ImagePreview({ runId, artifact, tall = false }: PreviewProps) {
+  return (
+    <img
+      className={mediaClass(tall)}
+      src={artifactUrl(runId, artifact.id)}
+      alt={artifact.filename}
+      loading="lazy"
+    />
+  );
+}
+
+function Media(props: PreviewProps) {
+  switch (props.artifact.kind) {
     case "video":
-      return (
-        <video
-          className={tall ? "media media-tall" : "media"}
-          controls
-          preload="metadata"
-          src={src}
-          poster={poster ? artifactUrl(runId, poster.id) : undefined}
-          aria-label={artifact.filename}
-        >
-          <track
-            kind="captions"
-            src={captions ? artifactUrl(runId, captions.id) : undefined}
-            srcLang={captions?.language ?? undefined}
-            label={captions ? (captions.language ?? "subtitles").toUpperCase() : undefined}
-          />
-        </video>
-      );
+      return <VideoPreview {...props} />;
     case "audio":
-      return (
-        <audio
-          className="media-audio"
-          controls
-          preload="none"
-          src={src}
-          aria-label={artifact.filename}
-        >
-          <track kind="captions" />
-        </audio>
-      );
+      return <AudioPreview {...props} />;
     case "image":
     case "thumbnail":
-      return (
-        <img
-          className={tall ? "media media-tall" : "media"}
-          src={src}
-          alt={artifact.filename}
-          loading="lazy"
-        />
-      );
+      return <ImagePreview {...props} />;
     default:
-      return <TextPreview runId={runId} artifact={artifact} />;
+      return <TextPreview runId={props.runId} artifact={props.artifact} />;
   }
 }
 
-export function ArtifactPreview({ runId, artifact, poster, captions }: PreviewProps) {
+export function ArtifactPreview(props: PreviewProps) {
+  const { runId, artifact } = props;
   return (
     <figure className={`artifact artifact-${artifact.kind}`}>
-      <Media runId={runId} artifact={artifact} poster={poster} captions={captions} />
+      <Media {...props} />
       <figcaption className="artifact-caption">
         <Badge>{artifact.kind}</Badge>
         <span className="artifact-name">{artifact.filename}</span>

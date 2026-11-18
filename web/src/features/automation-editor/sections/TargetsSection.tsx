@@ -1,6 +1,10 @@
 import type { Channel, PipelineDescriptor } from "@/api/types";
-import { newTarget } from "@/features/automation-editor/model/draft";
-import { targetOptions, updateTarget } from "@/features/automation-editor/model/targets";
+import { type AutomationDraft, newTarget } from "@/features/automation-editor/model/draft";
+import {
+  type TargetOptions,
+  targetOptions,
+  updateTarget,
+} from "@/features/automation-editor/model/targets";
 import {
   EditorSection,
   type SectionProps,
@@ -13,35 +17,63 @@ interface TargetsSectionProps extends SectionProps {
   channels: Channel[];
 }
 
-export function TargetsSection({
+function AddTargetButton({ reason, onAdd }: { reason: string | null; onAdd: () => void }) {
+  return (
+    <Button
+      size="sm"
+      icon="plus"
+      onClick={onAdd}
+      disabled={reason !== null}
+      title={reason ?? undefined}
+    >
+      Add target
+    </Button>
+  );
+}
+
+function TargetList({
   draft,
   onChange,
   errors,
   pipeline,
   channels,
-}: TargetsSectionProps) {
-  const options = targetOptions(pipeline, draft, channels);
-  const add = () =>
-    onChange({ ...draft, targets: [...draft.targets, newTarget(draft, pipeline, channels)] });
+  options,
+}: TargetsSectionProps & { options: TargetOptions }) {
   const remove = (key: string) =>
     onChange({ ...draft, targets: draft.targets.filter((t) => t.key !== key) });
-  const addButton = (
-    <Button
-      size="sm"
-      icon="plus"
-      onClick={add}
-      disabled={options.addBlockedReason !== null}
-      title={options.addBlockedReason ?? undefined}
-    >
-      Add target
-    </Button>
+  return (
+    <ol className="list-stack">
+      {draft.targets.map((target, index) => (
+        <TargetRow
+          key={target.key}
+          index={index}
+          target={target}
+          options={options}
+          pipeline={pipeline}
+          channels={channels}
+          errors={errors}
+          onChange={(patch) => onChange(updateTarget(draft, target.key, patch))}
+          onRemove={() => remove(target.key)}
+        />
+      ))}
+    </ol>
   );
+}
+
+function withNewTarget(draft: AutomationDraft, pipeline: PipelineDescriptor, channels: Channel[]) {
+  return { ...draft, targets: [...draft.targets, newTarget(draft, pipeline, channels)] };
+}
+
+export function TargetsSection(props: TargetsSectionProps) {
+  const { draft, onChange, pipeline, channels } = props;
+  const options = targetOptions(pipeline, draft, channels);
+  const add = () => onChange(withNewTarget(draft, pipeline, channels));
   return (
     <EditorSection
       id="targets"
       title="Targets"
       description="Where each language and output is published once a run is approved."
-      actions={addButton}
+      actions={<AddTargetButton reason={options.addBlockedReason} onAdd={add} />}
     >
       {draft.targets.length === 0 ? (
         <EmptyState
@@ -53,21 +85,7 @@ export function TargetsSection({
           }
         />
       ) : (
-        <ol className="target-list">
-          {draft.targets.map((target, index) => (
-            <TargetRow
-              key={target.key}
-              index={index}
-              target={target}
-              options={options}
-              pipeline={pipeline}
-              channels={channels}
-              errors={errors}
-              onChange={(patch) => onChange(updateTarget(draft, target.key, patch))}
-              onRemove={() => remove(target.key)}
-            />
-          ))}
-        </ol>
+        <TargetList {...props} options={options} />
       )}
     </EditorSection>
   );

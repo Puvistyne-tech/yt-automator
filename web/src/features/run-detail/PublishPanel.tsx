@@ -1,12 +1,34 @@
 import { useState } from "react";
 import { useChannels } from "@/api/channels";
-import { errorMessage } from "@/api/errors";
 import { UPLOAD_STATUSES } from "@/api/labels";
 import { usePublishRun } from "@/api/runs";
 import type { Run, Upload } from "@/api/types";
-import { uploadSummary } from "@/features/run-detail/model";
-import { formatNumber, humanizeId } from "@/shared/format/numbers";
-import { Button, Card, ConfirmDialog, Icon, StatusBadge, Table, useToast } from "@/shared/ui";
+import { useMutationNotifier } from "@/api/useMutationNotifier";
+import { publishDescription, uploadNote } from "@/features/run-detail/model";
+import { formatNumber } from "@/shared/format/numbers";
+import { humanizeId } from "@/shared/format/text";
+import { Button, Card, ConfirmDialog, Icon, StatusBadge, Table } from "@/shared/ui";
+
+const UPLOAD_COLUMNS = [
+  "Channel",
+  "Language",
+  "Output",
+  "Status",
+  "Quota",
+  { label: "Link", hidden: true },
+];
+
+function UploadStatus({ upload }: { upload: Upload }) {
+  const note = uploadNote(upload);
+  return (
+    <div className="cell-stack">
+      <StatusBadge {...UPLOAD_STATUSES[upload.status]} />
+      {note && (
+        <span className={note.tone === "error" ? "field-error" : "subtle"}>{note.text}</span>
+      )}
+    </div>
+  );
+}
 
 function UploadRow({ upload, channelTitle }: { upload: Upload; channelTitle: string }) {
   return (
@@ -14,11 +36,8 @@ function UploadRow({ upload, channelTitle }: { upload: Upload; channelTitle: str
       <td>{channelTitle}</td>
       <td className="mono">{upload.language.toUpperCase()}</td>
       <td>{humanizeId(upload.variant)}</td>
-      <td>
-        <div className="cell-stack">
-          <StatusBadge {...UPLOAD_STATUSES[upload.status]} />
-          {upload.error && <span className="field-error">{upload.error}</span>}
-        </div>
+      <td className="cell-wrap">
+        <UploadStatus upload={upload} />
       </td>
       <td>{formatNumber(upload.quota_units)}</td>
       <td className="cell-actions">
@@ -36,28 +55,14 @@ function UploadsTable({ uploads }: { uploads: Upload[] }) {
   const channels = useChannels();
   const title = (id: string) => channels.data?.find((c) => c.id === id)?.title ?? id;
   return (
-    <Table label="Uploads">
-      <thead>
-        <tr>
-          <th scope="col">Channel</th>
-          <th scope="col">Language</th>
-          <th scope="col">Output</th>
-          <th scope="col">Status</th>
-          <th scope="col">Quota</th>
-          <th scope="col">
-            <span className="visually-hidden">Link</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {uploads.map((upload) => (
-          <UploadRow
-            key={`${upload.target_id}-${upload.variant}`}
-            upload={upload}
-            channelTitle={title(upload.channel_id)}
-          />
-        ))}
-      </tbody>
+    <Table label="Uploads" columns={UPLOAD_COLUMNS}>
+      {uploads.map((upload) => (
+        <UploadRow
+          key={`${upload.target_id}-${upload.variant}`}
+          upload={upload}
+          channelTitle={title(upload.channel_id)}
+        />
+      ))}
     </Table>
   );
 }
@@ -65,25 +70,18 @@ function UploadsTable({ uploads }: { uploads: Upload[] }) {
 export function PublishPanel({ run, canPublish }: { run: Run; canPublish: boolean }) {
   const [confirming, setConfirming] = useState(false);
   const publish = usePublishRun();
-  const toast = useToast();
-  const summary = uploadSummary(run.uploads);
+  const notifier = useMutationNotifier();
   const start = () =>
-    publish
-      .mutateAsync({ id: run.id, vars: undefined })
-      .then(
-        () => toast.success("Publishing started."),
-        (error: unknown) => toast.error(errorMessage(error)),
-      )
-      .finally(() => setConfirming(false));
-  const description =
-    run.uploads.length > 0
-      ? `${summary.done} uploaded · ${summary.failed} failed · ${summary.pending} pending`
-      : "Approved and ready. Publishing creates one upload per target and output.";
+    publish.mutate(
+      { id: run.id, vars: undefined },
+      notifier.handlers({ success: "Publishing started.", onDone: () => setConfirming(false) }),
+    );
+  const hasUploads = run.uploads.length > 0;
   return (
     <Card
       title="Publishing"
-      description={description}
-      flush={run.uploads.length > 0}
+      description={publishDescription(run)}
+      flush={hasUploads}
       actions={
         canPublish ? (
           <Button variant="primary" icon="upload" onClick={() => setConfirming(true)}>
@@ -92,7 +90,7 @@ export function PublishPanel({ run, canPublish }: { run: Run; canPublish: boolea
         ) : undefined
       }
     >
-      {run.uploads.length > 0 ? <UploadsTable uploads={run.uploads} /> : null}
+      {hasUploads ? <UploadsTable uploads={run.uploads} /> : null}
       <ConfirmDialog
         open={confirming}
         tone="primary"

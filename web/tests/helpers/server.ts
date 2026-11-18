@@ -1,4 +1,4 @@
-import { HttpResponse, http } from "msw";
+import { HttpResponse, http, type JsonBodyType } from "msw";
 import { setupServer } from "msw/node";
 import { handlers } from "@/api/mocks/handlers";
 
@@ -26,4 +26,15 @@ export function failWith(
       ),
     ),
   );
+}
+
+export function captureBody(method: Method, path: string, reply: JsonBodyType): () => unknown {
+  let body: unknown;
+  server.use(
+    http[method](`/api${path}`, async ({ request }) => {
+      body = await request.json();
+      return HttpResponse.json(reply);
+    }),
+  );
+  return () => body;
 }

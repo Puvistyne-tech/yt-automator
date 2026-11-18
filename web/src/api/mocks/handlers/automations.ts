@@ -109,6 +109,7 @@ export const automationHandlers = [
       trigger: "manual",
       languages: automation.languages,
       settings_snapshot: structuredClone(automation.settings),
+      review_policy: { ...automation.review_policy },
       stages: stagesWith([]),
       artifacts: [],
       score: null,
