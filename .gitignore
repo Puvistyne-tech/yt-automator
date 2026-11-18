@@ -16,3 +16,6 @@ data/
 .claude/.ship-diff.patch
 .claude/.ship-files.txt
 .claude/settings.local.json
+.claude/worktrees/
+.claude/.audit/
+.claude/.ship-*
