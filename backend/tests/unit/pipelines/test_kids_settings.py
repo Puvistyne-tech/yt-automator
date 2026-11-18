@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from automator.domain.pipeline_descriptors import Aspect
 from automator.pipelines.kids_story.plugin import KidsStoryPipeline
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
+from automator.pipelines.kids_story.settings.subtitles import SubtitleSettings
 
 SCHEMA = KidsStorySettings.model_json_schema()
 
@@ -135,3 +136,10 @@ def test_duplicate_character_ids_are_rejected() -> None:
     member = KidsStorySettings().cast[0].model_dump()
     with pytest.raises(ValidationError):
         KidsStorySettings.model_validate({"cast": [member, member]})
+
+
+def test_settings_saved_with_the_old_pixel_margins_still_load() -> None:
+    stored = {"subtitles": {"margin_bottom": 90, "short_margin_bottom": 320, "max_lines": 3}}
+    loaded = KidsStorySettings.model_validate(stored).subtitles
+    assert loaded.max_lines == 3
+    assert loaded.bottom_margin_share == SubtitleSettings().bottom_margin_share

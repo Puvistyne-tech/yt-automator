@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageFont
+from PIL import Image
 
 from automator.domain.capabilities import (
     Capability,
@@ -183,11 +183,3 @@ def scripted_writer(answers: list[str]) -> FakeWriter:
 
 def as_json(value: object) -> str:
     return json.dumps(value, ensure_ascii=False)
-
-
-def embedded_font(folder: Path) -> Path:
-    font = ImageFont.load_default(12)
-    assert isinstance(font, ImageFont.FreeTypeFont)
-    path = folder / "embedded.ttf"
-    path.write_bytes(font.font_bytes)
-    return path

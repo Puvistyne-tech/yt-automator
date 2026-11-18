@@ -3,13 +3,13 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from automator.domain.capabilities import SubtitleStyle
+from automator.domain.font_names import safe_font_family
 from automator.domain.srt import SrtEntry
 from automator.shared.errors import UpstreamFailure
 
-FONT_NAME_EXTRAS = frozenset(" -_")
 NO_WRAPPING = 2
 SMART_WRAPPING = 0
-TEXT_REPLACEMENTS = (("\\", "/"), ("{", "("), ("}", ")"))
+TEXT_REPLACEMENTS = (("\\", "/"), ("{", "("), ("}", ")"), ("\r", " "), ("\n", " "))
 STYLE_FORMAT = (
     "Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, "
     "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, "
@@ -27,7 +27,7 @@ def ass_color(hex_color: str) -> str:
 
 
 def font_name(family: str) -> str:
-    if family and all(char.isalnum() or char in FONT_NAME_EXTRAS for char in family):
+    if safe_font_family(family):
         return family
     raise UpstreamFailure(
         f"subtitle font {family!r} may only use letters, digits, spaces, '-' and '_'"

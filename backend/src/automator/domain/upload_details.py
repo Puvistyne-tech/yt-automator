@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+import re
+from collections.abc import Iterable, Sequence
 
 from automator.domain.artifact_selection import VideoMetadata
 from automator.domain.channels import ChannelDefaults
 from automator.domain.model_base import DomainModel
 
 DESCRIPTION_MAX_BYTES = 5000
+HASHTAGS_MAX = 60
+HASHTAG = re.compile(r"#\S+")
 HASHTAG_GAP = "\n\n"
 
 
@@ -16,25 +19,42 @@ class UploadDetails(DomainModel):
     description: str
 
 
-def utf8_size(text: str) -> int:
+def utf8_length(text: str) -> int:
     return len(text.encode("utf-8"))
+
+
+def hashtags_in(text: str) -> set[str]:
+    return {token.casefold() for token in text.split() if HASHTAG.fullmatch(token)}
+
+
+def valid_hashtags(hashtags: Iterable[str]) -> list[str]:
+    kept: dict[str, str] = {}
+    for raw in hashtags:
+        tag = raw.strip()
+        if HASHTAG.fullmatch(tag):
+            kept.setdefault(tag.casefold(), tag)
+    return list(kept.values())
+
+
+def appended(description: str, added: Sequence[str]) -> str:
+    line = " ".join(added)
+    if not line:
+        return description
+    return f"{description}{HASHTAG_GAP}{line}" if description else line
 
 
 def with_hashtags(
     description: str, hashtags: Sequence[str], limit: int = DESCRIPTION_MAX_BYTES
 ) -> str:
-    present = description.casefold()
-    result = description
+    present = hashtags_in(description)
+    room = HASHTAGS_MAX - len(present)
     added: list[str] = []
-    for tag in hashtags:
-        if tag.casefold() in present or tag in added:
+    for tag in valid_hashtags(hashtags):
+        if tag.casefold() in present or len(added) >= room:
             continue
-        line = " ".join([*added, tag])
-        candidate = f"{description}{HASHTAG_GAP}{line}" if description else line
-        if utf8_size(candidate) <= limit:
+        if utf8_length(appended(description, [*added, tag])) <= limit:
             added.append(tag)
-            result = candidate
-    return result
+    return appended(description, added)
 
 
 def upload_details(

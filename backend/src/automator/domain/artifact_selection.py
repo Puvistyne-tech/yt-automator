@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 
 from automator.domain.model_base import DomainModel
@@ -9,6 +10,7 @@ from automator.domain.run_parts import Artifact
 EXACT = 2
 GENERIC = 1
 MISMATCH = 0
+LANGUAGE_CODE = re.compile(r"[a-z]{2,3}(-[A-Za-z0-9]{2,8})*")
 
 
 class VideoMetadata(DomainModel):
@@ -78,6 +80,11 @@ def optional_text(value: object) -> str | None:
     return value if isinstance(value, str) and value else None
 
 
+def language_code(value: object) -> str | None:
+    text = optional_text(value)
+    return text if text is not None and LANGUAGE_CODE.fullmatch(text) else None
+
+
 def video_metadata(
     artifacts: Sequence[Artifact], language: str, variant: str, fallback_title: str
 ) -> VideoMetadata:
@@ -89,7 +96,7 @@ def video_metadata(
         description=optional_text(meta.get("description")) or "",
         tags=text_list(meta.get("tags")),
         category_id=optional_text(meta.get("category_id")),
-        default_language=optional_text(meta.get("default_language")),
+        default_language=language_code(meta.get("default_language")),
         hashtags=text_list(meta.get("hashtags")),
         playlist_title=optional_text(meta.get("playlist_title")),
     )

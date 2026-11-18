@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from automator.pipelines.kids_story.art import lettering
-from tests.fixtures.kids_fakes import embedded_font
+from tests.fixtures.fonts import embedded_font
 
 
 @pytest.fixture

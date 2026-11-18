@@ -3,10 +3,10 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Sequence
 
+from automator.domain.upload_details import utf8_length
 from automator.pipelines.kids_story.text.graphemes import grapheme_clusters
 
 TITLE_MAX = 100
-DESCRIPTION_MAX_BYTES = 5000
 TAGS_MAX = 500
 ELLIPSIS = "…"
 FORBIDDEN = re.compile(r"[<>]")
@@ -17,10 +17,6 @@ Measure = Callable[[str], int]
 
 def cleaned(text: str) -> str:
     return FORBIDDEN.sub("", text).strip()
-
-
-def utf8_length(text: str) -> int:
-    return len(text.encode("utf-8"))
 
 
 def longest_head(clusters: Sequence[str], limit: int, measure: Measure) -> str:

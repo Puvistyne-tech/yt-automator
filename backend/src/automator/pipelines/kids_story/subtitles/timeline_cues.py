@@ -3,8 +3,9 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from automator.pipelines.kids_story.settings.subtitles import SubtitleSettings
-from automator.pipelines.kids_story.subtitles.cues import Cue, CueRules, segment_cues, separated
+from automator.pipelines.kids_story.subtitles.cues import Cue, CueRules, separated
 from automator.pipelines.kids_story.subtitles.layout import SubtitleLayout
+from automator.pipelines.kids_story.subtitles.timing import segment_cues
 from automator.pipelines.kids_story.timeline.plan import Segment
 from automator.pipelines.kids_story.timeline.voices import VoiceLine
 

@@ -81,13 +81,14 @@ class MetadataSettings(SettingsSection):
         ["#KidsStories", "#KuttyStories", "#MoralStories"],
         ["#தமிழ்கதைகள்", "#KuttyStories", "#KidsStories"],
         "Hashtags",
-        "Added where {hashtags} appears in the description.",
+        "Placed where {hashtags} appears in the description; any still missing are added at "
+        "the end when the video is uploaded, up to YouTube's 60 hashtags.",
     )
     playlist_title: LocalizedText = localized_text(
         "Kutty Stories",
         "குட்டி கதைகள்",
         "Playlist title",
-        "The playlist each episode belongs to, per language.",
+        "Shown with the episode for reference; uploads go to the target's own playlist.",
     )
     category: YouTubeCategory = Field(
         default=YouTubeCategory.FILM_AND_ANIMATION,

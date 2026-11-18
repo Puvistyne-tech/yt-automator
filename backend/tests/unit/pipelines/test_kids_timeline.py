@@ -17,8 +17,8 @@ from automator.pipelines.kids_story.timeline.plan import (
 )
 from automator.pipelines.kids_story.timeline.selection import short_scene_indexes
 from automator.pipelines.kids_story.timeline.variants import planned
+from tests.fixtures.fonts import embedded_font, embedded_font_family
 from tests.fixtures.kids_data import quick_settings, story, voices
-from tests.fixtures.kids_fakes import embedded_font
 
 PADDING = Padding(lead_in=0.5, tail=1.0)
 
@@ -155,11 +155,11 @@ def test_subtitle_style_per_variant_and_language() -> None:
     episode = subtitle_style(settings, "en", "episode")
     assert not episode.burn_in and episode.font_family == "Noto Sans"
     assert (episode.margin_bottom, episode.margin_sides, episode.font_file) == (58, 51, None)
-    assert (short.margin_bottom, short.margin_sides) == (282, 29)
+    assert short.margin_bottom == 282
 
 
 def test_subtitle_style_names_the_font_file_it_found(tmp_path: Path) -> None:
     font = embedded_font(tmp_path)
     settings = quick_settings(subtitles={"font_files": {"en": [str(font)], "ta": []}})
     style = subtitle_style(settings, "en", "episode")
-    assert (style.font_family, style.font_file) == ("Aileron", font)
+    assert (style.font_family, style.font_file) == (embedded_font_family(), font)

@@ -4,7 +4,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from automator.pipelines.kids_story.art.lettering import Font, load_font
+from automator.domain.font_names import safe_font_family
+from automator.pipelines.kids_story.art import lettering
+from automator.pipelines.kids_story.art.lettering import Font
 from automator.pipelines.kids_story.settings.subtitles import SubtitleSettings
 from automator.pipelines.kids_story.text.graphemes import grapheme_length
 
@@ -14,10 +16,6 @@ class SubtitleFont:
     family: str
     file: Path | None
     measure: Callable[[str], float]
-
-
-def first_font_file(files: list[str]) -> Path | None:
-    return next((Path(name) for name in files if Path(name).is_file()), None)
 
 
 def estimated_width(size: int, letter_width: float) -> Callable[[str], float]:
@@ -34,11 +32,21 @@ def measured_width(font: Font) -> Callable[[str], float]:
     return measure
 
 
+def measurable_font(
+    settings: SubtitleSettings, language: str, size: int
+) -> tuple[Path, Font] | None:
+    if not lettering.can_letter(language):
+        return None
+    return lettering.load_font(settings.font_files.for_language(language), size)
+
+
 def subtitle_font(settings: SubtitleSettings, language: str, size: int) -> SubtitleFont:
-    file = first_font_file(settings.font_files.for_language(language))
-    font = load_font([str(file)], size) if file is not None else None
-    if file is None or font is None:
+    fallback = settings.font_family.for_language(language)
+    loaded = measurable_font(settings, language, size)
+    if loaded is None:
         letter_width = settings.letter_width_estimate.for_language(language)
-        family = settings.font_family.for_language(language)
-        return SubtitleFont(family=family, file=None, measure=estimated_width(size, letter_width))
-    return SubtitleFont(family=str(font.getname()[0]), file=file, measure=measured_width(font))
+        return SubtitleFont(family=fallback, file=None, measure=estimated_width(size, letter_width))
+    file, font = loaded
+    named = str(font.getname()[0])
+    family = named if safe_font_family(named) else fallback
+    return SubtitleFont(family=family, file=file, measure=measured_width(font))

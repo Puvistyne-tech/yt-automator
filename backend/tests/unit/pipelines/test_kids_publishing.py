@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from automator.domain.upload_details import DESCRIPTION_MAX_BYTES, utf8_length
 from automator.pipelines.kids_story.publishing.limits import (
-    DESCRIPTION_MAX_BYTES,
     TAGS_MAX,
     TITLE_MAX,
     cleaned,
@@ -11,7 +11,6 @@ from automator.pipelines.kids_story.publishing.limits import (
     tags_within,
     truncated,
     truncated_bytes,
-    utf8_length,
 )
 from automator.pipelines.kids_story.publishing.metadata import upload_metadata
 from automator.pipelines.kids_story.publishing.templates import template_values

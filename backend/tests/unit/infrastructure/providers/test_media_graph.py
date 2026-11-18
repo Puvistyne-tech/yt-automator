@@ -58,7 +58,7 @@ def test_video_graph_places_clips_on_a_timeline_with_subtitles_and_fades() -> No
         "trim=duration=1.500,setpts=PTS-STARTPTS+2.000/TB[v1]"
     )
     assert graph[4] == "[o0][v1]overlay=eof_action=pass:repeatlast=0[o1]"
-    assert graph[5].startswith("[o1]ass=filename=/w/subs.srt:shaping=complex,fade=")
+    assert graph[5].startswith("[o1]ass=filename=/w/subs.ass:shaping=complex,fade=")
     assert graph[5].endswith(
         "fade=t=in:st=0:d=0.500,fade=t=out:st=3.000:d=0.500,format=yuv420p[vout]"
     )
@@ -143,6 +143,17 @@ def test_a_font_file_brings_its_own_folder() -> None:
     style = SubtitleStyle(font_file=Path("/opt/type/Tamil.ttf"))
     rendered = subtitle_filter(Path("/w/s.ass"), style, "/fonts")
     assert rendered.endswith(":shaping=complex:fontsdir=/opt/type")
+
+
+def test_the_font_folder_is_escaped_like_the_subtitle_path() -> None:
+    style = SubtitleStyle(font_file=Path("/opt/ty:pe/it's/T.ttf"))
+    rendered = subtitle_filter(Path("/w/s.ass"), style, "")
+    assert rendered.endswith(":fontsdir=/opt/ty\\\\:pe/it\\\\\\'s")
+
+
+def test_only_ass_files_can_be_burned_in() -> None:
+    with pytest.raises(UpstreamFailure, match="must be an ASS file"):
+        subtitle_filter(Path("/w/s.srt"), SubtitleStyle(), "")
 
 
 def test_no_fonts_dir_leaves_the_system_fonts() -> None:

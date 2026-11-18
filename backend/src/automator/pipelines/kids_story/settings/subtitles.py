@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from pydantic import Field
+from typing import Any
+
+from pydantic import Field, model_validator
 
 from automator.pipelines.kids_story.settings.base import (
     HexColor,
@@ -19,6 +21,7 @@ LATIN_SUBTITLE_FONTS = [
     "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
 ]
+RETIRED_KEYS = ("margin_bottom", "short_margin_bottom")
 TAMIL_SUBTITLE_FONTS = [
     "/System/Library/Fonts/Supplemental/Tamil Sangam MN.ttc",
     "/usr/share/fonts/truetype/noto/NotoSansTamil-Bold.ttf",
@@ -149,6 +152,13 @@ class SubtitleSettings(SettingsSection):
         description="Space kept clear at the left and right of every subtitle line, as a share "
         "of the picture width.",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def drop_retired_keys(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        return {key: value for key, value in data.items() if key not in RETIRED_KEYS}
 
     @property
     def captions_uploaded(self) -> bool:

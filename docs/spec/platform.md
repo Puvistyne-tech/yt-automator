@@ -104,9 +104,12 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 - A thumbnail, caption or playlist failure leaves the upload `done` and records the problem in its `error`.
 - Upload details come from the run's best `metadata` artifact for the language and variant: `title`, `description`,
   `tags`, and optionally `category_id`, `default_language`, `hashtags` and `playlist_title`. A metadata `category_id`
-  wins over the channel default; `default_language` (sent as `defaultLanguage` and `defaultAudioLanguage`) falls back
-  to the target language. Hashtags not already in the description are appended after a blank line, one by one, only
-  while the description stays within 5000 UTF-8 bytes. The playlist is always the target's `playlist_id`;
+  wins over the channel default; `default_language` (sent as `defaultLanguage` and `defaultAudioLanguage`) must look
+  like a language code (`^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$`) and otherwise falls back to the target language.
+  Hashtags must be one token matching `#\S+`; others are ignored. A hashtag is already present when a whitespace
+  token of the description equals it, compared with casefold. Missing ones are appended after a blank line, one by
+  one, deduplicated with casefold, only while the description stays within 5000 UTF-8 bytes and holds at most 60
+  hashtags in total. The playlist is always the target's `playlist_id`;
   `playlist_title` is informational and no playlist is ever created.
 - `publish_delay_minutes` applies only when the effective privacy is `public`: the video is uploaded private with `publish_at` set to now plus the delay, and YouTube makes it public then.
 - Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track, 50 per playlist insertion).

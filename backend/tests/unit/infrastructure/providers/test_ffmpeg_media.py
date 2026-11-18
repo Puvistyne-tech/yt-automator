@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from automator.domain.capabilities import TimedClip, VideoComposition
+from automator.domain.capabilities import SubtitleStyle, TimedClip, VideoComposition
 from automator.infrastructure.providers.media.ffmpeg_media import FfmpegMedia
 from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 from automator.infrastructure.providers.process import ProcessResult
@@ -73,6 +73,23 @@ def test_composition_needs_a_visual(tmp_path: Path) -> None:
     empty = video().model_copy(update={"visuals": ()})
     with pytest.raises(UpstreamFailure, match="visual"):
         media(tmp_path, RecordingRunner()).compose_video(empty, tmp_path / "x.mp4")
+
+
+@pytest.mark.parametrize("burn_in", [True, False])
+def test_srt_subtitles_are_burned_from_an_ass_file_beside_the_video(
+    tmp_path: Path, burn_in: bool
+) -> None:
+    srt = tmp_path / "en.srt"
+    srt.write_text("1\n00:00:01,000 --> 00:00:02,000\nHello\n", encoding="utf-8")
+    style = SubtitleStyle(burn_in=burn_in)
+    runner = RecordingRunner()
+    composition = video().model_copy(update={"subtitles": srt, "subtitle_style": style})
+    media(tmp_path, runner, two_pass_loudness=False).compose_video(
+        composition, tmp_path / "out.mp4"
+    )
+    burned = tmp_path / "out.ass"
+    assert burned.exists() is burn_in
+    assert (f"ass=filename={burned}:shaping=complex" in graph_of(runner.commands[0])) is burn_in
 
 
 def writes_frames(command: list[str]) -> None:

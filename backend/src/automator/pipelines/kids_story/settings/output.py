@@ -8,12 +8,14 @@ from automator.pipelines.kids_story.settings.base import SettingsSection
 
 
 class LandscapeResolution(StrEnum):
+    PREVIEW = "640x360"
     HD = "1280x720"
     FULL_HD = "1920x1080"
     UHD = "3840x2160"
 
 
 class PortraitResolution(StrEnum):
+    PREVIEW = "360x640"
     HD = "720x1280"
     FULL_HD = "1080x1920"
 

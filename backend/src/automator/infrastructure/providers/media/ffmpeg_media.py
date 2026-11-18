@@ -5,6 +5,7 @@ from pathlib import Path
 from automator.domain.capabilities import Capability, VideoComposition
 from automator.infrastructure.providers.context import ProviderContext
 from automator.infrastructure.providers.host import first_reason
+from automator.infrastructure.providers.media.ass_subtitles import with_ass_subtitles
 from automator.infrastructure.providers.media.composition_audio import LoudnessMeasurement
 from automator.infrastructure.providers.media.composition_video import frame_size
 from automator.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
@@ -16,7 +17,6 @@ from automator.infrastructure.providers.media.media_commands import (
     measure_command,
     probe_duration_command,
 )
-from automator.infrastructure.providers.media.subtitle_filter import with_ass_subtitles
 from automator.infrastructure.providers.output_path import ensure_parent, require_written
 from automator.infrastructure.providers.spec import ProviderSpec
 from automator.shared.errors import UpstreamFailure

@@ -23,7 +23,7 @@ def composition(**changes: object) -> VideoComposition:
         narration=(clip("n1.wav", 0.5, 1.0), clip("n2.wav", 2.0, 1.0, volume=0.8)),
         music=Path("/w/music.wav"),
         sound_effects=(clip("pop.wav", 1.0, 0.2),),
-        subtitles=Path("/w/subs.srt"),
+        subtitles=Path("/w/subs.ass"),
         subtitle_style=SubtitleStyle(burn_in=True, font_size=36, margin_bottom=40),
     )
     return base.model_copy(update=changes)

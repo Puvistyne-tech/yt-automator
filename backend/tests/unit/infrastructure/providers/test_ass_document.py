@@ -6,8 +6,8 @@ import pytest
 
 from automator.domain.capabilities import SubtitleStyle
 from automator.domain.srt import SrtEntry
-from automator.infrastructure.providers.media.ass_document import ass_document, ass_time
-from automator.infrastructure.providers.media.subtitle_filter import with_ass_subtitles
+from automator.infrastructure.providers.media.ass_document import ass_document, ass_text, ass_time
+from automator.infrastructure.providers.media.ass_subtitles import with_ass_subtitles
 from automator.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.media_fixtures import composition
 
@@ -44,6 +44,28 @@ def test_times_are_centiseconds() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("line", "drawn"),
+    [
+        ("a {b} c", "a (b) c"),
+        ("back\\slash", "back/slash"),
+        ("not \\N a break", "not /N a break"),
+        ("one\ntwo", "one two"),
+        ("one\r\ntwo", "one  two"),
+        ("commas, stay", "commas, stay"),
+        ("", ""),
+    ],
+)
+def test_text_cannot_carry_override_tags_or_breaks(line: str, drawn: str) -> None:
+    assert ass_text([line]) == drawn
+
+
+def test_outline_and_safe_font_names_are_kept() -> None:
+    style = STYLE.model_copy(update={"font_family": "Noto Sans Tamil-Bold_2"})
+    assert ",Noto Sans Tamil-Bold_2,64," in ass_document([], style, (10, 10), 2.5)
+    assert ",1,2.5,0,2," in ass_document([], style, (10, 10), 2.5)
+
+
 @pytest.mark.parametrize("family", ["Kid's Font", "Comic Sans, MS", "A:B", "", "x[y]"])
 def test_unsafe_font_names_are_refused(family: str) -> None:
     with pytest.raises(UpstreamFailure, match="may only use letters, digits"):
@@ -65,6 +87,7 @@ def test_srt_subtitles_become_an_ass_file_beside_the_video(tmp_path: Path) -> No
     [
         {"subtitles": None},
         {"subtitles": Path("/w/authored.ass")},
+        {"subtitles": Path("/w/authored.ASS")},
         {"subtitle_style": SubtitleStyle(burn_in=False)},
     ],
 )
@@ -72,3 +95,12 @@ def test_other_subtitles_are_left_alone(changes: dict[str, object], tmp_path: Pa
     original = composition(**changes)
     assert with_ass_subtitles(original, (320, 180), tmp_path / "v.mp4", 2.0) == original
     assert not (tmp_path / "v.ass").exists()
+
+
+def test_an_empty_srt_becomes_an_ass_file_without_dialogue(tmp_path: Path) -> None:
+    srt = tmp_path / "empty.srt"
+    srt.write_text("garbage", encoding="utf-8")
+    burned = with_ass_subtitles(composition(subtitles=srt), (320, 180), tmp_path / "v.mp4", 2.0)
+    assert burned.subtitles is not None
+    document = burned.subtitles.read_text(encoding="utf-8")
+    assert "[Events]" in document and "Dialogue:" not in document

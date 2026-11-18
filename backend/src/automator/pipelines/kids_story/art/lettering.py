@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFont, features
 
 from automator.pipelines.kids_story.art.imaging import ImageFailure
 from automator.pipelines.kids_story.settings.base import Placement
+from automator.pipelines.kids_story.text.packing import packed
 
 SHAPED_LANGUAGES = frozenset({"ta"})
 Font = ImageFont.FreeTypeFont
@@ -36,26 +37,20 @@ def can_letter(language: str) -> bool:
     return language not in SHAPED_LANGUAGES or shaping_available()
 
 
-def load_font(files: Sequence[str], size: int) -> Font | None:
+def load_font(files: Sequence[str], size: int) -> tuple[Path, Font] | None:
     engine = ImageFont.Layout.RAQM if shaping_available() else ImageFont.Layout.BASIC
     for name in files:
-        if Path(name).is_file():
+        path = Path(name)
+        if path.is_file():
             try:
-                return ImageFont.truetype(name, size, layout_engine=engine)
+                return path, ImageFont.truetype(name, size, layout_engine=engine)
             except OSError:
                 continue
     return None
 
 
 def wrap_to_width(text: str, font: Font, width: float) -> list[str]:
-    lines: list[str] = []
-    for word in text.split():
-        joined = f"{lines[-1]} {word}" if lines else word
-        if lines and font.getlength(joined) <= width:
-            lines[-1] = joined
-        else:
-            lines.append(word)
-    return lines
+    return packed(text.split(), " ", lambda line: font.getlength(line) <= width)
 
 
 def origin(
@@ -102,10 +97,10 @@ def lettered(source: Path, output: Path, lettering: Lettering) -> bool:
     try:
         with Image.open(source) as opened:
             image = opened.convert("RGB")
-        font = load_font(lettering.font_files, max(8, int(image.height * lettering.size_ratio)))
-        if font is None:
+        loaded = load_font(lettering.font_files, max(8, int(image.height * lettering.size_ratio)))
+        if loaded is None:
             return False
-        draw_block(image, lettering, font)
+        draw_block(image, lettering, loaded[1])
         image.save(output, format="PNG")
     except ImageFailure:
         return False

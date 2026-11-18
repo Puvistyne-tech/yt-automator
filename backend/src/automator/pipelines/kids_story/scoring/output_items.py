@@ -3,6 +3,7 @@ from __future__ import annotations
 from automator.domain.artifact_selection import text_list
 from automator.domain.quality import ScoreItem
 from automator.domain.run_parts import Artifact
+from automator.domain.upload_details import DESCRIPTION_MAX_BYTES, utf8_length
 from automator.pipelines.kids_story.artifacts import (
     Role,
     active_variants,
@@ -10,13 +11,7 @@ from automator.pipelines.kids_story.artifacts import (
     text,
     with_role,
 )
-from automator.pipelines.kids_story.publishing.limits import (
-    DESCRIPTION_MAX_BYTES,
-    TAGS_MAX,
-    TITLE_MAX,
-    tags_length,
-    utf8_length,
-)
+from automator.pipelines.kids_story.publishing.limits import TAGS_MAX, TITLE_MAX, tags_length
 from automator.pipelines.kids_story.scoring.inputs import ScoreInputs
 from automator.pipelines.kids_story.scoring.measures import FULL, average, clamp, distance_outside
 

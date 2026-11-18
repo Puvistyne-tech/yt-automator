@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
+from automator.domain.upload_details import DESCRIPTION_MAX_BYTES
 from automator.pipelines.kids_story.artifacts import SHORT
 from automator.pipelines.kids_story.publishing.limits import (
-    DESCRIPTION_MAX_BYTES,
     TITLE_MAX,
     cleaned,
     tags_within,

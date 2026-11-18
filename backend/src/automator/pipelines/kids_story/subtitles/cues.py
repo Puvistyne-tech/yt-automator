@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from automator.domain.capabilities import WordTiming
 from automator.pipelines.kids_story.story.words import ends_sentence
 from automator.pipelines.kids_story.text.graphemes import grapheme_clusters, grapheme_length
+from automator.pipelines.kids_story.text.packing import packed
 
 
 class CueRules(BaseModel):
@@ -39,17 +40,6 @@ class Cue(BaseModel):
         return " ".join(self.lines)
 
 
-def packed(units: Iterable[str], separator: str, fits: Callable[[str], bool]) -> list[str]:
-    lines: list[str] = []
-    for unit in units:
-        joined = f"{lines[-1]}{separator}{unit}" if lines else unit
-        if lines and fits(joined):
-            lines[-1] = joined
-        else:
-            lines.append(unit)
-    return lines
-
-
 def pieces(word: str, rules: CueRules) -> list[str]:
     return [word] if rules.fits(word) else packed(grapheme_clusters(word), "", rules.fits)
 
@@ -76,35 +66,6 @@ def word_groups(words: Sequence[WordTiming], rules: CueRules) -> list[list[WordT
             groups.append(current)
             current = []
     return [*groups, current] if current else groups
-
-
-def segment_cues(
-    words: Sequence[WordTiming], offset: float, audio_seconds: float, rules: CueRules
-) -> list[Cue]:
-    limit = offset + audio_seconds
-    cues = []
-    for group in word_groups(words, rules):
-        start = min(offset + group[0].start_seconds, limit)
-        end = max(start, min(offset + group[-1].end_seconds, limit))
-        lines = wrapped([word.word for word in group], rules)
-        cues.extend(screenfuls(Cue(start=start, end=end, lines=(), limit=limit), lines, rules))
-    return cues
-
-
-def screenfuls(window: Cue, lines: Sequence[str], rules: CueRules) -> list[Cue]:
-    chunks = [
-        tuple(lines[at : at + rules.max_lines]) for at in range(0, len(lines), rules.max_lines)
-    ]
-    weights = [sum(grapheme_length(line) for line in chunk) for chunk in chunks]
-    total = sum(weights) or 1
-    span = window.end - window.start
-    cues: list[Cue] = []
-    start = window.start
-    for chunk, weight in zip(chunks, weights, strict=True):
-        end = start + span * weight / total
-        cues.append(window.model_copy(update={"start": start, "end": end, "lines": chunk}))
-        start = end
-    return cues
 
 
 def separated(cues: Sequence[Cue], min_seconds: float) -> list[Cue]:
