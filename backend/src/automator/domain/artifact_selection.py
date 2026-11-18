@@ -15,6 +15,10 @@ class VideoMetadata(DomainModel):
     title: str
     description: str = ""
     tags: tuple[str, ...] = ()
+    category_id: str | None = None
+    default_language: str | None = None
+    hashtags: tuple[str, ...] = ()
+    playlist_title: str | None = None
 
 
 def match_rank(value: str | None, wanted: str) -> int:
@@ -70,15 +74,22 @@ def text_list(value: object) -> tuple[str, ...]:
     return ()
 
 
+def optional_text(value: object) -> str | None:
+    return value if isinstance(value, str) and value else None
+
+
 def video_metadata(
     artifacts: Sequence[Artifact], language: str, variant: str, fallback_title: str
 ) -> VideoMetadata:
     found = best_artifact(artifacts, ArtifactKind.METADATA, language, variant)
     meta = found.meta if found is not None else {}
-    title = meta.get("title")
-    description = meta.get("description")
+    title = optional_text(meta.get("title"))
     return VideoMetadata(
-        title=title if isinstance(title, str) and title else fallback_title,
-        description=description if isinstance(description, str) else "",
+        title=title or fallback_title,
+        description=optional_text(meta.get("description")) or "",
         tags=text_list(meta.get("tags")),
+        category_id=optional_text(meta.get("category_id")),
+        default_language=optional_text(meta.get("default_language")),
+        hashtags=text_list(meta.get("hashtags")),
+        playlist_title=optional_text(meta.get("playlist_title")),
     )

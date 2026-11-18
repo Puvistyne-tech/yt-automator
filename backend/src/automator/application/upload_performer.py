@@ -12,6 +12,7 @@ from automator.domain.ports import ArtifactStore, YouTubeGateway
 from automator.domain.publish_plan import UploadPlan
 from automator.domain.run_enums import UploadStatus
 from automator.domain.run_parts import Artifact, Upload
+from automator.domain.upload_details import upload_details
 from automator.domain.youtube import ChannelAuth, VideoUpload
 from automator.shared.errors import describe_error
 
@@ -68,13 +69,14 @@ class UploadPerformer:
 
     def request(self, attempt: UploadAttempt, video: Artifact) -> VideoUpload:
         plan, defaults = attempt.plan, attempt.channel.defaults
+        details = upload_details(plan.metadata, defaults, plan.language)
         return VideoUpload(
             path=self.store.open(attempt.run_id, video),
             title=plan.metadata.title,
-            description=plan.metadata.description,
+            description=details.description,
             tags=plan.metadata.tags,
-            category_id=defaults.category_id,
-            default_language=plan.language,
+            category_id=details.category_id,
+            default_language=details.default_language,
             privacy=plan.privacy,
             made_for_kids=plan.made_for_kids,
             notify_subscribers=defaults.notify_subscribers,
