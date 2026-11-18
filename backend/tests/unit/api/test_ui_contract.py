@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import json
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
 from automator.domain.pipeline import Stage, StageContext
@@ -13,10 +11,10 @@ from automator.domain.pipeline_descriptors import PipelineDescriptor
 from automator.domain.quality import ScoreItem
 from automator.domain.run_parts import Artifact, StageRun, Upload
 from automator.infrastructure.config import RuntimeConfig
-from automator.main import Overrides, create_app
+from automator.main import Overrides
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry
 from tests.fixtures.fake_runtime import RecordingEvents
-from tests.unit.api.client import Api, ok
+from tests.unit.api.client import Api, ok, streamed_events, wired
 
 UI_SCHEMA: dict[str, Any] = {
     "ui:sections": [{"title": "Story", "fields": ["topic", "score"]}],
@@ -43,21 +41,10 @@ class SectionedPipeline:
         return self.inner.score(context)
 
 
-def wired(config: RuntimeConfig, overrides: Overrides, **changes: Any) -> TestClient:
-    app = create_app(config, Overrides(**(vars(overrides) | changes)))
-    return TestClient(app, follow_redirects=False)
-
-
 def test_ui_schema_is_passed_through(config: RuntimeConfig, overrides: Overrides) -> None:
     pipelines = FakePipelineRegistry([SectionedPipeline()])
     with wired(config, overrides, pipelines=pipelines) as client:
         assert ok(client.get("/api/pipelines/fake"))["ui_schema"] == UI_SCHEMA
-
-
-def streamed_events(client: TestClient) -> list[dict[str, Any]]:
-    with client.stream("GET", "/api/events") as response:
-        lines = [line for line in response.iter_lines() if line.startswith("data: ")]
-    return [json.loads(line.removeprefix("data: ")) for line in lines]
 
 
 def payload_keys(events: list[dict[str, Any]], kind: str) -> set[frozenset[str]]:
@@ -77,4 +64,4 @@ def test_event_payloads_match_the_ui(config: RuntimeConfig, overrides: Overrides
     assert payload_keys(events, "artifact") == {frozenset(Artifact.model_fields)}
     assert payload_keys(events, "upload") == {frozenset(Upload.model_fields)}
     logs = [event["payload"] for event in events if event["kind"] == "log"]
-    assert logs[0] == {"message": "script running", "level": "info", "stage_id": None}
+    assert logs[0] == {"message": "script running", "level": "info", "stage_id": "script"}

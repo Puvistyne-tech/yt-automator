@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -8,7 +10,8 @@ from urllib.parse import parse_qs, urlparse
 from fastapi.testclient import TestClient
 from httpx2 import Response
 
-from automator.main import Runtime
+from automator.infrastructure.config import RuntimeConfig
+from automator.main import Overrides, Runtime, create_app
 
 WAIT_SECONDS = 10.0
 POLL_SECONDS = 0.02
@@ -28,6 +31,21 @@ def error_of(response: Response, status: int) -> dict[str, Any]:
     body: dict[str, Any] = response.json()["error"]
     assert set(body) == {"code", "message", "fields"}
     return body
+
+
+def wired(config: RuntimeConfig, overrides: Overrides, **changes: Any) -> TestClient:
+    app = create_app(config, Overrides(**(vars(overrides) | changes)))
+    return TestClient(app, follow_redirects=False)
+
+
+def data_payloads(lines: Iterable[str]) -> list[dict[str, Any]]:
+    data = [line for line in lines if line.startswith("data: ")]
+    return [json.loads(line.removeprefix("data: ")) for line in data]
+
+
+def streamed_events(client: TestClient) -> list[dict[str, Any]]:
+    with client.stream("GET", "/api/events") as response:
+        return data_payloads(response.iter_lines())
 
 
 def automation_body(channel_id: str, **overrides: Any) -> dict[str, Any]:
@@ -51,11 +69,15 @@ class Api:
         created: dict[str, Any] = ok(self.client.post("/api/credentials", json=body), 201)
         return created
 
-    def connect(self, credential_id: str) -> str:
+    def start_connect(self, credential_id: str) -> str:
         started = ok(
             self.client.post("/api/channels/connect", json={"credential_id": credential_id})
         )
-        state = parse_qs(urlparse(started["authorization_url"]).query)["state"][0]
+        state: str = parse_qs(urlparse(started["authorization_url"]).query)["state"][0]
+        return state
+
+    def connect(self, credential_id: str) -> str:
+        state = self.start_connect(credential_id)
         response = self.client.get("/api/oauth/callback", params={"code": "c0de", "state": state})
         assert response.status_code == 303, response.text
         location = urlparse(response.headers["location"])

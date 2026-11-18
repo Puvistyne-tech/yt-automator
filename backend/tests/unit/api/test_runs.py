@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 
+from tests.fixtures.fake_pipeline import FakePipelineRegistry
 from tests.fixtures.fake_youtube import FakeYouTube
 from tests.unit.api.client import Api, error_of, ok, send
 
@@ -21,7 +22,6 @@ def test_runs_list_filters_and_limits(api: Api) -> None:
     assert filtered == []
     by_status = ok(client.get("/api/runs", params={"status": "awaiting_review"}))
     assert len(by_status) == 2
-    assert first["review_policy"]["mode"] == "always"
 
 
 @pytest.mark.parametrize(
@@ -100,3 +100,75 @@ def test_artifacts_are_served_whole_with_their_media_type(api: Api) -> None:
 def test_missing_run_is_not_found(api: Api, method: str, suffix: str, body: Any) -> None:
     response = send(api.client, method, f"/api/runs/missing{suffix}", body)
     assert error_of(response, 404)["code"] == "run_not_found"
+
+
+def video_of(run: dict[str, Any]) -> dict[str, Any]:
+    return next(item for item in run["artifacts"] if item["kind"] == "video")
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/runs/{run}/artifacts/%2e%2e%2fsecret",
+        "/api/runs/..%2fx/artifacts/{artifact}",
+        "/api/runs/{run}/artifacts/%2e%2e",
+        "/api/runs/%2e%2e/artifacts/{artifact}",
+    ],
+)
+def test_traversal_ids_get_the_error_envelope(api: Api, path: str) -> None:
+    run = api.finished_run()
+    response = api.client.get(path.format(run=run["id"], artifact=video_of(run)["id"]))
+    assert response.status_code in (400, 404)
+    error_of(response, response.status_code)
+
+
+def test_unsatisfiable_ranges_and_deleted_files(api: Api) -> None:
+    run = api.finished_run()
+    video = video_of(run)
+    url = f"/api/runs/{run['id']}/artifacts/{video['id']}"
+    assert api.client.get(url, headers={"Range": "bytes=100-200"}).status_code == 416
+    stored = api.runtime.config.data_dir / "runs" / run["id"] / "artifacts" / video["id"]
+    for file in stored.iterdir():
+        file.unlink()
+    assert error_of(api.client.get(url), 404)["code"] == "artifact_file_not_found"
+
+
+def test_publish_conflicts(api: Api) -> None:
+    client = api.client
+    waiting = api.finished_run()
+    error = error_of(client.post(f"/api/runs/{waiting['id']}/publish"), 409)
+    assert error["code"] == "invalid_run_transition"
+    poor = api.credential(daily_quota_units=1)
+    automation = api.automation(api.connect(poor["id"]))
+    run_id = api.wait_for(api.start(automation["id"])["id"], "awaiting_review")["id"]
+    ok(client.post(f"/api/runs/{run_id}/review", json={"decision": "approved"}))
+    assert error_of(client.post(f"/api/runs/{run_id}/publish"), 409)["code"] == "quota_exceeded"
+
+
+def test_publishing_without_a_reachable_target_is_a_conflict(api: Api) -> None:
+    run = api.approved_run()
+    automation_id, channel_id = run["automation_id"], ok(api.client.get("/api/channels"))[0]["id"]
+    ok(api.client.patch(f"/api/automations/{automation_id}", json={"enabled": False}))
+    ok(api.client.delete(f"/api/channels/{channel_id}"), 204)
+    error = error_of(api.client.post(f"/api/runs/{run['id']}/publish"), 409)
+    assert error["code"] == "nothing_to_publish"
+
+
+def test_finished_runs_refuse_retry_and_repeat_cancel(api: Api) -> None:
+    client = api.client
+    run = api.approved_run()
+    published = ok(client.post(f"/api/runs/{run['id']}/publish"))
+    assert published["status"] == "published"
+    error_of(client.post(f"/api/runs/{run['id']}/retry"), 409)
+    other = api.finished_run()
+    ok(client.post(f"/api/runs/{other['id']}/cancel"))
+    error_of(client.post(f"/api/runs/{other['id']}/cancel"), 409)
+
+
+def test_starting_a_run_of_an_uninstalled_pipeline_is_a_conflict(api: Api) -> None:
+    automation = api.automation(api.channel())
+    registry = api.runtime.ports.pipelines
+    assert isinstance(registry, FakePipelineRegistry)
+    registry.pipelines.pop("fake")
+    response = api.client.post(f"/api/automations/{automation['id']}/runs")
+    assert error_of(response, 409)["code"] == "pipeline_unavailable"

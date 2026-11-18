@@ -7,7 +7,6 @@ from automator.api.container import (
     RunUseCases,
     UseCases,
 )
-from automator.api.ports_bundle import Collaborators, Ports, collaborators
 from automator.application.cancel_run import CancelRun
 from automator.application.complete_channel_connect import CompleteChannelConnect
 from automator.application.create_automation import CreateAutomation
@@ -34,6 +33,7 @@ from automator.application.list_runs import ListRuns
 from automator.application.list_secrets import ListSecrets
 from automator.application.open_run_artifact import OpenRunArtifact
 from automator.application.publish_run import PublishRun
+from automator.application.recover_interrupted_runs import RecoverInterruptedRuns
 from automator.application.retry_run import RetryRun
 from automator.application.review_run import ReviewRun
 from automator.application.run_due_automations import RunDueAutomations
@@ -48,13 +48,16 @@ from automator.application.update_automation import UpdateAutomation
 from automator.application.update_channel_defaults import UpdateChannelDefaults
 from automator.application.update_credential import UpdateCredential
 from automator.application.upload_performer import UploadPerformer
+from automator.composition.ports import Collaborators, Ports, collaborators
 
 
 def channel_use_cases(p: Ports, c: Collaborators) -> ChannelUseCases:
     return ChannelUseCases(
-        list_credentials=ListCredentials(p.credentials, p.secrets, c.quota_report),
-        create_credential=CreateCredential(p.credentials, p.secrets, p.ids, p.clock),
-        update_credential=UpdateCredential(p.credentials, p.secrets),
+        list_credentials=ListCredentials(p.credentials, c.credential_views),
+        create_credential=CreateCredential(
+            p.credentials, p.secrets, p.ids, p.clock, c.credential_views
+        ),
+        update_credential=UpdateCredential(p.credentials, p.secrets, c.credential_views),
         delete_credential=DeleteCredential(p.credentials, p.channels, p.secrets),
         list_channels=ListChannels(p.channels),
         start_connect=StartChannelConnect(p.credentials, c.authorizer, p.youtube, p.ids, p.clock),
@@ -63,7 +66,7 @@ def channel_use_cases(p: Ports, c: Collaborators) -> ChannelUseCases:
         ),
         update_defaults=UpdateChannelDefaults(p.channels),
         delete_channel=DeleteChannel(p.channels, p.automations, p.secrets),
-        list_playlists=ListChannelPlaylists(p.channels, c.authorizer, p.youtube),
+        list_playlists=ListChannelPlaylists(p.channels, c.authorizer, p.youtube, c.expiry),
     )
 
 
@@ -97,7 +100,7 @@ def execute_run(p: Ports, c: Collaborators) -> ExecuteRun:
 
 
 def publish_run(p: Ports, c: Collaborators) -> PublishRun:
-    performer = UploadPerformer(p.youtube, p.store, c.authorizer, c.quota_report)
+    performer = UploadPerformer(p.youtube, p.store, c.authorizer, c.quota_report, c.expiry)
     return PublishRun(
         p.runs,
         p.automations,
@@ -123,6 +126,7 @@ def run_use_cases(p: Ports, c: Collaborators) -> RunUseCases:
         delete=DeleteRun(p.runs, p.store),
         open_artifact=OpenRunArtifact(p.runs, p.store),
         execute=execute_run(p, c),
+        recover=RecoverInterruptedRuns(p.runs, c.recorder, c.progress, p.queue, p.clock),
     )
 
 

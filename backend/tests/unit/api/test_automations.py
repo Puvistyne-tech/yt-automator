@@ -50,10 +50,23 @@ def test_automation_crud(api: Api) -> None:
 def test_invalid_automations_report_field_paths(
     api: Api, changes: dict[str, Any], field: str
 ) -> None:
-    body = automation_body(api.channel(), **changes)
-    error = error_of(api.client.post("/api/automations", json=body), 400)
-    assert error["code"] == "validation_failed"
-    assert field in error["fields"], error["fields"]
+    channel_id = api.channel()
+    body = automation_body(channel_id, **changes)
+    existing = api.automation(channel_id)
+    for method, path in (
+        ("post", "/api/automations"),
+        ("put", f"/api/automations/{existing['id']}"),
+    ):
+        error = error_of(send(api.client, method, path, body), 400)
+        assert error["code"] == "validation_failed"
+        assert field in error["fields"], error["fields"]
+
+
+@pytest.mark.parametrize("body", [{}, {"enabled": "x"}])
+def test_enabling_needs_a_boolean(api: Api, body: dict[str, Any]) -> None:
+    automation = api.automation(api.channel())
+    response = api.client.patch(f"/api/automations/{automation['id']}", json=body)
+    assert "enabled" in error_of(response, 400)["fields"]
 
 
 def test_unknown_target_channel_is_rejected(api: Api) -> None:

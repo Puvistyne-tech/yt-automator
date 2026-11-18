@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, status
 from fastapi.responses import RedirectResponse
 
 from automator.api.container import App, Options
 from automator.api.schemas.requests import ChannelPatchRequest, ConnectChannelRequest
-from automator.api.schemas.responses import ERROR_RESPONSES, ConnectChannelResponse
+from automator.api.schemas.responses import (
+    ERROR_RESPONSES,
+    NO_CONTENT_RESPONSE,
+    ConnectChannelResponse,
+)
 from automator.domain.channels import Channel
 from automator.domain.youtube import Playlist
 from automator.shared.errors import AppError
@@ -58,8 +62,7 @@ def update_channel(channel_id: str, body: ChannelPatchRequest, app: App) -> Chan
 
 @router.delete(
     "/channels/{channel_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_class=Response,
+    **NO_CONTENT_RESPONSE,
     summary="Disconnect a channel that no enabled automation targets",
 )
 def delete_channel(channel_id: str, app: App) -> None:

@@ -31,6 +31,7 @@ from automator.application.list_runs import ListRuns
 from automator.application.list_secrets import ListSecrets
 from automator.application.open_run_artifact import OpenRunArtifact
 from automator.application.publish_run import PublishRun
+from automator.application.recover_interrupted_runs import RecoverInterruptedRuns
 from automator.application.retry_run import RetryRun
 from automator.application.review_run import ReviewRun
 from automator.application.run_due_automations import RunDueAutomations
@@ -49,9 +50,9 @@ from automator.domain.ports import RunEvents
 @dataclass(frozen=True)
 class ApiOptions:
     version: str
-    ui_base_url: str = ""
-    sse_heartbeat_seconds: float = 15.0
-    max_run_list_limit: int = 100
+    ui_base_url: str
+    sse_heartbeat_seconds: float
+    max_run_list_limit: int
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,7 @@ class RunUseCases:
     delete: DeleteRun
     open_artifact: OpenRunArtifact
     execute: ExecuteRun
+    recover: RecoverInterruptedRuns
 
 
 @dataclass(frozen=True)

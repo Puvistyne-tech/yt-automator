@@ -3,12 +3,12 @@ from __future__ import annotations
 from pathlib import PurePosixPath
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter, Query
 from fastapi.responses import FileResponse
 
 from automator.api.container import App, Options
 from automator.api.schemas.requests import RetryRequest, ReviewRequest
-from automator.api.schemas.responses import ERROR_RESPONSES
+from automator.api.schemas.responses import ERROR_RESPONSES, NO_CONTENT_RESPONSE
 from automator.domain.run_enums import RunStatus
 from automator.domain.runs import Run, RunQuery
 from automator.shared.errors import ValidationFailed
@@ -57,8 +57,7 @@ def publish_run(run_id: str, app: App) -> Run:
 
 @router.delete(
     "/{run_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_class=Response,
+    **NO_CONTENT_RESPONSE,
     summary="Delete a finished run and its files",
 )
 def delete_run(run_id: str, app: App) -> None:

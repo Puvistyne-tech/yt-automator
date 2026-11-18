@@ -12,10 +12,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from automator.api.app import build_api
-from automator.api.composition import build_use_cases
 from automator.api.container import ApiOptions, UseCases
-from automator.api.ports_bundle import Ports
 from automator.api.spa import mount_web_ui
+from automator.composition.ports import Ports
+from automator.composition.use_cases import build_use_cases
 from automator.domain.ports import (
     Clock,
     IdGenerator,
@@ -40,7 +40,6 @@ from automator.infrastructure.db.settings_repositories import (
 )
 from automator.infrastructure.providers.catalog import build_provider_catalog
 from automator.infrastructure.runtime.events import InProcessRunEvents
-from automator.infrastructure.runtime.recovery import recover_interrupted_runs
 from automator.infrastructure.runtime.scheduler import SchedulerTicker
 from automator.infrastructure.runtime.system import RandomIds, SystemClock
 from automator.infrastructure.runtime.worker_pool import WorkerPoolQueue
@@ -75,15 +74,16 @@ class Runtime:
     use_cases: UseCases
 
     def start(self) -> None:
-        report = recover_interrupted_runs(self.ports.runs, self.queue, self.ports.clock)
-        if report.failed or report.requeued:
-            logger.info("recovered %d interrupted runs", len(report.failed) + len(report.requeued))
+        report = self.use_cases.runs.recover.execute()
+        if report.total():
+            logger.info("recovered %d interrupted runs", report.total())
         self.queue.start(self.use_cases.runs.execute.execute)
         self.scheduler.start()
 
     def stop(self) -> None:
         self.scheduler.stop(self.config.shutdown_timeout_seconds)
-        self.queue.stop(self.config.shutdown_timeout_seconds)
+        if not self.queue.stop(self.config.shutdown_timeout_seconds):
+            logger.warning("some runs were still working at shutdown")
         self.database.dispose()
 
 
@@ -96,7 +96,10 @@ def package_version() -> str:
 
 def youtube_gateway(config: RuntimeConfig) -> GoogleYouTubeGateway:
     settings = YouTubeSettings(
-        redirect_uri=config.oauth_redirect_uri, upload_chunk_bytes=config.upload_chunk_bytes
+        redirect_uri=config.oauth_redirect_uri,
+        upload_chunk_bytes=config.upload_chunk_bytes,
+        caption_track_name=config.youtube_caption_track_name,
+        playlist_page_size=config.youtube_playlist_page_size,
     )
     return GoogleYouTubeGateway(settings)
 
@@ -129,7 +132,7 @@ def build_ports(
 
 
 def build_runtime(config: RuntimeConfig, overrides: Overrides) -> Runtime:
-    database = Database(config.database_path)
+    database = Database(config.database_path, config.database_busy_timeout_ms)
     database.migrate()
     settings = SqlAppSettingsRepository(database, str(config.data_dir))
     queue = WorkerPoolQueue(lambda: settings.get().max_parallel_runs, config.worker_poll_seconds)

@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from automator.application.automation_builder import AutomationBuilder
 from automator.application.automation_presenter import AutomationPresenter
 from automator.application.channel_auth import ChannelAuthorizer
+from automator.application.channel_expiry import ChannelExpiry
+from automator.application.credential_views import CredentialViews
 from automator.application.quota_report import QuotaReport
 from automator.application.run_progress import RunProgress
 from automator.application.run_recorder import RunRecorder
@@ -60,15 +62,20 @@ class Collaborators:
     recorder: RunRecorder
     progress: RunProgress
     quota_report: QuotaReport
+    expiry: ChannelExpiry
+    credential_views: CredentialViews
 
 
 def collaborators(p: Ports) -> Collaborators:
     recorder = RunRecorder(p.runs, p.events, p.clock)
+    quota_report = QuotaReport(p.ledger, p.clock, p.quota)
     return Collaborators(
         authorizer=ChannelAuthorizer(p.credentials, p.secrets),
         presenter=AutomationPresenter(p.runs, p.schedules),
         builder=AutomationBuilder(p.pipelines, p.channels, p.ids),
         recorder=recorder,
         progress=RunProgress(p.runs, recorder, p.clock),
-        quota_report=QuotaReport(p.ledger, p.clock, p.quota),
+        quota_report=quota_report,
+        expiry=ChannelExpiry(p.channels),
+        credential_views=CredentialViews(p.secrets, quota_report),
     )

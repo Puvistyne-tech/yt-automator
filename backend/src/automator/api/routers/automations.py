@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter
 
 from automator.api.container import App
 from automator.api.schemas.requests import EnabledRequest
-from automator.api.schemas.responses import ERROR_RESPONSES
+from automator.api.schemas.responses import CREATED, ERROR_RESPONSES, NO_CONTENT_RESPONSE
 from automator.domain.automations import Automation, AutomationInput
 from automator.domain.runs import Run
 
 router = APIRouter(prefix="/automations", tags=["automations"], responses=ERROR_RESPONSES)
-CREATED = status.HTTP_201_CREATED
 
 
 @router.get("", summary="List automations with next and last run")
@@ -39,8 +38,7 @@ def set_enabled(automation_id: str, body: EnabledRequest, app: App) -> Automatio
 
 @router.delete(
     "/{automation_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    response_class=Response,
+    **NO_CONTENT_RESPONSE,
     summary="Delete an automation and keep its runs",
 )
 def delete_automation(automation_id: str, app: App) -> None:

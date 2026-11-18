@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter
 
 from automator.api.container import App
 from automator.api.schemas.requests import SecretValueRequest, SettingsRequest
-from automator.api.schemas.responses import ERROR_RESPONSES
+from automator.api.schemas.responses import ERROR_RESPONSES, NO_CONTENT_RESPONSE
 from automator.domain.providers import ProviderConfig, ProvidersView
 from automator.domain.secrets import SecretStatus
 from automator.domain.settings import AppSettings
 
 router = APIRouter(tags=["configuration"], responses=ERROR_RESPONSES)
-NO_CONTENT = status.HTTP_204_NO_CONTENT
 
 
 @router.get("/providers", summary="Provider descriptors and the configured chains")
@@ -30,8 +29,7 @@ def list_secrets(app: App) -> list[SecretStatus]:
 
 @router.put(
     "/secrets/{name:path}",
-    status_code=NO_CONTENT,
-    response_class=Response,
+    **NO_CONTENT_RESPONSE,
     summary="Store a secret in the keychain",
 )
 def set_secret(name: str, body: SecretValueRequest, app: App) -> None:
@@ -40,8 +38,7 @@ def set_secret(name: str, body: SecretValueRequest, app: App) -> None:
 
 @router.delete(
     "/secrets/{name:path}",
-    status_code=NO_CONTENT,
-    response_class=Response,
+    **NO_CONTENT_RESPONSE,
     summary="Remove a secret from the keychain",
 )
 def delete_secret(name: str, app: App) -> None:

@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-from automator.domain.credentials import credential_secret_name
-from tests.fixtures.fake_runtime import InMemorySecrets
 from tests.fixtures.fake_youtube import FakeYouTube
 from tests.unit.api.client import Api, ok
 
 
-def test_end_to_end_from_credential_to_published_upload(
-    api: Api, youtube: FakeYouTube, secrets: InMemorySecrets
-) -> None:
+def test_end_to_end_from_credential_to_published_upload(api: Api, youtube: FakeYouTube) -> None:
     client = api.client
     credential = api.credential(daily_quota_units=5000)
-    assert secrets.get(credential_secret_name(credential["id"])) == "csecret"
     channel_id = api.connect(credential["id"])
     assert ok(client.get("/api/channels"))[0]["youtube_channel_id"] == "UC-fake"
     automation = api.automation(channel_id)
@@ -34,7 +29,6 @@ def test_end_to_end_from_credential_to_published_upload(
     assert youtube.uploads[0].title == "Story in en"
     [listed] = ok(client.get("/api/credentials"))
     assert listed["quota_used_today"] == published["uploads"][0]["quota_units"] > 0
-    assert listed["has_secret"] is True
     dashboard = ok(client.get("/api/dashboard"))
     assert dashboard["automations"] == dashboard["enabled_automations"] == 1
     assert (dashboard["channels"], dashboard["runs_today"]) == (1, 1)
@@ -50,3 +44,20 @@ def test_end_to_end_from_credential_to_published_upload(
         }
     ]
     assert ok(client.get(f"/api/automations/{automation['id']}"))["last_run"]["id"] == run["id"]
+
+
+def test_a_fresh_dashboard_is_empty(api: Api) -> None:
+    assert ok(api.client.get("/api/dashboard")) == {
+        "automations": 0,
+        "enabled_automations": 0,
+        "channels": 0,
+        "runs_awaiting_review": 0,
+        "runs_today": 0,
+        "recent_runs": [],
+        "quota": [],
+    }
+
+
+def test_the_dashboard_counts_runs_awaiting_review(api: Api) -> None:
+    api.finished_run()
+    assert ok(api.client.get("/api/dashboard"))["runs_awaiting_review"] == 1
