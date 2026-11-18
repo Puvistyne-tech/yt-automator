@@ -55,6 +55,7 @@
     "thumbnail.outline_color": {"widget": "color"},
     "thumbnail.jpeg_quality": {"widget": "slider", "step": 1},
     "thumbnail.min_jpeg_quality": {"widget": "slider", "step": 1},
+    "thumbnail.downscale_step": {"widget": "slider", "step": 0.05},
     "metadata.description_template.en": {"widget": "textarea", "rows": 10},
     "metadata.description_template.ta": {"widget": "textarea", "rows": 10},
     "metadata.category": {"widget": "select"},

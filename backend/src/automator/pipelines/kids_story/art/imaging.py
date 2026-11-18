@@ -15,6 +15,8 @@ class JpegBudget:
     max_bytes: int
     quality: int
     min_quality: int
+    downscale_step: float
+    min_width: int
 
 
 def cover(image: Image.Image, width: int, height: int, focus: float) -> Image.Image:
@@ -46,12 +48,27 @@ def jpeg_bytes(image: Image.Image, quality: int) -> bytes:
     return buffer.getvalue()
 
 
-def saved_jpeg(source: Path, output: Path, budget: JpegBudget) -> int:
-    with Image.open(source) as opened:
-        image = opened.convert("RGB")
+def best_quality(image: Image.Image, budget: JpegBudget) -> bytes:
+    data = b""
     for quality in qualities(budget):
         data = jpeg_bytes(image, quality)
         if len(data) <= budget.max_bytes:
             break
+    return data
+
+
+def shrunk(image: Image.Image, budget: JpegBudget) -> Image.Image:
+    width = max(budget.min_width, int(image.width * budget.downscale_step))
+    height = max(1, round(image.height * width / image.width))
+    return image.resize((width, height), Image.Resampling.LANCZOS)
+
+
+def saved_jpeg(source: Path, output: Path, budget: JpegBudget) -> int:
+    with Image.open(source) as opened:
+        image = opened.convert("RGB")
+    data = best_quality(image, budget)
+    while len(data) > budget.max_bytes and image.width > budget.min_width:
+        image = shrunk(image, budget)
+        data = jpeg_bytes(image, budget.min_quality)
     output.write_bytes(data)
-    return quality
+    return len(data)

@@ -35,6 +35,8 @@ def jpeg_budget(thumbnail: ThumbnailSettings) -> JpegBudget:
         max_bytes=thumbnail.max_bytes,
         quality=thumbnail.jpeg_quality,
         min_quality=thumbnail.min_jpeg_quality,
+        downscale_step=thumbnail.downscale_step,
+        min_width=thumbnail.min_width,
     )
 
 
@@ -84,8 +86,10 @@ class PackageStage:
         if lines and not has_title:
             context.log(f"thumbnail for {story.language} {variant} has no title: no usable font")
         output = lettered.with_name(f"{name}.jpg")
-        quality = saved_jpeg(lettered, output, jpeg_budget(settings.thumbnail))
+        size = saved_jpeg(lettered, output, jpeg_budget(settings.thumbnail))
         lettered.unlink()
+        if size > settings.thumbnail.max_bytes:
+            context.log(f"{output.name} is still {size} bytes at the narrowest allowed width")
         return artifact(
             ArtifactKind.THUMBNAIL,
             output,
@@ -94,7 +98,7 @@ class PackageStage:
             language=story.language,
             variant=variant,
             title_drawn=has_title,
-            jpeg_quality=quality,
+            bytes=size,
         )
 
     def metadata(

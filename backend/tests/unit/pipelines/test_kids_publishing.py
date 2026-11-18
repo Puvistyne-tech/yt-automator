@@ -42,6 +42,10 @@ def test_truncated_keeps_text_up_to_the_limit(length: int, kept: bool) -> None:
     assert len(result) <= TITLE_MAX and (kept or result.endswith("…"))
 
 
+def test_a_limit_too_small_for_any_letter_leaves_only_the_ellipsis() -> None:
+    assert truncated("abc", 1) == "…"
+
+
 def test_truncated_prefers_a_word_boundary_and_cuts_long_words() -> None:
     assert truncated("hello wonderful world", 18) == "hello wonderful…"
     assert truncated("x" * 150, TITLE_MAX) == "x" * 99 + "…"

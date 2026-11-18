@@ -4,12 +4,13 @@ from pydantic import Field, model_validator
 
 from automator.pipelines.kids_story.settings.base import (
     Edge,
+    HexColor,
     LocalizedList,
     Placement,
     SettingsSection,
+    color,
     localized_list,
 )
-from automator.pipelines.kids_story.settings.subtitles import color
 
 LATIN_FONTS = [
     "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
@@ -66,6 +67,20 @@ class ThumbnailSettings(SettingsSection):
         title="Lowest thumbnail quality",
         description="The JPEG quality is never lowered below this to meet the size limit.",
     )
+    downscale_step: float = Field(
+        default=0.85,
+        ge=0.5,
+        lt=1,
+        title="Thumbnail shrink step",
+        description="When the lowest quality is still too large, the width is multiplied by this.",
+    )
+    min_width: int = Field(
+        default=640,
+        ge=160,
+        le=3840,
+        title="Narrowest thumbnail",
+        description="Thumbnails are never shrunk below this width in pixels to fit the size limit.",
+    )
     text_position: Edge = Field(
         default=Placement.BOTTOM,
         title="Title position",
@@ -92,8 +107,8 @@ class ThumbnailSettings(SettingsSection):
         title="Outline thickness",
         description="Outline width as a share of the letter height.",
     )
-    text_color: str = color("#FFFFFF", "Title colour", "Colour of the title letters.")
-    outline_color: str = color("#3A2A1A", "Title outline", "Colour around the title letters.")
+    text_color: HexColor = color("#FFFFFF", "Title colour", "Colour of the title letters.")
+    outline_color: HexColor = color("#3A2A1A", "Title outline", "Colour around the title letters.")
     font_files: LocalizedList = localized_list(
         LATIN_FONTS,
         TAMIL_FONTS,

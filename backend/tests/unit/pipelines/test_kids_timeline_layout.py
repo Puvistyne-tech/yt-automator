@@ -9,18 +9,7 @@ from automator.pipelines.kids_story.story.model import Story
 from automator.pipelines.kids_story.timeline.composition import Sources, composition, effect_clips
 from automator.pipelines.kids_story.timeline.selection import short_scene_indexes
 from automator.pipelines.kids_story.timeline.variants import planned
-from automator.pipelines.kids_story.timeline.voices import VoiceLine
-from tests.fixtures.kids_data import quick_settings, story
-
-
-def voices(
-    draft: Story, keys: tuple[str, ...] = ("intro", "outro", "hook")
-) -> dict[str, VoiceLine]:
-    names = [f"scene-{index}" for index in range(len(draft.scenes))] + list(keys)
-    return {
-        key: VoiceLine(segment=key, filename=f"voice/{key}.wav", seconds=4.0, text="hi")
-        for key in names
-    }
+from tests.fixtures.kids_data import quick_settings, story, voices
 
 
 @pytest.mark.parametrize(
@@ -36,7 +25,7 @@ def test_episode_cards_and_spoken_lines(
     intro_card: bool, outro_card: bool, spoken: tuple[str, ...], first: str, last: str
 ) -> None:
     settings = quick_settings(episode={"intro_card": intro_card, "outro_card": outro_card})
-    segments = planned(story(), voices(story(), spoken), settings, "episode")
+    segments = planned(story(), voices(story(), extra=spoken), settings, "episode")
     assert (segments[0].visual_key, segments[-1].visual_key) == (first, last)
     keys = [item.key for item in segments]
     assert ("outro" in keys) is (outro_card or "outro" in spoken)
@@ -44,7 +33,7 @@ def test_episode_cards_and_spoken_lines(
 
 def test_a_card_without_its_line_stays_silent_for_the_card_length() -> None:
     settings = quick_settings(episode={"card_seconds": 4.5})
-    intro = planned(story(), voices(story(), ()), settings, "episode")[0]
+    intro = planned(story(), voices(story(), extra=()), settings, "episode")[0]
     assert intro.key == "intro" and intro.narration is None and intro.duration == 4.5
 
 
@@ -55,7 +44,7 @@ def test_a_card_without_its_line_stays_silent_for_the_card_length() -> None:
 def test_short_without_a_hook_starts_on_a_scene(
     sections: dict[str, dict[str, object]], keys: tuple[str, ...]
 ) -> None:
-    segments = planned(story(), voices(story(), keys), quick_settings(**sections), "short")
+    segments = planned(story(), voices(story(), extra=keys), quick_settings(**sections), "short")
     assert segments[0].key == "scene-0"
 
 

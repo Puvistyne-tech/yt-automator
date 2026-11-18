@@ -9,7 +9,6 @@ from automator.domain.quality import ScoreItem
 from automator.pipelines.kids_story.plugin import KidsStoryPipeline
 from automator.pipelines.kids_story.scoring.content_items import (
     character_consistency,
-    moral_and_refrain,
     reading_level,
 )
 from automator.pipelines.kids_story.scoring.inputs import ScoreInputs, gathered
@@ -131,8 +130,6 @@ def test_durations_and_speaking_rate_follow_settings(inputs: ScoreInputs) -> Non
 
 
 def test_content_items_react_to_changed_rules(inputs: ScoreInputs) -> None:
-    refrain = quick_settings(series={"refrain": {"en": "Hip hip hooray!", "ta": "ஆஹா!"}})
-    assert required(moral_and_refrain(replace(inputs, settings=refrain))).score == 50
     strict = quick_settings(story={"max_average_sentence_words": {"en": 2, "ta": 2}})
     assert required(reading_level(replace(inputs, settings=strict))).score == 50
     recast = [

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import shutil
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from automator.pipelines.kids_story.art.imaging import covered_copy
@@ -10,8 +10,8 @@ from automator.pipelines.kids_story.settings.base import Placement
 from automator.pipelines.kids_story.settings.media import VisualSettings
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.text.scripts import script_language
 
-BADGE_LANGUAGE = "en"
 CENTRED = 0.5
 
 
@@ -61,16 +61,17 @@ def wants_badge(visuals: VisualSettings) -> bool:
     return visuals.overlay_series_badge and bool(visuals.badge_text.strip())
 
 
-def badged_copy(source: Path, output: Path, settings: KidsStorySettings) -> Path:
+def badged_copy(
+    source: Path, output: Path, settings: KidsStorySettings, log: Callable[[str], None]
+) -> Path:
     visuals = settings.visuals
     if not wants_badge(visuals):
         return source
+    text = visuals.badge_text.strip()
     lettering = lettering_for(
-        settings,
-        [visuals.badge_text.strip()],
-        BADGE_LANGUAGE,
-        visuals.badge_corner,
-        visuals.badge_size_ratio,
+        settings, [text], script_language(text), visuals.badge_corner, visuals.badge_size_ratio
     )
-    lettered_or_plain(source, output, lettering)
-    return output
+    if lettered(source, output, lettering):
+        return output
+    log(f"brand mark skipped on {source.name}: no usable font or text shaping")
+    return source

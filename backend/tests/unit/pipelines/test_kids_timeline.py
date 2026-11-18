@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 
 from automator.pipelines.kids_story.settings.output import ShortSceneSelection, ShortSettings
-from automator.pipelines.kids_story.story.model import Story
 from automator.pipelines.kids_story.timeline.composition import Sources, composition, subtitle_style
 from automator.pipelines.kids_story.timeline.cuts import story_cuts
 from automator.pipelines.kids_story.timeline.needs import clip_needs
@@ -18,18 +17,9 @@ from automator.pipelines.kids_story.timeline.plan import (
 )
 from automator.pipelines.kids_story.timeline.selection import short_scene_indexes
 from automator.pipelines.kids_story.timeline.variants import planned
-from automator.pipelines.kids_story.timeline.voices import VoiceLine
-from tests.fixtures.kids_data import quick_settings, story
+from tests.fixtures.kids_data import quick_settings, story, voices
 
 PADDING = Padding(lead_in=0.5, tail=1.0)
-
-
-def voices(story_: Story, seconds: float = 10.0) -> dict[str, VoiceLine]:
-    keys = [f"scene-{index}" for index in range(len(story_.scenes))] + ["intro", "outro", "hook"]
-    return {
-        key: VoiceLine(segment=key, filename=f"voice/en-{key}.wav", seconds=seconds, text="hi")
-        for key in keys
-    }
 
 
 def test_laid_out_accumulates_padding_and_minimums() -> None:

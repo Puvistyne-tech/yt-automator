@@ -100,7 +100,9 @@ class ArtStage:
             artifact(ArtifactKind.IMAGE, path, PNG, Role.CANDIDATE, scene=index, candidate=number)
             for number, path in enumerate(paths)
         ]
-        final = badged_copy(paths[chosen], painter.out / f"scene-{index}-badge.png", settings)
+        final = badged_copy(
+            paths[chosen], painter.out / f"scene-{index}-badge.png", settings, painter.log
+        )
         made.append(
             artifact(
                 ArtifactKind.IMAGE,

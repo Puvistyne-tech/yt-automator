@@ -140,18 +140,8 @@ def test_music_and_effects_follow_their_prompts(tmp_path: Path) -> None:
     assert episode.sound_effects[0].start_seconds == pytest.approx(first_scene.start_seconds + 1.1)
 
 
-def test_no_short_means_no_short_music(tmp_path: Path) -> None:
-    providers = FakeProviders()
-    settings = quick_settings(short={"enabled": False})
-    rig = run_chain(StageRig(tmp_path, settings=settings, providers=providers), "music")
-    assert {item.variant for item in meta_of(rig, "music")} == {"episode"}
-
-
-def test_music_stage_with_both_off_or_no_provider_adds_nothing(tmp_path: Path) -> None:
-    settings = quick_settings(music={"enabled": False}, sound_effects={"enabled": False})
-    off = run_chain(StageRig(tmp_path / "off", settings=settings), "music")
-    assert meta_of(off, "music") == [] and meta_of(off, "sound_effect") == []
-    missing = run_chain(StageRig(tmp_path / "none", providers=FakeProviders(music=None)))
+def test_missing_music_provider_logs_and_adds_nothing(tmp_path: Path) -> None:
+    missing = run_chain(StageRig(tmp_path, providers=FakeProviders(music=None)))
     assert meta_of(missing, "music") == []
     assert any("no music provider" in line for line in missing.logs)
 

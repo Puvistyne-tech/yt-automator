@@ -91,5 +91,9 @@ def localized_list(en: list[str], ta: list[str], title: str, description: str) -
     )
 
 
-def text_list(items: list[str], title: str, description: str) -> Any:
+def text_list_field(items: list[str], title: str, description: str) -> Any:
     return Field(default_factory=lambda: list(items), title=title, description=description)
+
+
+def color(default: str, title: str, description: str) -> Any:
+    return Field(default=default, title=title, description=description)

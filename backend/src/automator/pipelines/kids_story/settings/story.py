@@ -9,7 +9,7 @@ from automator.pipelines.kids_story.settings.base import (
     SettingsSection,
     StoryLanguage,
     localized_number,
-    text_list,
+    text_list_field,
 )
 
 THEMES = [
@@ -63,7 +63,7 @@ class StorySettings(SettingsSection):
         title="Theme choice",
         description="Rotate through the theme list, or always use the fixed theme.",
     )
-    themes: list[str] = text_list(
+    themes: list[str] = text_list_field(
         THEMES,
         "Themes",
         "Story themes the writer rotates through, one per episode.",
@@ -71,7 +71,7 @@ class StorySettings(SettingsSection):
     fixed_theme: str = Field(
         default="sharing", title="Fixed theme", description="Used when theme choice is fixed."
     )
-    recent_themes: list[str] = text_list(
+    recent_themes: list[str] = text_list_field(
         [], "Recently used themes", "Themes of recent episodes, newest last. Avoided by rotation."
     )
     avoid_repeat_last: int = Field(
@@ -81,7 +81,9 @@ class StorySettings(SettingsSection):
         title="Avoid repeating last themes",
         description="How many of the most recent themes rotation skips.",
     )
-    morals: list[str] = text_list(MORALS, "Moral themes", "Morals the writer may choose from.")
+    morals: list[str] = text_list_field(
+        MORALS, "Moral themes", "Morals the writer may choose from."
+    )
     age_min: int = Field(
         default=3, ge=1, le=12, title="Youngest age", description="Youngest viewer, in years."
     )

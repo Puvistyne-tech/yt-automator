@@ -3,22 +3,12 @@ from __future__ import annotations
 from pydantic import Field
 
 from automator.pipelines.kids_story.settings.base import (
-    HEX_COLOR,
+    HexColor,
     LocalizedText,
     SettingsSection,
+    color,
     localized_text,
 )
-
-
-def color(default: str, title: str, description: str) -> str:
-    field: str = Field(
-        default=default,
-        pattern=HEX_COLOR,
-        title=title,
-        description=description,
-        json_schema_extra={"format": "color"},
-    )
-    return field
 
 
 class SubtitleSettings(SettingsSection):
@@ -97,9 +87,9 @@ class SubtitleSettings(SettingsSection):
         title="Font size in Shorts",
         description="Size of burned-in subtitle letters in the Short, in pixels.",
     )
-    primary_color: str = color("#FFFFFF", "Text colour", "Colour of the letters.")
-    outline_color: str = color("#000000", "Outline colour", "Colour around the letters.")
-    highlight_color: str = color("#FFD54A", "Highlight colour", "Colour of the spoken word.")
+    primary_color: HexColor = color("#FFFFFF", "Text colour", "Colour of the letters.")
+    outline_color: HexColor = color("#000000", "Outline colour", "Colour around the letters.")
+    highlight_color: HexColor = color("#FFD54A", "Highlight colour", "Colour of the spoken word.")
     margin_bottom: int = Field(
         default=90,
         ge=0,

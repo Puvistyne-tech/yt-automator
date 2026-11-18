@@ -12,6 +12,7 @@ from automator.pipelines.kids_story.plugin import KidsStoryPipeline
 from automator.pipelines.kids_story.resources import resource_json
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.timeline.voices import VoiceLine
 from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, as_json
 
 REFRAIN_EN = "Be kind, be brave, be you!"
@@ -161,6 +162,16 @@ def with_font(font: Path, **sections: dict[str, Any]) -> KidsStorySettings:
     fonts = {"en": [str(font)], "ta": [str(font)]}
     thumbnail = {**sections.pop("thumbnail", {}), "font_files": fonts}
     return quick_settings(thumbnail=thumbnail, **sections)
+
+
+def voices(
+    draft: Story, seconds: float = 10.0, extra: tuple[str, ...] = ("intro", "outro", "hook")
+) -> dict[str, VoiceLine]:
+    keys = [f"scene-{index}" for index in range(len(draft.scenes))] + list(extra)
+    return {
+        key: VoiceLine(segment=key, filename=f"voice/{key}.wav", seconds=seconds, text="hi")
+        for key in keys
+    }
 
 
 def run_chain(rig: StageRig, until: str | None = None) -> StageRig:

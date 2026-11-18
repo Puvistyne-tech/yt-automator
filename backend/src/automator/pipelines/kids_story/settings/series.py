@@ -6,7 +6,7 @@ from automator.pipelines.kids_story.settings.base import (
     LocalizedText,
     SettingsSection,
     localized_text,
-    text_list,
+    text_list_field,
 )
 
 ART_STYLE = (
@@ -98,7 +98,7 @@ class SeriesSettings(SettingsSection):
         "Outro line",
         "Spoken over the outro card at the end of every episode.",
     )
-    editorial_rules: list[str] = text_list(
+    editorial_rules: list[str] = text_list_field(
         EDITORIAL_RULES,
         "Editorial rules",
         "Rules the story writer must follow. Each rule is one line in the prompt.",
@@ -106,12 +106,12 @@ class SeriesSettings(SettingsSection):
 
 
 class SafetySettings(SettingsSection):
-    banned_words: list[str] = text_list(
+    banned_words: list[str] = text_list_field(
         BANNED_WORDS,
         "Banned words",
         "A story containing any of these whole words is rejected and rewritten.",
     )
-    brand_names: list[str] = text_list(
+    brand_names: list[str] = text_list_field(
         BRAND_NAMES,
         "Brand names",
         "A story mentioning any of these names is rejected and rewritten.",

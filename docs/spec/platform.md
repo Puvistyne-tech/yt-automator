@@ -135,7 +135,7 @@ ProviderResolver.resolve(capability) -> a provider for the capability (see Provi
 
 `pipelines/registry.py` is the index of installed plugins: `installed_pipelines() -> tuple[Pipeline, ...]`.
 `infrastructure/pipelines/static_registry.py` holds `StaticPipelineRegistry(pipelines)`, the `PipelineRegistry` adapter
-that the composition root builds from that index.
+that the composition root builds from that index. It refuses two pipelines with the same `type_id`.
 
 ### Provider resolution
 

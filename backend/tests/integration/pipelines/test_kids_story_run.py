@@ -35,6 +35,9 @@ class KidsCatalog:
     def secrets(self) -> list[SecretDefinition]:
         return []
 
+    def option_errors(self, configs: Sequence[ProviderConfig]) -> dict[str, str]:  # noqa: ARG002
+        return {}
+
     def resolver(self, configs: Sequence[ProviderConfig]) -> FakeProviders:
         self.configs.append(list(configs))
         return self.providers

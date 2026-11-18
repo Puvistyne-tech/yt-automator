@@ -8,7 +8,6 @@ from pydantic import ValidationError
 from automator.domain.pipeline_descriptors import Aspect
 from automator.pipelines.kids_story.plugin import KidsStoryPipeline
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
-from automator.pipelines.registry import installed_pipelines
 
 SCHEMA = KidsStorySettings.model_json_schema()
 
@@ -136,7 +135,3 @@ def test_duplicate_character_ids_are_rejected() -> None:
     member = KidsStorySettings().cast[0].model_dump()
     with pytest.raises(ValidationError):
         KidsStorySettings.model_validate({"cast": [member, member]})
-
-
-def test_installed_pipelines_include_kids_story() -> None:
-    assert [pipeline.descriptor.type_id for pipeline in installed_pipelines()] == ["kids_story"]

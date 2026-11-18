@@ -72,7 +72,7 @@ class ExtraArt:
         size = settings.video_size(SHORT)
         drawing = Drawing(scene_prompt(settings, scene), size, self.painter.seed(index), name)
         base = self.portrait(self.episode_visuals[index], name, size, drawing)
-        path = badged_copy(base, self.painter.out / f"{name}-badge.png", settings)
+        path = badged_copy(base, self.painter.out / f"{name}-badge.png", settings, self.context.log)
         return artifact(
             ArtifactKind.IMAGE,
             path,
