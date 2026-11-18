@@ -6,6 +6,7 @@ from pydantic import JsonValue
 
 from autotube.domain.json_schema import Schema, resolve_ref, resolved
 from autotube.domain.model_base import JsonObject
+from autotube.domain.ui_basic import BASIC_KEY, basic_problems
 
 UI_WIDGETS = frozenset({"textarea", "select", "radio", "checkboxes", "range", "color", "cards"})
 CARDS_WIDGET = "cards"
@@ -19,6 +20,7 @@ OPTIONS_KEY = "ui:options"
 UI_PREFIX = "ui:"
 ITEMS_KEY = "items"
 ORDER_WILDCARD = "*"
+ROOT_ONLY_KEYS = frozenset({SECTIONS_KEY, BASIC_KEY})
 
 
 def property_names(node: Schema) -> list[str]:
@@ -139,8 +141,9 @@ def node_problems(ui: JsonObject, schema: Schema, root: Schema, path: str) -> li
 
 
 def ui_schema_problems(ui_schema: JsonObject, settings_schema: JsonObject) -> list[str]:
-    body = {key: value for key, value in ui_schema.items() if key != SECTIONS_KEY}
+    body = {key: value for key, value in ui_schema.items() if key not in ROOT_ONLY_KEYS}
     return [
         *section_problems(ui_schema, property_names(settings_schema)),
+        *basic_problems(ui_schema, settings_schema),
         *node_problems(body, settings_schema, settings_schema, ""),
     ]

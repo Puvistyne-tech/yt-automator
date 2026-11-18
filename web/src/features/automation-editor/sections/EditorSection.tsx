@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { AutomationDraft } from "@/features/automation-editor/model/draft";
 import { type EditorSectionId, sectionAnchor } from "@/features/automation-editor/model/sections";
+import type { PlatformShows } from "@/features/automation-editor/model/settingsView";
 import { Card } from "@/shared/ui";
 
 interface EditorSectionProps {
@@ -30,4 +31,5 @@ export interface SectionProps {
   draft: AutomationDraft;
   onChange: (draft: AutomationDraft) => void;
   errors: Record<string, string>;
+  shows: PlatformShows;
 }

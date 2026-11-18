@@ -72,7 +72,7 @@ function PipelineSummary({ pipeline }: { pipeline: PipelineDescriptor | undefine
 }
 
 export function GeneralSection(props: GeneralSectionProps) {
-  const { draft, onChange, errors, isNew, pipeline } = props;
+  const { draft, onChange, errors, isNew, pipeline, shows } = props;
   return (
     <EditorSection
       id="general"
@@ -87,13 +87,15 @@ export function GeneralSection(props: GeneralSectionProps) {
             onChange={(e) => onChange({ ...draft, name: e.target.value })}
           />
         </FormField>
-        <FormField label="Description" hint="Optional. Only shown inside this app.">
-          <Textarea
-            rows={2}
-            value={draft.description}
-            onChange={(e) => onChange({ ...draft, description: e.target.value })}
-          />
-        </FormField>
+        {shows("description") && (
+          <FormField label="Description" hint="Optional. Only shown inside this app.">
+            <Textarea
+              rows={2}
+              value={draft.description}
+              onChange={(e) => onChange({ ...draft, description: e.target.value })}
+            />
+          </FormField>
+        )}
         {isNew ? <PipelinePicker {...props} /> : <PipelineSummary pipeline={pipeline} />}
         <Switch
           checked={draft.enabled}

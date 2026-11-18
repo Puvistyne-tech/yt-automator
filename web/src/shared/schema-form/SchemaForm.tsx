@@ -22,6 +22,7 @@ interface SchemaFormProps {
   defaults?: FormValue;
   idPrefix: string;
   disabled?: boolean;
+  visible?: ReadonlySet<string> | undefined;
 }
 
 export function SchemaForm({
@@ -33,10 +34,11 @@ export function SchemaForm({
   defaults,
   idPrefix,
   disabled = false,
+  visible,
 }: SchemaFormProps) {
   const extraErrors = useMemo(() => toErrorSchema(errors), [errors]);
   const changes = useChangeTracking(value, defaults, onChange, disabled);
-  const formContext = useMemo(() => ({ changes }), [changes]);
+  const formContext = useMemo(() => ({ changes, visible }), [changes, visible]);
   const resolvedUi = useMemo<UiSchema>(
     () => ({ ...uiSchema, "ui:submitButtonOptions": { norender: true } }),
     [uiSchema],

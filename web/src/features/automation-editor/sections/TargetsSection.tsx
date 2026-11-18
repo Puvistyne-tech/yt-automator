@@ -38,6 +38,7 @@ function TargetList({
   pipeline,
   channels,
   options,
+  shows,
 }: TargetsSectionProps & { options: TargetOptions }) {
   const remove = (key: string) =>
     onChange({ ...draft, targets: draft.targets.filter((t) => t.key !== key) });
@@ -52,6 +53,7 @@ function TargetList({
           pipeline={pipeline}
           channels={channels}
           errors={errors}
+          shows={shows}
           onChange={(patch) => onChange(updateTarget(draft, target.key, patch))}
           onRemove={() => remove(target.key)}
         />
