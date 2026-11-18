@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useClearSecret, useSecrets } from "@/api/system";
 import type { SecretInfo } from "@/api/types";
-import { useMutationNotifier } from "@/api/useMutationNotifier";
+import { useConfirmedMutation } from "@/api/useConfirmedMutation";
 import { SecretDialog } from "@/features/secrets/SecretDialog";
 import "@/features/secrets/secrets.css";
 import {
@@ -63,24 +63,19 @@ function SecretList({ list, handlers }: { list: SecretInfo[]; handlers: SecretHa
 }
 
 function ClearSecretDialog({ confirm }: { confirm: ConfirmTarget<SecretInfo> }) {
-  const clear = useClearSecret();
-  const notifier = useMutationNotifier();
-  const target = confirm.target;
-  const onConfirm = () => {
-    if (target !== null) {
-      clear.mutate(
-        target.name,
-        notifier.handlers({ success: `${target.title} cleared.`, onDone: confirm.cancel }),
-      );
-    }
-  };
+  const { onConfirm, busy } = useConfirmedMutation({
+    confirm,
+    mutation: useClearSecret(),
+    vars: (secret) => secret.name,
+    success: (secret) => `${secret.title} cleared.`,
+  });
   return (
     <ConfirmDialog
       {...confirm.dialogProps}
       title="Clear secret?"
-      message={`${target?.title ?? ""} is removed from the keychain. Providers that need it become unavailable.`}
+      message={`${confirm.target?.title ?? ""} is removed from the keychain. Providers that need it become unavailable.`}
       confirmLabel="Clear secret"
-      busy={clear.isPending}
+      busy={busy}
       onConfirm={onConfirm}
     />
   );

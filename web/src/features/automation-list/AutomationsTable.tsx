@@ -58,8 +58,8 @@ function DeleteAutomationDialog({ flow }: { flow: DeleteFlow }) {
       title="Delete automation?"
       message={`“${flow.confirm.target?.name ?? ""}” will stop running. Its past runs and uploads are kept.`}
       confirmLabel="Delete automation"
-      busy={flow.deleting}
-      onConfirm={flow.confirmDelete}
+      busy={flow.busy}
+      onConfirm={flow.onConfirm}
     />
   );
 }

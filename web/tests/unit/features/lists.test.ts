@@ -9,6 +9,7 @@ import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import type { LogLine } from "@/api/types";
 import {
   languagesLabel,
+  nextRunLabel,
   pipelineName,
   sortAutomations,
   targetsLabel,
@@ -50,6 +51,24 @@ describe("automation summary", () => {
       makeAutomation({ id: "3", name: "Beta", enabled: true }),
     ]);
     expect(sorted.map((a) => a.name)).toEqual(["Beta", "Zeta", "Alpha"]);
+  });
+});
+
+describe("nextRunLabel", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("says paused for a disabled automation", () => {
+    expect(nextRunLabel(makeAutomation({ enabled: false }))).toBe("Paused");
+  });
+
+  it("shows a dash when an enabled automation has no next run", () => {
+    expect(nextRunLabel(makeAutomation({ next_run_at: null }))).toBe("Next —");
+  });
+
+  it("shows how far ahead the next run is", () => {
+    vi.useFakeTimers({ now: new Date("2026-03-01T12:00:00Z") });
+    const automation = makeAutomation({ next_run_at: "2026-03-01T15:00:00Z" });
+    expect(nextRunLabel(automation)).toBe("Next in 3 hours");
   });
 });
 

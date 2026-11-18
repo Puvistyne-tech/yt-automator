@@ -67,6 +67,7 @@ export function AutomationEditor(props: AutomationEditorProps) {
           dirty={editor.dirty}
           saving={editor.saving}
           saveLabel={props.automationId === undefined ? "Create automation" : "Save changes"}
+          saveDisabled={false}
           onSave={editor.submit}
         >
           <ButtonLink to="/automations">Cancel</ButtonLink>

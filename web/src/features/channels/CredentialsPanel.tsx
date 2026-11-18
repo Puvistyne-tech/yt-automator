@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useCredentials, useDeleteCredential } from "@/api/channels";
 import type { CredentialSummary } from "@/api/types";
-import { useMutationNotifier } from "@/api/useMutationNotifier";
+import { useConfirmedMutation } from "@/api/useConfirmedMutation";
 import { CredentialDialog } from "@/features/channels/CredentialDialog";
 import { CredentialItem } from "@/features/channels/CredentialItem";
 import {
@@ -54,24 +54,19 @@ function AddCredentialButton({ onAdd, primary }: { onAdd: () => void; primary?: 
 }
 
 function DeleteCredentialDialog({ confirm }: { confirm: ConfirmTarget<CredentialSummary> }) {
-  const remove = useDeleteCredential();
-  const notifier = useMutationNotifier();
-  const target = confirm.target;
-  const onConfirm = () => {
-    if (target !== null) {
-      remove.mutate(
-        target.id,
-        notifier.handlers({ success: `Deleted ${target.name}.`, onDone: confirm.cancel }),
-      );
-    }
-  };
+  const { onConfirm, busy } = useConfirmedMutation({
+    confirm,
+    mutation: useDeleteCredential(),
+    vars: (credential) => credential.id,
+    success: (credential) => `Deleted ${credential.name}.`,
+  });
   return (
     <ConfirmDialog
       {...confirm.dialogProps}
       title="Delete credential?"
-      message={`${target?.name ?? ""} and its stored client secret will be removed. Channels using it must be disconnected first.`}
+      message={`${confirm.target?.name ?? ""} and its stored client secret will be removed. Channels using it must be disconnected first.`}
       confirmLabel="Delete credential"
-      busy={remove.isPending}
+      busy={busy}
       onConfirm={onConfirm}
     />
   );

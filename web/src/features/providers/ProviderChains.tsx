@@ -120,7 +120,6 @@ function ChainsEditor({ data }: { data: ProvidersResponse }) {
         dirty={dirty}
         saving={save.isPending}
         saveLabel="Save chains"
-        saveDisabled={!dirty}
         onSave={submit}
         onReset={() => setConfig(data.config)}
       />

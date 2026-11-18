@@ -1,8 +1,9 @@
 import { HttpResponse, http } from "msw";
 import { artifactResponse } from "@/api/mocks/artifactFiles";
 import { apiError, db, noContent, notFound } from "@/api/mocks/db";
-import { makeUpload } from "@/api/mocks/fixtures/factories";
-import type { Run, Target, Upload } from "@/api/types";
+import { publishRun } from "@/api/mocks/publish";
+import { canCancel, canDelete, canRetry } from "@/api/mocks/runRules";
+import type { Run } from "@/api/types";
 
 const find = (id: unknown) => db.state.runs.find((run) => run.id === id);
 
@@ -20,33 +21,8 @@ function withRun(id: unknown, change: (run: Run) => Run | Response) {
   return result instanceof Response ? result : store(result);
 }
 
-function skipReason(run: Run, target: Target): string | null {
-  if (!run.languages.includes(target.language)) {
-    return `Language ${target.language} is not in this run.`;
-  }
-  return db.state.channels.some((c) => c.id === target.channel_id)
-    ? null
-    : "The channel no longer exists.";
-}
-
-function uploadFor(run: Run, target: Target, variant: string): Upload {
-  const reason = skipReason(run, target);
-  return makeUpload({
-    target_id: target.id,
-    channel_id: target.channel_id,
-    language: target.language,
-    variant,
-    ...(reason === null
-      ? { youtube_video_id: `vid${Math.random().toString(36).slice(2, 10)}` }
-      : { status: "skipped", youtube_video_id: null, url: null, error: reason, quota_units: 0 }),
-  });
-}
-
-function uploadsFor(run: Run): Upload[] {
-  const automation = db.state.automations.find((a) => a.id === run.automation_id);
-  return (automation?.targets ?? []).flatMap((target) =>
-    target.variants.map((variant) => uploadFor(run, target, variant)),
-  );
+function refuse(action: string) {
+  return apiError(409, "invalid_state", `This run cannot be ${action} in its current status.`);
 }
 
 function retry(run: Run, fromStage: string | undefined): Run {
@@ -92,10 +68,16 @@ export const runHandlers = [
   }),
   http.post("/api/runs/:id/retry", async ({ params, request }) => {
     const body = (await request.json().catch(() => ({}))) as { from_stage?: string };
-    return withRun(params.id, (run) => retry(run, body.from_stage));
+    return withRun(params.id, (run) =>
+      canRetry(run.status) ? retry(run, body.from_stage) : refuse("retried"),
+    );
   }),
   http.post("/api/runs/:id/cancel", ({ params }) =>
-    withRun(params.id, (run) => ({ ...run, status: "cancelled", finished_at: db.now() })),
+    withRun(params.id, (run) =>
+      canCancel(run.status)
+        ? { ...run, status: "cancelled", finished_at: db.now() }
+        : refuse("cancelled"),
+    ),
   ),
   http.post("/api/runs/:id/review", async ({ params, request }) => {
     const body = (await request.json()) as { decision: "approved" | "rejected"; notes?: string };
@@ -113,11 +95,18 @@ export const runHandlers = [
     withRun(params.id, (run) =>
       run.status !== "approved"
         ? apiError(409, "invalid_state", "Only an approved run can be published.")
-        : { ...run, status: "published", uploads: uploadsFor(run), finished_at: db.now() },
+        : publishRun(run),
     ),
   ),
   http.delete("/api/runs/:id", ({ params }) => {
-    db.state.runs = db.state.runs.filter((run) => run.id !== params.id);
+    const run = find(params.id);
+    if (run === undefined) {
+      return notFound("Run");
+    }
+    if (!canDelete(run.status)) {
+      return refuse("deleted");
+    }
+    db.state.runs = db.state.runs.filter((item) => item.id !== run.id);
     return noContent();
   }),
 ];

@@ -1,5 +1,5 @@
 import { makeChannel, makeCredential } from "@/api/mocks/fixtures/factories";
-import { settingsInput, validateSettings } from "@/features/app-settings/validate";
+import { settingsChanged, settingsInput, validateSettings } from "@/features/app-settings/validate";
 import {
   credentialPayload,
   credentialSecretHint,
@@ -138,5 +138,22 @@ describe("secret form", () => {
   it("trims the value and rejects blanks", () => {
     expect(validateSecretValue("  ")).toEqual({ ok: false, error: "Enter a value." });
     expect(validateSecretValue(" key ")).toEqual({ ok: true, value: "key" });
+  });
+});
+
+describe("settingsChanged", () => {
+  const settings = {
+    timezone: "UTC",
+    max_parallel_runs: 1,
+    keep_runs_days: 30,
+    data_dir: "/data",
+  };
+
+  it("is false when the input matches the saved settings", () => {
+    expect(settingsChanged(settingsInput(settings), settings)).toBe(false);
+  });
+
+  it("is true when any field differs", () => {
+    expect(settingsChanged({ ...settingsInput(settings), keep_runs_days: 7 }, settings)).toBe(true);
   });
 });

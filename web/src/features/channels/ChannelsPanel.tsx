@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useChannels, useCredentials, useDisconnectChannel } from "@/api/channels";
 import { CHANNEL_STATUSES, PRIVACY_LABELS } from "@/api/labels";
 import type { Channel } from "@/api/types";
-import { useMutationNotifier } from "@/api/useMutationNotifier";
+import { useConfirmedMutation } from "@/api/useConfirmedMutation";
 import { ChannelDefaultsDialog } from "@/features/channels/ChannelDefaultsDialog";
 import { formatDateTime } from "@/shared/format/dates";
 import {
@@ -94,24 +94,19 @@ function ChannelsTable({ list, handlers }: { list: Channel[]; handlers: RowHandl
 }
 
 function DisconnectDialog({ confirm }: { confirm: ConfirmTarget<Channel> }) {
-  const disconnect = useDisconnectChannel();
-  const notifier = useMutationNotifier();
-  const target = confirm.target;
-  const onConfirm = () => {
-    if (target !== null) {
-      disconnect.mutate(
-        target.id,
-        notifier.handlers({ success: `Disconnected ${target.title}.`, onDone: confirm.cancel }),
-      );
-    }
-  };
+  const { onConfirm, busy } = useConfirmedMutation({
+    confirm,
+    mutation: useDisconnectChannel(),
+    vars: (channel) => channel.id,
+    success: (channel) => `Disconnected ${channel.title}.`,
+  });
   return (
     <ConfirmDialog
       {...confirm.dialogProps}
       title="Disconnect channel?"
-      message={`The stored token for ${target?.title ?? ""} is deleted. Automations can no longer publish there.`}
+      message={`The stored token for ${confirm.target?.title ?? ""} is deleted. Automations can no longer publish there.`}
       confirmLabel="Disconnect"
-      busy={disconnect.isPending}
+      busy={busy}
       onConfirm={onConfirm}
     />
   );

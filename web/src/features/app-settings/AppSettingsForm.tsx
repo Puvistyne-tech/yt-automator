@@ -33,7 +33,6 @@ function SettingsEditor({ settings }: { settings: AppSettings }) {
         dirty={dirty}
         saving={save.isPending}
         saveLabel="Save settings"
-        saveDisabled={!dirty}
         onSave={submit}
         onReset={() => setInput(settingsInput(settings))}
       />

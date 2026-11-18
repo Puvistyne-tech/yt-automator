@@ -19,7 +19,7 @@ export function SaveBar({
   saveLabel,
   onSave,
   onReset,
-  saveDisabled = false,
+  saveDisabled = !dirty,
   className,
   children,
 }: SaveBarProps) {

@@ -69,6 +69,19 @@ describe("numbers", () => {
     expect(pluralize(2, "child", "children")).toBe("2 children");
     expect(humanizeId("text_to_speech-v2")).toBe("Text to speech v2");
   });
+
+  it.each([
+    ["llm", "LLM"],
+    ["tts", "TTS"],
+    ["stt", "STT"],
+    ["gpu", "GPU"],
+    ["image", "Image"],
+    ["music", "Music"],
+    ["schedule", "Schedule"],
+    ["sms_gateway", "Sms gateway"],
+  ])("humanizes %s as %s, upper-casing short or vowel-less single words", (id, title) => {
+    expect(humanizeId(id)).toBe(title);
+  });
 });
 
 describe("isIntegerAtLeast", () => {
