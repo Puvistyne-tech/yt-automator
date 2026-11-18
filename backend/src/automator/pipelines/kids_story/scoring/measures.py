@@ -4,8 +4,8 @@ from collections.abc import Sequence
 
 from pydantic import BaseModel, ConfigDict
 
+from automator.domain.srt import SrtEntry
 from automator.pipelines.kids_story.story.words import word_count
-from automator.pipelines.kids_story.subtitles.srt import SrtEntry
 
 FULL = 100.0
 TOLERANCE = 1e-3

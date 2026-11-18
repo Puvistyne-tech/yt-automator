@@ -50,6 +50,22 @@ SMALL_SETTINGS: dict[str, Any] = {
     },
 }
 
+FASTEST_ENCODING: list[dict[str, Any]] = [
+    {
+        "capability": "media",
+        "chain": [
+            {
+                "provider_id": "ffmpeg",
+                "options": {"preset": "ultrafast", "two_pass_loudness": False},
+            }
+        ],
+    },
+    {
+        "capability": "motion",
+        "chain": [{"provider_id": "ffmpeg_pan_zoom", "options": {"preset": "ultrafast"}}],
+    },
+]
+
 
 @pytest.fixture
 def youtube() -> FakeYouTube:
@@ -70,6 +86,7 @@ def api(tmp_path: Path, youtube: FakeYouTube) -> Iterator[Api]:
 
 
 def reviewed_run(api: Api) -> dict[str, Any]:
+    ok(api.client.put("/api/providers", json=FASTEST_ENCODING))
     channel_id = api.channel()
     targets = [
         {"channel_id": channel_id, "language": language, "variants": list(VARIANTS)}

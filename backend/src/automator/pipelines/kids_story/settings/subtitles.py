@@ -4,11 +4,26 @@ from pydantic import Field
 
 from automator.pipelines.kids_story.settings.base import (
     HexColor,
+    LocalizedList,
+    LocalizedNumber,
     LocalizedText,
     SettingsSection,
     color,
+    localized_list,
+    localized_number,
     localized_text,
 )
+
+LATIN_SUBTITLE_FONTS = [
+    "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
+    "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+]
+TAMIL_SUBTITLE_FONTS = [
+    "/System/Library/Fonts/Supplemental/Tamil Sangam MN.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSansTamil-Bold.ttf",
+    "/usr/share/fonts/truetype/noto/NotoSansTamil-Regular.ttf",
+]
 
 
 class SubtitleSettings(SettingsSection):
@@ -51,7 +66,14 @@ class SubtitleSettings(SettingsSection):
         ge=1,
         le=3,
         title="Lines per cue",
-        description="Most lines of text shown on screen at the same time.",
+        description="Most lines of text shown on screen at the same time in the episode.",
+    )
+    short_max_lines: int = Field(
+        default=2,
+        ge=1,
+        le=3,
+        title="Lines per cue in Shorts",
+        description="Most lines of text shown on screen at the same time in the Short.",
     )
     max_cue_seconds: float = Field(
         default=6.0,
@@ -67,11 +89,25 @@ class SubtitleSettings(SettingsSection):
         title="Shortest cue",
         description="Fewest seconds one subtitle stays on screen, so children can read it.",
     )
+    font_files: LocalizedList = localized_list(
+        LATIN_SUBTITLE_FONTS,
+        TAMIL_SUBTITLE_FONTS,
+        "Font files",
+        "Font files tried in order for burned-in subtitles; the first one found draws and "
+        "measures every line.",
+    )
     font_family: LocalizedText = localized_text(
         "Noto Sans",
         "Noto Sans Tamil",
-        "Font",
-        "Name of the font burned-in subtitles are drawn with, per language.",
+        "Fallback font",
+        "Font name used when none of the font files is found, per language.",
+    )
+    letter_width_estimate: LocalizedNumber = localized_number(
+        0.6,
+        1.15,
+        "Letter width estimate",
+        "Width of one letter as a share of the font size, used to wrap lines when no font file "
+        "is found. Higher is safer.",
     )
     font_size: int = Field(
         default=54,
@@ -90,19 +126,28 @@ class SubtitleSettings(SettingsSection):
     primary_color: HexColor = color("#FFFFFF", "Text colour", "Colour of the letters.")
     outline_color: HexColor = color("#000000", "Outline colour", "Colour around the letters.")
     highlight_color: HexColor = color("#FFD54A", "Highlight colour", "Colour of the spoken word.")
-    margin_bottom: int = Field(
-        default=90,
+    bottom_margin_share: float = Field(
+        default=0.08,
         ge=0,
-        le=1000,
+        le=0.6,
         title="Bottom margin",
-        description="Pixels between burned-in subtitles and the bottom of the episode.",
+        description="Space below burned-in subtitles in the episode, as a share of its height.",
     )
-    short_margin_bottom: int = Field(
-        default=320,
+    short_bottom_margin_share: float = Field(
+        default=0.22,
         ge=0,
-        le=1500,
+        le=0.6,
         title="Bottom margin in Shorts",
-        description="Pixels between burned-in subtitles and the bottom of the Short.",
+        description="Space below burned-in subtitles in the Short, as a share of its height. "
+        "The default keeps them in the lower third, above the Shorts title and buttons.",
+    )
+    side_margin_share: float = Field(
+        default=0.04,
+        ge=0,
+        le=0.3,
+        title="Side margins",
+        description="Space kept clear at the left and right of every subtitle line, as a share "
+        "of the picture width.",
     )
 
     @property

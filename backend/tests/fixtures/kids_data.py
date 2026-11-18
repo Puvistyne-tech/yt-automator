@@ -107,11 +107,11 @@ def quick_settings(**sections: dict[str, Any]) -> KidsStorySettings:
         "episode": {"resolution": "1280x720"},
         "short": {"resolution": "720x1280"},
         "thumbnail": {"width": 640, "height": 360, "font_files": NO_FONTS},
+        "subtitles": {"font_files": NO_FONTS},
         "visuals": {"image_candidates": 1, "hero_candidates": 2, "sheet_size": 256},
     }
-    for name, values in sections.items():
-        base[name] = {**base.get(name, {}), **values}
-    return KidsStorySettings.model_validate(base)
+    merged = {name: {**base.get(name, {}), **values} for name, values in sections.items()}
+    return KidsStorySettings.model_validate(base | merged)
 
 
 @dataclass
@@ -195,7 +195,5 @@ def meta_of(rig: StageRig, role: str) -> list[Artifact]:
 
 
 def roles(rig: StageRig, kind: ArtifactKind) -> list[tuple[str | None, str | None]]:
-    return sorted(
-        ((item.language, item.variant) for item in rig.artifacts if item.kind is kind),
-        key=str,
-    )
+    pairs = ((item.language, item.variant) for item in rig.artifacts if item.kind is kind)
+    return sorted(pairs, key=str)

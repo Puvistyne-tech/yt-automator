@@ -18,7 +18,6 @@ from automator.pipelines.kids_story.story.words import (
 from automator.pipelines.kids_story.text.graphemes import (
     grapheme_clusters,
     grapheme_length,
-    split_clusters,
 )
 
 
@@ -105,9 +104,6 @@ def test_grapheme_clusters_keep_tamil_vowel_signs_and_virama() -> None:
     assert grapheme_clusters("குட்டி") == ["கு", "ட்", "டி"]
     assert grapheme_length("மகிழ்ச்சி") == 5
     assert grapheme_length("kutty") == 5
-    pieces = split_clusters("மகிழ்ச்சியாக", 2)
-    assert "".join(pieces) == "மகிழ்ச்சியாக"
-    assert all(piece[0] not in "ாிீ்" for piece in pieces)
 
 
 def test_reading_metrics_use_graphemes() -> None:

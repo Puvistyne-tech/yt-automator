@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from automator.domain.capabilities import WordTiming
+from automator.domain.srt import parse_srt
 from automator.pipelines.kids_story.subtitles.cues import (
     Cue,
     CueRules,
@@ -9,7 +10,7 @@ from automator.pipelines.kids_story.subtitles.cues import (
     word_groups,
     wrapped,
 )
-from automator.pipelines.kids_story.subtitles.srt import parse_srt, render_srt, timestamp
+from automator.pipelines.kids_story.subtitles.srt import render_srt, timestamp
 from automator.pipelines.kids_story.subtitles.timeline_cues import timeline_cues
 from automator.pipelines.kids_story.text.graphemes import grapheme_length
 from automator.pipelines.kids_story.timeline.plan import Segment
@@ -45,14 +46,14 @@ def test_cues_respect_line_length_and_line_count() -> None:
 
 def test_tamil_lines_count_graphemes_not_code_points() -> None:
     text = "குட்டி யானை பெரிய மாமரத்தை நோக்கி நடந்தான்."
-    lines = wrapped(text.split(), 12)
+    lines = wrapped(text.split(), RULES.model_copy(update={"max_chars": 12}))
     assert all(grapheme_length(line) <= 12 for line in lines)
     assert " ".join(lines) == text
     assert len("மாமரத்தை") > grapheme_length("மாமரத்தை")
 
 
 def test_long_tamil_word_is_split_between_clusters_only() -> None:
-    lines = wrapped(["மகிழ்ச்சியுடன்"], 3)
+    lines = wrapped(["மகிழ்ச்சியுடன்"], RULES.model_copy(update={"max_chars": 3}))
     assert "".join(lines) == "மகிழ்ச்சியுடன்"
     assert all(line[0] not in "ாிீுூெேை்" for line in lines)
 

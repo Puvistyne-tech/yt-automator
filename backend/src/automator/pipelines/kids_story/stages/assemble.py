@@ -19,6 +19,7 @@ from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.stages.media_types import JSON, MP4, SRT
 from automator.pipelines.kids_story.stages.run_settings import kids_settings
 from automator.pipelines.kids_story.stages.story_loading import load_stories
+from automator.pipelines.kids_story.subtitles.layout import subtitle_layout
 from automator.pipelines.kids_story.subtitles.srt import render_srt
 from automator.pipelines.kids_story.subtitles.timeline_cues import cue_rules, timeline_cues
 from automator.pipelines.kids_story.timeline.composition import Sources, composition, timeline_meta
@@ -92,7 +93,8 @@ class AssembleStage:
     ) -> Path | None:
         if not settings.subtitles.enabled:
             return None
-        cues = timeline_cues(cut.segments, cut.voices, cue_rules(settings.subtitles, cut.variant))
+        layout = subtitle_layout(settings, cut.language, cut.variant)
+        cues = timeline_cues(cut.segments, cut.voices, cue_rules(settings.subtitles, layout))
         path = folder(context, "subtitles") / f"{cut.name}.srt"
         path.write_text(render_srt(cues), encoding="utf-8")
         return path

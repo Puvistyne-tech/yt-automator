@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+import math
+from collections.abc import Callable, Iterable, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from automator.domain.capabilities import WordTiming
 from automator.pipelines.kids_story.story.words import ends_sentence
-from automator.pipelines.kids_story.text.graphemes import grapheme_length, split_clusters
+from automator.pipelines.kids_story.text.graphemes import grapheme_clusters, grapheme_length
 
 
 class CueRules(BaseModel):
@@ -16,6 +17,13 @@ class CueRules(BaseModel):
     max_lines: int = Field(ge=1)
     max_seconds: float = Field(gt=0)
     min_seconds: float = Field(ge=0)
+    max_width: float = Field(default=math.inf, gt=0)
+    measure: Callable[[str], float] | None = Field(default=None, exclude=True)
+
+    def fits(self, line: str) -> bool:
+        if grapheme_length(line) > self.max_chars:
+            return False
+        return self.measure is None or self.measure(line) <= self.max_width
 
 
 class Cue(BaseModel):
@@ -31,24 +39,27 @@ class Cue(BaseModel):
         return " ".join(self.lines)
 
 
-def pieces(word: str, max_chars: int) -> list[str]:
-    return split_clusters(word, max_chars) if grapheme_length(word) > max_chars else [word]
-
-
-def wrapped(words: Sequence[str], max_chars: int) -> list[str]:
+def packed(units: Iterable[str], separator: str, fits: Callable[[str], bool]) -> list[str]:
     lines: list[str] = []
-    for word in words:
-        for piece in pieces(word, max_chars):
-            joined = f"{lines[-1]} {piece}" if lines else piece
-            if lines and grapheme_length(joined) <= max_chars:
-                lines[-1] = joined
-            else:
-                lines.append(piece)
+    for unit in units:
+        joined = f"{lines[-1]}{separator}{unit}" if lines else unit
+        if lines and fits(joined):
+            lines[-1] = joined
+        else:
+            lines.append(unit)
     return lines
 
 
+def pieces(word: str, rules: CueRules) -> list[str]:
+    return [word] if rules.fits(word) else packed(grapheme_clusters(word), "", rules.fits)
+
+
+def wrapped(words: Sequence[str], rules: CueRules) -> list[str]:
+    return packed((piece for word in words for piece in pieces(word, rules)), " ", rules.fits)
+
+
 def fits(group: Sequence[WordTiming], rules: CueRules) -> bool:
-    within_lines = len(wrapped([word.word for word in group], rules.max_chars)) <= rules.max_lines
+    within_lines = len(wrapped([word.word for word in group], rules)) <= rules.max_lines
     within_time = group[-1].end_seconds - group[0].start_seconds <= rules.max_seconds
     return within_lines and within_time
 
@@ -74,9 +85,25 @@ def segment_cues(
     cues = []
     for group in word_groups(words, rules):
         start = min(offset + group[0].start_seconds, limit)
-        end = min(offset + group[-1].end_seconds, limit)
-        lines = tuple(wrapped([word.word for word in group], rules.max_chars))
-        cues.append(Cue(start=start, end=max(start, end), lines=lines, limit=limit))
+        end = max(start, min(offset + group[-1].end_seconds, limit))
+        lines = wrapped([word.word for word in group], rules)
+        cues.extend(screenfuls(Cue(start=start, end=end, lines=(), limit=limit), lines, rules))
+    return cues
+
+
+def screenfuls(window: Cue, lines: Sequence[str], rules: CueRules) -> list[Cue]:
+    chunks = [
+        tuple(lines[at : at + rules.max_lines]) for at in range(0, len(lines), rules.max_lines)
+    ]
+    weights = [sum(grapheme_length(line) for line in chunk) for chunk in chunks]
+    total = sum(weights) or 1
+    span = window.end - window.start
+    cues: list[Cue] = []
+    start = window.start
+    for chunk, weight in zip(chunks, weights, strict=True):
+        end = start + span * weight / total
+        cues.append(window.model_copy(update={"start": start, "end": end, "lines": chunk}))
+        start = end
     return cues
 
 

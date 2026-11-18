@@ -21,9 +21,3 @@ def grapheme_clusters(text: str) -> list[str]:
 
 def grapheme_length(text: str) -> int:
     return len(grapheme_clusters(text))
-
-
-def split_clusters(text: str, size: int) -> list[str]:
-    clusters = grapheme_clusters(text)
-    step = max(1, size)
-    return ["".join(clusters[index : index + step]) for index in range(0, len(clusters), step)]

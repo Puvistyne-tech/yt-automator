@@ -2,20 +2,21 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
-from automator.pipelines.kids_story.artifacts import SHORT
 from automator.pipelines.kids_story.settings.subtitles import SubtitleSettings
 from automator.pipelines.kids_story.subtitles.cues import Cue, CueRules, segment_cues, separated
+from automator.pipelines.kids_story.subtitles.layout import SubtitleLayout
 from automator.pipelines.kids_story.timeline.plan import Segment
 from automator.pipelines.kids_story.timeline.voices import VoiceLine
 
 
-def cue_rules(settings: SubtitleSettings, variant: str) -> CueRules:
-    chars = settings.short_max_chars_per_line if variant == SHORT else settings.max_chars_per_line
+def cue_rules(settings: SubtitleSettings, layout: SubtitleLayout) -> CueRules:
     return CueRules(
-        max_chars=chars,
-        max_lines=settings.max_lines,
+        max_chars=layout.max_chars,
+        max_lines=layout.max_lines,
         max_seconds=settings.max_cue_seconds,
         min_seconds=settings.min_cue_seconds,
+        max_width=layout.line_width,
+        measure=layout.font.measure,
     )
 
 

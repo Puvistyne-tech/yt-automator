@@ -10,6 +10,7 @@ from automator.domain.capabilities import SubtitleStyle, TimedClip, VideoComposi
 from automator.pipelines.kids_story.artifacts import SHORT, is_scene_key
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.model import Story
+from automator.pipelines.kids_story.subtitles.layout import subtitle_layout
 from automator.pipelines.kids_story.timeline.plan import Segment
 from automator.pipelines.kids_story.timeline.voices import VoiceLine
 
@@ -69,15 +70,17 @@ def effect_clips(
 
 def subtitle_style(settings: KidsStorySettings, language: str, variant: str) -> SubtitleStyle:
     subtitles = settings.subtitles
-    short = variant == SHORT
+    layout = subtitle_layout(settings, language, variant)
     return SubtitleStyle(
-        burn_in=subtitles.burn_in_short if short else subtitles.burn_in_episode,
-        font_family=subtitles.font_family.for_language(language),
-        font_size=subtitles.short_font_size if short else subtitles.font_size,
+        burn_in=subtitles.burn_in_short if variant == SHORT else subtitles.burn_in_episode,
+        font_family=layout.font.family,
+        font_file=layout.font.file,
+        font_size=layout.font_size,
         primary_color=subtitles.primary_color,
         outline_color=subtitles.outline_color,
         highlight_color=subtitles.highlight_color,
-        margin_bottom=subtitles.short_margin_bottom if short else subtitles.margin_bottom,
+        margin_bottom=layout.bottom_margin,
+        margin_sides=layout.side_margin,
     )
 
 

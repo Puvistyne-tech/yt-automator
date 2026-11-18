@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 
 from automator.domain.capabilities import WordTiming
+from automator.domain.srt import parse_srt
+from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.settings.subtitles import SubtitleSettings
 from automator.pipelines.kids_story.story.words import ends_sentence
 from automator.pipelines.kids_story.subtitles.cues import (
@@ -12,7 +14,8 @@ from automator.pipelines.kids_story.subtitles.cues import (
     separated,
     word_groups,
 )
-from automator.pipelines.kids_story.subtitles.srt import parse_srt, render_srt
+from automator.pipelines.kids_story.subtitles.layout import subtitle_layout
+from automator.pipelines.kids_story.subtitles.srt import render_srt
 from automator.pipelines.kids_story.subtitles.timeline_cues import cue_rules, timeline_cues
 from automator.pipelines.kids_story.timeline.plan import Segment
 from automator.pipelines.kids_story.timeline.voices import VoiceLine
@@ -31,10 +34,15 @@ def words_in(groups: list[list[WordTiming]]) -> list[list[str]]:
     return [[word.word for word in group] for group in groups]
 
 
-def test_cue_rules_use_the_line_length_of_each_variant() -> None:
-    settings = SubtitleSettings(max_chars_per_line=40, short_max_chars_per_line=20)
-    assert cue_rules(settings, "short").max_chars == 20
-    assert cue_rules(settings, "episode").max_chars == 40
+def test_cue_rules_use_the_line_length_and_line_count_of_each_variant() -> None:
+    subtitles = SubtitleSettings(
+        max_chars_per_line=40, short_max_chars_per_line=20, max_lines=3, short_max_lines=1
+    )
+    settings = KidsStorySettings(subtitles=subtitles)
+    short = cue_rules(subtitles, subtitle_layout(settings, "en", "short"))
+    episode = cue_rules(subtitles, subtitle_layout(settings, "en", "episode"))
+    assert (short.max_chars, short.max_lines) == (20, 1)
+    assert (episode.max_chars, episode.max_lines) == (40, 3)
 
 
 def test_time_limit_splits_mid_sentence_and_a_sentence_end_still_closes_a_cue() -> None:

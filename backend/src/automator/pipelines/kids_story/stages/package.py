@@ -6,6 +6,7 @@ from pathlib import Path
 from automator.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from automator.domain.pipeline_descriptors import StageDescriptor
 from automator.domain.run_enums import ArtifactKind, LogLevel
+from automator.domain.srt import parse_srt
 from automator.pipelines.kids_story.art.cards import lettered_or_plain, lettering_for
 from automator.pipelines.kids_story.art.imaging import JpegBudget, saved_jpeg
 from automator.pipelines.kids_story.artifacts import (
@@ -25,7 +26,6 @@ from automator.pipelines.kids_story.stages.media_types import JPEG, JSON, SRT
 from automator.pipelines.kids_story.stages.run_settings import kids_settings
 from automator.pipelines.kids_story.stages.story_loading import load_story
 from automator.pipelines.kids_story.story.model import Story
-from automator.pipelines.kids_story.subtitles.srt import parse_srt
 
 LOCAL_PROVIDER = "local"
 

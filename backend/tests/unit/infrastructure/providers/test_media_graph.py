@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from automator.domain.capabilities import SubtitleStyle
+from automator.infrastructure.providers.media.ass_document import ass_color
 from automator.infrastructure.providers.media.composition_audio import (
     LoudnessMeasurement,
     audio_graph,
@@ -15,11 +16,7 @@ from automator.infrastructure.providers.media.composition_inputs import (
 )
 from automator.infrastructure.providers.media.composition_video import video_graph
 from automator.infrastructure.providers.media.media_commands import compose_command
-from automator.infrastructure.providers.media.subtitle_filter import (
-    ass_color,
-    filter_path,
-    subtitle_filter,
-)
+from automator.infrastructure.providers.media.subtitle_filter import filter_path, subtitle_filter
 from automator.shared.errors import UpstreamFailure
 from tests.unit.infrastructure.providers.media_fixtures import OPTIONS, composition
 
@@ -61,8 +58,7 @@ def test_video_graph_places_clips_on_a_timeline_with_subtitles_and_fades() -> No
         "trim=duration=1.500,setpts=PTS-STARTPTS+2.000/TB[v1]"
     )
     assert graph[4] == "[o0][v1]overlay=eof_action=pass:repeatlast=0[o1]"
-    assert graph[5].startswith("[o1]subtitles=filename=/w/subs.srt:force_style='FontName=Noto Sans")
-    assert "FontSize=57.6" in graph[5]
+    assert graph[5].startswith("[o1]ass=filename=/w/subs.srt:shaping=complex,fade=")
     assert graph[5].endswith(
         "fade=t=in:st=0:d=0.500,fade=t=out:st=3.000:d=0.500,format=yuv420p[vout]"
     )
@@ -138,8 +134,18 @@ def test_filter_paths_and_colours_are_escaped() -> None:
         ass_color("gold")
 
 
-def test_ass_subtitles_keep_pixel_sizes_and_fonts_dir() -> None:
-    rendered = subtitle_filter(Path("/w/s.ass"), SubtitleStyle(font_size=54), 1080, 3, "/fonts")
-    assert "FontSize=54.0" in rendered
-    assert "MarginV=90" in rendered
-    assert rendered.endswith(":fontsdir=/fonts")
+def test_subtitles_use_complex_shaping_and_the_configured_fonts_dir() -> None:
+    rendered = subtitle_filter(Path("/w/s.ass"), SubtitleStyle(), "/fonts")
+    assert rendered == "ass=filename=/w/s.ass:shaping=complex:fontsdir=/fonts"
+
+
+def test_a_font_file_brings_its_own_folder() -> None:
+    style = SubtitleStyle(font_file=Path("/opt/type/Tamil.ttf"))
+    rendered = subtitle_filter(Path("/w/s.ass"), style, "/fonts")
+    assert rendered.endswith(":shaping=complex:fontsdir=/opt/type")
+
+
+def test_no_fonts_dir_leaves_the_system_fonts() -> None:
+    assert subtitle_filter(Path("/w/s.ass"), SubtitleStyle(), "") == (
+        "ass=filename=/w/s.ass:shaping=complex"
+    )

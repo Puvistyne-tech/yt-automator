@@ -201,6 +201,15 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   the last narration clip.
 - `extract_frame` fails with an upstream failure when no frame was written, for example past the end.
 - Speech synthesizers refuse blank text with an upstream failure.
+- `SubtitleStyle`: burn_in, font_family, font_file (nullable), font_size, primary, outline and highlight
+  colours, margin_bottom, margin_sides, wrap_lines (default false).
+- Burned-in subtitles (`subtitles` set and `SubtitleStyle.burn_in`): an SRT file is converted to an ASS
+  document whose canvas is the frame size, so `font_size`, `margin_bottom` and `margin_sides` are frame
+  pixels. Each SRT line is drawn as one line: the renderer does not re-wrap unless `wrap_lines` is true,
+  so the producer wraps to fit. An `.ass` file is drawn as authored. Text is shaped with complex
+  shaping (needed for Tamil and other Indic scripts). When `font_file` is set its folder is the font
+  folder, otherwise the provider's configured fonts folder, otherwise the system fonts.
+- `domain/srt.py` parses SRT into entries (start, end, lines); producers and the media toolkit share it.
 
 ## HTTP API
 

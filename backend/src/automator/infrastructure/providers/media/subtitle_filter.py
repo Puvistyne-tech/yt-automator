@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from automator.domain.capabilities import SubtitleStyle
-from automator.shared.errors import UpstreamFailure
+from automator.domain.capabilities import SubtitleStyle, VideoComposition
+from automator.domain.srt import parse_srt
+from automator.infrastructure.providers.media.ass_document import ass_document
 
-LIBASS_DEFAULT_PLAY_HEIGHT = 288
 OPTION_SPECIALS = ("\\", "'", ":")
 GRAPH_SPECIALS = ("\\", "'", "[", "]", ",", ";")
-FONT_NAME_EXTRAS = frozenset(" -_")
+ASS_SUFFIX = ".ass"
 
 
 def escaped(value: str, specials: tuple[str, ...]) -> str:
@@ -21,49 +21,27 @@ def filter_path(path: Path) -> str:
     return escaped(escaped(str(path), OPTION_SPECIALS), GRAPH_SPECIALS)
 
 
-def ass_color(hex_color: str) -> str:
-    digits = hex_color.lstrip("#")
-    if len(digits) != 6 or any(char not in "0123456789abcdefABCDEF" for char in digits):
-        raise UpstreamFailure(f"subtitle colour {hex_color!r} is not #RRGGBB")
-    red, green, blue = digits[0:2], digits[2:4], digits[4:6]
-    return f"&H00{blue}{green}{red}".upper()
+def fonts_folder(style: SubtitleStyle, configured: str) -> str:
+    return str(style.font_file.parent) if style.font_file is not None else configured
 
 
-def font_name(family: str) -> str:
-    if family and all(char.isalnum() or char in FONT_NAME_EXTRAS for char in family):
-        return family
-    raise UpstreamFailure(
-        f"subtitle font {family!r} may only use letters, digits, spaces, '-' and '_'"
-    )
-
-
-def style_scale(subtitles: Path, video_height: int) -> float:
-    if subtitles.suffix.lower() == ".ass":
-        return 1.0
-    return LIBASS_DEFAULT_PLAY_HEIGHT / video_height
-
-
-def force_style(style: SubtitleStyle, scale: float, outline: float) -> str:
-    fields = {
-        "FontName": font_name(style.font_family),
-        "FontSize": f"{style.font_size * scale:.1f}",
-        "PrimaryColour": ass_color(style.primary_color),
-        "SecondaryColour": ass_color(style.highlight_color),
-        "OutlineColour": ass_color(style.outline_color),
-        "BorderStyle": "1",
-        "Outline": f"{outline * scale:.2f}",
-        "Shadow": "0",
-        "Alignment": "2",
-        "MarginV": str(round(style.margin_bottom * scale)),
-    }
-    return ",".join(f"{key}={value}" for key, value in fields.items())
-
-
-def subtitle_filter(
-    subtitles: Path, style: SubtitleStyle, video_height: int, outline: float, fonts_dir: str
-) -> str:
-    styled = force_style(style, style_scale(subtitles, video_height), outline)
-    rendered = f"subtitles=filename={filter_path(subtitles)}:force_style='{styled}'"
-    if fonts_dir:
-        rendered += f":fontsdir={filter_path(Path(fonts_dir))}"
+def subtitle_filter(subtitles: Path, style: SubtitleStyle, fonts_dir: str) -> str:
+    rendered = f"ass=filename={filter_path(subtitles)}:shaping=complex"
+    folder = fonts_folder(style, fonts_dir)
+    if folder:
+        rendered += f":fontsdir={filter_path(Path(folder))}"
     return rendered
+
+
+def with_ass_subtitles(
+    composition: VideoComposition, size: tuple[int, int], output: Path, outline: float
+) -> VideoComposition:
+    subtitles = composition.subtitles
+    burned = composition.subtitle_style.burn_in
+    if subtitles is None or not burned or subtitles.suffix.lower() == ASS_SUFFIX:
+        return composition
+    entries = parse_srt(subtitles.read_text(encoding="utf-8"))
+    document = ass_document(entries, composition.subtitle_style, size, outline)
+    target = output.with_suffix(ASS_SUFFIX)
+    target.write_text(document, encoding="utf-8")
+    return composition.model_copy(update={"subtitles": target})

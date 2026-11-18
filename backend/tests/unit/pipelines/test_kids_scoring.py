@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from automator.domain.quality import ScoreItem
+from automator.domain.srt import SrtEntry
 from automator.pipelines.kids_story.plugin import KidsStoryPipeline
 from automator.pipelines.kids_story.scoring.content_items import (
     character_consistency,
@@ -28,7 +29,6 @@ from automator.pipelines.kids_story.scoring.timing_items import (
     speaking_rate,
     subtitle_timing,
 )
-from automator.pipelines.kids_story.subtitles.srt import SrtEntry
 from tests.fixtures.kids_data import StageRig, quick_settings, run_chain
 from tests.fixtures.kids_fakes import FakeMedia, FakeProviders, FakeSpeech
 
@@ -53,14 +53,17 @@ def required(item: ScoreItem | None) -> ScoreItem:
 
 def test_range_score_and_subtitle_track_measures() -> None:
     assert range_score(5, 0, 10, 2) == 100 and range_score(13, 0, 10, 10) == 70
-    good = [SrtEntry(start=0, end=1, text="one two"), SrtEntry(start=1, end=2, text="three")]
+    good = [
+        SrtEntry(start=0, end=1, lines=("one two",)),
+        SrtEntry(start=1, end=2, lines=("three",)),
+    ]
     assert subtitle_track(good, 2.0, 3, RULES).score == 100
     overlapping = [
-        SrtEntry(start=0, end=1.5, text="one two"),
-        SrtEntry(start=1, end=2, text="three"),
+        SrtEntry(start=0, end=1.5, lines=("one two",)),
+        SrtEntry(start=1, end=2, lines=("three",)),
     ]
     assert subtitle_track(overlapping, 2.0, 3, RULES).score == 50
-    outside = [SrtEntry(start=0, end=5, text="one two three")]
+    outside = [SrtEntry(start=0, end=5, lines=("one two three",))]
     assert subtitle_track(outside, 2.0, 3, RULES).score == 50
     strict = RULES.model_copy(update={"min_coverage": 1.0})
     assert subtitle_track(good, 2.0, 6, strict).score == 50

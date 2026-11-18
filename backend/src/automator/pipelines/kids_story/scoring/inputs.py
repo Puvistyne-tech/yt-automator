@@ -8,12 +8,12 @@ from automator.domain.capabilities import Capability, MediaToolkit
 from automator.domain.pipeline import StageContext
 from automator.domain.quality import ScoreItem
 from automator.domain.run_parts import Artifact
+from automator.domain.srt import SrtEntry, parse_srt
 from automator.pipelines.kids_story.artifacts import MissingArtifactError, Role, latest, number
 from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.stages.run_settings import kids_settings
 from automator.pipelines.kids_story.stages.story_loading import load_story
 from automator.pipelines.kids_story.story.model import Story
-from automator.pipelines.kids_story.subtitles.srt import SrtEntry, parse_srt
 from automator.pipelines.kids_story.timeline.voices import VoiceLine, voice_lines
 
 
