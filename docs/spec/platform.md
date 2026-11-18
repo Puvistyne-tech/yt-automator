@@ -98,16 +98,25 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (runtime setting `doctor_
     top-level settings property, and when sections are given every top-level property is in exactly one
     section. The form shows the sections in list order, each under its title; without sections the form is one
     ungrouped list.
-  - Any other key names a settings property (after resolving `$ref` into `$defs`) and holds the hints for it;
-    `items` holds the hints for the items of an array property. Nesting follows the settings schema.
-  - `ui:widget`: one of `textarea`, `select`, `radio`, `checkboxes`, `range`, `color` (`UI_WIDGETS`).
-  - `ui:order`: a list of property names of that object, optionally with `"*"` for the rest.
-  - `ui:options`: an object; the form honours `rows` on `textarea` and `step` on `range`.
-  - No other `ui:` key is allowed. The web mock pipeline uses this same format.
+  - Any other key names a settings property and holds the hints for it; `items` holds the hints for the
+    items of an array property. Nesting follows the settings schema, resolving local `$ref`s (`#/...`) and,
+    for an optional property written as `anyOf`/`oneOf`, its first non-null branch (`domain/json_schema.py`).
+  - `ui:widget`: one of `textarea`, `select`, `radio`, `checkboxes`, `range`, `color` (`UI_WIDGETS`; this line is
+    the source both test suites read).
+  - `ui:order`: a list of property names of that object. It either names every property or ends with `"*"`
+    for the rest; leaving a property out without `"*"` is a problem.
+  - `ui:options`: an object; the form honours `rows` on `textarea` and `step` on `range`. A `step` that is not a
+    finite number above zero is ignored and the schema's own step is used.
+  - No other `ui:` key is allowed. Help text comes from each field's `description` in the settings schema.
+    The web mock pipeline uses this same format.
+- `PipelineDescriptor` rejects a `ui_schema` with any problem, so a broken plugin fails when it is loaded.
 - The kids story pipeline (`kids_story`, shown as "Kids story videos") carries no channel identity in its
   defaults: the series name defaults to "Story Time", the brand mark text is empty (no mark is drawn), and
   `{series}` is filled in with the automation's series name in the intro line, outro line, titles,
-  descriptions and playlist title.
+  descriptions and playlist title; the intro and outro lines take the same placeholders as the description,
+  and unknown placeholders stay as written. The series name must not be blank in any language. When no bundled story
+  fits the automation's cast ids and languages, the story stage fails naming both what the automation has
+  and what the bundled stories need.
 - Every automation language must be one the pipeline offers. Every target language must be in the automation's languages. Every target variant must be one the pipeline offers. Every target channel must exist.
 - An automation with schedule `interval` needs `every_hours >= 1`. With `cron` it needs a valid 5-field expression.
 - A run snapshots the automation's settings, languages and review policy at creation. Editing or deleting the automation never changes a past or queued run.

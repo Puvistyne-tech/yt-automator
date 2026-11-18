@@ -22,14 +22,14 @@ from automator.pipelines.kids_story.text.graphemes import (
 
 
 def test_words_strip_punctuation_and_keep_tamil_marks() -> None:
-    assert words_of('"Hello," said Raju. "Let\'s go!"') == [
+    assert words_of('"Hello," said Kavin. "Let\'s go!"') == [
         "Hello",
         "said",
-        "Raju",
+        "Kavin",
         "Let's",
         "go",
     ]
-    assert words_of("ராஜு யானை நடந்தான்.") == ["ராஜு", "யானை", "நடந்தான்"]
+    assert words_of("கவின் யானை நடந்தான்.") == ["கவின்", "யானை", "நடந்தான்"]
     assert word_count("  ") == 0
 
 
@@ -91,7 +91,7 @@ def test_speakable_english() -> None:
 
 
 def test_speakable_tamil() -> None:
-    assert speakable("ராஜு 2 மாம்பழம் & 10 வாழைப்பழம்.", "ta") == ("ராஜு இரண்டு மாம்பழம் மற்றும் பத்து வாழைப்பழம்.")
+    assert speakable("கவின் 2 மாம்பழம் & 10 வாழைப்பழம்.", "ta") == ("கவின் இரண்டு மாம்பழம் மற்றும் பத்து வாழைப்பழம்.")
 
 
 def test_speakable_unknown_language_only_tidies_spaces() -> None:
@@ -105,7 +105,7 @@ def test_grapheme_clusters_keep_tamil_vowel_signs_and_virama() -> None:
 
 
 def test_reading_metrics_use_graphemes() -> None:
-    metrics = reading_metrics("Raju walked. The elephant smiled happily.", 7)
+    metrics = reading_metrics("Kavin walked. The elephant smiled happily.", 7)
     assert metrics.average_sentence_words == 3.0
     assert metrics.long_word_share == pytest.approx(1 / 6)
 

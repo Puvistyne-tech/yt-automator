@@ -16,9 +16,9 @@ from tests.fixtures.fonts import embedded_font, embedded_font_family
 from tests.fixtures.kids_data import quick_settings
 
 NARRATION = {
-    "en": "Raju the little elephant lifted his long trunk high into the warm morning air and "
+    "en": "Kavin the little elephant lifted his long trunk high into the warm morning air and "
     "reached for the biggest, sweetest, most wonderfully golden mango on the whole tree.",
-    "ta": "ராஜு தன் தும்பிக்கையை உயர்த்தி, மிகப் பெரிய, மிக இனிப்பான மாம்பழத்தைப் பறித்தான். "
+    "ta": "கவின் தன் தும்பிக்கையை உயர்த்தி, மிகப் பெரிய, மிக இனிப்பான மாம்பழத்தைப் பறித்தான். "
     "மிட்டு கிளி மகிழ்ச்சியுடன் பாட்டுப் பாடியது, சின்னு அணில் கைதட்டிச் சிரித்தது.",
 }
 VARIANTS = ("episode", "short")

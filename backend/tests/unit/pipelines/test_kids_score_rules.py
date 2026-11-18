@@ -83,7 +83,7 @@ def test_episode_length_scores_scene_narration_only(
 
 def ending_without_moral_or_refrain(draft: Story) -> Story:
     scenes = [
-        scene.model_copy(update={"narration": "Raju waved goodbye to everyone."})
+        scene.model_copy(update={"narration": "Kavin waved goodbye to everyone."})
         for scene in draft.scenes
     ]
     return draft.model_copy(update={"scenes": scenes})

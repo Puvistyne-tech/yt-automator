@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -97,12 +97,33 @@ class BundledChoice:
     seed: str
 
 
+def listed(names: Iterable[str]) -> str:
+    return ", ".join(sorted(names))
+
+
+def bundled_requirements(stories: Sequence[BundledStory]) -> str:
+    needs = dict.fromkeys(
+        f"the cast ids {listed(story.cast)} with the languages {listed(story.text)}"
+        for story in stories
+    )
+    return ", or ".join(needs)
+
+
+def no_fit_message(choice: BundledChoice) -> str:
+    return (
+        f"no bundled story fits this automation, whose cast ids are {listed(choice.cast_ids)} "
+        f"and whose languages are {listed(choice.languages)}. Bundled stories need "
+        f"{bundled_requirements(bundled_stories())}. Use those cast ids, or let the language "
+        "model write the stories."
+    )
+
+
 def pick_bundled(choice: BundledChoice) -> BundledStory:
     usable = [
         story for story in bundled_stories() if compatible(story, choice.cast_ids, choice.languages)
     ]
     if not usable:
-        raise LookupError("no bundled story fits the cast and languages")
+        raise LookupError(no_fit_message(choice))
     by_theme = {story.theme.casefold(): story for story in usable}
     if choice.theme.casefold() in by_theme:
         return by_theme[choice.theme.casefold()]

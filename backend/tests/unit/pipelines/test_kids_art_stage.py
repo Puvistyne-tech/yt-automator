@@ -89,11 +89,11 @@ def test_character_sheets_are_drawn_once_and_referenced(tmp_path: Path) -> None:
     assert sorted(str(item.meta["character"]) for item in sheets) == [
         "aamai_thatha",
         "chinnu",
+        "kavin",
         "mittu",
-        "raju",
     ]
     first_scene = scene_requests(rig.providers.images)[0]
-    assert [path.name for path in first_scene.reference_images] == ["sheet-raju.png"]
+    assert [path.name for path in first_scene.reference_images] == ["sheet-kavin.png"]
 
 
 def test_character_sheets_can_be_turned_off(tmp_path: Path) -> None:

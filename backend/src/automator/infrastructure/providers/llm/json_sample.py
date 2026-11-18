@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import JsonValue
 
+from automator.domain.json_schema import resolved
+
 Schema = Mapping[str, Any]
 
 
@@ -22,16 +24,6 @@ class Slot:
     index: int
 
 
-def resolve_ref(schema: Schema, root: Schema) -> Schema:
-    reference = schema.get("$ref")
-    if not isinstance(reference, str) or not reference.startswith("#/"):
-        return schema
-    node: Any = root
-    for part in reference[2:].split("/"):
-        node = node.get(part, {}) if isinstance(node, Mapping) else {}
-    return {**node, **{key: value for key, value in schema.items() if key != "$ref"}}
-
-
 def preset(schema: Schema, slot: Slot) -> tuple[bool, JsonValue]:
     if "const" in schema:
         return True, schema["const"]
@@ -44,18 +36,6 @@ def preset(schema: Schema, slot: Slot) -> tuple[bool, JsonValue]:
     if isinstance(enum, list) and enum:
         return True, enum[slot.index % len(enum)]
     return False, None
-
-
-def non_null(options: Any) -> Schema:
-    candidates = [item for item in options if item.get("type") != "null"] or list(options)
-    return dict(candidates[0]) if candidates else {}
-
-
-def narrowed(schema: Schema) -> Schema:
-    for key in ("anyOf", "oneOf", "allOf"):
-        if isinstance(schema.get(key), list) and schema[key]:
-            return {**schema, **non_null(schema[key]), key: None}
-    return schema
 
 
 def kind_of(schema: Schema) -> str:
@@ -128,11 +108,11 @@ SAMPLERS: dict[str, Sampler] = {
 
 
 def sample(schema: Schema, context: SampleContext, slot: Slot) -> JsonValue:
-    resolved = resolve_ref(narrowed(resolve_ref(schema, context.root)), context.root)
-    found, value = preset(resolved, slot)
+    node = resolved(schema, context.root)
+    found, value = preset(node, slot)
     if found:
         return value
-    return SAMPLERS.get(kind_of(resolved), string_sample)(resolved, slot, context)
+    return SAMPLERS.get(kind_of(node), string_sample)(node, slot, context)
 
 
 def sample_document(schema: Schema, topic: str, array_items: int) -> JsonValue:

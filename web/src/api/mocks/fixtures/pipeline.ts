@@ -72,7 +72,7 @@ const settingsSchema = {
       minItems: 1,
       items: castMember,
       default: [
-        { name: "Raju", role: "hero", description: "A curious elephant calf", color: "#f59e0b" },
+        { name: "Kavin", role: "hero", description: "A curious elephant calf", color: "#f59e0b" },
         { name: "Mynah", role: "friend", description: "A chatty bird", color: "#10b981" },
       ],
     },

@@ -36,6 +36,7 @@ const series = {
   title: "SeriesSettings",
   properties: {
     art_style: text("Art style prompt"),
+    tagline: text("Tagline"),
     name: { $ref: "#/$defs/LocalizedText", title: "Series name" },
   },
 };
@@ -93,19 +94,23 @@ const pipelineUiSchema = {
     fields: SECTION_FIELDS[index],
   })),
   series: {
-    "ui:order": ["name", "art_style"],
+    "ui:order": ["name", "*"],
     art_style: { "ui:widget": "textarea", "ui:options": { rows: 3 } },
   },
   cast: { items: { palette: { items: { "ui:widget": "color" } } } },
   music: { volume: { "ui:widget": "range", "ui:options": { step: 0.01 } } },
 };
 
+function follows(first: Element, second: Element): boolean {
+  return (first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+}
+
 function renderPipelineForm() {
   render(
     <SchemaForm
       schema={settingsSchema}
       uiSchema={pipelineUiSchema}
-      value={{ cast: [{ id: "raju", palette: ["#8FA3B8"] }] }}
+      value={{ cast: [{ id: "kavin", palette: ["#8FA3B8"] }] }}
       idPrefix="pipeline"
       onChange={() => undefined}
     />,
@@ -125,7 +130,9 @@ describe("SchemaForm with the pipeline ui_schema shape", () => {
 
     const seriesName = screen.getByRole("group", { name: "Series name" });
     const artStyle = screen.getByRole("textbox", { name: "Art style prompt" });
-    expect(seriesName.compareDocumentPosition(artStyle)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    const tagline = screen.getByRole("textbox", { name: "Tagline" });
+    expect(follows(seriesName, artStyle)).toBe(true);
+    expect(follows(artStyle, tagline)).toBe(true);
     expect(artStyle).toHaveAttribute("rows", "3");
     expect(screen.getByRole("slider", { name: "Music volume" })).toHaveAttribute("step", "0.01");
     expect(screen.getByText("#8FA3B8")).toBeInTheDocument();

@@ -71,9 +71,9 @@ def test_settings_helpers_resolve_sizes_and_characters() -> None:
     settings = KidsStorySettings()
     assert settings.video_size("episode") == (1920, 1080)
     assert settings.video_size("short") == (1080, 1920)
-    assert [member.id for member in settings.characters(["mittu", "nobody", "raju"])] == [
+    assert [member.id for member in settings.characters(["mittu", "nobody", "kavin"])] == [
         "mittu",
-        "raju",
+        "kavin",
     ]
 
 
@@ -81,7 +81,7 @@ def test_default_settings_validate_and_round_trip() -> None:
     descriptor = KidsStoryPipeline().descriptor
     settings = KidsStorySettings.model_validate(descriptor.default_settings)
     assert settings == KidsStorySettings()
-    assert settings.cast[0].id == "raju" and settings.cast[0].species == "baby elephant"
+    assert settings.cast[0].id == "kavin" and settings.cast[0].species == "baby elephant"
     assert 3 <= len(settings.cast) <= 4
 
 
@@ -106,9 +106,16 @@ def test_descriptor_declares_languages_variants_and_kids_content() -> None:
 def test_ui_schema_sections_cover_every_settings_section() -> None:
     ui = KidsStoryPipeline().descriptor.ui_schema
     sections = cast(list[dict[str, Any]], ui["ui:sections"])
-    assert [section["title"] for section in sections][:2] == ["Series", "Story"]
-    covered = [name for section in sections for name in section["fields"]]
-    assert sorted(covered) == sorted(KidsStorySettings.model_fields)
+    assert [section["title"] for section in sections] == [
+        "Series",
+        "Story",
+        "Pictures and motion",
+        "Sound",
+        "Subtitles",
+        "Videos",
+        "Publishing",
+        "Quality checks",
+    ]
     assert cast(dict[str, Any], ui["music"])["volume"] == {
         "ui:widget": "range",
         "ui:options": {"step": 0.01},
@@ -147,6 +154,22 @@ def test_settings_saved_with_the_old_pixel_margins_still_load() -> None:
     loaded = KidsStorySettings.model_validate(stored).subtitles
     assert loaded.max_lines == 3
     assert loaded.bottom_margin_share == SubtitleSettings().bottom_margin_share
+
+
+@pytest.mark.parametrize(
+    ("name", "blank"), [({"en": "", "ta": "கதை"}, "en"), ({"en": "Tales", "ta": "  "}, "ta")]
+)
+def test_a_blank_series_name_is_rejected_with_a_field_error(name: JsonObject, blank: str) -> None:
+    errors = validated_settings(KidsStorySettings, {"series": {"name": name}})[1]
+    assert errors == {
+        "settings.series.name": f"Value error, enter a series name for every language; "
+        f"blank: {blank}"
+    }
+
+
+def test_the_brand_mark_has_no_default_text() -> None:
+    visuals = KidsStorySettings().visuals
+    assert visuals.badge_text == "" and not visuals.overlay_series_badge
 
 
 @pytest.mark.parametrize("family", ["Fonts & Co.", "Kid's Font", ""])

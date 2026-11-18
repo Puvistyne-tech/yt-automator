@@ -22,8 +22,8 @@ from automator.pipelines.kids_story.story.model import Story
 from tests.fixtures.kids_data import quick_settings, story
 
 SETTINGS = KidsStorySettings()
-SIXTY_WORDS = " ".join(["Raju walked on."] * 20)
-LAST = "Raju felt warm and bright inside and smiled at all of his dear friends today."
+SIXTY_WORDS = " ".join(["Kavin walked on."] * 20)
+LAST = "Kavin felt warm and bright inside and smiled at all of his dear friends today."
 MORAL_ONLY = f"{LAST} Sharing makes everyone happier."
 REFRAIN_ONLY = f"{LAST} Be kind, be brave, be you!"
 
@@ -55,7 +55,7 @@ CASES: list[tuple[Gate, Story, dict[str, Any], list[str]]] = [
     ),
     (
         words_per_scene_problems,
-        with_narration(2, "Raju smiled."),
+        with_narration(2, "Kavin smiled."),
         {},
         ["scene 3 has 2 words; use between 18 and 50"],
     ),
@@ -114,7 +114,7 @@ CASES: list[tuple[Gate, Story, dict[str, Any], list[str]]] = [
     ),
     (
         brand_problems,
-        story(title="Raju and the Lego Mango"),
+        story(title="Kavin and the Lego Mango"),
         {},
         ["remove these brand names: Lego"],
     ),
@@ -132,7 +132,7 @@ CASES: list[tuple[Gate, Story, dict[str, Any], list[str]]] = [
     ),
     (
         cast_problems,
-        with_cast("raju", "zebra", "dragon"),
+        with_cast("kavin", "zebra", "dragon"),
         {},
         ["only use cast ids; unknown: dragon, zebra"],
     ),

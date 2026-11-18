@@ -8,6 +8,7 @@ from automator.pipelines.kids_story.settings.root import KidsStorySettings
 from automator.pipelines.kids_story.story.bundled import (
     BundledChoice,
     BundledStory,
+    bundled_requirements,
     bundled_stories,
     pick_bundled,
 )
@@ -16,7 +17,7 @@ from automator.pipelines.kids_story.story.words import contains_phrase
 from tests.fixtures.kids_data import bundled_raw
 
 NAMES = ("golden_mango", "leaf_boat", "lost_song")
-CAST = {"raju", "mittu", "chinnu", "aamai_thatha"}
+CAST = {"kavin", "mittu", "chinnu", "aamai_thatha"}
 
 
 def tamil_letter_share(text: str) -> float:
@@ -76,7 +77,27 @@ def test_pick_bundled_prefers_the_theme_then_avoids_recent_themes() -> None:
 
 def test_pick_bundled_needs_a_compatible_cast() -> None:
     with pytest.raises(LookupError):
-        pick_bundled(choice("sharing", cast={"raju"}))
+        pick_bundled(choice("sharing", cast={"kavin"}))
+
+
+def test_pick_bundled_error_names_what_the_stories_need_and_what_the_automation_has() -> None:
+    with pytest.raises(LookupError) as raised:
+        pick_bundled(choice("sharing", cast={"elephant", "mittu"}))
+    assert str(raised.value) == (
+        "no bundled story fits this automation, whose cast ids are elephant, mittu and whose "
+        "languages are en, ta. Bundled stories need the cast ids aamai_thatha, chinnu, kavin, "
+        "mittu with the languages en, ta. Use those cast ids, or let the language model write "
+        "the stories."
+    )
+
+
+def test_bundled_requirements_list_each_distinct_need_once() -> None:
+    stories = bundled_stories()
+    other = stories[0].model_copy(update={"cast": ["owl"], "text": {"en": stories[0].text["en"]}})
+    assert bundled_requirements([*stories, other]) == (
+        "the cast ids aamai_thatha, chinnu, kavin, mittu with the languages en, ta, "
+        "or the cast ids owl with the languages en"
+    )
 
 
 def test_bundled_structure_is_checked() -> None:

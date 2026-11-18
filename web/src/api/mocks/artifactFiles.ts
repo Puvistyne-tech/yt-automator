@@ -14,7 +14,7 @@ function thumbnailSvg(artifact: Artifact): string {
   const [from, to] = PALETTES[artifact.language ?? "en"] ?? ["#6366f1", "#f59e0b"];
   const tall = isTall(artifact);
   const [width, height] = tall ? [540, 960] : [1280, 720];
-  const title = artifact.language === "ta" ? "இரவுக் கதைகள்" : "Raju and the Lost Shell";
+  const title = artifact.language === "ta" ? "இரவுக் கதைகள்" : "Kavin and the Lost Shell";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
 <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs>
 <rect width="100%" height="100%" fill="url(#g)"/>
@@ -27,26 +27,26 @@ function thumbnailSvg(artifact: Artifact): string {
 const SUBTITLES = `WEBVTT
 
 00:00:00.000 --> 00:00:04.000
-Once upon a time, by a quiet blue sea, lived a little elephant called Raju.
+Once upon a time, by a quiet blue sea, lived a little elephant called Kavin.
 
 00:00:04.000 --> 00:00:08.500
-One morning Raju found a shiny shell that was not hers.
+One morning Kavin found a shiny shell that was not his.
 
 00:00:08.500 --> 00:00:13.000
-"Someone must be missing this," she said, and set off to find its owner.
+"Someone must be missing this," he said, and set off to find its owner.
 `;
 
-const STORY = `# Raju and the Lost Shell
+const STORY = `# Kavin and the Lost Shell
 
-Raju finds a shell on the beach and searches the village for its owner.
+Kavin finds a shell on the beach and searches the village for its owner.
 Moral: returning what is not ours is a kind of kindness.
 `;
 
 function metadataFor(artifact: Artifact) {
   return {
-    title: `Raju and the Lost Shell | ${isTall(artifact) ? "#shorts" : "Bedtime Story"}`,
+    title: `Kavin and the Lost Shell | ${isTall(artifact) ? "#shorts" : "Bedtime Story"}`,
     description: "A gentle story about honesty and kindness for children aged 3 to 7.",
-    tags: ["kids stories", "bedtime", "moral stories", "raju"],
+    tags: ["kids stories", "bedtime", "moral stories", "kavin"],
     category_id: "1",
     default_language: artifact.language,
   };

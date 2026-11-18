@@ -10,7 +10,7 @@ from automator.infrastructure.youtube.request_bodies import video_body
 def test_the_video_language_is_both_the_metadata_and_the_audio_language() -> None:
     video = VideoUpload(
         path=Path("v.mp4"),
-        title="ராஜு",
+        title="கவின்",
         description="ஒரு கதை\n\n#BedtimeTales",
         category_id="27",
         default_language="ta",

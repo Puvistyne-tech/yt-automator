@@ -118,7 +118,7 @@ def test_a_single_tamil_episode_target_publishes_only_that_video(harness: Harnes
     run = executed(harness, (target_input(language="ta", variants=("episode",)),))
     plans = planned_uploads(harness, run)
     assert [(plan.language, plan.variant) for plan in plans] == [("ta", "episode")]
-    assert plans[0].made_for_kids and plans[0].metadata.title.startswith("ராஜு")
+    assert plans[0].made_for_kids and plans[0].metadata.title.startswith("கவினும் தங்க மாம்பழமும்")
     review_run(harness).execute(run.id, ReviewDecision.APPROVED)
     published = publish_run(harness).execute(run.id)
     assert published.status is RunStatus.PUBLISHED

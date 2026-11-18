@@ -4,7 +4,8 @@ from typing import Any
 
 import pytest
 
-from automator.pipelines.kids_story.stages.voice import lines_to_speak, voice_for
+from automator.pipelines.kids_story.settings.base import LocalizedText
+from automator.pipelines.kids_story.stages.voice import filled_line, lines_to_speak, voice_for
 from automator.pipelines.kids_story.story.normalise import (
     SpeechRules,
     expand_abbreviations,
@@ -39,20 +40,41 @@ def test_lines_to_speak_follow_settings(
     ("series", "language", "intro"),
     [
         ({}, "en", "Hello, little friends! Welcome to Story Time. Let's begin!"),
-        ({"name": {"en": "Bedtime tales", "ta": "இரவுக் கதைகள்"}}, "ta", "இரவுக் கதைகள் உங்களை"),
-        ({"intro_line": {"en": "Hi from {series} and {nope}", "ta": ""}}, "en", "{nope}"),
+        (
+            {"name": {"en": "Bedtime tales", "ta": "இரவுக் கதைகள்"}},
+            "ta",
+            "வணக்கம், சின்ன நண்பர்களே! இரவுக் கதைகள் உங்களை அன்புடன் வரவேற்கிறது. கதையைத் தொடங்குவோம்!",
+        ),
+        (
+            {"intro_line": {"en": "Hi from {series} and {nope}", "ta": ""}},
+            "en",
+            "Hi from Story Time and {nope}",
+        ),
+        (
+            {"name": {"en": "A {series} {title} B", "ta": "x"}, "intro_line": {"en": "{series}!"}},
+            "en",
+            "A {series} {title} B!",
+        ),
+        ({"intro_line": {"en": "{title} by {series}", "ta": ""}}, "en", None),
     ],
 )
 def test_intro_line_fills_in_the_series_name(
-    series: dict[str, Any], language: str, intro: str
+    series: dict[str, Any], language: str, intro: str | None
 ) -> None:
-    lines = lines_to_speak(story(language), quick_settings(series=series))
-    assert lines[0].segment == "intro" and intro in lines[0].text
+    told = story(language)
+    lines = lines_to_speak(told, quick_settings(series=series))
+    assert lines[0].segment == "intro"
+    assert lines[0].text == (intro or f"{told.title} by Story Time")
 
 
 def test_outro_line_fills_in_the_series_name() -> None:
     settings = quick_settings(series={"outro_line": {"en": "Bye from {series}!", "ta": ""}})
     assert lines_to_speak(story(), settings)[-2].text == "Bye from Story Time!"
+
+
+def test_a_language_without_its_own_line_falls_back_to_english() -> None:
+    line = LocalizedText(en="Welcome to {series}", ta="")
+    assert filled_line(line, {"series": "Tales"}, "fr") == "Welcome to Tales"
 
 
 def test_voice_for_prefers_a_character_override_then_the_narrator() -> None:
