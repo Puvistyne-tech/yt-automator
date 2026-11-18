@@ -30,6 +30,13 @@ STORED_SETTINGS: dict[str, Any] = {
 }
 
 
+def settings_with(**sections: dict[str, Any]) -> KidsStorySettings:
+    merged = {
+        name: {**STORED_SETTINGS.get(name, {}), **values} for name, values in sections.items()
+    }
+    return KidsStorySettings.model_validate(STORED_SETTINGS | merged)
+
+
 def timed_words(text: str) -> tuple[WordTiming, ...]:
     return tuple(
         WordTiming(word=word, start_seconds=index * WORD_STEP, end_seconds=(index + 1) * WORD_STEP)

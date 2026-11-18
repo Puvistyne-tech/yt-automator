@@ -19,7 +19,7 @@ from tests.unit.api.client import Api, ok, streamed_events, wired
 UI_SCHEMA: dict[str, Any] = {
     "ui:sections": [
         {"title": "Story", "fields": ["topic", "score"]},
-        {"title": "Testing", "fields": ["fail_stage", "with_thumbnail", "extra_meta"]},
+        {"title": "Testing", "fields": ["fail_stage", "with_thumbnail", "extra_meta", "font_file"]},
     ],
     "topic": {"ui:widget": "textarea", "ui:options": {"rows": 2}},
 }

@@ -7,6 +7,7 @@ from pydantic.config import JsonDict
 
 from autotube.domain.video_look import SubtitlePosition, Transition, VideoQuality
 from autotube.pipelines.kids_story.languages import LANGUAGE_NAMES
+from autotube.pipelines.kids_story.settings.base import Placement
 
 ChoiceSchema = Callable[[JsonDict], None]
 
@@ -27,6 +28,18 @@ def enum_choices(enum: type[StrEnum], titles: Mapping[str, str]) -> ChoiceSchema
         missing, extra = sorted(members - set(titles)), sorted(set(titles) - members)
         raise ValueError(f"{enum.__name__} titles differ; missing {missing}, extra {extra}")
     return titled_choices(titles)
+
+
+def checkbox_choices(enum: type[StrEnum], titles: Mapping[str, str]) -> ChoiceSchema:
+    item_choices = enum_choices(enum, titles)
+
+    def apply(schema: JsonDict) -> None:
+        items: JsonDict = {}
+        item_choices(items)
+        schema["items"] = items
+        schema["uniqueItems"] = True
+
+    return apply
 
 
 LANGUAGE_CHOICES = titled_choices(LANGUAGE_NAMES)
@@ -55,26 +68,16 @@ CAMERA_MOVE_CHOICES = titled_choices(
 SHORT_ART_CHOICES = titled_choices(
     {"native": "Draw a new vertical picture", "crop": "Crop the wide picture"}
 )
-CORNER_CHOICES = titled_choices(
-    {
-        "top_left": "Top left",
-        "top_right": "Top right",
-        "bottom_left": "Bottom left",
-        "bottom_right": "Bottom right",
-    }
-)
-EDGE_CHOICES = titled_choices({"top": "Top", "bottom": "Bottom"})
-PLACEMENT_CHOICES = titled_choices(
-    {
-        "top": "Top",
-        "bottom": "Bottom",
-        "center": "Centre",
-        "top_left": "Top left",
-        "top_right": "Top right",
-        "bottom_left": "Bottom left",
-        "bottom_right": "Bottom right",
-    }
-)
+CORNER_TITLES = {
+    "top_left": "Top left",
+    "top_right": "Top right",
+    "bottom_left": "Bottom left",
+    "bottom_right": "Bottom right",
+}
+EDGE_TITLES = {"top": "Top", "bottom": "Bottom"}
+CORNER_CHOICES = titled_choices(CORNER_TITLES)
+EDGE_CHOICES = titled_choices(EDGE_TITLES)
+PLACEMENT_CHOICES = enum_choices(Placement, {**EDGE_TITLES, "center": "Centre", **CORNER_TITLES})
 SUBTITLE_POSITION_CHOICES = enum_choices(
     SubtitlePosition, {"bottom": "Bottom", "middle": "Middle", "top": "Top"}
 )

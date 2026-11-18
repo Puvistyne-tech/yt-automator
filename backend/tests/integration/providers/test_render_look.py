@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-import shutil
+import json
+import subprocess
+import wave
 from pathlib import Path
 
 import numpy
@@ -19,16 +21,19 @@ from autotube.infrastructure.providers.context import ProviderContext
 from autotube.infrastructure.providers.media.ffmpeg_media import FfmpegMedia
 from autotube.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 from tests.fixtures.fake_runtime import InMemorySecrets
+from tests.fixtures.ffmpeg_filters import ffmpeg_has
 from tests.fixtures.fonts import embedded_font, embedded_font_family
 
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(
-        not (shutil.which("ffmpeg") and shutil.which("ffprobe")),
-        reason="ffmpeg and ffprobe are needed to render video",
+        not ffmpeg_has("ass", "overlay", "colorchannelmixer", "fade"),
+        reason="needs ffmpeg and ffprobe with the ass, overlay, colorchannelmixer and fade filters",
     ),
 ]
 SIZE = (320, 180)
+ODD_LOGO_NAME = "my logo it's:%d"
+SAMPLE_RATE = 16000
 Pixel = tuple[int, int, int]
 WORDS = (
     WordTiming(word="Hello", start_seconds=0.2, end_seconds=1.0),
@@ -40,6 +45,33 @@ def still(folder: Path, name: str, colour: Pixel, size: tuple[int, int] = SIZE) 
     path = folder / f"{name}.png"
     Image.new("RGB", size, colour).save(path)
     return path
+
+
+def tone(folder: Path) -> Path:
+    path = folder / "voice.wav"
+    samples = (numpy.sin(numpy.arange(SAMPLE_RATE) * 0.05) * 8000).astype("<i2")
+    with wave.open(str(path), "wb") as sound:
+        sound.setnchannels(1)
+        sound.setsampwidth(2)
+        sound.setframerate(SAMPLE_RATE)
+        sound.writeframes(samples.tobytes())
+    return path
+
+
+def stream_seconds(video: Path) -> dict[str, float]:
+    command = ["ffprobe", "-v", "error", "-show_streams", "-of", "json", str(video)]
+    streams = json.loads(subprocess.run(command, capture_output=True, check=True).stdout)
+    return {item["codec_type"]: float(item["duration"]) for item in streams["streams"]}
+
+
+def green_logo(folder: Path) -> Watermark:
+    return Watermark(
+        image=still(folder, ODD_LOGO_NAME, (0, 200, 0), (40, 40)),
+        corner=ScreenCorner.BOTTOM_LEFT,
+        width_share=0.2,
+        opacity=1.0,
+        margin_share=0.05,
+    )
 
 
 def look_video(folder: Path, karaoke: bool) -> VideoComposition:
@@ -58,13 +90,6 @@ def look_video(folder: Path, karaoke: bool) -> VideoComposition:
         box_opacity=1.0,
         highlight_color="#FFD54A",
     )
-    logo = Watermark(
-        image=still(folder, "logo", (0, 200, 0), (40, 40)),
-        corner=ScreenCorner.BOTTOM_LEFT,
-        width_share=0.2,
-        opacity=1.0,
-        margin_share=0.05,
-    )
     return VideoComposition(
         width=SIZE[0],
         height=SIZE[1],
@@ -75,12 +100,13 @@ def look_video(folder: Path, karaoke: bool) -> VideoComposition:
                 path=still(folder, "blue", (0, 0, 220)), start_seconds=1.5, duration_seconds=2
             ),
         ),
+        narration=(TimedClip(path=tone(folder), start_seconds=2.5, duration_seconds=0.8),),
         subtitles=srt,
         subtitle_style=style,
         subtitle_words=WORDS,
         fade_seconds=0,
         transition=Transition.CROSSFADE,
-        watermark=logo,
+        watermark=green_logo(folder),
     )
 
 
@@ -112,6 +138,9 @@ def test_crossfade_logo_box_and_karaoke_reach_the_picture(tmp_path: Path) -> Non
     media, sung = rendered(tmp_path / "sung", karaoke=True)
     _, plain = rendered(tmp_path / "plain", karaoke=False)
     assert media.duration_seconds(sung) == pytest.approx(3.5, abs=0.1)
+    seconds = stream_seconds(sung)
+    assert seconds["audio"] == pytest.approx(seconds["video"], abs=0.1)
+    assert seconds["video"] == pytest.approx(3.5, abs=0.1)
     middle = frame_at(media, sung, 1.75, tmp_path)
     red, _, blue = pixel(middle, SIZE[0] // 2, SIZE[1] - 20)
     assert red > 60 and blue > 60

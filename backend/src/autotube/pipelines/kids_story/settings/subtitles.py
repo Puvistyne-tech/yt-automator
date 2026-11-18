@@ -102,6 +102,7 @@ class SubtitleSettings(SubtitleLookSettings):
         "Font files",
         "Font files tried in order for burned-in subtitles; the first one that loads draws every "
         "line and measures it where the script can be shaped. Its own font name is used.",
+        machine_local=True,
     )
     font_family: LocalizedText = localized_text(
         "Noto Sans",

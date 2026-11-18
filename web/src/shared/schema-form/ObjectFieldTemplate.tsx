@@ -1,5 +1,10 @@
-import type { ObjectFieldTemplatePropertyType, ObjectFieldTemplateProps } from "@rjsf/utils";
-import { groupIntoSections, readSections } from "@/shared/schema-form/sections";
+import type {
+  ObjectFieldTemplatePropertyType,
+  ObjectFieldTemplateProps,
+  Registry,
+} from "@rjsf/utils";
+import { SectionChanges } from "@/shared/schema-form/ChangeMarks";
+import { groupIntoSections, readSections, type Section } from "@/shared/schema-form/sections";
 
 function Properties({ properties }: { properties: ObjectFieldTemplatePropertyType[] }) {
   return (
@@ -15,6 +20,35 @@ function Properties({ properties }: { properties: ObjectFieldTemplatePropertyTyp
   );
 }
 
+function SchemaSection({
+  section,
+  registry,
+  idPrefix,
+}: {
+  section: Section<ObjectFieldTemplatePropertyType>;
+  registry: Registry;
+  idPrefix: string;
+}) {
+  const title = section.title ?? "Other";
+  const headingId = `${idPrefix}__section-${title.toLowerCase().replace(/\W+/g, "-")}`;
+  return (
+    <section className="schema-section" aria-labelledby={headingId}>
+      <div className="schema-section-head">
+        <h3 className="schema-section-title" id={headingId} tabIndex={-1}>
+          {title}
+        </h3>
+        <SectionChanges
+          registry={registry}
+          title={title}
+          names={section.properties.map((property) => property.name)}
+          headingId={headingId}
+        />
+      </div>
+      <Properties properties={section.properties} />
+    </section>
+  );
+}
+
 function RootObject(props: ObjectFieldTemplateProps) {
   const sections = groupIntoSections(props.properties, readSections(props.uiSchema));
   if (sections.length === 1 && sections[0]?.title === null) {
@@ -23,10 +57,12 @@ function RootObject(props: ObjectFieldTemplateProps) {
   return (
     <div className="schema-sections">
       {sections.map((section) => (
-        <section key={section.title ?? "other"} className="schema-section">
-          <h3 className="schema-section-title">{section.title ?? "Other"}</h3>
-          <Properties properties={section.properties} />
-        </section>
+        <SchemaSection
+          key={section.title ?? "other"}
+          section={section}
+          registry={props.registry}
+          idPrefix={props.fieldPathId.$id}
+        />
       ))}
     </div>
   );

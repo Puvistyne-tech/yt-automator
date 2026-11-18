@@ -3,10 +3,12 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 from autotube.domain.image_style import HEX_COLOUR_PATTERN
+from autotube.domain.ui_schema import MACHINE_LOCAL_KEY
 
+MACHINE_LOCAL: dict[str, JsonValue] = {MACHINE_LOCAL_KEY: True}
 HexColor = Annotated[str, Field(pattern=HEX_COLOUR_PATTERN, json_schema_extra={"format": "color"})]
 
 
@@ -84,11 +86,14 @@ def localized_number(en: float, ta: float, title: str, description: str) -> Any:
     )
 
 
-def localized_list(en: list[str], ta: list[str], title: str, description: str) -> Any:
+def localized_list(
+    en: list[str], ta: list[str], title: str, description: str, machine_local: bool = False
+) -> Any:
     return Field(
         default_factory=lambda: LocalizedList(en=list(en), ta=list(ta)),
         title=title,
         description=description,
+        json_schema_extra=MACHINE_LOCAL if machine_local else None,
     )
 
 

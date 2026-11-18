@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 import subprocess
 from collections.abc import Iterator
 from pathlib import Path
@@ -15,18 +14,8 @@ from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides, create_app
 from tests.fixtures.fake_runtime import InMemorySecrets
 from tests.fixtures.fake_youtube import FakeYouTube
+from tests.fixtures.ffmpeg_filters import ffmpeg_has
 from tests.unit.api.client import Api, ok
-
-
-def ffmpeg_has(*filters: str) -> bool:
-    if not (shutil.which("ffmpeg") and shutil.which("ffprobe")):
-        return False
-    listed = subprocess.run(
-        ["ffmpeg", "-hide_banner", "-filters"], capture_output=True, text=True, check=False
-    ).stdout
-    names = {line.split()[1] for line in listed.splitlines() if len(line.split()) > 2}
-    return all(name in names for name in filters)
-
 
 pytestmark = [
     pytest.mark.integration,

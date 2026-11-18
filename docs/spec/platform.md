@@ -73,6 +73,12 @@ Upload          target_id, channel_id, language, variant, status: pending|upload
                 privacy (nullable: private|unlisted|public), made_for_kids (nullable bool),
                 publish_at (nullable: when YouTube makes a scheduled video public)
 RunLog          at, level: info|warning|error = info, stage_id (nullable: null outside a stage), message
+AutomationDocument  app = "AutoTube", format_version: int >= 1 (current 1), exported_at (nullable),
+                    automation: Automation's name, description, pipeline_type, settings, languages,
+                    schedule, review_policy, retry_policy and targets (Target without id),
+                    channels: [ExportedChannel] (the target channels, each once)
+ExportedChannel     id, youtube_channel_id = "", title = ""
+ImportPreview       automation: AutomationInput (what the import would create), unknown_channels: [ExportedChannel]
 RunSummary      id, status, score, created_at, finished_at
 RunEvent        run_id, kind: status|stage|log|artifact|upload, at, payload (object)
                 payload by kind: status {status, error}; stage a StageRun; artifact an Artifact;
@@ -138,6 +144,12 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     finite number above zero is ignored and the schema's own step is used.
   - No other `ui:` key is allowed. Help text comes from each field's `description` in the settings schema.
     The web mock pipeline uses this same format.
+- A settings property whose schema carries `x-machine-local: true` (`MACHINE_LOCAL_KEY` in `domain/ui_schema.py`,
+  set with `json_schema_extra`) holds a value that only makes sense on this machine, such as a file or folder
+  path. `domain/machine_local.py` finds these properties through nested objects, local `$ref`s and optional
+  objects (not inside array items). An export writes the pipeline's default for each of them instead of the
+  stored value, and an import replaces each of them with the importing pipeline's default, so paths never move
+  between machines. A marked property whose parent object is missing stays missing.
 - `PipelineDescriptor` rejects a `ui_schema` with any problem, so a broken plugin fails when it is loaded.
 - The kids story pipeline (`kids_story`, shown as "Kids story videos") carries no channel identity in its
   defaults: the series name defaults to "Story Time", the brand mark text is empty (no mark is drawn), and
@@ -146,6 +158,40 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   and unknown placeholders stay as written. The series name must not be blank in any language. When no bundled story
   fits the automation's cast ids and languages, the story stage fails naming both what the automation has
   and what the bundled stories need.
+- Kids story writing, voice and sound controls. Every default renders the translation, motion and judge
+  prompts and the story user prompt exactly as before these settings existed, and stored settings without
+  them load unchanged. The default editorial rules no longer include "End with the moral said plainly, then
+  the series refrain." (the ending requirement states the ending once); that exact line is removed from
+  stored `series.editorial_rules` when they load, so the story system prompt only loses that line.
+  - `story.tone` (default "warm, gentle") fills "You write <tone>, original stories…" in the system prompt;
+    `story.writing_style` is the wording requirement line; each non-blank line of `story.extra_instructions`
+    (default empty) becomes one more requirement. `safety.avoid_topics` (default empty) adds a "Never write
+    about these topics" list after the editorial rules.
+  - `story.ending_style`: `moral_and_refrain` (default), `refrain_only` or `open`. The story prompt, the
+    translation rules and the ending gate (and so the `moral_and_refrain` score item) follow it: the moral is
+    required only for `moral_and_refrain`, the refrain (when the language has one) for every style but `open`.
+    Bundled stories get an empty refrain for `open`; they keep the moral their characters say, because it is
+    part of the written dialogue, and no gate runs on them.
+  - `story.cast_per_episode` (0, the default, means the whole cast) and `story.lead_mode` (`fixed`: the first
+    cast member leads; `per_episode`: the lead is picked from a hash of the run id, as stages have no episode
+    counter, so a lead can repeat). The episode cast is the lead followed by the next cast members in cast
+    order, wrapping round (`story/casting.py::episode_cast(settings, seed)`). The story prompt lists only the
+    episode cast, and the cast gate (`story_problems(story, settings, seed)`, seeded with the run id) rejects
+    any other cast id. Bundled stories are picked against the whole cast.
+  - `story.question_style`, `short.hook_style` and `story.translation_style` replace the fixed wording of the
+    questions, the hook line and the translation register.
+  - `story.enabled_checks`: the story checks that run (`scene_count`, `words_per_scene`, `duration`,
+    `ending`, `reading_level`, `cast`; default all), published as an array of `oneOf` items with
+    `uniqueItems` and shown as checkboxes. Banned words and brand names are child-safety checks: they always
+    run and cannot be listed. Translations run the ending check only when it is enabled.
+  - `sound_effects.max_per_scene` (default 2) is stated in the prompt ("zero to two…", or "always an empty
+    list" for 0) and shaping drops any cue beyond it.
+  - `voice.speed` is a per-language speed (0.5 to 1.5, default 0.95); a stored single number is applied to
+    every language. `music.short_mood_prompt` (default empty) replaces `music.mood_prompt` for Short beds.
+  - `visuals.motion_prompt` (with `{visual}` and `{mood}`; a card uses "a title card" and "warm") and
+    `visuals.judge_criteria` replace the fixed motion and picture-judge wording. A motion prompt naming any
+    other lowercase `{placeholder}` fails validation; `$`, `{}` and `{Visual}` pass through as written, as
+    does any text in the judge criteria, tone and extra instructions.
 - Kids story visual styles. The style library is data: `pipelines/kids_story/styles/library.json`, validated by
   `styles/library.py`. Each entry has `id`, `title`, `family` (animated, illustrated, drawn, crafted, graphic,
   realistic), `description` (one sentence), `prompt`, `negative_prompt`, `palette` (4 to 6 `#RRGGBB`, ordered
@@ -209,7 +255,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   - `visuals`: `logo_file` (a .png, .jpg, .jpeg or .webp path on this machine, trimmed, empty default),
     `logo_corner` (default top right), `logo_size_percent` (of the video width, default 12), `logo_opacity`
     (default 0.8), `logo_margin_percent` (of the height, default 3), `logo_on_episode` and `logo_on_short` (both
-    default on). A logo path with no file fails the edit stage with "visuals.logo_file: no picture at ...".
+    default on). Planning the composition does not touch the file; the edit stage checks it just before
+    rendering and fails with "visuals.logo_file: no picture at ...". `visuals.logo_file`,
+    `subtitles.font_files` and `thumbnail.font_files` are machine-local, so an export carries their defaults.
   - A template with an unknown placeholder is refused on its field (for example `thumbnail.text_template`), and
     the message names the field and the placeholders it may use.
   - Transitions overlap neighbouring segments: each boundary overlaps by `transition_seconds`, cut down to the
@@ -295,6 +343,22 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
 - Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track, 50 per playlist insertion).
 - The quota day resets at midnight Pacific time (`America/Los_Angeles`), as YouTube's does.
 - Duplicating an automation creates a disabled copy named with the suffix " (copy)" and new target ids.
+- Export and import (`domain/automation_export.py`). An export is an `AutomationDocument`: it never holds ids of
+  the automation or its targets, `enabled`, timestamps, run data, credentials, tokens or any secret. Import reads
+  the document before anything else: `app` other than "AutoTube" is refused on `app`, and a `format_version`
+  above the current one is refused on `format_version` with a message naming both formats and telling the user
+  to update AutoTube; both use the message "This file cannot be imported: <reason>.". Any other shape problem
+  is a field error at its document path (`automation.languages`). Fields missing from an older export take
+  their defaults, and settings are validated and filled like a create. Each target channel resolves, in order,
+  to the choice in `channel_map` (a channel id, or null to leave that channel's targets out), the same channel
+  id when it exists, or the connected channel with the same `youtube_channel_id`. A chosen channel that does
+  not exist is an error on `channel_map.<exported id>`. The automation is then validated exactly like a create,
+  with errors prefixed `automation.`, except that a missing target channel is never reported on the target:
+  the preview lists it in `unknown_channels`, and the import refuses it on `channel_map.<exported id>`
+  ("... choose a channel for its targets or leave them out"). The import creates the automation through the
+  create use case, named with the suffix " (imported)" (not added again when the name already ends with it),
+  disabled, with new target ids. Unknown keys anywhere in the document (a target `id` included) are field
+  errors "Extra inputs are not permitted" at their path.
 - A scheduled automation's next run is computed from the later of its last scheduled run, its `updated_at`, and
   the latest `skipped_start_at` among the runs created since its last scheduled run. Manual runs do not move the
   schedule. The schedule gives a candidate start; then, in the schedule's time zone:
@@ -517,7 +581,8 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
 - The ffmpeg toolkit reads overlaps from the visual timeline (a clip starting before the previous one ends).
   Crossfade fades the later clip in over the overlap; fade through black darkens the earlier clip over the first
   half and reveals the later one over the second half; cut draws overlapping clips as they are. The watermark is
-  scaled to an even width, given the opacity, and overlaid in its corner before subtitles are burned in. Quality
+  read as one still picture whatever its path holds (`-f image2 -pattern_type none -i file:<path>`), scaled to
+  an even width, given the opacity, and overlaid in its corner before subtitles are burned in. Quality
   shifts the provider CRF by +8 (draft), 0 (standard), -4 (high) or -8 (best), kept within 0 to 51.
 - Burned-in subtitles (`subtitles` set and `SubtitleStyle.burn_in`): an SRT file is converted to an ASS
   document whose canvas is the frame size, so `font_size`, `margin_bottom` and `margin_sides` are frame
@@ -568,6 +633,9 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | PATCH `/automations/{id}` | `{enabled}` | Automation |
 | DELETE `/automations/{id}` | | 204 |
 | POST `/automations/{id}/duplicate` | | Automation, 201 |
+| GET `/automations/{id}/export` | | AutomationDocument |
+| POST `/automations/import/preview` | `{document, channel_map?: {exported channel id: channel id or null}}` | ImportPreview; 400 with field errors (see Rules) |
+| POST `/automations/import` | same as preview | Automation, 201; 400 with field errors, including `channel_map.<id>` for every unknown channel without a choice |
 | POST `/automations/{id}/runs` | | Run, 201 |
 | GET `/runs?automation_id&status&limit` | | `[Run]` newest first |
 | GET `/runs/{id}` | | Run |
@@ -600,7 +668,19 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
 `/channels`, `/providers`, `/settings`.
 
 - Automations list: name, pipeline, languages, targets, schedule, next run, last run status, enabled switch,
-  actions (run now, edit, duplicate, delete with confirmation).
+  actions (run now, edit, duplicate, export, delete with confirmation). Export downloads
+  `<name slug>.autotube.json` (accents dropped, lower case, every other run of characters becomes "-",
+  trimmed, "untitled" when nothing is left). Import (list header and empty state) opens a dialog: choosing a
+  file runs the preview; a file that is not a JSON object, a refused format and field errors are shown in the
+  dialog, each unknown channel gets a "Channel for “<title>”" select (every channel, named like the target
+  channel select: its title, plus its status label in brackets when it is not connected; or "Leave its targets
+  out"), and "Import automation" stays disabled until the preview succeeds. Cancel creates nothing.
+- Settings forms with defaults (the editor's Content section passes the pipeline's `default_settings`): every
+  field whose value differs from its default shows a "Changed from default" dot and a "Reset" button (its title
+  names the default); changes are tracked on named fields, per-language values and other nested fields, whole
+  arrays and `cards` choices, never inside array items. A field without a default is never marked. Each
+  `ui:sections` section with changes shows "<n> changed" and "Reset section to defaults". Resetting moves focus
+  to the field, or to the section title, and space for the controls is reserved so nothing shifts.
 - Automation editor: sections General, Content (form generated from `settings_schema` and `ui_schema`),
   Languages (multi-select from the pipeline's languages), Targets (rows of channel, language, variants,
   privacy, playlist, made for kids, and when to go public: at once, after a delay, or at a time of day in a time
@@ -611,6 +691,7 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   at most 2 a day. Publishes privately after you approve.", built by a pure function. When a target goes public
   at a time of day, the summary names it ("Goes public at 18:00 (Asia/Kolkata).").
   A saved automation without unsaved changes offers Run now; with unsaved changes it is disabled with the reason.
+  A saved automation also offers Export, which always exports the saved version.
   A "Run queued" toast (list or editor) links to the new run; a toast with an action stays until it is
   used or dismissed, other toasts close after five seconds. An unknown automation id shows a not-found
   state with a link back to Automations.

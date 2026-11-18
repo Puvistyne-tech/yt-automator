@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -10,21 +9,14 @@ from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from autotube.pipelines.kids_story.timeline.plan import Segment, total_seconds
 from tests.fixtures.kids_data import story
 from tests.fixtures.look_rig import (
-    STORED_SETTINGS,
     look_segments,
     look_srt,
     rendered_ass,
+    settings_with,
     spoken_lines,
 )
 
 SHOWN = "{\\alpha&H00&}"
-
-
-def settings_with(**sections: dict[str, Any]) -> KidsStorySettings:
-    merged = {
-        name: {**STORED_SETTINGS.get(name, {}), **values} for name, values in sections.items()
-    }
-    return KidsStorySettings.model_validate(STORED_SETTINGS | merged)
 
 
 def crossfade(seconds: float = 0.5) -> KidsStorySettings:

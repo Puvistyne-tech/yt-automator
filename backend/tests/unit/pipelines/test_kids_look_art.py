@@ -4,20 +4,24 @@ from pathlib import Path
 
 from PIL import Image, ImageChops
 
+from autotube.domain.capabilities import TextRequest
 from autotube.pipelines.kids_story.art.cards import card_lettering, card_lines, thumbnail_lines
 from autotube.pipelines.kids_story.art.lettering import lettered
 from autotube.pipelines.kids_story.settings.base import Placement
 from tests.fixtures.kids_data import (
     StageRig,
     is_judge,
+    is_translation,
     meta_of,
     quick_settings,
     run_chain,
     smart_writer,
     story,
+    story_answer,
+    tamil_answer,
     with_font,
 )
-from tests.fixtures.kids_fakes import FakeProviders
+from tests.fixtures.kids_fakes import FakeProviders, FakeWriter
 
 
 def test_default_card_and_thumbnail_text_match_todays_pictures() -> None:
@@ -60,12 +64,21 @@ def test_the_card_text_position_moves_the_letters(tmp_path: Path, font_file: Pat
     assert ImageChops.difference(drawn[0], drawn[1]).getbbox() is not None
 
 
-def thumbnail_run(root: Path, candidates: int, judge: bool = True) -> StageRig:
+def thumbnail_run(
+    root: Path, candidates: int, judge: bool = True, writer: FakeWriter | None = None
+) -> StageRig:
     settings = quick_settings(
-        thumbnail={"candidates": candidates}, visuals={"use_vision_judge": judge}
+        thumbnail={"candidates": candidates},
+        visuals={"use_vision_judge": judge, "hero_candidates": 1},
     )
-    rig = StageRig(root, settings=settings, providers=FakeProviders(writer=smart_writer("2")))
-    return run_chain(rig, "art")
+    providers = FakeProviders(writer=writer or smart_writer("2"))
+    return run_chain(StageRig(root, settings=settings, providers=providers), "art")
+
+
+def judge_offline(request: TextRequest) -> str:
+    if is_judge(request):
+        raise RuntimeError("vision offline")
+    return tamil_answer() if is_translation(request) else story_answer()
 
 
 def thumbnail_art(rig: StageRig) -> dict[str | None, Path]:
@@ -94,6 +107,13 @@ def test_without_a_judge_the_first_thumbnail_is_kept(tmp_path: Path) -> None:
     rig = thumbnail_run(tmp_path, 2, judge=False)
     assert thumbnail_art(rig)["episode"].name == "thumbnail-wide.png"
     assert "thumbnail: kept picture 1 of 2" in rig.logs
+
+
+def test_a_failing_thumbnail_judge_keeps_the_first_picture(tmp_path: Path) -> None:
+    rig = thumbnail_run(tmp_path, 3, writer=FakeWriter(judge_offline))
+    assert thumbnail_art(rig)["episode"].name == "thumbnail-wide.png"
+    assert any("picture judge failed" in line for line in rig.book.warnings())
+    assert "thumbnail: kept picture 1 of 3" in rig.logs
 
 
 def test_the_short_can_animate_at_its_own_frame_rate(tmp_path: Path) -> None:

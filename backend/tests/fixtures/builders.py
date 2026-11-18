@@ -36,11 +36,12 @@ def add_channel(
     credential_id: str = "cred-1",
     token: str | None = "tok",
     defaults: ChannelDefaults | None = None,
+    youtube_id: str | None = None,
 ) -> Channel:
     channel = Channel(
         id=channel_id,
         credential_id=credential_id,
-        youtube_channel_id=f"UC-{channel_id}",
+        youtube_channel_id=youtube_id or f"UC-{channel_id}",
         title=f"Channel {channel_id}",
         defaults=defaults or ChannelDefaults(),
         connected_at=harness.clock.now(),

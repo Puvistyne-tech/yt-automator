@@ -1,3 +1,5 @@
+import { isJsonObject } from "@/shared/isJsonObject";
+
 export type FieldErrors = Record<string, string>;
 
 export class ApiError extends Error {
@@ -14,12 +16,8 @@ export class ApiError extends Error {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function readFields(value: unknown): FieldErrors {
-  if (!isRecord(value)) {
+  if (!isJsonObject(value)) {
     return {};
   }
   return Object.fromEntries(
@@ -39,7 +37,7 @@ export function apiErrorFromBody(
   fallback: string,
   requestId: string | null = null,
 ): ApiError {
-  const error = isRecord(body) && isRecord(body.error) ? body.error : null;
+  const error = isJsonObject(body) && isJsonObject(body.error) ? body.error : null;
   if (error === null) {
     return new ApiError(status, `http_${status}`, withRequestId(fallback, requestId));
   }

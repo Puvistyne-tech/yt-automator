@@ -18,13 +18,15 @@ class AutomationBuilder:
     channels: ChannelRepository
     ids: IdGenerator
 
-    def validated_pipeline(self, data: AutomationInput) -> Pipeline:
+    def errors(self, data: AutomationInput) -> dict[str, str]:
         pipeline = self.pipelines.get(data.pipeline_type)
         settings_model = pipeline.settings_model if pipeline is not None else None
         channel_ids = {channel.id for channel in self.channels.list()}
-        errors = automation_errors(data, descriptor_of(pipeline), settings_model, channel_ids)
-        raise_if_invalid(errors)
-        return require(pipeline, "pipeline", data.pipeline_type)
+        return automation_errors(data, descriptor_of(pipeline), settings_model, channel_ids)
+
+    def validated_pipeline(self, data: AutomationInput) -> Pipeline:
+        raise_if_invalid(self.errors(data))
+        return require(self.pipelines.get(data.pipeline_type), "pipeline", data.pipeline_type)
 
     def targets(self, data: AutomationInput, pipeline: Pipeline) -> tuple[Target, ...]:
         return tuple(

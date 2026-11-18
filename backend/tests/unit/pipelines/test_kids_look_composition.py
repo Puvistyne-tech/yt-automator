@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 import pytest
 from PIL import Image
@@ -13,18 +12,11 @@ from autotube.domain.video_look import (
     VideoQuality,
     Watermark,
 )
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.timeline.watermark import LogoMissingError
+from autotube.pipelines.kids_story.artifacts import VARIANTS
+from autotube.pipelines.kids_story.stages.logo_check import LogoMissingError, require_logo
 from tests.fixtures.kids_data import StageRig, quick_settings, run_chain, smart_writer, stage_named
 from tests.fixtures.kids_fakes import FakeProviders
-from tests.fixtures.look_rig import STORED_SETTINGS, look_composition, rendered_command
-
-
-def settings_with(**sections: dict[str, Any]) -> KidsStorySettings:
-    merged = {
-        name: {**STORED_SETTINGS.get(name, {}), **values} for name, values in sections.items()
-    }
-    return KidsStorySettings.model_validate(STORED_SETTINGS | merged)
+from tests.fixtures.look_rig import look_composition, rendered_command, settings_with
 
 
 def logo(folder: Path) -> Path:
@@ -97,7 +89,7 @@ def test_a_logo_is_placed_on_the_videos_it_is_switched_on_for(tmp_path: Path) ->
     )
     assert look_composition(settings, "short").watermark is None
     command = rendered_command(settings)
-    assert str(tmp_path / "logo.png") in command
+    assert f"file:{tmp_path / 'logo.png'}" in command
     assert "colorchannelmixer=aa=0.500[logo]" in command[command.index("-filter_complex") + 1]
 
 
@@ -105,10 +97,22 @@ def test_no_logo_file_means_no_watermark() -> None:
     assert look_composition(settings_with(visuals={"logo_on_episode": True})).watermark is None
 
 
-def test_a_missing_logo_fails_naming_the_field(tmp_path: Path) -> None:
-    settings = settings_with(visuals={"logo_file": str(tmp_path / "gone.png")})
+@pytest.mark.parametrize(("episode", "short"), [(False, True), (True, False)])
+def test_the_logo_can_mark_only_one_video(tmp_path: Path, episode: bool, short: bool) -> None:
+    visuals = {"logo_file": str(logo(tmp_path)), "logo_on_episode": episode, "logo_on_short": short}
+    settings = settings_with(visuals=visuals)
+    marked = [look_composition(settings, variant).watermark is not None for variant in VARIANTS]
+    assert marked == [episode, short]
+
+
+def test_only_the_logo_check_needs_the_file(tmp_path: Path) -> None:
+    present = look_composition(settings_with(visuals={"logo_file": str(logo(tmp_path))}))
+    gone = look_composition(settings_with(visuals={"logo_file": str(tmp_path / "gone.png")}))
+    assert gone.watermark is not None and gone.watermark.image == tmp_path / "gone.png"
+    require_logo(present)
+    require_logo(look_composition(settings_with()))
     with pytest.raises(LogoMissingError, match=r"visuals\.logo_file: no picture at"):
-        look_composition(settings)
+        require_logo(gone)
 
 
 def test_the_edit_stage_fails_on_a_missing_logo(tmp_path: Path) -> None:

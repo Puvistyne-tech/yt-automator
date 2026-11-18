@@ -49,7 +49,10 @@ def test_fade_through_black_darkens_then_reveals() -> None:
 def test_a_watermark_is_scaled_faded_and_placed_before_the_subtitles() -> None:
     made = composition(watermark=LOGO)
     plan = plan_inputs(made)
-    assert (plan.watermark, plan.args[-2:]) == (6, ["-i", "/w/logo.png"])
+    assert (plan.watermark, plan.args[-6:]) == (
+        6,
+        ["-f", "image2", "-pattern_type", "none", "-i", "file:/w/logo.png"],
+    )
     graph = graph_of(made)
     assert "[6:v]scale=38:-2,format=rgba,colorchannelmixer=aa=0.800[logo]" in graph
     assert "[o1][logo]overlay=x=W-w-5:y=5[marked]" in graph
@@ -67,6 +70,27 @@ def test_a_watermark_is_scaled_faded_and_placed_before_the_subtitles() -> None:
 def test_the_watermark_corner_sets_its_place(corner: ScreenCorner, place: str) -> None:
     graph = graph_of(composition(watermark=LOGO.model_copy(update={"corner": corner})))
     assert f"[o1][logo]overlay={place}[marked]" in graph
+
+
+def test_a_logo_path_is_read_literally_as_one_still_picture() -> None:
+    odd = Path("/my logos/it's:%d brand.webp")
+    plan = plan_inputs(composition(watermark=LOGO.model_copy(update={"image": odd})))
+    assert plan.args[-6:] == [
+        "-f",
+        "image2",
+        "-pattern_type",
+        "none",
+        "-i",
+        "file:/my logos/it's:%d brand.webp",
+    ]
+
+
+def test_one_clip_has_no_transition_to_draw() -> None:
+    single = BLENDED[:1]
+    assert overlaps(single) == [0.0, 0.0]
+    graph = graph_of(composition(visuals=single, transition=Transition.CROSSFADE))
+    assert graph[1].endswith("setpts=PTS-STARTPTS+0.000/TB[v0]")
+    assert not any("alpha=1" in chain for chain in graph)
 
 
 def test_no_watermark_adds_no_input() -> None:

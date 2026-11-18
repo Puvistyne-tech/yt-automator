@@ -29,6 +29,7 @@ export function ContentSection({ draft, onChange, errors, pipeline }: ContentSec
           schema={pipeline.settings_schema}
           uiSchema={pipeline.ui_schema}
           value={draft.settings}
+          defaults={pipeline.default_settings}
           onChange={(settings) => onChange({ ...draft, settings })}
           errors={scopedErrors(errors, "settings")}
         />

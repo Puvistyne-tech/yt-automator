@@ -32,7 +32,7 @@ def motion_request(
     fps = settings.video_fps(need.variant)
     return MotionRequest(
         image=path_of(context, image),
-        prompt=motion_prompt(scene, motion.feel),
+        prompt=motion_prompt(settings, scene, motion.feel),
         duration_seconds=need.seconds,
         width=width,
         height=height,

@@ -6,15 +6,12 @@ from pydantic import Field, model_validator
 
 from autotube.domain.video_look import VideoQuality
 from autotube.pipelines.kids_story.artifacts import SHORT
+from autotube.pipelines.kids_story.settings.audio import MusicSettings, VoiceSettings
 from autotube.pipelines.kids_story.settings.base import SettingsSection
 from autotube.pipelines.kids_story.settings.cast import Character, default_cast
 from autotube.pipelines.kids_story.settings.legacy_look import migrated_look
 from autotube.pipelines.kids_story.settings.look import LookSettings
-from autotube.pipelines.kids_story.settings.media import (
-    MusicSettings,
-    VisualSettings,
-    VoiceSettings,
-)
+from autotube.pipelines.kids_story.settings.media import VisualSettings
 from autotube.pipelines.kids_story.settings.metadata import MetadataSettings
 from autotube.pipelines.kids_story.settings.output import (
     EpisodeSettings,
@@ -45,7 +42,7 @@ class KidsStorySettings(SettingsSection):
         default_factory=default_cast,
         min_length=1,
         title="Cast",
-        description="The recurring characters. The first one leads every story.",
+        description="The recurring characters. The first one leads unless the lead takes turns.",
     )
     story: StorySettings = Field(
         default_factory=StorySettings,

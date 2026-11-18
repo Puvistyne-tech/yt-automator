@@ -49,6 +49,20 @@ def test_bold_shadow_and_outline_width_override_the_provider() -> None:
     assert (drawn[7], drawn[16], drawn[17]) == ("-1", "1", "2.5")
 
 
+@pytest.mark.parametrize(("width", "drawn"), [(0.0, "0"), (None, "3")])
+def test_a_zero_outline_is_kept_and_none_follows_the_provider(
+    width: float | None, drawn: str
+) -> None:
+    styled = STYLE.model_copy(update={"outline_width": width})
+    assert fields(style_line(styled, 3.0))[16] == drawn
+
+
+@pytest.mark.parametrize(("opacity", "colour"), [(0.0, "&HFF302010"), (1.0, "&H00302010")])
+def test_box_opacity_sets_the_alpha_byte(opacity: float, colour: str) -> None:
+    boxed = STYLE.model_copy(update={"box": True, "box_color": "#102030", "box_opacity": opacity})
+    assert fields(style_line(boxed, 3.0))[5] == colour
+
+
 def test_a_box_uses_its_colour_and_opacity_behind_the_text() -> None:
     boxed = STYLE.model_copy(update={"box": True, "box_color": "#102030", "box_opacity": 0.6})
     drawn = fields(style_line(boxed, 3.0))

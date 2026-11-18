@@ -216,12 +216,21 @@
     "ui:order": [
       "source",
       "primary_language",
+      "tone",
+      "writing_style",
+      "extra_instructions",
+      "ending_style",
+      "ending_scenes",
+      "question_style",
+      "question_count",
       "theme_mode",
       "themes",
       "fixed_theme",
       "recent_themes",
       "avoid_repeat_last",
       "morals",
+      "lead_mode",
+      "cast_per_episode",
       "age_min",
       "age_max",
       "target_duration_seconds",
@@ -235,9 +244,9 @@
       "max_average_sentence_words",
       "long_word_graphemes",
       "max_long_word_share",
-      "ending_scenes",
-      "question_count",
+      "enabled_checks",
       "temperature",
+      "translation_style",
       "translation_temperature",
       "max_tokens",
       "max_attempts"
@@ -271,6 +280,39 @@
       "ui:options": {
         "step": 0.01
       }
+    },
+    "tone": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    },
+    "writing_style": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    },
+    "extra_instructions": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 4
+      }
+    },
+    "question_style": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    },
+    "ending_style": {
+      "ui:widget": "radio"
+    },
+    "lead_mode": {
+      "ui:widget": "radio"
+    },
+    "enabled_checks": {
+      "ui:widget": "checkboxes"
     }
   },
   "short": {
@@ -283,7 +325,8 @@
       "scene_selection",
       "first_n_scenes",
       "max_scenes",
-      "hook_line"
+      "hook_line",
+      "hook_style"
     ],
     "resolution": {
       "ui:widget": "select"
@@ -301,11 +344,13 @@
       "hero_candidates",
       "hero_scene_count",
       "use_vision_judge",
+      "judge_criteria",
       "character_sheets",
       "sheet_size",
       "base_seed",
       "motion_intensity",
       "hero_motion_intensity",
+      "motion_prompt",
       "card_camera",
       "short_art_mode",
       "crop_focus",
@@ -354,6 +399,18 @@
     "card_camera": {
       "ui:widget": "select"
     },
+    "motion_prompt": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 3
+      }
+    },
+    "judge_criteria": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 3
+      }
+    },
     "logo_corner": {
       "ui:widget": "select"
     },
@@ -366,9 +423,17 @@
   },
   "voice": {
     "speed": {
-      "ui:widget": "range",
-      "ui:options": {
-        "step": 0.05
+      "en": {
+        "ui:widget": "range",
+        "ui:options": {
+          "step": 0.05
+        }
+      },
+      "ta": {
+        "ui:widget": "range",
+        "ui:options": {
+          "step": 0.05
+        }
       }
     }
   },
@@ -389,6 +454,12 @@
       "ui:widget": "range",
       "ui:options": {
         "step": 0.05
+      }
+    },
+    "short_mood_prompt": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
       }
     }
   },

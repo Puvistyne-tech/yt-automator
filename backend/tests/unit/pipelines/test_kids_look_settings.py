@@ -5,7 +5,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from autotube.domain.machine_local import portable_settings
 from autotube.domain.video_look import SubtitlePosition, Transition, VideoQuality
+from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from tests.fixtures.look_rig import STORED_SETTINGS
 
@@ -46,14 +48,8 @@ def test_the_short_can_run_at_its_own_rate_and_quality() -> None:
     assert settings.video_quality("episode") is VideoQuality.DRAFT
 
 
-def test_a_transition_overlaps_by_its_length_and_outline_can_be_set() -> None:
-    settings = KidsStorySettings.model_validate(
-        {
-            "episode": {"transition": "crossfade", "transition_seconds": 0.8},
-            "subtitles": {"outline_width": 0},
-        }
-    )
-    assert settings.episode.overlap_seconds() == 0.8
+def test_an_outline_of_zero_is_kept_rather_than_following_the_provider() -> None:
+    settings = KidsStorySettings.model_validate({"subtitles": {"outline_width": 0}})
     assert settings.subtitles.outline_override() == 0.0
 
 
@@ -92,3 +88,20 @@ def test_out_of_range_look_values_are_refused(sections: dict[str, Any]) -> None:
 def test_the_logo_path_is_trimmed() -> None:
     settings = KidsStorySettings.model_validate({"visuals": {"logo_file": " /a/logo.PNG "}})
     assert settings.visuals.logo_file == "/a/logo.PNG"
+
+
+def test_an_export_leaves_logo_and_font_paths_on_this_machine() -> None:
+    descriptor = KidsStoryPipeline().descriptor
+    fonts = {"en": ["/mine/a.ttf"], "ta": ["/mine/b.ttf"]}
+    local = {
+        "visuals": {"logo_file": "/mine/logo.png", "logo_opacity": 0.4},
+        "subtitles": {"font_files": fonts},
+        "thumbnail": {"font_files": fonts},
+    }
+    stored = KidsStorySettings.model_validate(local).model_dump(mode="json")
+    exported: Any = portable_settings(stored, descriptor)
+    defaults: Any = descriptor.default_settings
+    assert exported["visuals"]["logo_file"] == defaults["visuals"]["logo_file"] == ""
+    assert exported["visuals"]["logo_opacity"] == 0.4
+    for section in ("subtitles", "thumbnail"):
+        assert exported[section]["font_files"] == defaults[section]["font_files"] != fonts

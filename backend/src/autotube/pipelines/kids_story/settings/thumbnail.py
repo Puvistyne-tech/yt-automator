@@ -147,6 +147,7 @@ class ThumbnailSettings(SettingsSection):
         TAMIL_FONTS,
         "Font files",
         "Font files tried in order for every lettered picture; the first one found is used.",
+        machine_local=True,
     )
 
     @field_validator("text_template")

@@ -16,6 +16,7 @@ from autotube.pipelines.kids_story.artifacts import (
     with_role,
 )
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.kids_story.stages.logo_check import require_logo
 from autotube.pipelines.kids_story.stages.media_types import JSON, MP4, SRT
 from autotube.pipelines.kids_story.stages.run_settings import kids_settings
 from autotube.pipelines.kids_story.stages.story_loading import load_stories
@@ -120,6 +121,7 @@ class AssembleStage:
         plan = composition(
             cut.segments, cut.story, self.sources(context, cut, captions), settings, cut.variant
         )
+        require_logo(plan)
         planned_seconds = total_seconds(cut.segments)
         context.log(f"editing the {cut.language} {cut.variant}: {planned_seconds:.1f} s")
         videos = folder(context, "videos")

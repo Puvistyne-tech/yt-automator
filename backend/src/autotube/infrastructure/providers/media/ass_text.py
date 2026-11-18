@@ -1,21 +1,21 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 
+from autotube.domain.image_style import HEX_COLOUR_PATTERN, rgb_of_hex
 from autotube.shared.errors import UpstreamFailure
 
 TEXT_REPLACEMENTS = (("\\", "/"), ("{", "("), ("}", ")"), ("\r", " "), ("\n", " "))
-HEX_DIGITS = "0123456789abcdefABCDEF"
 OPAQUE = 1.0
 FULL_ALPHA = 255
 
 
 def ass_bgr(hex_color: str) -> str:
-    digits = hex_color.lstrip("#")
-    if len(digits) != 6 or any(char not in HEX_DIGITS for char in digits):
+    if re.fullmatch(HEX_COLOUR_PATTERN, hex_color) is None:
         raise UpstreamFailure(f"subtitle colour {hex_color!r} is not #RRGGBB")
-    red, green, blue = digits[0:2], digits[2:4], digits[4:6]
-    return f"{blue}{green}{red}".upper()
+    red, green, blue = rgb_of_hex(hex_color)
+    return f"{blue:02X}{green:02X}{red:02X}"
 
 
 def ass_color(hex_color: str, opacity: float = OPAQUE) -> str:

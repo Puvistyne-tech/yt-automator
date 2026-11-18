@@ -3,6 +3,7 @@ import { withTheme } from "@rjsf/core";
 import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import { useMemo } from "react";
+import { useChangeTracking } from "@/shared/schema-form/changeTracking";
 import { type PathErrors, toErrorSchema } from "@/shared/schema-form/errors";
 import { templates } from "@/shared/schema-form/templates";
 import { widgets } from "@/shared/schema-form/widgets";
@@ -18,6 +19,7 @@ interface SchemaFormProps {
   value: FormValue;
   onChange: (value: FormValue) => void;
   errors?: PathErrors;
+  defaults?: FormValue;
   idPrefix: string;
   disabled?: boolean;
 }
@@ -28,10 +30,13 @@ export function SchemaForm({
   value,
   onChange,
   errors = {},
+  defaults,
   idPrefix,
   disabled = false,
 }: SchemaFormProps) {
   const extraErrors = useMemo(() => toErrorSchema(errors), [errors]);
+  const changes = useChangeTracking(value, defaults, onChange, disabled);
+  const formContext = useMemo(() => ({ changes }), [changes]);
   const resolvedUi = useMemo<UiSchema>(
     () => ({ ...uiSchema, "ui:submitButtonOptions": { norender: true } }),
     [uiSchema],
@@ -51,6 +56,7 @@ export function SchemaForm({
         validator={validator}
         onChange={handleChange}
         extraErrors={extraErrors}
+        formContext={formContext}
         noValidate
         showErrorList={false}
         idPrefix={idPrefix}

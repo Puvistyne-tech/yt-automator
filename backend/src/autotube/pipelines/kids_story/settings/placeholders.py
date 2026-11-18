@@ -1,26 +1,16 @@
 from __future__ import annotations
 
-from collections.abc import Collection
-
 from autotube.pipelines.kids_story.settings.base import LocalizedText
-from autotube.pipelines.kids_story.text.templates import PLACEHOLDER
+from autotube.pipelines.kids_story.text.templates import unknown_placeholders
 
 THUMBNAIL_PLACEHOLDERS = ("title", "series", "moral", "hook")
 CARD_PLACEHOLDERS = ("title", "series", "tagline", "moral", "hook", "refrain")
 
 
-def unknown_placeholders(template: str, allowed: Collection[str]) -> list[str]:
-    return [name for name in PLACEHOLDER.findall(template) if name not in allowed]
-
-
-def checked_template(field: str, value: LocalizedText, allowed: Collection[str]) -> LocalizedText:
-    unknown = sorted(
-        {
-            name
-            for text in value.model_dump().values()
-            for name in unknown_placeholders(text, allowed)
-        }
-    )
+def checked_template(field: str, value: LocalizedText, allowed: tuple[str, ...]) -> LocalizedText:
+    known = frozenset(allowed)
+    texts = value.model_dump().values()
+    unknown = sorted({name for text in texts for name in unknown_placeholders(text, known)})
     if unknown:
         named = ", ".join(f"{{{name}}}" for name in unknown)
         usable = " ".join(f"{{{name}}}" for name in allowed)

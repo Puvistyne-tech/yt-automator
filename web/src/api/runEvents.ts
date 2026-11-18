@@ -9,19 +9,16 @@ import type {
   StageRun,
   Upload,
 } from "@/api/types";
+import { isJsonObject } from "@/shared/isJsonObject";
 
 export const MAX_RUN_LOGS = 2000;
 
 const LOG_LEVELS: readonly LogLevel[] = ["info", "warning", "error"];
 
-function isObject(value: unknown): value is JsonObject {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 export function parseRunEvent(data: string): RunEvent | null {
   try {
     const value: unknown = JSON.parse(data);
-    if (isObject(value) && typeof value.run_id === "string" && typeof value.kind === "string") {
+    if (isJsonObject(value) && typeof value.run_id === "string" && typeof value.kind === "string") {
       return value as unknown as RunEvent;
     }
   } catch {

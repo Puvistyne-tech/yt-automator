@@ -2,15 +2,12 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from autotube.domain.capabilities import CameraMove
 from autotube.pipelines.kids_story.settings.base import (
     Corner,
-    LocalizedText,
     Placement,
-    SettingsSection,
-    localized_text,
 )
 from autotube.pipelines.kids_story.settings.choices import (
     CAMERA_MOVE_CHOICES,
@@ -18,8 +15,18 @@ from autotube.pipelines.kids_story.settings.choices import (
     SHORT_ART_CHOICES,
 )
 from autotube.pipelines.kids_story.settings.logo import LogoSettings
+from autotube.pipelines.kids_story.text.templates import unknown_placeholders
 
 STYLE_MOTION_NOTE = "Used when Move the way the style suggests is off, or for a custom style."
+MOTION_PROMPT = (
+    "Gentle, slow animation of a children's picture-book scene: {visual}. Mood: {mood}. "
+    "Soft natural movement, no sudden changes."
+)
+MOTION_PLACEHOLDERS = frozenset({"visual", "mood"})
+JUDGE_CRITERIA = (
+    "Pick the picture that best matches the scene, keeps every character on model, "
+    "looks warm and safe for small children and has no text in it."
+)
 
 
 class ShortArtMode(StrEnum):
@@ -54,6 +61,13 @@ class VisualSettings(LogoSettings):
         title="Let the language model pick pictures",
         description="Ask a vision-capable language model for the best candidate.",
     )
+    judge_criteria: str = Field(
+        default=JUDGE_CRITERIA,
+        min_length=1,
+        max_length=1000,
+        title="How pictures are picked",
+        description="Tells the picture judge what makes the best candidate.",
+    )
     character_sheets: bool = Field(
         default=True,
         title="Character sheets",
@@ -84,6 +98,14 @@ class VisualSettings(LogoSettings):
         title="Hero motion intensity",
         description="How strongly the camera moves over hero scenes: 0 is still, 1 is lively. "
         f"{STYLE_MOTION_NOTE}",
+    )
+    motion_prompt: str = Field(
+        default=MOTION_PROMPT,
+        min_length=1,
+        max_length=1000,
+        title="Motion prompt",
+        description="Describes the animation of each picture. {visual} and {mood} are replaced "
+        "by the scene's picture and mood.",
     )
     card_camera: CameraMove = Field(
         default=CameraMove.PUSH_IN,
@@ -129,49 +151,13 @@ class VisualSettings(LogoSettings):
         description="Brand mark letter height as a share of the picture height.",
     )
 
-
-class VoiceSettings(SettingsSection):
-    narrator_voice: LocalizedText = localized_text(
-        "", "", "Narrator voice", "Voice id per language. Empty uses the provider's default."
-    )
-    speed: float = Field(
-        default=0.95,
-        ge=0.5,
-        le=1.5,
-        title="Speaking speed",
-        description="How fast the narrator speaks: 1 is normal, lower is slower.",
-    )
-    include_intro: bool = Field(
-        default=True, title="Speak the intro line", description="Narrate the series intro line."
-    )
-    include_outro: bool = Field(
-        default=True, title="Speak the outro line", description="Narrate the series outro line."
-    )
-
-
-class MusicSettings(SettingsSection):
-    enabled: bool = Field(
-        default=True,
-        title="Background music",
-        description="Play a soft music bed under every episode and Short.",
-    )
-    mood_prompt: str = Field(
-        default="gentle playful lullaby with soft marimba, ukulele and light flute, calm and warm",
-        min_length=1,
-        title="Music mood",
-        description="Describes the music to the music model.",
-    )
-    volume: float = Field(
-        default=0.18,
-        ge=0,
-        le=1,
-        title="Music volume",
-        description="Loudness of the music bed: 0 is silent, 1 is full volume.",
-    )
-    ducking: float = Field(
-        default=0.6,
-        ge=0,
-        le=1,
-        title="Ducking",
-        description="How much the music dips while the narrator speaks.",
-    )
+    @field_validator("motion_prompt")
+    @classmethod
+    def check_motion_placeholders(cls, value: str) -> str:
+        unknown = unknown_placeholders(value, MOTION_PLACEHOLDERS)
+        if unknown:
+            names = ", ".join(f"{{{name}}}" for name in unknown)
+            raise ValueError(
+                f"motion prompt may only use {{visual}} and {{mood}}; unknown: {names}"
+            )
+        return value

@@ -4,7 +4,12 @@ from pathlib import PurePath
 
 from pydantic import Field, field_validator
 
-from autotube.pipelines.kids_story.settings.base import Corner, Placement, SettingsSection
+from autotube.pipelines.kids_story.settings.base import (
+    MACHINE_LOCAL,
+    Corner,
+    Placement,
+    SettingsSection,
+)
 from autotube.pipelines.kids_story.settings.choices import CORNER_CHOICES
 
 LOGO_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp")
@@ -17,7 +22,8 @@ class LogoSettings(SettingsSection):
         title="Logo file",
         description="Full path to a PNG, JPEG or WebP logo on this computer, drawn over the "
         "videos as a watermark. A transparent PNG looks best. Empty means no logo; a path "
-        "with no file there fails the run.",
+        "with no file there fails the run. It stays on this computer when settings are exported.",
+        json_schema_extra=MACHINE_LOCAL,
     )
     logo_corner: Corner = Field(
         default=Placement.TOP_RIGHT,
