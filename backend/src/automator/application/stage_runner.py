@@ -82,7 +82,10 @@ class StageRunner:
                 "finished_at": self.clock.now(),
             }
         )
-        recorded = self.recorder.stage(run.id, stage, accepts_results)
+        seen: list[Run] = []
+        recorded = self.recorder.stage(run.id, stage, partial(seen_and_accepted, seen))
+        if not seen:
+            self.store.delete_run(run.id)
         if recorded is None or recorded.status is not RunStatus.RUNNING:
             return self.progress.synced(run)
         failure = f"stage {stage.stage_id} failed: {message}"

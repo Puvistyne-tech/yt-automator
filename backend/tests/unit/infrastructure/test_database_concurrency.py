@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from functools import partial
@@ -80,3 +81,32 @@ def test_the_busy_timeout_is_configurable(tmp_path: Path) -> None:
     with database.engine.connect() as connection:
         assert connection.execute(text("PRAGMA busy_timeout")).scalar() == 250
     database.dispose()
+
+
+def test_a_save_waits_for_an_open_update_and_succeeds(database: Database) -> None:
+    runs = SqlRunRepository(database)
+    runs.save(run("held"))
+    inside, release, saved = threading.Event(), threading.Event(), threading.Event()
+
+    def hold(stored: Run) -> Run:
+        inside.set()
+        release.wait(10)
+        return stored.model_copy(update={"error": "held"})
+
+    def save_other() -> None:
+        runs.save(run("other"))
+        saved.set()
+
+    updater = threading.Thread(target=runs.update, args=("held", hold))
+    updater.start()
+    assert inside.wait(10)
+    saver = threading.Thread(target=save_other)
+    saver.start()
+    assert not saved.wait(0.2)
+    release.set()
+    updater.join(10)
+    saver.join(10)
+    assert saved.is_set()
+    assert {item.id for item in runs.list(RunQuery())} == {"other", "held"}
+    stored = runs.get("held")
+    assert stored is not None and stored.error == "held"

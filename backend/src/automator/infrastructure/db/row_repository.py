@@ -29,11 +29,11 @@ class RowStore[M: BaseModel, R: SQLModel]:
             return self.decode(row) if row is not None else None
 
     def save(self, model: M) -> None:
-        with self.db.session() as session:
+        with self.db.immediate_session() as session:
             session.merge(self.to_row(model))
 
     def delete(self, row_id: str) -> None:
-        with self.db.session() as session:
+        with self.db.immediate_session() as session:
             row = session.get(self.row_type, row_id)
             if row is not None:
                 session.delete(row)

@@ -117,3 +117,11 @@ def test_a_stale_stage_discards_only_unreferenced_files(harness: Harness) -> Non
     assert {a.stage_id for a in final.artifacts} == {"script"}
     assert (workspace / "script-en.txt").exists()
     assert not (workspace / "en-landscape.mp4").exists()
+
+
+def test_a_run_deleted_during_a_failing_stage_leaves_no_folder(harness: Harness) -> None:
+    run = started_run(harness, settings={"fail_stage": "script"})
+    with_hook(harness, 0, cancels(harness, delete=True))
+    assert execute_run(harness).execute(run.id).status is RunStatus.CANCELLED
+    assert harness.runs.get(run.id) is None
+    assert not (harness.store.root / run.id).exists()

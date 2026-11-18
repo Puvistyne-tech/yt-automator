@@ -7,8 +7,9 @@ import pytest
 
 from automator.domain.pipeline import StageContext
 from automator.domain.run_enums import LogLevel, RunEventKind, RunStatus, StageStatus
-from automator.domain.run_parts import RunLogPolicy
+from automator.domain.run_parts import RunLogPolicy, Upload
 from automator.domain.run_state import transition
+from automator.shared.errors import NotFound
 from tests.fixtures.builders import execute_run, finished_run, started_run
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry
 from tests.fixtures.harness import Harness
@@ -128,14 +129,13 @@ def test_logs_are_stored_with_level_and_stage(harness: Harness) -> None:
     assert payloads[-1] == {"level": "warning", "stage_id": None, "message": "dim"}
 
 
-def test_logging_for_a_missing_run_only_emits_the_event(harness: Harness) -> None:
+def test_recording_for_a_missing_run_emits_nothing(harness: Harness) -> None:
     harness.recorder.log("gone", "hello", LogLevel.ERROR, "script")
+    upload = Upload(target_id="t", channel_id="c", language="en", variant="v")
+    with pytest.raises(NotFound):
+        harness.recorder.upload("gone", 0, upload)
     assert harness.runs.get("gone") is None
-    assert harness.events.published[-1].payload == {
-        "level": "error",
-        "stage_id": "script",
-        "message": "hello",
-    }
+    assert harness.events.published == []
 
 
 def test_stored_logs_keep_only_the_newest_entries(harness: Harness) -> None:

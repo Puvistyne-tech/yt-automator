@@ -150,3 +150,19 @@ def test_get_run_and_open_artifact(harness: Harness) -> None:
         OpenRunArtifact(harness.runs, harness.store).execute(run.id, "nope")
     with pytest.raises(NotFound):
         GetRun(harness.runs).execute("nope")
+
+
+def test_delete_removes_the_row_before_the_folder(
+    harness: Harness, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    run = failed_at_render(harness)
+    rows_at_folder_removal: list[object] = []
+    remove_folder = harness.store.delete_run
+
+    def recording_delete(run_id: str) -> None:
+        rows_at_folder_removal.append(harness.runs.get(run_id))
+        remove_folder(run_id)
+
+    monkeypatch.setattr(harness.store, "delete_run", recording_delete)
+    delete_run(harness).execute(run.id)
+    assert rows_at_folder_removal == [None]

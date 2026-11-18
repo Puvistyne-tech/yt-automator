@@ -60,9 +60,13 @@ class RunRecorder:
         return saved
 
     def upload(self, run_id: str, index: int, upload: Upload) -> Run:
-        saved = self.runs.update(run_id, lambda stored: with_upload(stored, index, upload))
+        saved = require(
+            self.runs.update(run_id, lambda stored: with_upload(stored, index, upload)),
+            "run",
+            run_id,
+        )
         self.emit_parts(run_id, RunEventKind.UPLOAD, (upload,))
-        return require(saved, "run", run_id)
+        return saved
 
     def log(
         self,
@@ -72,7 +76,8 @@ class RunRecorder:
         stage_id: str | None = None,
     ) -> None:
         entry = RunLog(at=self.clock.now(), level=level, stage_id=stage_id, message=message)
-        self.runs.update(run_id, lambda stored: self.logged(stored, entry))
+        if self.runs.update(run_id, lambda stored: self.logged(stored, entry)) is None:
+            return
         self.emit(run_id, RunEventKind.LOG, entry.model_dump(mode="json", exclude={"at"}))
 
     def logged(self, stored: Run, entry: RunLog) -> Run:

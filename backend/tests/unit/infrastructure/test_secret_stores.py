@@ -146,6 +146,18 @@ def test_removing_the_unreadable_file_recovers_without_a_restart(
     assert file_store(tmp_path).get("api") == "new"
 
 
+def test_removing_both_files_writes_a_new_key_that_survives_a_restart(tmp_path: Path) -> None:
+    file_store(tmp_path).set("api", "value")
+    truncate_secrets(tmp_path)
+    store = file_store(tmp_path)
+    with pytest.raises(SecretsUnreadable):
+        store.get("api")
+    (tmp_path / "secrets.enc").unlink()
+    (tmp_path / "secrets.key").unlink()
+    store.set("api", "new")
+    assert file_store(tmp_path).get("api") == "new"
+
+
 class SilentKeyring(MemoryKeyring):
     priority = 0
 

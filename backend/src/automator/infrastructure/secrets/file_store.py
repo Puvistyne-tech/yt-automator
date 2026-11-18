@@ -74,7 +74,7 @@ class EncryptedFileSecretStore:
             raise self.unreadable() from error
 
     def writer(self) -> Fernet:
-        if self.fernet is None:
+        if self.fernet is None or not self.key_path.exists():
             key = Fernet.generate_key()
             write_private(self.key_path, key)
             self.fernet = Fernet(key)
