@@ -10,6 +10,7 @@ from autotube.pipelines.kids_story.settings.cast import Character
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from autotube.pipelines.kids_story.story.model import Story, StoryScene
 from autotube.pipelines.kids_story.styles.resolve import resolve_style
+from autotube.pipelines.kids_story.text.templates import render_template
 
 ART_LANGUAGE = "en"
 FIRST_NUMBER = re.compile(r"\d+")
@@ -63,9 +64,10 @@ def thumbnail_prompt(settings: KidsStorySettings, story: Story) -> str:
     )
 
 
-def motion_prompt(scene: StoryScene | None, feel: str = "") -> str:
+def motion_prompt(settings: KidsStorySettings, scene: StoryScene | None, feel: str = "") -> str:
     visual, mood = ("a title card", "warm") if scene is None else (scene.visual, scene.mood)
-    prompt = render_prompt("motion.txt", visual=visual, mood=mood)
+    values = {"visual": visual, "mood": mood}
+    prompt = render_template(settings.visuals.motion_prompt, values).strip()
     return f"{prompt} Camera: {feel}." if feel else prompt
 
 
@@ -78,6 +80,7 @@ def judge_request(
         characters=characters_text(settings, scene.characters),
         style=resolve_style(settings).prompt,
         count=len(candidates),
+        criteria=settings.visuals.judge_criteria,
     )
     return TextRequest(prompt=prompt, max_tokens=8, temperature=0.0, images=tuple(candidates))
 

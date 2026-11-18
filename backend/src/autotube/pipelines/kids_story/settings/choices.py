@@ -28,6 +28,18 @@ def enum_choices(enum: type[StrEnum], titles: Mapping[str, str]) -> ChoiceSchema
     return titled_choices(titles)
 
 
+def checkbox_choices(enum: type[StrEnum], titles: Mapping[str, str]) -> ChoiceSchema:
+    item_choices = enum_choices(enum, titles)
+
+    def apply(schema: JsonDict) -> None:
+        items: JsonDict = {}
+        item_choices(items)
+        schema["items"] = items
+        schema["uniqueItems"] = True
+
+    return apply
+
+
 LANGUAGE_CHOICES = titled_choices(LANGUAGE_NAMES)
 STORY_SOURCE_CHOICES = titled_choices(
     {

@@ -19,8 +19,8 @@ EDITORIAL_RULES = [
     "Problems are small and everyday, and the friends solve them by being kind.",
     "No brands, products, real people, places of worship or current events.",
     "Use short sentences and simple words a young child understands.",
-    "End with the moral said plainly, then the series refrain.",
 ]
+RETIRED_ENDING_RULE = "End with the moral said plainly, then the series refrain."
 BANNED_WORDS = [
     "kill",
     "killed",
@@ -53,6 +53,12 @@ BRAND_NAMES = [
     "Pixar",
     "Marvel",
 ]
+
+
+def without_retired_rule(value: object) -> object:
+    if not isinstance(value, list):
+        return value
+    return [rule for rule in value if rule != RETIRED_ENDING_RULE]
 
 
 class SeriesSettings(SettingsSection):
@@ -95,6 +101,11 @@ class SeriesSettings(SettingsSection):
         "Rules the story writer must follow. Each rule is one line in the prompt.",
     )
 
+    @field_validator("editorial_rules", mode="before")
+    @classmethod
+    def drop_retired_rule(cls, value: object) -> object:
+        return without_retired_rule(value)
+
     @field_validator("name")
     @classmethod
     def check_name(cls, value: LocalizedText) -> LocalizedText:
@@ -114,6 +125,11 @@ class SafetySettings(SettingsSection):
         BRAND_NAMES,
         "Brand names",
         "A story mentioning any of these names is rejected and rewritten.",
+    )
+    avoid_topics: list[str] = text_list_field(
+        [],
+        "Topics to avoid",
+        "Subjects the writer is told never to write about, one per line.",
     )
     picture_exclusions: str = Field(
         default=PICTURE_EXCLUSIONS,

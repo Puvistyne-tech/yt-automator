@@ -97,8 +97,9 @@ def test_a_held_rate_only_applies_below_the_frame_rate() -> None:
 
 
 def test_the_motion_prompt_adds_the_camera_feel_only_when_given() -> None:
-    assert motion_prompt(None).endswith("no sudden changes.")
-    assert motion_prompt(None, "slow drift").endswith("Camera: slow drift.")
+    settings = quick_settings()
+    assert motion_prompt(settings, None).endswith("no sudden changes.")
+    assert motion_prompt(settings, None, "slow drift").endswith("Camera: slow drift.")
 
 
 def test_cards_and_thumbnails_letter_in_the_style_colours() -> None:

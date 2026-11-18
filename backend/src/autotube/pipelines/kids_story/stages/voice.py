@@ -61,7 +61,7 @@ def speech_request(settings: KidsStorySettings, line: Line, language: str) -> Sp
         text=speakable(line.text, language),
         language=language,
         voice=voice_for(settings, line.speaker, language),
-        speed=settings.voice.speed,
+        speed=settings.voice.speed.for_language(language),
     )
 
 

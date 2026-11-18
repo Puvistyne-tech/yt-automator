@@ -10,6 +10,7 @@ from autotube.pipelines.kids_story.artifacts import Role, artifact, folder, writ
 from autotube.pipelines.kids_story.languages import ordered_languages, primary_language
 from autotube.pipelines.kids_story.settings.root import KidsStorySettings
 from autotube.pipelines.kids_story.settings.story import StorySource
+from autotube.pipelines.kids_story.settings.story_choices import says_refrain
 from autotube.pipelines.kids_story.stages.media_types import JSON
 from autotube.pipelines.kids_story.stages.run_settings import kids_settings
 from autotube.pipelines.kids_story.story.authoring import StoryAuthor, WriterUnavailableError
@@ -20,6 +21,12 @@ from autotube.pipelines.kids_story.story.themes import choose_theme
 
 BUNDLED_PROVIDER = "bundled"
 Written = tuple[dict[str, Story], str]
+
+
+def bundled_refrain(settings: KidsStorySettings, language: str) -> str:
+    if not says_refrain(settings.story.ending_style):
+        return ""
+    return settings.series.refrain.for_language(language)
 
 
 class StoryStage:
@@ -64,7 +71,7 @@ class StoryStage:
     ) -> Written | None:
         try:
             llm = context.providers.resolve(Capability.LLM)
-            author = StoryAuthor(llm, settings, context.log)
+            author = StoryAuthor(llm, settings, context.log, context.run_id)
             first = author.written(theme, order[0])
             if first is None:
                 return None
@@ -96,7 +103,7 @@ class StoryStage:
         bundled = pick_bundled(choice)
         context.log(f"using bundled story {bundled.id}")
         stories = {
-            language: bundled.to_story(language, settings.series.refrain.for_language(language))
+            language: bundled.to_story(language, bundled_refrain(settings, language))
             for language in order
         }
         return stories, BUNDLED_PROVIDER

@@ -1,0 +1,33 @@
+Translate this story from English into Tamil.
+
+Rules:
+- Keep exactly 9 narrations, in the same order, one translated narration per original narration.
+- Keep exactly 2 questions.
+- The moral must appear word for word, as you translate it, inside the last narration.
+- The last narration must end with this exact refrain: "அன்பாக இரு, துணிவாக இரு, நீயாகவே இரு!"
+- Character names in Tamil: Kavin = கவின், Mittu = மிட்டு, Chinnu = சின்னு, Grandpa Tortoise = ஆமை தாத்தா
+
+Story:
+{
+  "title": "Kavin and the Golden Mango",
+  "moral": "Sharing makes everyone happier.",
+  "narrations": [
+    "One sunny morning, Kavin the little elephant walked to the big mango tree. The mangoes glowed like little suns. Kavin lifted his trunk up high and picked the biggest, sweetest mango of all.",
+    "\"This mango is all mine,\" Kavin said with a happy smile. He sat down under the tree. Just then, Mittu the parrot flew down and landed on a low branch.",
+    "\"What a lovely mango!\" said Mittu. \"I am so hungry today.\" Kavin held the mango close. He did not want to share. Mittu looked down at her little feet and said nothing more.",
+    "Then Chinnu the squirrel came running along the path. Her tummy made a funny rumbling sound. \"I could not find any nuts this morning,\" Chinnu said softly.",
+    "Kavin looked at his friends. Mittu was quiet. Chinnu was quiet too. The big mango felt heavy in his trunk, and somehow Kavin did not feel happy anymore.",
+    "Grandpa Tortoise walked slowly up the hill. \"Hello, little ones,\" he said. \"Kavin, a mango tastes sweet. But do you know what tastes even sweeter?\"",
+    "Kavin thought and thought. Then he smiled a big smile. He broke the mango into four pieces, one for Mittu, one for Chinnu, one for Grandpa Tortoise and one for himself.",
+    "The friends sat together in the cool shade. They ate their mango pieces and laughed and laughed. Mittu sang a happy song, and Chinnu did a little dance.",
+    "Kavin felt warm and bright inside. \"Sharing makes everyone happier,\" he said. Grandpa Tortoise nodded and smiled. Be kind, be brave, be you!"
+  ],
+  "questions": [
+    "What do you think the friends will do with the mango seed?",
+    "Who do you think will visit the mango tree tomorrow?"
+  ],
+  "hook_line": "What could be sweeter than the sweetest mango?"
+}
+
+Answer with JSON in exactly this shape:
+{"title": "...", "moral": "...", "narrations": ["..."], "questions": ["..."], "hook_line": "..."}

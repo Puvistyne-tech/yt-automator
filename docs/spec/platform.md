@@ -146,6 +146,40 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   and unknown placeholders stay as written. The series name must not be blank in any language. When no bundled story
   fits the automation's cast ids and languages, the story stage fails naming both what the automation has
   and what the bundled stories need.
+- Kids story writing, voice and sound controls. Every default renders the translation, motion and judge
+  prompts and the story user prompt exactly as before these settings existed, and stored settings without
+  them load unchanged. The default editorial rules no longer include "End with the moral said plainly, then
+  the series refrain." (the ending requirement states the ending once); that exact line is removed from
+  stored `series.editorial_rules` when they load, so the story system prompt only loses that line.
+  - `story.tone` (default "warm, gentle") fills "You write <tone>, original stories…" in the system prompt;
+    `story.writing_style` is the wording requirement line; each non-blank line of `story.extra_instructions`
+    (default empty) becomes one more requirement. `safety.avoid_topics` (default empty) adds a "Never write
+    about these topics" list after the editorial rules.
+  - `story.ending_style`: `moral_and_refrain` (default), `refrain_only` or `open`. The story prompt, the
+    translation rules and the ending gate (and so the `moral_and_refrain` score item) follow it: the moral is
+    required only for `moral_and_refrain`, the refrain (when the language has one) for every style but `open`.
+    Bundled stories get an empty refrain for `open`; they keep the moral their characters say, because it is
+    part of the written dialogue, and no gate runs on them.
+  - `story.cast_per_episode` (0, the default, means the whole cast) and `story.lead_mode` (`fixed`: the first
+    cast member leads; `per_episode`: the lead is picked from a hash of the run id, as stages have no episode
+    counter, so a lead can repeat). The episode cast is the lead followed by the next cast members in cast
+    order, wrapping round (`story/casting.py::episode_cast(settings, seed)`). The story prompt lists only the
+    episode cast, and the cast gate (`story_problems(story, settings, seed)`, seeded with the run id) rejects
+    any other cast id. Bundled stories are picked against the whole cast.
+  - `story.question_style`, `short.hook_style` and `story.translation_style` replace the fixed wording of the
+    questions, the hook line and the translation register.
+  - `story.enabled_checks`: the story checks that run (`scene_count`, `words_per_scene`, `duration`,
+    `ending`, `reading_level`, `cast`; default all), published as an array of `oneOf` items with
+    `uniqueItems` and shown as checkboxes. Banned words and brand names are child-safety checks: they always
+    run and cannot be listed. Translations run the ending check only when it is enabled.
+  - `sound_effects.max_per_scene` (default 2) is stated in the prompt ("zero to two…", or "always an empty
+    list" for 0) and shaping drops any cue beyond it.
+  - `voice.speed` is a per-language speed (0.5 to 1.5, default 0.95); a stored single number is applied to
+    every language. `music.short_mood_prompt` (default empty) replaces `music.mood_prompt` for Short beds.
+  - `visuals.motion_prompt` (with `{visual}` and `{mood}`; a card uses "a title card" and "warm") and
+    `visuals.judge_criteria` replace the fixed motion and picture-judge wording. A motion prompt naming any
+    other lowercase `{placeholder}` fails validation; `$`, `{}` and `{Visual}` pass through as written, as
+    does any text in the judge criteria, tone and extra instructions.
 - Kids story visual styles. The style library is data: `pipelines/kids_story/styles/library.json`, validated by
   `styles/library.py`. Each entry has `id`, `title`, `family` (animated, illustrated, drawn, crafted, graphic,
   realistic), `description` (one sentence), `prompt`, `negative_prompt`, `palette` (4 to 6 `#RRGGBB`, ordered
