@@ -52,6 +52,14 @@ describe("applyRunEvent", () => {
     },
   );
 
+  it("clears the error when a status event carries a null error", () => {
+    const run = makeRun({ status: "failed", error: "old" });
+    expect(applyRunEvent(run, event("status", { status: "queued", error: null }))).toMatchObject({
+      status: "queued",
+      error: null,
+    });
+  });
+
   it("keeps the run when a status event has no status", () => {
     const run = makeRun();
     expect(applyRunEvent(run, event("status", {}))).toBe(run);
@@ -124,6 +132,18 @@ describe("applyRunEvent", () => {
     expect(next.logs).toHaveLength(MAX_RUN_LOGS);
     expect(next.logs[0]?.message).toBe("line 1");
     expect(next.logs.at(-1)?.message).toBe("newest");
+  });
+
+  it("never keeps fewer log entries than the server returned", () => {
+    const logs = Array.from({ length: MAX_RUN_LOGS + 5 }, (_, index) => ({
+      at: AT,
+      level: "info" as const,
+      stage_id: null,
+      message: `line ${index}`,
+    }));
+    const next = applyRunEvent(makeRun({ logs }), event("log", { message: "newest" }));
+    expect(next.logs).toHaveLength(MAX_RUN_LOGS + 5);
+    expect(next.logs[0]?.message).toBe("line 1");
   });
 });
 

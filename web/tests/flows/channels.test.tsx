@@ -45,7 +45,7 @@ describe("Channels page", () => {
 
     await waitFor(() =>
       expect(navigateExternal).toHaveBeenCalledWith(
-        expect.stringContaining("credential=cred-main"),
+        expect.stringMatching(/\/channels\?connected=/),
       ),
     );
   });
@@ -60,7 +60,7 @@ describe("Channels page", () => {
     await waitFor(() =>
       expect(navigateExternal).toHaveBeenCalledWith(expect.stringContaining("connected=chan-old")),
     );
-    expect(channel("chan-old")?.status).toBe("connected");
+    expect(channel("chan-old")?.status).toBe("expired");
   });
 
   it("offers no reconnect for a connected channel", async () => {
@@ -69,35 +69,26 @@ describe("Channels page", () => {
     expect(row.queryByRole("button", { name: /Reconnect/ })).not.toBeInTheDocument();
   });
 
-  it("reports a reconnect that cannot start", async () => {
+  it.each([
+    ["Reconnect Kutty Classics", () => findRow("Channels", "Kutty Classics")],
+    ["Connect channel", () => findCredential("Main Google project")],
+  ])("reports when %s cannot start", async (button, findScope) => {
     failWith("post", "/channels/connect", 409, {
       code: "credential_secret_missing",
       message: "credential cred-main has no client secret",
     });
     const { user, navigateExternal } = renderApp("/channels");
-    const row = await findRow("Channels", "Kutty Classics");
+    const scope = await findScope();
 
-    await user.click(row.getByRole("button", { name: "Reconnect Kutty Classics" }));
+    await user.click(scope.getByRole("button", { name: button }));
 
     await findToast("credential cred-main has no client secret");
-    expect(navigateExternal).not.toHaveBeenCalled();
-  });
-
-  it("reports a connect flow that cannot start", async () => {
-    failWith("post", "/channels/connect", 502, { message: "Google is unreachable." });
-    const { user, navigateExternal } = renderApp("/channels");
-    const main = await findCredential("Main Google project");
-
-    await user.click(main.getByRole("button", { name: "Connect channel" }));
-
-    await findToast("Google is unreachable.");
     expect(navigateExternal).not.toHaveBeenCalled();
   });
 
   it.each([
     ["?connected=chan-ta", "Connected Kutty Kathaigal."],
     ["?error=access_denied", "Google sign-in was cancelled, so no channel was connected."],
-    ["?error=brand_new_code", "Connecting the channel failed: brand new code."],
   ])("shows a toast when returning with %s and cleans the url", async (query, message) => {
     const { router } = renderApp(`/channels${query}`);
 

@@ -14,7 +14,7 @@ import {
   removeChoice,
 } from "@/features/providers/chain";
 import { humanizeId } from "@/shared/format/text";
-import { Callout, Card, EmptyState, Icon, Select } from "@/shared/ui";
+import { AlertCallout, Card, EmptyState, Select } from "@/shared/ui";
 
 export interface CapabilityCardProps {
   capability: string;
@@ -101,10 +101,9 @@ export function CapabilityCard(props: CapabilityCardProps) {
       }
     >
       {problem && (
-        <Callout tone="danger" role="alert">
-          <Icon name="alert" />
-          <span>{problem}</span>
-        </Callout>
+        <AlertCallout tone="danger" role="alert">
+          {problem}
+        </AlertCallout>
       )}
       <ChainList {...listProps} />
     </Card>

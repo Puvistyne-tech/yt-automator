@@ -107,21 +107,45 @@ describe("oauthReturnMessage", () => {
   });
 
   it.each([
-    "missing_code",
-    "validation_failed",
-    "youtube_no_channel",
-    "youtube_oauth_failed",
-    "youtube_invalid_grant",
-    "youtube_unreachable",
-    "credential_secret_missing",
-    "credential_not_found",
-    "secrets_unreadable",
-  ])("explains the %s return code in plain words", (code) => {
-    expect(oauthErrorMessage(code)).not.toContain(code.replace(/_/g, " "));
+    ["missing_code", "Google did not send an authorization code. Start connecting again."],
+    [
+      "validation_failed",
+      "The sign-in link was invalid or expired, or its credential was changed or removed. Start connecting again.",
+    ],
+    [
+      "youtube_no_channel",
+      "That Google account has no YouTube channel. Choose an account that owns one.",
+    ],
+    [
+      "youtube_oauth_failed",
+      "Google rejected the sign-in. Check the credential's client id and secret, then try again.",
+    ],
+    ["youtube_invalid_grant", "Google refused the authorization code. Start connecting again."],
+    [
+      "youtube_unreachable",
+      "Google could not be reached. Check the internet connection and try again.",
+    ],
+    [
+      "youtube_quota_exceeded",
+      "The credential's YouTube quota is used up for today. Try again after midnight Pacific time.",
+    ],
+    ["credential_secret_missing", "Add the credential's client secret, then connect again."],
+    [
+      "secrets_unreadable",
+      "Stored secrets could not be read. The error on the Google API credentials card names the files to remove; remove them, then reconnect.",
+    ],
+  ])("explains the %s return code in plain words", (code, message) => {
+    expect(oauthErrorMessage(code)).toBe(message);
+  });
+
+  it("has no message for a code the backend never sends", () => {
+    expect(oauthErrorMessage("credential_not_found")).toBe(
+      "Connecting the channel failed: credential not found.",
+    );
   });
 
   it("strips only the oauth parameters from the url", () => {
-    const params = new URLSearchParams("connected=a&error=b&credential=c&tab=x");
+    const params = new URLSearchParams("connected=a&error=b&tab=x");
     expect(withoutOAuthParams(params).toString()).toBe("tab=x");
   });
 });

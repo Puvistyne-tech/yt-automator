@@ -43,6 +43,8 @@ export function apiError(
   return HttpResponse.json({ error: { code, message, fields } }, { status });
 }
 
+export const EMPTY_VALUE_MESSAGE = "String should have at least 1 character";
+
 export const notFound = (entity: string, id: unknown) =>
   apiError(404, `${entity}_not_found`, `${entity} '${String(id)}' was not found`);
 

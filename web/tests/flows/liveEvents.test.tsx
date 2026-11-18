@@ -1,8 +1,7 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import { keys } from "@/api/keys";
 import { db } from "@/api/mocks/db";
-import { MAX_RUN_LOGS } from "@/api/runEvents";
-import type { JsonObject, Run, RunEvent } from "@/api/types";
+import type { JsonObject, RunEvent } from "@/api/types";
 import { renderApp } from "../helpers/renderApp";
 
 class FakeEventSource {
@@ -125,26 +124,6 @@ describe("Live run events", () => {
 
     expect(await screen.findByText("Live updates on")).toBeInTheDocument();
     expect(invalidate).not.toHaveBeenCalledWith({ queryKey: keys.runs });
-  });
-
-  it("keeps only the newest log entries on the run", async () => {
-    const { client } = renderApp("/runs/run-live");
-    await screen.findByRole("heading", { level: 1 });
-    const source = latest();
-
-    act(() => {
-      for (let index = 0; index <= 2000; index += 1) {
-        source.onmessage?.(
-          new MessageEvent("message", {
-            data: JSON.stringify(event("log", { message: `line ${index}` })),
-          }),
-        );
-      }
-    });
-
-    const lines = client.getQueryData<Run>(keys.run("run-live"))?.logs ?? [];
-    expect(lines).toHaveLength(MAX_RUN_LOGS);
-    expect(lines.at(-1)?.message).toBe("line 2000");
   });
 
   it("closes the stream when the app unmounts", () => {

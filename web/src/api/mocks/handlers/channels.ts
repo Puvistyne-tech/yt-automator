@@ -1,9 +1,14 @@
 import { HttpResponse, http } from "msw";
 import { connectReturnUrl } from "@/api/mocks/connect";
-import { db, noContent, notFound, ruleConflict, validationFailed } from "@/api/mocks/db";
+import {
+  db,
+  EMPTY_VALUE_MESSAGE,
+  noContent,
+  notFound,
+  ruleConflict,
+  validationFailed,
+} from "@/api/mocks/db";
 import type { ChannelDefaults, CredentialInput, CredentialView } from "@/api/types";
-
-const MIN_LENGTH = "String should have at least 1 character";
 
 function credentialErrors(input: Partial<CredentialInput>, creating: boolean) {
   const errors: Record<string, string> = {};
@@ -11,7 +16,7 @@ function credentialErrors(input: Partial<CredentialInput>, creating: boolean) {
   for (const field of fields) {
     const value = input[field];
     if ((creating && value === undefined) || value === "") {
-      errors[field] = value === undefined ? "Field required" : MIN_LENGTH;
+      errors[field] = value === undefined ? "Field required" : EMPTY_VALUE_MESSAGE;
     }
   }
   return errors;
@@ -65,6 +70,9 @@ const credentialHandlers = [
     return HttpResponse.json(updated);
   }),
   http.delete("/api/credentials/:id", ({ params }) => {
+    if (!db.state.credentials.some((c) => c.id === params.id)) {
+      return notFound("credential", params.id);
+    }
     const using = db.state.channels.filter((channel) => channel.credential_id === params.id);
     if (using.length > 0) {
       const titles = using.map((channel) => channel.title).sort();
@@ -105,6 +113,9 @@ const channelHandlers = [
     return HttpResponse.json(updated);
   }),
   http.delete("/api/channels/:id", ({ params }) => {
+    if (!db.state.channels.some((c) => c.id === params.id)) {
+      return notFound("channel", params.id);
+    }
     const blocking = db.state.automations
       .filter((a) => a.enabled && a.targets.some((target) => target.channel_id === params.id))
       .map((a) => a.name)

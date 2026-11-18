@@ -1,5 +1,5 @@
 import { HttpResponse, http } from "msw";
-import { db, noContent, notFound, validationFailed } from "@/api/mocks/db";
+import { db, EMPTY_VALUE_MESSAGE, noContent, notFound, validationFailed } from "@/api/mocks/db";
 import { makeRun, stagesWith } from "@/api/mocks/fixtures/factories";
 import type { Automation, AutomationInput } from "@/api/types";
 
@@ -7,7 +7,7 @@ function inputErrors(input: AutomationInput): Record<string, string> {
   const errors: Record<string, string> = {};
   const pipeline = db.state.pipelines.find((p) => p.type_id === input.pipeline_type);
   if (input.name === "") {
-    errors.name = "String should have at least 1 character";
+    errors.name = EMPTY_VALUE_MESSAGE;
   }
   if (pipeline === undefined) {
     errors.pipeline_type = `unknown pipeline type '${input.pipeline_type}'`;

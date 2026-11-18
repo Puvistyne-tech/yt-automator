@@ -13,7 +13,7 @@ import {
   PlaylistField,
   PrivacyField,
 } from "@/features/automation-editor/sections/TargetFields";
-import { Callout, CheckboxGroup, Icon, IconButton } from "@/shared/ui";
+import { AlertCallout, CheckboxGroup, IconButton } from "@/shared/ui";
 
 interface TargetRowProps {
   index: number;
@@ -49,12 +49,7 @@ export function TargetRow(props: TargetRowProps) {
   return (
     <li className="target-row panel-inset panel-inset-muted" aria-label={`Target ${index + 1}`}>
       <TargetHead index={index} onRemove={props.onRemove} />
-      {warning && (
-        <Callout tone="warning">
-          <Icon name="alert" />
-          <span>{warning}</span>
-        </Callout>
-      )}
+      {warning && <AlertCallout tone="warning">{warning}</AlertCallout>}
       <div className="target-grid">
         <ChannelField {...field} />
         <LanguageField {...field} pipeline={pipeline} />

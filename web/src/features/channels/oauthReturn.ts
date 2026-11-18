@@ -3,12 +3,13 @@ export interface OAuthReturnMessage {
   message: string;
 }
 
-export const OAUTH_RETURN_PARAMS = ["connected", "error", "credential"];
+export const OAUTH_RETURN_PARAMS = ["connected", "error"];
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   access_denied: "Google sign-in was cancelled, so no channel was connected.",
   missing_code: "Google did not send an authorization code. Start connecting again.",
-  validation_failed: "The sign-in link expired or was already used. Start connecting again.",
+  validation_failed:
+    "The sign-in link was invalid or expired, or its credential was changed or removed. Start connecting again.",
   youtube_scope_denied:
     "Google granted fewer permissions than needed. Connect again and allow every permission.",
   youtube_no_channel:
@@ -18,9 +19,10 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   youtube_invalid_grant: "Google refused the authorization code. Start connecting again.",
   youtube_unreachable: "Google could not be reached. Check the internet connection and try again.",
   credential_secret_missing: "Add the credential's client secret, then connect again.",
-  credential_not_found: "That credential no longer exists. Add it again, then connect.",
+  youtube_quota_exceeded:
+    "The credential's YouTube quota is used up for today. Try again after midnight Pacific time.",
   secrets_unreadable:
-    "Stored secrets could not be read. Remove the files named in the server log, then reconnect.",
+    "Stored secrets could not be read. The error on the Google API credentials card names the files to remove; remove them, then reconnect.",
 };
 
 export function oauthErrorMessage(code: string): string {

@@ -1,7 +1,8 @@
 import { HttpResponse, http } from "msw";
 import { artifactResponse } from "@/api/mocks/artifactFiles";
-import { db, noContent, notFound, ruleConflict, validationFailed } from "@/api/mocks/db";
+import { db, noContent, notFound, ruleConflict } from "@/api/mocks/db";
 import { publishRun } from "@/api/mocks/publish";
+import { retriedRun } from "@/api/mocks/retry";
 import { canCancel, canDelete, canRetry } from "@/api/mocks/runRules";
 import type { Run } from "@/api/types";
 
@@ -29,31 +30,7 @@ function refuse(run: Run, target: string) {
 }
 
 function retryOrRefuse(run: Run, fromStage: string | undefined): Run | Response {
-  if (fromStage !== undefined && !run.stages.some((stage) => stage.stage_id === fromStage)) {
-    return validationFailed({ from_stage: `run has no stage '${fromStage}'` });
-  }
-  return canRetry(run.status) ? retry(run, fromStage) : refuse(run, "queued");
-}
-
-function retry(run: Run, fromStage: string | undefined): Run {
-  const index = Math.max(
-    0,
-    run.stages.findIndex((stage) => stage.stage_id === fromStage),
-  );
-  const stages = run.stages.map((stage, i) =>
-    i < index ? stage : { ...stage, status: "pending" as const, message: "", finished_at: null },
-  );
-  return {
-    ...run,
-    status: "queued",
-    stages,
-    error: null,
-    score: null,
-    score_details: [],
-    review: null,
-    uploads: [],
-    finished_at: null,
-  };
+  return canRetry(run.status) ? retriedRun(run, fromStage) : refuse(run, "queued");
 }
 
 export const runHandlers = [

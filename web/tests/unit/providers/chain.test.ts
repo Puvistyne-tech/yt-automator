@@ -140,6 +140,14 @@ describe("provider save errors", () => {
     expect(configErrors(fields, providerConfig, "unsaved")).toEqual({});
   });
 
+  it("drops errors for an index or key shape that matches no saved config", () => {
+    expect(configErrors({ "5.capability": "x", body: "y" }, providerConfig, "llm")).toEqual({});
+  });
+
+  it("shows an unknown key of the card's own config on the card", () => {
+    expect(cardError(configErrors({ "0.foo": "x" }, providerConfig, "llm"))).toBe("x");
+  });
+
   it("finds the card error outside any chain entry", () => {
     const llm = configErrors(fields, providerConfig, "llm");
     expect(cardError(llm)).toBe("capability is configured twice");

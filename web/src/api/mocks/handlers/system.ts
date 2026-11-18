@@ -1,5 +1,5 @@
 import { HttpResponse, http } from "msw";
-import { db, noContent, notFound, validationFailed } from "@/api/mocks/db";
+import { db, EMPTY_VALUE_MESSAGE, noContent, notFound, validationFailed } from "@/api/mocks/db";
 import { providerConfigErrors } from "@/api/mocks/providerRules";
 import type { AppSettingsInput, Dashboard, ProviderConfig } from "@/api/types";
 
@@ -62,7 +62,7 @@ export const systemHandlers = [
   http.put("/api/secrets/:name", async ({ params, request }) => {
     const { value } = (await request.json()) as { value: string };
     if (value === "") {
-      return validationFailed({ value: "String should have at least 1 character" });
+      return validationFailed({ value: EMPTY_VALUE_MESSAGE });
     }
     setSecret(String(params.name), true);
     return noContent();

@@ -44,6 +44,19 @@ describe("api client", () => {
     });
   });
 
+  it("names the request id when an error page has no error body", async () => {
+    stubFetch(
+      new Response("<html>bad gateway</html>", {
+        status: 502,
+        headers: { "X-Request-Id": "ab12" },
+      }),
+    );
+    await expect(api.get("/x")).rejects.toMatchObject({
+      code: "http_502",
+      message: "Request failed (request id ab12)",
+    });
+  });
+
   it("falls back to a generic message for an html error page", async () => {
     stubFetch(new Response("<html>bad gateway</html>", { status: 502 }));
     await expect(api.get("/x")).rejects.toMatchObject({

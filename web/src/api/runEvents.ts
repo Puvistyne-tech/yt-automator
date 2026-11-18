@@ -36,7 +36,8 @@ function replaceBy<T>(items: T[], next: T, same: (item: T) => boolean): T[] {
 
 function applyStatus(run: Run, payload: JsonObject): Run {
   const status = payload.status as RunStatus | undefined;
-  const error = typeof payload.error === "string" ? payload.error : run.error;
+  const error =
+    typeof payload.error === "string" || payload.error === null ? payload.error : run.error;
   return status === undefined ? run : { ...run, status, error };
 }
 
@@ -55,7 +56,11 @@ function applyUpload(run: Run, upload: Upload): Run {
 
 function applyLog(run: Run, event: RunEvent): Run {
   const entry = runLogFromEvent(event);
-  return entry === null ? run : { ...run, logs: [...run.logs, entry].slice(-MAX_RUN_LOGS) };
+  if (entry === null) {
+    return run;
+  }
+  const kept = Math.max(MAX_RUN_LOGS, run.logs.length);
+  return { ...run, logs: [...run.logs, entry].slice(-kept) };
 }
 
 export function applyRunEvent(run: Run, event: RunEvent): Run {

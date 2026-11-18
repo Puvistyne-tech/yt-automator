@@ -5,7 +5,7 @@ import {
   type SectionProps,
 } from "@/features/automation-editor/sections/EditorSection";
 import { pluralize } from "@/shared/format/text";
-import { Badge, Callout, FormField, Icon, Input, RadioCards, Switch, Textarea } from "@/shared/ui";
+import { AlertCallout, Badge, FormField, Input, RadioCards, Switch, Textarea } from "@/shared/ui";
 
 interface GeneralSectionProps extends SectionProps {
   pipelines: PipelineDescriptor[];
@@ -26,10 +26,9 @@ function PipelineMeta({ pipeline }: { pipeline: PipelineDescriptor }) {
 function PipelinePicker({ pipelines, draft, onChange, errors }: GeneralSectionProps) {
   if (pipelines.length === 0) {
     return (
-      <Callout tone="warning">
-        <Icon name="alert" />
-        <span>No pipeline types are installed, so there is nothing to automate yet.</span>
-      </Callout>
+      <AlertCallout tone="warning">
+        No pipeline types are installed, so there is nothing to automate yet.
+      </AlertCallout>
     );
   }
   const choose = (typeId: string) => {
