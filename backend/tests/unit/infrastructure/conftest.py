@@ -7,8 +7,10 @@ import pytest
 
 from automator.infrastructure.config import RuntimeConfig
 from automator.infrastructure.db.database import Database
+from automator.infrastructure.runtime.worker_pool import WorkerPoolQueue
 from automator.infrastructure.youtube.gateway import GoogleYouTubeGateway
 from automator.infrastructure.youtube.settings import YouTubeSettings
+from tests.unit.infrastructure.worker_pool_support import TIMEOUT, BlockingExecutor
 from tests.unit.infrastructure.youtube_fakes import FakeService, media
 
 
@@ -38,3 +40,22 @@ def gateway(service: FakeService, refreshed: list[str]) -> GoogleYouTubeGateway:
         media=media,
         refresher=lambda credentials: refreshed.append(credentials.refresh_token or ""),
     )
+
+
+@pytest.fixture
+def executor() -> BlockingExecutor:
+    return BlockingExecutor()
+
+
+@pytest.fixture
+def limit() -> list[int]:
+    return [2]
+
+
+@pytest.fixture
+def pool(executor: BlockingExecutor, limit: list[int]) -> Iterator[WorkerPoolQueue]:
+    queue = WorkerPoolQueue(lambda: limit[0], poll_seconds=0.01)
+    queue.start(executor)
+    yield queue
+    executor.release.set()
+    queue.stop(TIMEOUT)

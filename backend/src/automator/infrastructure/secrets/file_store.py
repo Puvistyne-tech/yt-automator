@@ -14,11 +14,11 @@ PRIVATE_FILE_MODE = 0o600
 
 
 class SecretsUnreadable(RuleConflict):
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, key_path: Path) -> None:
         super().__init__(
             "secrets_unreadable",
-            f"the secrets file {path} cannot be decrypted with its key; remove it, then "
-            "reconnect your channels and enter your credentials and API keys again",
+            f"the secrets file {path} cannot be decrypted with its key {key_path}; remove both "
+            "files, then reconnect your channels and enter your credentials and API keys again",
         )
 
 
@@ -58,16 +58,27 @@ def fernet_for(key: bytes | None) -> Fernet | None:
 class EncryptedFileSecretStore:
     def __init__(self, path: Path, key_path: Path) -> None:
         self.path = path
+        self.key_path = key_path
         self.fernet = fernet_for(load_key(key_path, path))
         self.lock = threading.Lock()
 
+    def unreadable(self) -> SecretsUnreadable:
+        return SecretsUnreadable(self.path, self.key_path)
+
     def decrypted(self) -> bytes:
         if self.fernet is None:
-            raise SecretsUnreadable(self.path)
+            raise self.unreadable()
         try:
             return self.fernet.decrypt(self.path.read_bytes())
         except InvalidToken as error:
-            raise SecretsUnreadable(self.path) from error
+            raise self.unreadable() from error
+
+    def writer(self) -> Fernet:
+        if self.fernet is None:
+            key = Fernet.generate_key()
+            write_private(self.key_path, key)
+            self.fernet = Fernet(key)
+        return self.fernet
 
     def read_all(self) -> dict[str, str]:
         if not self.path.exists():
@@ -75,15 +86,14 @@ class EncryptedFileSecretStore:
         try:
             loaded = json.loads(self.decrypted())
         except ValueError as error:
-            raise SecretsUnreadable(self.path) from error
+            raise self.unreadable() from error
         if not isinstance(loaded, dict):
-            raise SecretsUnreadable(self.path)
+            raise self.unreadable()
         return {str(key): str(value) for key, value in loaded.items()}
 
     def write_all(self, values: dict[str, str]) -> None:
-        if self.fernet is None:
-            raise SecretsUnreadable(self.path)
-        write_private(self.path, self.fernet.encrypt(json.dumps(values).encode("utf-8")))
+        encrypted = self.writer().encrypt(json.dumps(values).encode("utf-8"))
+        write_private(self.path, encrypted)
 
     def get(self, name: str) -> str | None:
         with self.lock:

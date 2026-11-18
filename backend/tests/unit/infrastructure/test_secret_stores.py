@@ -127,15 +127,23 @@ def test_unreadable_secrets_raise_a_reconnect_error(
         store.set("api", "new")
 
 
-def test_a_store_without_its_key_never_writes(tmp_path: Path) -> None:
+@pytest.mark.parametrize("damage", [lose_key, corrupt_key])
+def test_removing_the_unreadable_file_recovers_without_a_restart(
+    tmp_path: Path, damage: Callable[[Path], None]
+) -> None:
     file_store(tmp_path).set("api", "value")
-    lose_key(tmp_path)
+    damage(tmp_path)
     store = file_store(tmp_path)
+    with pytest.raises(SecretsUnreadable) as raised:
+        store.get("api")
+    assert str(tmp_path / "secrets.enc") in raised.value.message
+    assert str(tmp_path / "secrets.key") in raised.value.message
     (tmp_path / "secrets.enc").unlink()
     assert store.get("api") is None
-    with pytest.raises(SecretsUnreadable):
-        store.set("api", "new")
-    assert not (tmp_path / "secrets.key").exists()
+    store.set("api", "new")
+    assert store.get("api") == "new"
+    assert mode_of(tmp_path / "secrets.key") == 0o600
+    assert file_store(tmp_path).get("api") == "new"
 
 
 class SilentKeyring(MemoryKeyring):
