@@ -147,6 +147,7 @@ class FakePipeline:
         )
     )
     raise_on_score: bool = False
+    score_calls: list[str] = field(default_factory=list)
 
     @property
     def descriptor(self) -> PipelineDescriptor:
@@ -170,6 +171,7 @@ class FakePipeline:
         return self.stage_list
 
     def score(self, context: StageContext) -> Sequence[ScoreItem]:
+        self.score_calls.append(context.run_id)
         if self.raise_on_score:
             raise RuntimeError("scorer offline")
         return [ScoreItem(id="quality", title="Quality", score=settings_of(context).score)]

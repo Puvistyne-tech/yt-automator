@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from automator.application.lookups import require
+from automator.application.lookups import require_credential
 from automator.domain.channels import Channel, channel_token_secret_name
 from automator.domain.credentials import Credential, credential_secret_name
 from automator.domain.ports import CredentialRepository, SecretStore
@@ -29,9 +29,7 @@ class ChannelAuthorizer:
         )
 
     def credential_of(self, channel: Channel) -> Credential:
-        return require(
-            self.credentials.get(channel.credential_id), "credential", channel.credential_id
-        )
+        return require_credential(self.credentials, channel.credential_id)
 
     def auth(self, channel: Channel) -> ChannelAuth:
         token = self.secrets.get(channel_token_secret_name(channel.id))

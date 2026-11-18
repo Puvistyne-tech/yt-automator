@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from automator.application.lookups import require
+from automator.application.lookups import require_run
 from automator.application.run_progress import RunProgress
 from automator.domain.ports import ArtifactStore, RunQueue, RunRepository
 from automator.domain.run_enums import RunStatus, StageStatus
@@ -30,7 +30,7 @@ class RetryRun:
     queue: RunQueue
 
     def execute(self, run_id: str, from_stage: str | None = None) -> Run:
-        run = require(self.runs.get(run_id), "run", run_id)
+        run = require_run(self.runs, run_id)
         ensure_transition(run, RunStatus.QUEUED)
         start = retry_start(run, from_stage)
         reset_ids = {stage.stage_id for stage in run.stages[start:]}

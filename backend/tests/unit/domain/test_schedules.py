@@ -7,7 +7,6 @@ import pytest
 from automator.domain.schedules import (
     Schedule,
     ScheduleKind,
-    StandardScheduleCalculator,
     next_run_at,
     schedule_errors,
 )
@@ -59,7 +58,6 @@ def test_cron_syntax_error_is_reported_on_cron_field() -> None:
 )
 def test_next_run_at(schedule: Schedule, expected: datetime | None) -> None:
     assert next_run_at(schedule, AFTER) == expected
-    assert StandardScheduleCalculator().next_run_at(schedule, AFTER) == expected
 
 
 def test_next_run_at_requires_aware_reference() -> None:

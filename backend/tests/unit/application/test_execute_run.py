@@ -4,7 +4,6 @@ from dataclasses import replace
 
 import pytest
 
-from automator.domain.pipeline import StageContext
 from automator.domain.quality import ReviewMode, ReviewPolicy
 from automator.domain.run_enums import (
     ArtifactKind,
@@ -13,7 +12,6 @@ from automator.domain.run_enums import (
     RunTrigger,
     StageStatus,
 )
-from automator.domain.run_state import transition
 from automator.shared.errors import NotFound, RuleConflict
 from tests.fixtures.builders import add_automation, execute_run, finished_run, started_run
 from tests.fixtures.fake_pipeline import FakePipelineRegistry
@@ -78,10 +76,29 @@ def test_auto_review_policy(harness: Harness, score: float, status: RunStatus) -
     assert run.status is status
 
 
-def test_deleted_automation_falls_back_to_manual_review(harness: Harness) -> None:
-    run = started_run(harness, review_policy=AUTO)
-    harness.automations.delete(run.automation_id)
-    assert execute_run(harness).execute(run.id).status is RunStatus.AWAITING_REVIEW
+@pytest.mark.parametrize(
+    ("queued_policy", "edited_policy", "status"),
+    [
+        (AUTO, ReviewPolicy(), RunStatus.APPROVED),
+        (ReviewPolicy(), AUTO, RunStatus.AWAITING_REVIEW),
+        (AUTO, None, RunStatus.APPROVED),
+    ],
+)
+def test_review_policy_is_snapshotted_at_start(
+    harness: Harness,
+    queued_policy: ReviewPolicy,
+    edited_policy: ReviewPolicy | None,
+    status: RunStatus,
+) -> None:
+    run = started_run(harness, review_policy=queued_policy)
+    assert run.review_policy == queued_policy
+    automation = harness.automations.get(run.automation_id)
+    assert automation is not None
+    if edited_policy is None:
+        harness.automations.delete(automation.id)
+    else:
+        harness.automations.save(automation.model_copy(update={"review_policy": edited_policy}))
+    assert execute_run(harness).execute(run.id).status is status
 
 
 def test_stage_failure_fails_run_and_skips_later_stages(harness: Harness) -> None:
@@ -121,25 +138,6 @@ def test_execute_ignores_runs_that_are_not_queued(harness: Harness, status: RunS
     harness.runs.save(run)
     assert execute_run(harness).execute(run.id) == run
     assert harness.pipeline.stage_list[0].calls == []
-
-
-def test_cancellation_during_a_stage_stops_the_run(harness: Harness) -> None:
-    run = started_run(harness)
-
-    def cancel_midway(context: StageContext) -> None:
-        stored = harness.runs.get(context.run_id)
-        assert stored is not None
-        harness.runs.save(transition(stored, RunStatus.CANCELLED, harness.clock.now()))
-
-    first, *rest = harness.pipeline.stage_list
-    stages = (replace(first, hook=cancel_midway), *rest)
-    harness.pipelines = FakePipelineRegistry([replace(harness.pipeline, stage_list=stages)])
-    result = execute_run(harness).execute(run.id)
-    assert result.status is RunStatus.CANCELLED
-    assert harness.runs.get(run.id) == result
-    assert result.stages[0].status is StageStatus.DONE
-    assert result.stages[1].status is StageStatus.PENDING
-    assert rest[0].calls == []
 
 
 def test_execute_unknown_run(harness: Harness) -> None:

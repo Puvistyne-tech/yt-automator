@@ -3,12 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+from automator.application.lookups import descriptor_of, require
 from automator.domain.automation_rules import automation_errors, normalized_settings
 from automator.domain.automations import Automation, AutomationInput, Target
 from automator.domain.kids_rules import enforce_kids_content
 from automator.domain.pipeline import Pipeline
 from automator.domain.ports import ChannelRepository, IdGenerator, PipelineRegistry
-from automator.shared.errors import ValidationFailed
+from automator.shared.errors import raise_if_invalid
 
 
 @dataclass(frozen=True)
@@ -19,13 +20,11 @@ class AutomationBuilder:
 
     def validated_pipeline(self, data: AutomationInput) -> Pipeline:
         pipeline = self.pipelines.get(data.pipeline_type)
-        descriptor = pipeline.descriptor if pipeline is not None else None
         settings_model = pipeline.settings_model if pipeline is not None else None
         channel_ids = {channel.id for channel in self.channels.list()}
-        errors = automation_errors(data, descriptor, settings_model, channel_ids)
-        if errors or pipeline is None:
-            raise ValidationFailed(errors)
-        return pipeline
+        errors = automation_errors(data, descriptor_of(pipeline), settings_model, channel_ids)
+        raise_if_invalid(errors)
+        return require(pipeline, "pipeline", data.pipeline_type)
 
     def targets(self, data: AutomationInput, pipeline: Pipeline) -> tuple[Target, ...]:
         return tuple(

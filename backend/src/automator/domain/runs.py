@@ -3,7 +3,7 @@ from __future__ import annotations
 from pydantic import AwareDatetime, Field
 
 from automator.domain.model_base import DomainModel, JsonObject
-from automator.domain.quality import ScoreItem
+from automator.domain.quality import ReviewPolicy, ScoreItem
 from automator.domain.run_enums import RunEventKind, RunStatus, RunTrigger
 from automator.domain.run_parts import Artifact, Review, StageRun, Upload
 
@@ -25,6 +25,7 @@ class Run(DomainModel):
     trigger: RunTrigger = RunTrigger.MANUAL
     languages: tuple[str, ...]
     settings_snapshot: JsonObject
+    review_policy: ReviewPolicy = Field(default_factory=ReviewPolicy)
     stages: tuple[StageRun, ...] = ()
     artifacts: tuple[Artifact, ...] = ()
     score: float | None = None

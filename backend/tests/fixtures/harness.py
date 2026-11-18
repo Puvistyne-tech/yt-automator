@@ -12,7 +12,6 @@ from automator.application.run_recorder import RunRecorder
 from automator.application.stage_runner import StageRunner
 from automator.application.start_run import StartRun
 from automator.application.upload_performer import UploadPerformer
-from automator.domain.schedules import StandardScheduleCalculator
 from tests.fixtures.fake_pipeline import FakePipeline, FakePipelineRegistry, kids_pipeline
 from tests.fixtures.fake_providers import FakeProviderCatalog
 from tests.fixtures.fake_repositories import (
@@ -27,6 +26,7 @@ from tests.fixtures.fake_runtime import (
     FakeClock,
     InMemoryQuotaLedger,
     InMemorySecrets,
+    PureScheduleCalculator,
     RecordingEvents,
     RecordingQueue,
     SequentialIds,
@@ -54,7 +54,7 @@ class Harness:
     app_settings: InMemoryAppSettings = field(default_factory=InMemoryAppSettings)
     pipeline: FakePipeline = field(default_factory=FakePipeline)
     kids: FakePipeline = field(default_factory=kids_pipeline)
-    schedules: StandardScheduleCalculator = field(default_factory=StandardScheduleCalculator)
+    schedules: PureScheduleCalculator = field(default_factory=PureScheduleCalculator)
 
     def __post_init__(self) -> None:
         self.store = TmpArtifactStore(self.root)
@@ -90,7 +90,7 @@ class Harness:
 
     @property
     def performer(self) -> UploadPerformer:
-        return UploadPerformer(self.youtube, self.store, self.ledger, self.authorizer, self.clock)
+        return UploadPerformer(self.youtube, self.store, self.authorizer, self.quota_report)
 
     @property
     def start_run(self) -> StartRun:

@@ -35,9 +35,12 @@ class UploadPlan(DomainModel):
     privacy: Privacy
     made_for_kids: bool
     publish_at: AwareDatetime | None
+    run_languages: tuple[str, ...]
 
     @property
     def skip_reason(self) -> str | None:
+        if self.language not in self.run_languages:
+            return f"language {self.language!r} is not in this run"
         if self.channel is None:
             return f"channel {self.target.channel_id} no longer exists"
         if self.video is None:
@@ -96,6 +99,7 @@ def plan_target_variant(
         privacy=privacy,
         made_for_kids=kids,
         publish_at=scheduled_publish(target, privacy, now),
+        run_languages=run.languages,
     )
 
 
@@ -109,7 +113,6 @@ def plan_uploads(
     return [
         plan_target_variant(run, target, variant, channels.get(target.channel_id), descriptor, now)
         for target in targets
-        if target.language in run.languages
         for variant in target.variants
     ]
 

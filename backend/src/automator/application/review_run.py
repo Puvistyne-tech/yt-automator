@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from automator.application.lookups import require
+from automator.application.lookups import require_run
 from automator.application.run_progress import RunProgress
 from automator.domain.ports import Clock, RunRepository
 from automator.domain.run_enums import ReviewDecision, RunStatus
@@ -23,7 +23,7 @@ class ReviewRun:
     clock: Clock
 
     def execute(self, run_id: str, decision: ReviewDecision, notes: str = "") -> Run:
-        run = require(self.runs.get(run_id), "run", run_id)
+        run = require_run(self.runs, run_id)
         if run.status is not RunStatus.AWAITING_REVIEW:
             raise RuleConflict(
                 "run_not_awaiting_review",

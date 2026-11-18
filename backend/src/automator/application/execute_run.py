@@ -5,29 +5,33 @@ from functools import partial
 
 from pydantic import BaseModel
 
-from automator.application.lookups import require
+from automator.application.lookups import require_run
 from automator.application.run_progress import RunProgress
 from automator.application.run_recorder import RunRecorder
 from automator.application.stage_runner import ContextFactory, StageRunner
-from automator.domain.pipeline import Pipeline, ProviderResolver, StageContext
+from automator.domain.pipeline import (
+    Pipeline,
+    ProviderResolver,
+    StageContext,
+    pipeline_not_installed,
+)
 from automator.domain.ports import (
     ArtifactStore,
-    AutomationRepository,
     PipelineRegistry,
     ProviderCatalog,
     ProviderConfigRepository,
     RunRepository,
 )
-from automator.domain.quality import ReviewPolicy, status_after_scoring, weighted_score
+from automator.domain.quality import status_after_scoring, weighted_score
 from automator.domain.run_enums import RunStatus
 from automator.domain.runs import Run
 from automator.domain.validation import validated_settings
+from automator.shared.errors import describe_error
 
 
 @dataclass(frozen=True)
 class ExecuteRun:
     runs: RunRepository
-    automations: AutomationRepository
     pipelines: PipelineRegistry
     provider_configs: ProviderConfigRepository
     catalog: ProviderCatalog
@@ -37,12 +41,12 @@ class ExecuteRun:
     stage_runner: StageRunner
 
     def execute(self, run_id: str) -> Run:
-        run = require(self.runs.get(run_id), "run", run_id)
+        run = require_run(self.runs, run_id)
         if run.status is not RunStatus.QUEUED:
             return run
         pipeline = self.pipelines.get(run.pipeline_type)
         if pipeline is None:
-            return self.progress.fail(run, f"pipeline {run.pipeline_type!r} is not installed")
+            return self.progress.fail(run, pipeline_not_installed(run.pipeline_type))
         settings, errors = validated_settings(pipeline.settings_model, run.settings_snapshot)
         if settings is None:
             return self.progress.fail(run, f"settings are invalid: {errors}")
@@ -76,11 +80,7 @@ class ExecuteRun:
         try:
             items = tuple(pipeline.score(context))
         except Exception as error:
-            return self.progress.fail(run, f"scoring failed: {error}")
+            return self.progress.fail(run, f"scoring failed: {describe_error(error)}")
         score = weighted_score(items)
         run = run.model_copy(update={"score": score, "score_details": items})
-        return self.progress.move(run, status_after_scoring(self.review_policy(run), score))
-
-    def review_policy(self, run: Run) -> ReviewPolicy:
-        automation = self.automations.get(run.automation_id)
-        return automation.review_policy if automation is not None else ReviewPolicy()
+        return self.progress.move(run, status_after_scoring(run.review_policy, score))

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from automator.application.lookups import require
+from automator.application.lookups import require_run
 from automator.domain.deletion_rules import ensure_run_deletable
 from automator.domain.ports import ArtifactStore, RunRepository
 
@@ -13,7 +13,7 @@ class DeleteRun:
     store: ArtifactStore
 
     def execute(self, run_id: str) -> None:
-        run = require(self.runs.get(run_id), "run", run_id)
+        run = require_run(self.runs, run_id)
         ensure_run_deletable(run)
         self.store.delete_run(run.id)
         self.runs.delete(run.id)

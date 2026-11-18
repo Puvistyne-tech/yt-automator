@@ -15,8 +15,14 @@ SCRIPT_SUFFIXES = {".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"}
 SOURCE_SUFFIXES = PYTHON_SUFFIXES | SCRIPT_SUFFIXES
 IGNORED_PARTS = {"node_modules", ".venv", "dist", "build", "migrations", "__pycache__", "data"}
 
-ALLOWED_PYTHON = re.compile(r"#\s*(type:\s*ignore\[[^\]]+\]|noqa:\s*[A-Z]+[0-9]+|pragma:\s*\S+)")
-ALLOWED_SCRIPT = re.compile(r"^(//\s*biome-ignore\s+\S+|//\s*@ts-expect-error|///\s*<reference\s)")
+ALLOWED_PYTHON = re.compile(
+    r"#\s*(type:\s*ignore\[[^\]]+\]|noqa:\s*[A-Z]+[0-9]+(,\s*[A-Z]+[0-9]+)*)\s*"
+)
+ALLOWED_SCRIPT = re.compile(
+    r"//\s*biome-ignore\s+lint/[A-Za-z0-9/]+:\s*\S.*"
+    r"|//\s*@ts-expect-error(\s.*)?"
+    r"|///\s*<reference\s[^>]*/>\s*"
+)
 SCRIPT_LITERALS = re.compile(
     r"""("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)""",
     re.DOTALL,
@@ -45,7 +51,7 @@ def python_comment_findings(path: str, source: str) -> list[Finding]:
         if token.type != tokenize.COMMENT:
             continue
         is_shebang = token.start[0] == 1 and token.string.startswith("#!")
-        if is_shebang or ALLOWED_PYTHON.match(token.string):
+        if is_shebang or ALLOWED_PYTHON.fullmatch(token.string):
             continue
         findings.append(Finding(path, token.start[0], token.line))
     return findings
@@ -86,7 +92,7 @@ def script_findings(path: str, source: str) -> list[Finding]:
     for match in SCRIPT_COMMENT.finditer(masked):
         line_number = masked.count("\n", 0, match.start()) + 1
         comment = source[match.start() : match.end()]
-        if ALLOWED_SCRIPT.match(comment):
+        if ALLOWED_SCRIPT.fullmatch(comment):
             continue
         findings.append(Finding(path, line_number, lines[line_number - 1]))
     return findings

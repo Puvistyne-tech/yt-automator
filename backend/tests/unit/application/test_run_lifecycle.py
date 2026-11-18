@@ -6,15 +6,11 @@ from automator.application.get_run import GetRun
 from automator.application.list_runs import ListRuns
 from automator.application.open_run_artifact import OpenRunArtifact
 from automator.domain.run_enums import ReviewDecision, RunStatus, StageStatus
-from automator.domain.runs import Run, RunQuery
+from automator.domain.runs import RunQuery
 from automator.shared.errors import NotFound, RuleConflict, ValidationFailed
 from tests.fixtures.builders import add_automation, execute_run, finished_run, started_run
 from tests.fixtures.harness import Harness
-from tests.fixtures.use_cases import cancel_run, delete_run, retry_run, review_run
-
-
-def failed_at_render(harness: Harness) -> Run:
-    return finished_run(harness, settings={"fail_stage": "render"})
+from tests.fixtures.use_cases import cancel_run, delete_run, failed_at_render, retry_run, review_run
 
 
 def test_retry_defaults_to_first_unfinished_stage_and_keeps_earlier_artifacts(
@@ -114,7 +110,7 @@ def test_delete_refuses_active_run(harness: Harness) -> None:
         delete_run(harness).execute(run.id)
 
 
-def test_list_runs_newest_first_with_filters_and_default_limit(harness: Harness) -> None:
+def test_list_runs_newest_first_with_filters(harness: Harness) -> None:
     first = add_automation(harness, name="First")
     second = add_automation(harness, name="Second")
     runs = []
@@ -124,8 +120,23 @@ def test_list_runs_newest_first_with_filters_and_default_limit(harness: Harness)
     assert [r.id for r in ListRuns(harness.runs).execute()] == [r.id for r in reversed(runs)]
     only_first = ListRuns(harness.runs).execute(RunQuery(automation_id=first.id))
     assert [r.id for r in only_first] == [runs[2].id, runs[0].id]
-    assert len(ListRuns(harness.runs, default_limit=2).execute()) == 2
     assert ListRuns(harness.runs).execute(RunQuery(status=RunStatus.FAILED)) == []
+
+
+@pytest.mark.parametrize(
+    ("default_limit", "query_limit", "count"), [(2, None, 2), (2, 3, 3), (50, 1, 1)]
+)
+def test_list_runs_limit(
+    harness: Harness, default_limit: int, query_limit: int | None, count: int
+) -> None:
+    automation = add_automation(harness)
+    for _ in range(4):
+        harness.clock.advance(seconds=1)
+        harness.start_run.execute(automation.id)
+    listed = ListRuns(harness.runs, default_limit=default_limit).execute(
+        RunQuery(limit=query_limit)
+    )
+    assert len(listed) == count
 
 
 def test_get_run_and_open_artifact(harness: Harness) -> None:

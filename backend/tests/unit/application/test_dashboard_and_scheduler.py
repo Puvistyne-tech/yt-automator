@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from automator.domain.run_enums import RunStatus, RunTrigger
 from automator.domain.schedules import Schedule, ScheduleKind
-from tests.fixtures.builders import add_automation, add_credential, finished_run
+from tests.fixtures.builders import add_automation, add_credential, automation_input, finished_run
 from tests.fixtures.harness import Harness
-from tests.fixtures.use_cases import get_dashboard, run_due
+from tests.fixtures.use_cases import get_dashboard, run_due, update_automation
 
 HOURLY = Schedule(kind=ScheduleKind.INTERVAL, every_hours=1)
 NINE_AM = Schedule(kind=ScheduleKind.CRON, cron="0 9 * * *")
@@ -19,7 +19,7 @@ def test_dashboard_counts_and_quota(harness: Harness) -> None:
     add_automation(harness, name="Off", enabled=False)
     harness.start_run.execute(finished.automation_id)
     add_credential(harness, credential_id="cred-2", quota=500)
-    day = harness.quota_report.quota.quota_day(harness.clock.now())
+    day = harness.quota_report.today()
     harness.ledger.record("cred-2", 120, day)
     summary = get_dashboard(harness).execute()
     assert (summary.automations, summary.enabled_automations, summary.channels) == (2, 1, 1)
@@ -87,3 +87,18 @@ def test_scheduler_skips_automations_that_cannot_start(harness: Harness) -> None
     harness.pipelines.pipelines.clear()
     harness.clock.advance(hours=2)
     assert run_due(harness).execute(harness.clock.now()) == []
+
+
+def test_editing_after_a_scheduled_run_moves_the_anchor(harness: Harness) -> None:
+    automation = add_automation(harness, schedule=HOURLY)
+    harness.clock.advance(hours=1)
+    assert len(run_due(harness).execute(harness.clock.now())) == 1
+    harness.clock.advance(minutes=10)
+    edited = update_automation(harness).execute(
+        automation.id, automation_input(name="Edited", schedule=HOURLY)
+    )
+    assert edited.next_run_at == edited.updated_at + timedelta(hours=1)
+    harness.clock.advance(minutes=59)
+    assert run_due(harness).execute(harness.clock.now()) == []
+    harness.clock.advance(minutes=1)
+    assert len(run_due(harness).execute(harness.clock.now())) == 1

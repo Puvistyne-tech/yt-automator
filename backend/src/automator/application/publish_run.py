@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from automator.application.lookups import require
+from automator.application.lookups import descriptor_of, require_credential, require_run
 from automator.application.quota_report import QuotaReport
 from automator.application.run_progress import RunProgress
 from automator.application.run_recorder import RunRecorder
@@ -38,7 +38,7 @@ class PublishRun:
     clock: Clock
 
     def execute(self, run_id: str) -> Run:
-        run = require(self.runs.get(run_id), "run", run_id)
+        run = require_run(self.runs, run_id)
         ensure_transition(run, RunStatus.PUBLISHING)
         plans = self.plans(run)
         self.ensure_quota(plans)
@@ -61,8 +61,7 @@ class PublishRun:
 
     def plans(self, run: Run) -> list[UploadPlan]:
         automation = self.automation(run)
-        pipeline = self.pipelines.get(run.pipeline_type)
-        descriptor = pipeline.descriptor if pipeline is not None else None
+        descriptor = descriptor_of(self.pipelines.get(run.pipeline_type))
         channels = {channel.id: channel for channel in self.channels.list()}
         plans = plan_uploads(run, automation.targets, channels, descriptor, self.clock.now())
         if not any(plan.skip_reason is None for plan in plans):
@@ -70,10 +69,10 @@ class PublishRun:
         return plans
 
     def ensure_quota(self, plans: list[UploadPlan]) -> None:
-        needed = quota_needed(plans, self.quota_report.quota)
+        needed = quota_needed(plans, self.quota_report.policy)
         usage = {
             credential_id: self.quota_report.usage(
-                require(self.credentials.get(credential_id), "credential", credential_id)
+                require_credential(self.credentials, credential_id)
             )
             for credential_id in needed
         }

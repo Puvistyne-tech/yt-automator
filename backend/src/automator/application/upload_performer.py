@@ -5,22 +5,19 @@ from dataclasses import dataclass, field
 from functools import partial
 
 from automator.application.channel_auth import ChannelAuthorizer
+from automator.application.quota_report import QuotaReport
 from automator.domain.channels import Channel
-from automator.domain.ports import ArtifactStore, Clock, QuotaLedger, YouTubeGateway
+from automator.domain.ports import ArtifactStore, YouTubeGateway
 from automator.domain.publish_plan import UploadPlan
-from automator.domain.quota import QuotaPolicy
 from automator.domain.run_enums import UploadStatus
 from automator.domain.run_parts import Artifact, Upload
 from automator.domain.youtube import ChannelAuth, VideoUpload
-
-
-def describe(error: Exception) -> str:
-    return str(error) or type(error).__name__
+from automator.shared.errors import describe_error
 
 
 def failed_upload(base: Upload, error: Exception, units: int) -> Upload:
     return base.model_copy(
-        update={"status": UploadStatus.FAILED, "error": describe(error), "quota_units": units}
+        update={"status": UploadStatus.FAILED, "error": describe_error(error), "quota_units": units}
     )
 
 
@@ -38,10 +35,8 @@ class UploadAttempt:
 class UploadPerformer:
     youtube: YouTubeGateway
     store: ArtifactStore
-    ledger: QuotaLedger
     authorizer: ChannelAuthorizer
-    clock: Clock
-    quota: QuotaPolicy = field(default_factory=QuotaPolicy)
+    quota_report: QuotaReport
 
     def perform(self, run_id: str, plan: UploadPlan) -> Upload:
         base = plan.initial_upload()
@@ -52,7 +47,7 @@ class UploadPerformer:
         except Exception as error:
             return failed_upload(base, error, 0)
         attempt = UploadAttempt(run_id, plan, plan.channel, auth)
-        self.charge(attempt, self.quota.video_units)
+        self.charge(attempt, self.quota_report.policy.video_units)
         try:
             uploaded = self.youtube.upload_video(auth, self.request(attempt, plan.video))
         except Exception as error:
@@ -84,8 +79,7 @@ class UploadPerformer:
         )
 
     def charge(self, attempt: UploadAttempt, units: int) -> None:
-        day = self.quota.quota_day(self.clock.now())
-        self.ledger.record(attempt.channel.credential_id, units, day)
+        self.quota_report.charge(attempt.channel.credential_id, units)
         attempt.units += units
 
     def extra(
@@ -95,10 +89,11 @@ class UploadPerformer:
         try:
             action()
         except Exception as error:
-            attempt.problems.append(f"{label}: {describe(error)}")
+            attempt.problems.append(f"{label}: {describe_error(error)}")
 
     def finish_extras(self, attempt: UploadAttempt, video_id: str) -> None:
-        plan, auth, youtube, quota = attempt.plan, attempt.auth, self.youtube, self.quota
+        plan, auth, youtube = attempt.plan, attempt.auth, self.youtube
+        quota = self.quota_report.policy
         if plan.thumbnail is not None:
             image = self.store.open(attempt.run_id, plan.thumbnail)
             action = partial(youtube.set_thumbnail, auth, video_id, image)

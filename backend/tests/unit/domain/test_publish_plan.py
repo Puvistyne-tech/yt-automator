@@ -95,8 +95,12 @@ def test_one_plan_per_target_and_variant() -> None:
     ]
 
 
-def test_targets_outside_run_languages_are_ignored() -> None:
-    assert plans(target(language="ta"), languages=("en",)) == []
+def test_targets_outside_run_languages_are_skipped_without_cost() -> None:
+    (plan,) = plans(target(language="ta"), languages=("en",))
+    assert plan.skip_reason == "language 'ta' is not in this run"
+    upload = plan.initial_upload()
+    assert upload.status is UploadStatus.SKIPPED and upload.error == plan.skip_reason
+    assert plan.cost(QuotaPolicy()) == 0
 
 
 def test_plan_picks_artifacts_and_metadata() -> None:

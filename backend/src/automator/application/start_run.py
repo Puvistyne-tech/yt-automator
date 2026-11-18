@@ -3,9 +3,10 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass
 
-from automator.application.lookups import require
+from automator.application.lookups import require_automation
 from automator.application.run_recorder import RunRecorder
 from automator.domain.automations import Automation
+from automator.domain.pipeline import pipeline_not_installed
 from automator.domain.ports import (
     AutomationRepository,
     Clock,
@@ -29,7 +30,7 @@ class StartRun:
     clock: Clock
 
     def execute(self, automation_id: str, trigger: RunTrigger = RunTrigger.MANUAL) -> Run:
-        automation = require(self.automations.get(automation_id), "automation", automation_id)
+        automation = require_automation(self.automations, automation_id)
         run = self.recorder.status(self.new_run(automation, trigger))
         self.queue.enqueue(run.id)
         return run
@@ -38,7 +39,7 @@ class StartRun:
         pipeline = self.pipelines.get(automation.pipeline_type)
         if pipeline is None:
             raise RuleConflict(
-                "pipeline_unavailable", f"pipeline {automation.pipeline_type!r} is not installed"
+                "pipeline_unavailable", pipeline_not_installed(automation.pipeline_type)
             )
         stages = tuple(
             StageRun(stage_id=stage.descriptor.id, title=stage.descriptor.title)
@@ -52,6 +53,7 @@ class StartRun:
             trigger=trigger,
             languages=automation.languages,
             settings_snapshot=deepcopy(automation.settings),
+            review_policy=automation.review_policy,
             stages=stages,
             created_at=self.clock.now(),
         )

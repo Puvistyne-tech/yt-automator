@@ -3,7 +3,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from automator.domain.model_base import DomainModel
-from automator.shared.clock import is_valid_timezone
+from automator.domain.validation import timezone_errors
 
 
 class AppSettingsInput(DomainModel):
@@ -20,6 +20,4 @@ class AppSettings(AppSettingsInput):
 
 
 def app_settings_errors(settings: AppSettingsInput) -> dict[str, str]:
-    if not is_valid_timezone(settings.timezone):
-        return {"timezone": f"unknown timezone {settings.timezone!r}"}
-    return {}
+    return timezone_errors(settings.timezone)

@@ -1,23 +1,15 @@
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 
 from automator.domain.channels import channel_token_secret_name
-from automator.domain.run_enums import ReviewDecision, RunEventKind, RunStatus, UploadStatus
-from automator.domain.runs import Run
+from automator.domain.run_enums import RunEventKind, RunStatus, UploadStatus
 from automator.shared.errors import RuleConflict
 from tests.fixtures.builders import add_channel, finished_run, target_input
 from tests.fixtures.harness import Harness
-from tests.fixtures.use_cases import publish_run, review_run
+from tests.fixtures.use_cases import approved_run, publish_run
 
 BOTH = ("landscape", "short")
-
-
-def approved_run(harness: Harness, **overrides: Any) -> Run:
-    run = finished_run(harness, **overrides)
-    return review_run(harness).execute(run.id, ReviewDecision.APPROVED)
 
 
 def used_units(harness: Harness) -> int:
@@ -141,7 +133,7 @@ def test_only_approved_runs_publish(harness: Harness, status: RunStatus) -> None
 
 def test_publish_refuses_when_quota_is_too_low(harness: Harness) -> None:
     run = approved_run(harness)
-    day = harness.quota_report.quota.quota_day(harness.clock.now())
+    day = harness.quota_report.today()
     harness.ledger.record("cred-1", 10000 - 2049, day)
     with pytest.raises(RuleConflict) as raised:
         publish_run(harness).execute(run.id)

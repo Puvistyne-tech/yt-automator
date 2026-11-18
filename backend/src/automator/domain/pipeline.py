@@ -84,3 +84,7 @@ class Pipeline(Protocol):
     def stages(self) -> Sequence[Stage]: ...
 
     def score(self, context: StageContext) -> Sequence[ScoreItem]: ...
+
+
+def pipeline_not_installed(type_id: str) -> str:
+    return f"pipeline {type_id!r} is not installed"

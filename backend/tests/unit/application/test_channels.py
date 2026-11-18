@@ -5,8 +5,6 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from automator.application.delete_channel import DeleteChannel
-from automator.application.list_channel_playlists import ListChannelPlaylists
 from automator.application.list_channels import ListChannels
 from automator.application.update_channel_defaults import UpdateChannelDefaults
 from automator.domain.automations import Automation
@@ -22,7 +20,7 @@ from automator.domain.youtube import ChannelProfile
 from automator.shared.errors import NotFound, RuleConflict, ValidationFailed
 from tests.fixtures.builders import add_channel, add_credential
 from tests.fixtures.harness import Harness
-from tests.fixtures.use_cases import complete_connect, start_connect
+from tests.fixtures.use_cases import complete_connect, delete_channel, list_playlists, start_connect
 
 
 def connect_url_state(harness: Harness, credential_id: str = "cred-1") -> str:
@@ -125,25 +123,21 @@ def test_update_defaults(harness: Harness, channel: Channel) -> None:
         UpdateChannelDefaults(harness.channels).execute("nope", defaults)
 
 
-def delete(harness: Harness) -> DeleteChannel:
-    return DeleteChannel(harness.channels, harness.automations, harness.secrets)
-
-
 def test_delete_refused_while_enabled_automation_targets_it(
     harness: Harness, automation: Automation
 ) -> None:
     with pytest.raises(RuleConflict) as raised:
-        delete(harness).execute("chan-1")
+        delete_channel(harness).execute("chan-1")
     assert raised.value.code == "channel_in_use"
     harness.automations.save(automation.model_copy(update={"enabled": False}))
-    delete(harness).execute("chan-1")
+    delete_channel(harness).execute("chan-1")
     assert harness.channels.get("chan-1") is None
     assert not harness.secrets.has(channel_token_secret_name("chan-1"))
 
 
 def test_delete_unknown_channel(harness: Harness) -> None:
     with pytest.raises(NotFound):
-        delete(harness).execute("nope")
+        delete_channel(harness).execute("nope")
 
 
 @pytest.mark.usefixtures("credential")
@@ -153,12 +147,8 @@ def test_list_channels_sorted_by_title(harness: Harness) -> None:
     assert [c.id for c in ListChannels(harness.channels).execute()] == ["a", "b"]
 
 
-def playlists(harness: Harness) -> ListChannelPlaylists:
-    return ListChannelPlaylists(harness.channels, harness.authorizer, harness.youtube)
-
-
 def test_list_playlists_uses_channel_token(harness: Harness, channel: Channel) -> None:
-    assert [p.id for p in playlists(harness).execute(channel.id)] == ["PL-1"]
+    assert [p.id for p in list_playlists(harness).execute(channel.id)] == ["PL-1"]
     assert harness.youtube.tokens == ["tok"]
 
 
@@ -166,7 +156,28 @@ def test_list_playlists_uses_channel_token(harness: Harness, channel: Channel) -
 def test_list_playlists_without_token_is_a_conflict(harness: Harness) -> None:
     add_channel(harness, token=None)
     with pytest.raises(RuleConflict) as raised:
-        playlists(harness).execute("chan-1")
+        list_playlists(harness).execute("chan-1")
     assert raised.value.code == "channel_not_authorized"
-    with pytest.raises(NotFound):
-        playlists(harness).execute("ghost")
+
+
+def forget_channel_credential(harness: Harness) -> str:
+    harness.credentials.delete("cred-1")
+    return "chan-1"
+
+
+def ghost_channel(_harness: Harness) -> str:
+    return "ghost"
+
+
+@pytest.mark.parametrize(
+    ("setup", "entity"), [(ghost_channel, "channel"), (forget_channel_credential, "credential")]
+)
+@pytest.mark.usefixtures("channel")
+def test_list_playlists_not_found(
+    harness: Harness, setup: Callable[[Harness], str], entity: str
+) -> None:
+    channel_id = setup(harness)
+    with pytest.raises(NotFound) as raised:
+        list_playlists(harness).execute(channel_id)
+    assert raised.value.entity == entity
+    assert harness.youtube.calls == []

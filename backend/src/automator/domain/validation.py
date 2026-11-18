@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from pydantic import BaseModel, ValidationError
 
 from automator.domain.model_base import JsonObject
+from automator.shared.clock import is_valid_timezone
 
 ROOT_FIELD = "__root__"
 
@@ -32,3 +33,9 @@ def validated_settings(
         return model.model_validate(settings), {}
     except ValidationError as error:
         return None, field_errors(error, prefix)
+
+
+def timezone_errors(name: str, field: str = "timezone") -> dict[str, str]:
+    if is_valid_timezone(name):
+        return {}
+    return {field: f"unknown timezone {name!r}"}

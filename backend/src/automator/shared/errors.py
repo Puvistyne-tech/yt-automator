@@ -30,3 +30,12 @@ class RuleConflict(AppError):  # noqa: N818
 class UpstreamFailure(AppError):  # noqa: N818
     def __init__(self, message: str, code: str = "upstream_failure") -> None:
         super().__init__(code, message)
+
+
+def describe_error(error: Exception) -> str:
+    return str(error) or type(error).__name__
+
+
+def raise_if_invalid(errors: Mapping[str, str]) -> None:
+    if errors:
+        raise ValidationFailed(errors)

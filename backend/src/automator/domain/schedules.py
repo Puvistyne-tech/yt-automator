@@ -7,6 +7,7 @@ from pydantic import Field
 
 from automator.domain.cron import cron_error, next_cron_time, parse_cron
 from automator.domain.model_base import DomainModel
+from automator.domain.validation import timezone_errors
 from automator.shared.clock import find_zone, require_aware, to_utc
 
 
@@ -45,9 +46,7 @@ def cron_errors(schedule: Schedule) -> dict[str, str]:
 
 
 def schedule_errors(schedule: Schedule) -> dict[str, str]:
-    errors: dict[str, str] = {}
-    if find_zone(schedule.timezone) is None:
-        errors["timezone"] = f"unknown timezone {schedule.timezone!r}"
+    errors = timezone_errors(schedule.timezone)
     if schedule.kind is ScheduleKind.INTERVAL:
         errors |= interval_errors(schedule)
     if schedule.kind is ScheduleKind.CRON:
@@ -69,8 +68,3 @@ def next_run_at(schedule: Schedule, after: datetime) -> datetime | None:
     if schedule.kind is ScheduleKind.CRON and schedule.cron and zone is not None:
         return next_cron_time(parse_cron(schedule.cron), after, zone)
     return None
-
-
-class StandardScheduleCalculator:
-    def next_run_at(self, schedule: Schedule, after: datetime) -> datetime | None:
-        return next_run_at(schedule, after)

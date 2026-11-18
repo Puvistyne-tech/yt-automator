@@ -10,6 +10,7 @@ from automator.domain.ports import ArtifactStore, Clock, IdGenerator
 from automator.domain.run_enums import RunStatus, StageStatus
 from automator.domain.run_parts import Artifact, StageRun
 from automator.domain.runs import Run
+from automator.shared.errors import describe_error
 
 ContextFactory = Callable[[Run], StageContext]
 
@@ -57,7 +58,7 @@ class StageRunner:
         )
 
     def failed(self, run: Run, started: StageRun, error: Exception) -> Run:
-        message = str(error) or type(error).__name__
+        message = describe_error(error)
         stage = started.model_copy(
             update={
                 "status": StageStatus.FAILED,

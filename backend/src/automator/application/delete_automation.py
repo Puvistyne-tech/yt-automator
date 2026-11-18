@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from automator.application.lookups import require
+from automator.application.lookups import require_automation
 from automator.domain.ports import AutomationRepository
 
 
@@ -11,5 +11,5 @@ class DeleteAutomation:
     automations: AutomationRepository
 
     def execute(self, automation_id: str) -> None:
-        require(self.automations.get(automation_id), "automation", automation_id)
+        require_automation(self.automations, automation_id)
         self.automations.delete(automation_id)

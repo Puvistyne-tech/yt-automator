@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from automator.domain.model_base import JsonObject
@@ -20,6 +21,14 @@ class RunRecorder:
             RunEvent(run_id=run_id, kind=kind, at=self.clock.now(), payload=payload)
         )
 
+    def _save_and_emit(
+        self, run: Run, kind: RunEventKind, parts: Sequence[StageRun | Artifact | Upload]
+    ) -> Run:
+        self.runs.save(run)
+        for part in parts:
+            self.emit(run.id, kind, part.model_dump(mode="json"))
+        return run
+
     def status(self, run: Run) -> Run:
         self.runs.save(run)
         payload: JsonObject = {"status": run.status.value, "error": run.error}
@@ -32,23 +41,16 @@ class RunRecorder:
                 "stages": tuple(stage if s.stage_id == stage.stage_id else s for s in run.stages)
             }
         )
-        self.runs.save(updated)
-        self.emit(run.id, RunEventKind.STAGE, stage.model_dump(mode="json"))
-        return updated
+        return self._save_and_emit(updated, RunEventKind.STAGE, (stage,))
 
     def artifacts(self, run: Run, added: tuple[Artifact, ...]) -> Run:
         updated = run.model_copy(update={"artifacts": run.artifacts + added})
-        self.runs.save(updated)
-        for artifact in added:
-            self.emit(run.id, RunEventKind.ARTIFACT, artifact.model_dump(mode="json"))
-        return updated
+        return self._save_and_emit(updated, RunEventKind.ARTIFACT, added)
 
     def upload(self, run: Run, index: int, upload: Upload) -> Run:
         uploads = run.uploads[:index] + (upload,) + run.uploads[index + 1 :]
         updated = run.model_copy(update={"uploads": uploads})
-        self.runs.save(updated)
-        self.emit(run.id, RunEventKind.UPLOAD, upload.model_dump(mode="json"))
-        return updated
+        return self._save_and_emit(updated, RunEventKind.UPLOAD, (upload,))
 
     def log(self, run_id: str, message: str) -> None:
         self.emit(run_id, RunEventKind.LOG, {"message": message})

@@ -88,7 +88,6 @@ def add_automation(harness: Harness, **overrides: Any) -> Automation:
 def execute_run(harness: Harness) -> ExecuteRun:
     return ExecuteRun(
         harness.runs,
-        harness.automations,
         harness.pipelines,
         harness.provider_configs,
         harness.catalog,

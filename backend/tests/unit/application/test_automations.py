@@ -9,7 +9,6 @@ from automator.application.duplicate_automation import DuplicateAutomation
 from automator.application.get_automation import GetAutomation
 from automator.application.list_automations import ListAutomations
 from automator.application.set_automation_enabled import SetAutomationEnabled
-from automator.application.update_automation import UpdateAutomation
 from automator.domain.automations import Automation
 from automator.domain.run_enums import RunStatus
 from automator.domain.schedules import Schedule, ScheduleKind
@@ -22,6 +21,7 @@ from tests.fixtures.builders import (
     target_input,
 )
 from tests.fixtures.harness import Harness
+from tests.fixtures.use_cases import update_automation
 
 pytestmark = pytest.mark.usefixtures("channel")
 
@@ -58,22 +58,18 @@ def test_kids_pipeline_targets_are_stored_made_for_kids(harness: Harness) -> Non
     assert created.targets[0].made_for_kids is True
 
 
-def update(harness: Harness) -> UpdateAutomation:
-    return UpdateAutomation(harness.automations, harness.builder, harness.presenter, harness.clock)
-
-
 def test_update_keeps_identity_and_creation_time(harness: Harness, automation: Automation) -> None:
     harness.clock.advance(hours=1)
-    updated = update(harness).execute(automation.id, automation_input(name="Renamed"))
+    updated = update_automation(harness).execute(automation.id, automation_input(name="Renamed"))
     assert (updated.id, updated.created_at) == (automation.id, automation.created_at)
     assert updated.name == "Renamed" and updated.updated_at == harness.clock.now()
 
 
 def test_update_validates_and_requires_existing(harness: Harness, automation: Automation) -> None:
     with pytest.raises(NotFound):
-        update(harness).execute("missing", automation_input())
+        update_automation(harness).execute("missing", automation_input())
     with pytest.raises(ValidationFailed):
-        update(harness).execute(automation.id, automation_input(languages=("xx",)))
+        update_automation(harness).execute(automation.id, automation_input(languages=("xx",)))
     assert harness.automations.get(automation.id) == automation
 
 
@@ -139,7 +135,7 @@ def test_get_unknown_automation(harness: Harness) -> None:
 
 def test_run_snapshot_is_independent_of_later_edits(harness: Harness) -> None:
     run = started_run(harness)
-    update(harness).execute(
+    update_automation(harness).execute(
         run.automation_id,
         automation_input(settings={"topic": "bats"}, languages=("ta",), targets=()),
     )

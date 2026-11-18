@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from automator.application.automation_presenter import AutomationPresenter
-from automator.application.lookups import require
+from automator.application.lookups import require_automation
 from automator.domain.automations import Automation, Target
 from automator.domain.ports import AutomationRepository, Clock, IdGenerator
 
@@ -17,7 +17,7 @@ class DuplicateAutomation:
     name_suffix: str = " (copy)"
 
     def execute(self, automation_id: str) -> Automation:
-        source = require(self.automations.get(automation_id), "automation", automation_id)
+        source = require_automation(self.automations, automation_id)
         now = self.clock.now()
         copy = source.model_copy(
             update={

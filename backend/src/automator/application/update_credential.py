@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from automator.application.lookups import require
+from automator.application.lookups import require_credential
 from automator.domain.credentials import Credential, CredentialPatch, credential_secret_name
 from automator.domain.ports import CredentialRepository, SecretStore
 
@@ -13,7 +13,7 @@ class UpdateCredential:
     secrets: SecretStore
 
     def execute(self, credential_id: str, patch: CredentialPatch) -> Credential:
-        current = require(self.credentials.get(credential_id), "credential", credential_id)
+        current = require_credential(self.credentials, credential_id)
         changes = patch.model_dump(exclude_none=True, exclude={"client_secret"})
         updated = current.model_copy(update=changes)
         if patch.client_secret is not None:

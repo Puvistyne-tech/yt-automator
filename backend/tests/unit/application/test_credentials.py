@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from automator.application.create_credential import CreateCredential
-from automator.application.delete_credential import DeleteCredential
 from automator.application.list_credentials import ListCredentials
 from automator.application.update_credential import UpdateCredential
 from automator.domain.channels import Channel
@@ -15,6 +14,7 @@ from automator.domain.credentials import (
 )
 from automator.shared.errors import NotFound, RuleConflict
 from tests.fixtures.harness import Harness
+from tests.fixtures.use_cases import delete_credential
 
 
 def test_create_stores_secret_separately(harness: Harness) -> None:
@@ -50,33 +50,27 @@ def test_update_unknown_credential(harness: Harness) -> None:
         UpdateCredential(harness.credentials, harness.secrets).execute("nope", CredentialPatch())
 
 
-def delete(harness: Harness) -> DeleteCredential:
-    return DeleteCredential(harness.credentials, harness.channels, harness.secrets)
-
-
 def test_delete_removes_credential_and_secret(harness: Harness, credential: Credential) -> None:
-    delete(harness).execute(credential.id)
+    delete_credential(harness).execute(credential.id)
     assert harness.credentials.get(credential.id) is None
     assert not harness.secrets.has(credential_secret_name(credential.id))
 
 
 def test_delete_refused_while_channel_uses_it(harness: Harness, channel: Channel) -> None:
     with pytest.raises(RuleConflict):
-        delete(harness).execute(channel.credential_id)
+        delete_credential(harness).execute(channel.credential_id)
     assert harness.credentials.get(channel.credential_id) is not None
 
 
 def test_delete_unknown_credential(harness: Harness) -> None:
     with pytest.raises(NotFound):
-        delete(harness).execute("nope")
+        delete_credential(harness).execute("nope")
 
 
 def test_list_reports_secret_presence_and_quota(harness: Harness, credential: Credential) -> None:
     other = credential.model_copy(update={"id": "cred-2"})
     harness.credentials.save(other)
-    harness.ledger.record(
-        credential.id, 1650, harness.quota_report.quota.quota_day(harness.clock.now())
-    )
+    harness.ledger.record(credential.id, 1650, harness.quota_report.today())
     views = ListCredentials(harness.credentials, harness.secrets, harness.quota_report).execute()
     assert [(v.id, v.has_secret, v.quota_used_today) for v in views] == [
         ("cred-1", True, 1650),
