@@ -25,7 +25,7 @@ what is already installed. Pick only what you need:
 | Flag | Installs |
 | --- | --- |
 | (none) | uv, just, ffmpeg, node, pnpm, backend and web dependencies, the built UI |
-| `--ollama` | Ollama as a background service and the `gemma3:12b` model (set `OLLAMA_MODEL` to change) |
+| `--ollama` | Ollama as a background service and the app's default model, `gemma3:12b` (set `OLLAMA_MODEL` to pull another model, then choose it in the Ollama provider's Model option under Providers) |
 | `--images` | mflux (`mflux-generate`) for FLUX image models on Apple silicon |
 | `--motion` | DepthFlow parallax motion (`uv tool install depthflow`) |
 | `--speech` | edge-tts, Kokoro, espeak-ng and Whisper alignment (Python extras `tts`, `align`, `mac`) |
@@ -40,6 +40,11 @@ except gated models such as FLUX.1-dev: accept the licence on huggingface.co, cr
 and add it as the `huggingface_token` secret in the UI. The script records the Python extras it
 installed in `<data dir>/setup/extras`; `just setup` alone removes them, so run `scripts/setup.sh`
 again afterwards.
+
+The script adds `~/.local/bin` (where `just`, `mflux-generate` and `depthflow` live) to your shell
+profile with `uv tool update-shell`. Open a new terminal afterwards so the commands are on PATH.
+After the backend is installed, the script reads the app's own defaults (data directory, host,
+port, Ollama model and URL, music folders) from `python -m automator.doctor --print-defaults`.
 
 Start the app:
 

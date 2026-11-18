@@ -1,5 +1,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
+brew_lib := env_var_or_default("BREW_LIB", "/opt/homebrew/lib")
+
 default: check
 
 setup:
@@ -10,13 +12,13 @@ dev:
     just dev-api & just dev-web & wait
 
 dev-api:
-    cd backend && uv run python -m automator.main
+    cd backend && DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m automator.main
 
 dev-web:
     cd web && pnpm dev
 
 doctor:
-    cd backend && uv run python -m automator.doctor
+    cd backend && DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m automator.doctor
 
 fmt:
     cd backend && uv run ruff format . && uv run ruff check --fix .
@@ -24,7 +26,8 @@ fmt:
 
 lint:
     python3 .claude/hooks/comment_scan.py backend web .claude scripts
-    bash -n scripts/setup.sh
+    for script in scripts/*.sh; do bash -n "$script"; done
+    if grep -HnE '^[[:space:]]*#' scripts/*.sh | grep -v ':1:#!'; then echo "shell scripts may only have a shebang comment"; exit 1; fi
     if command -v shellcheck >/dev/null; then shellcheck scripts/*.sh; else echo "shellcheck not installed, skipped"; fi
     cd backend && uv run ruff format --check . && uv run ruff check .
     cd web && pnpm lint
