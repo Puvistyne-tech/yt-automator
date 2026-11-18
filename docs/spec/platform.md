@@ -12,7 +12,7 @@ The contract every layer and the UI build against. Change it in the same pull re
 | Automation | A pipeline type + settings + languages + targets + schedule + review policy. |
 | Target | Where one language and variant of an automation's output is published: a channel plus overrides. |
 | Run | One execution of an automation: stage progress, artifacts, score, review, uploads. |
-| Provider | A named implementation of a capability (llm, image, motion, tts, music) with options. |
+| Provider | A named implementation of a capability (llm, image, motion, tts, music, media) with options. |
 | Secret | A named value (API key, OAuth token) stored in the keychain, never returned by the API. |
 
 ## Domain model
@@ -47,7 +47,8 @@ Schedule        kind: manual | interval | cron, every_hours (interval), cron (5-
 ReviewPolicy    mode: always | auto_when_score_at_least, min_score: float 0..100 = 85
 
 Run             id, automation_id, automation_name, pipeline_type, status, trigger: manual|schedule,
-                languages, settings_snapshot, stages: [StageRun], artifacts: [Artifact], score (nullable),
+                languages, settings_snapshot, review_policy, stages: [StageRun], artifacts: [Artifact],
+                score (nullable),
                 score_details: [ScoreItem], review (nullable), uploads: [Upload], error (nullable),
                 created_at, started_at, finished_at
                 status: queued | running | awaiting_review | approved | rejected | publishing |
@@ -75,22 +76,32 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1, keep_runs_days = 30, da
 - An automation's `settings` must validate against its pipeline's settings model. Unknown pipeline type is an error.
 - Every automation language must be one the pipeline offers. Every target language must be in the automation's languages. Every target variant must be one the pipeline offers. Every target channel must exist.
 - An automation with schedule `interval` needs `every_hours >= 1`. With `cron` it needs a valid 5-field expression.
-- A run snapshots the automation's settings and languages at creation. Editing the automation never changes a past run.
+- A run snapshots the automation's settings, languages and review policy at creation. Editing or deleting the automation never changes a past or queued run.
 - Stage order is the pipeline's. A stage failure fails the run. A retry re-runs from a chosen stage and keeps earlier artifacts.
+- Retry is allowed from `failed`, `cancelled`, `awaiting_review`, `approved` and `rejected`. It re-queues the run and clears its score, score details, review and uploads.
+- Cancel is allowed from `queued`, `running`, `awaiting_review` and `approved`. A stage that fails after the run was cancelled is recorded as failed, but the run stays `cancelled` without an error.
+- Deleting a `queued`, `running` or `publishing` run is refused; cancel it first.
 - After the last stage the run is scored, then becomes `awaiting_review`, or `approved` directly when the policy is `auto_when_score_at_least` and the score reaches `min_score`.
-- Only an `approved` run can publish. Publishing creates one upload per target and variant. A failed upload fails only itself; the run is `published` when at least one upload is done and none is pending.
-- Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track).
+- Only an `approved` run can publish. Publishing creates one upload per target and variant. A target whose language is not in the run, whose channel no longer exists, or that has no matching video yields a `skipped` upload with the reason in `error`. A failed upload fails only itself; the run is `published` when at least one upload is done and none is pending.
+- When every upload fails the run returns to `approved` with the error "no upload succeeded", so it can be published again.
+- A thumbnail, caption or playlist failure leaves the upload `done` and records the problem in its `error`.
+- `publish_delay_minutes` applies only when the effective privacy is `public`: the video is uploaded private with `publish_at` set to now plus the delay, and YouTube makes it public then.
+- Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track, 50 per playlist insertion).
+- The quota day resets at midnight Pacific time (`America/Los_Angeles`), as YouTube's does.
+- Duplicating an automation creates a disabled copy named with the suffix " (copy)" and new target ids.
+- A scheduled automation's next run is computed from the later of its last scheduled run and its `updated_at`. Manual runs do not move the schedule.
 - Deleting a channel is refused while an enabled automation targets it. Deleting a credential is refused while a channel uses it. Deleting an automation keeps its runs.
 - Made-for-kids on a target can only be forced on by a pipeline that declares the capability `kids_content`; such a pipeline's targets are always made for kids.
 
 ## Ports (`domain/ports.py`)
 
-`CredentialRepository`, `ChannelRepository`, `AutomationRepository`, `RunRepository`, `ProviderConfigRepository`,
-`AppSettingsRepository` (get, list, save, delete as applicable), `QuotaLedger` (used_today, record),
+`CredentialRepository`, `AutomationRepository`, `RunRepository` (get, list, save, delete),
+`ChannelRepository` (get, find_by_youtube_id, list, save, delete), `ProviderConfigRepository` (list, save_all),
+`AppSettingsRepository` (get, save), `QuotaLedger` (used_today(credential_id, day), record(credential_id, units, day)),
 `SecretStore` (get, set, delete, has), `Clock` (now), `IdGenerator` (new), `PipelineRegistry` (list, get),
-`ProviderCatalog` (descriptors, resolve capability chain), `YouTubeGateway` (authorization_url, exchange_code,
-describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
-`ArtifactStore` (workspace for a run, save, open, delete run), `RunQueue` (enqueue, cancel),
+`ProviderCatalog` (descriptors, secrets, resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
+exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
+`ArtifactStore` (workspace for a run, save, open, discard one artifact, delete run), `RunQueue` (enqueue, cancel),
 `RunEvents` (publish, subscribe), `ScheduleCalculator` (next_run_at).
 
 ## Pipeline contract (`domain/pipeline.py`)
@@ -113,8 +124,19 @@ NewArtifact     kind, path (inside workspace), language, variant, media_type, me
 ProviderResolver.resolve(capability) -> the first available provider in the configured chain
 ```
 
-Capability interfaces live in `domain/capabilities.py`: `TextGenerator`, `ImageGenerator`, `MotionGenerator`,
-`SpeechSynthesizer`, `MusicGenerator`, `MediaToolkit`. Pipelines depend on these only.
+Capability interfaces live in `domain/capabilities.py`. There are six capabilities; pipelines depend on these only.
+
+```
+llm    TextGenerator.generate(TextRequest) -> str
+image  ImageGenerator.generate(ImageRequest, output) -> Path
+motion MotionGenerator.animate(MotionRequest, output) -> Path
+tts    SpeechSynthesizer.synthesize(SpeechRequest, output) -> Speech
+       Speech: path, duration_seconds, words: [WordTiming word, start_seconds, end_seconds],
+               timing_source: synthesizer | alignment | estimate
+music  MusicGenerator.compose(MusicRequest, output) -> Path
+media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, output) -> Path,
+       extract_frame(video, at_seconds, output) -> Path, loudness_lufs(media)
+```
 
 ## HTTP API
 

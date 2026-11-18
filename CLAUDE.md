@@ -69,6 +69,8 @@ Every change, however small, goes through all six steps.
 - Conventional Commits: `type(scope): summary`, imperative, under 72 characters.
 - Scopes: `domain`, `application`, `infrastructure`, `pipelines`, `api`, `web`, `claude`, `ci`.
 - One logical change per pull request. Keep diffs under about 600 changed lines where possible.
+- Pull requests are squash-merged. Start every branch from a fresh `origin/main`, and merge `origin/main`
+  into any branch that was cut before its base was merged.
 
 ## Hooks
 

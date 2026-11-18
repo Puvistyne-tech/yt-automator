@@ -21,12 +21,14 @@ Run `just check`. If anything fails, fix it and rerun only the failing command u
 1. Write the diff where read-only agents can reach it:
    `git add -A -N && git diff origin/main > .claude/.ship-diff.patch && git diff --name-only origin/main > .claude/.ship-files.txt`
 2. In a single message, spawn `code-deduplicator`, `test-deduplicator`, and `architecture-guardian`, each given the two file paths above.
+   Give each the checkout path to read, and for a diff over 2,000 lines tell it to read the files directly.
 3. Collect all three reports.
 
 ## 3. Fix
 
 - Hand every `blocking` finding to the `implementer` subagent, grouped by file.
-- Rerun `just check`. Rerun only the auditors that reported `RESULT: FAIL`, on a fresh diff.
+- Rerun `just check`. Rerun only the auditors that reported `RESULT: FAIL`, on a diff of the fix commits only,
+  telling each what round one reported so it verifies those and checks the fixes for regressions.
 - Repeat until all three report `RESULT: PASS`. After three rounds without convergence, stop and report.
 - List `advisory` findings in the pull request body. Do not fix them in this change.
 
@@ -43,6 +45,7 @@ Fix what you find and rerun the affected check.
 4. `gh pr create --fill-first --base main`, with a body that states what changed, how it was verified, and the advisory findings.
 5. `gh pr merge --squash --auto --delete-branch`
 6. `gh pr checks --watch --fail-fast`. If a check fails, read its log, fix, and return to step 1.
+   If the pull request reports a conflict, merge `origin/main` into the branch, rerun `just check`, and push.
 7. Confirm the merge with `gh pr view --json state`, then `git checkout main && git pull --ff-only`.
 
 ## 6. Compound
