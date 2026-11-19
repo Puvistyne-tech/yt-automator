@@ -4,12 +4,19 @@ import { usePipelines } from "@/api/catalog";
 import { ApiError } from "@/api/errors";
 import { keys } from "@/api/keys";
 import { BUILTIN_TEMPLATES, USER_TEMPLATES } from "@/api/mocks/fixtures/templates";
-import { previewUnavailableOf, templateConflictOf } from "@/api/templateErrors";
+import {
+  PREVIEW_UNAVAILABLE,
+  SUGGESTIONS_UNAVAILABLE,
+  templateConflictOf,
+  type UnavailableCode,
+  unavailableMessageOf,
+} from "@/api/templateErrors";
 import {
   useDeleteTemplate,
   useDuplicateTemplate,
   usePreviewTemplateScript,
   useSaveTemplate,
+  useSuggestTemplates,
   useTemplate,
   useTemplateEngines,
   useTemplates,
@@ -42,18 +49,21 @@ describe("templateConflictOf", () => {
   });
 });
 
-describe("previewUnavailableOf", () => {
-  it("reads the server message of an unavailable preview", () => {
-    const error = new ApiError(409, "preview_unavailable", "No writer.");
-    expect(previewUnavailableOf(error)).toBe("No writer.");
-  });
+describe("unavailableMessageOf", () => {
+  it.each<UnavailableCode>([PREVIEW_UNAVAILABLE, SUGGESTIONS_UNAVAILABLE])(
+    "reads the server message of %s",
+    (code) => {
+      expect(unavailableMessageOf(new ApiError(409, code, "No writer."), code)).toBe("No writer.");
+    },
+  );
 
   it.each([
     new ApiError(409, "template_in_use", "other"),
-    new ApiError(400, "preview_unavailable", "not a conflict status"),
+    new ApiError(409, SUGGESTIONS_UNAVAILABLE, "another code"),
+    new ApiError(400, PREVIEW_UNAVAILABLE, "not a conflict status"),
     new Error("plain"),
   ])("ignores %s", (error) => {
-    expect(previewUnavailableOf(error)).toBeNull();
+    expect(unavailableMessageOf(error, PREVIEW_UNAVAILABLE)).toBeNull();
   });
 });
 
@@ -142,17 +152,29 @@ describe("template mutation hooks", () => {
     expect(client.getQueryData(keys.template("history-five"))).toBeUndefined();
   });
 
-  it("previews a sample script without refreshing anything", async () => {
+  it.each<[string, () => (input: never) => Promise<unknown>, unknown, unknown]>([
+    [
+      "previews a sample script",
+      () => usePreviewTemplateScript().mutateAsync,
+      { ...TEMPLATE_INPUT, language: "ta", topic: "tides" },
+      { language: "ta", provider: "ollama" },
+    ],
+    [
+      "suggests templates",
+      () => useSuggestTemplates().mutateAsync,
+      { engine: "narrated_video", audience: "general", region: "IN", count: 2 },
+      { source: "youtube", dropped: 0, provider: "ollama" },
+    ],
+  ])("%s without refreshing anything", async (_name, useCall, input, expected) => {
     const client = createQueryClient(false);
     const invalidate = vi.spyOn(client, "invalidateQueries");
-    const preview = renderHook(() => usePreviewTemplateScript(), {
+    const hook = renderHook(useCall, {
       wrapper: ({ children }) => <AppProviders client={client}>{children}</AppProviders>,
     });
-    const input = { ...TEMPLATE_INPUT, language: "ta", topic: "tides" };
 
-    const sample = await act(() => preview.result.current.mutateAsync(input));
+    const reply = await act(() => hook.result.current(input as never));
 
-    expect(sample).toMatchObject({ language: "ta", provider: "ollama" });
+    expect(reply).toMatchObject(expected as object);
     expect(invalidate).not.toHaveBeenCalled();
   });
 

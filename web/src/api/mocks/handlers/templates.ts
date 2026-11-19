@@ -1,6 +1,7 @@
 import { HttpResponse, http } from "msw";
 import { db, noContent, notFound, validationFailed } from "@/api/mocks/db";
 import { USER_TYPE_PREFIX } from "@/api/mocks/fixtures/templates";
+import type { SuggestionBody } from "@/api/mocks/suggestionRules";
 import { previewReply } from "@/api/mocks/templatePreview";
 import {
   allTemplates,
@@ -12,6 +13,7 @@ import {
   originErrors,
   summaryOf,
 } from "@/api/mocks/templateRules";
+import { suggestionsReply } from "@/api/mocks/templateSuggestions";
 import { DELETE_REMEDY, DRAFT_REMEDY, inUseConflict } from "@/api/mocks/templateUsage";
 import type {
   DuplicateTemplateRequest,
@@ -117,6 +119,9 @@ export const templateHandlers = [
   }),
   http.post("/api/templates/preview-script", async ({ request }) =>
     previewReply(db.state, (await request.json()) as TemplatePreviewInput),
+  ),
+  http.post("/api/templates/suggestions", async ({ request }) =>
+    suggestionsReply(db.state, (await request.json()) as SuggestionBody),
   ),
   http.put("/api/templates/:id", ({ params, request }) =>
     withEditable(params.id, async (current) =>

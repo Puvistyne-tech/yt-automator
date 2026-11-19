@@ -12,6 +12,6 @@ export function common(props: WidgetProps) {
   };
 }
 
-export function isLocked(props: WidgetProps): boolean {
+export function isLocked(props: { disabled?: boolean; readonly?: boolean }): boolean {
   return Boolean(props.disabled || props.readonly);
 }

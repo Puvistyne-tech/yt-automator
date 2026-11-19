@@ -4,7 +4,7 @@ import {
   type SampleScriptState,
   useSampleScript,
 } from "@/features/pipeline-templates/useSampleScript";
-import { Button, ButtonLink, Callout, Card, FormField, Input, Select, Spinner } from "@/shared/ui";
+import { Button, Card, FormField, Input, LinkCallout, ProgressLine, Select } from "@/shared/ui";
 
 const TITLE = "Try a sample script";
 const WRITING = "Writing a sample script";
@@ -33,29 +33,6 @@ function SampleControls({ state }: { state: SampleScriptState }) {
   );
 }
 
-function UnavailableNotice({ message }: { message: string | null }) {
-  if (message === null) {
-    return null;
-  }
-  return (
-    <Callout tone="info">
-      <span>{message}</span>
-      <ButtonLink to="/providers" size="sm">
-        Open Providers
-      </ButtonLink>
-    </Callout>
-  );
-}
-
-function WritingProgress() {
-  return (
-    <p className="row subtle" role="status" aria-label={WRITING}>
-      <Spinner size={14} />
-      {WRITING}. This can take a minute.
-    </p>
-  );
-}
-
 function SampleScriptCard({ state }: { state: SampleScriptState }) {
   return (
     <Card
@@ -65,8 +42,10 @@ function SampleScriptCard({ state }: { state: SampleScriptState }) {
     >
       <div className="stack">
         <SampleControls state={state} />
-        {state.writing && <WritingProgress />}
-        <UnavailableNotice message={state.unavailable} />
+        {state.writing && (
+          <ProgressLine label={WRITING}>{WRITING}. This can take a minute.</ProgressLine>
+        )}
+        <LinkCallout message={state.unavailable} to="/providers" action="Open Providers" />
         {state.sample !== undefined && <SampleScriptView sample={state.sample} />}
       </div>
     </Card>

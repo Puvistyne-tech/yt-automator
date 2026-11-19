@@ -67,3 +67,28 @@ export interface EngineSummary {
   definition_ui_schema: JsonObject;
   blank: Record<TemplateAudience, JsonObject>;
 }
+
+export type TrendOrigin = "youtube" | "sample";
+
+export interface SuggestionRequest {
+  engine: string;
+  audience: TemplateAudience;
+  region: string;
+  category?: string | null;
+  count?: number;
+}
+
+export interface TemplateSuggestion {
+  name: string;
+  description: string;
+  reason: string;
+  based_on: string[];
+  input: TemplateInput;
+}
+
+export interface TemplateSuggestions {
+  suggestions: TemplateSuggestion[];
+  source: TrendOrigin;
+  dropped: number;
+  provider: string;
+}

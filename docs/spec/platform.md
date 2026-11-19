@@ -1277,6 +1277,9 @@ pipeline type when it is served), `/automations/:id`, `/pipelines`, `/pipelines/
   dialog, each unknown channel gets a "Channel for “<title>”" select (every channel, named like the target
   channel select: its title, plus its status label in brackets when it is not connected; or "Leave its targets
   out"), and "Import automation" stays disabled until the preview succeeds. Cancel creates nothing.
+- Schema form arrays: an item of a plain value has no visible label; its label is the array title and its
+  position ("Topics 1"). A disabled or read-only form (built-in pipelines) shows no add, move, duplicate or
+  remove controls.
 - Settings forms with defaults (the editor's Content section passes the pipeline's `default_settings`): every
   field whose value differs from its default shows a "Changed from default" dot and a "Reset" button (its title
   names the default); changes are tracked on named fields, per-language values and other nested fields, whole
@@ -1334,7 +1337,35 @@ pipeline type when it is served), `/automations/:id`, `/pipelines`, `/pipelines/
   field. Delete asks for confirmation; a 409 `template_in_use` keeps the dialog open and shows the server's
   message, which names the automations and open runs. A 409 conflict (`template_in_use`, `template_builtin`,
   `template_type_taken`) shows as a titled alert with the server's message; other failures show as a toast.
-- New pipeline (`/pipelines/new`): first "For kids" or "General audience", with the note that the audience
+- Suggest ideas (Pipelines header, next to "New pipeline"; `features/pipeline-suggestions/`): opens a "Suggest
+  ideas" panel above the list (Close hides it) with "Who are the videos for?" (For kids, the default, or General
+  audience), Country (a short select of common regions named in English, `model/regions.ts`, plus "Another
+  country", which shows a "Country code" input sent trimmed and upper-cased; the default is the browser locale's
+  two-letter region, and US when the locale has none), "YouTube category (optional)" ("Every category" sends
+  `null`; names map to ids in `model/categories.ts`) and "Number of ideas" (1 to 10, default 5). "Find ideas"
+  sends `{engine: first installed engine, audience, region, category, count}` to `POST /templates/suggestions`;
+  while it runs the button shows "Finding ideas…" and is disabled and a progress line says "Finding ideas".
+  Starting a search clears the previous ideas, source and dropped lines and notice; a failed search shows none.
+  The answer shows where the trends came from ("Based on what is trending on YouTube in <country>." or "Based on
+  built-in sample trends because no YouTube channel is connected." with a "Connect a channel" link to
+  `/channels`), "Written by <provider>." and, when `dropped` is above zero, "<n> ideas were left out because
+  they did not pass the checks." ("1 idea was…it did…" for one). Each idea is a card with its name, the format
+  badge (the title of its definition's `structure` choice in the engine schema, the schema default when absent)
+  and the audience badge, the description, "Why: <reason>" and the trend titles it drew on in a muted list.
+  "Use this idea" opens `/pipelines/new` with the idea's `input` in router state (`api/paths.ts::
+  newPipelineState`), nothing saved. "Save as draft" sends the `input` as is to `POST /templates` (disabled
+  while saving), toasts "Saved “<name>” as a draft.", refreshes the list and replaces the button with a link to
+  the new pipeline; a failure is a toast. A 409 `suggestions_unavailable` shows the server's message as a calm
+  info notice with "Open Providers"; a 400 puts `audience`, `region` (on "Country code" while it shows),
+  `category` and `count` errors on their inputs and shows a toast, as do other failures. With no engine
+  installed the panel says "No pipeline templates are installed".
+- New pipeline (`/pipelines/new`): router state `{prefill: TemplateInput}` (read by
+  `api/paths.ts::prefilledInputOf`, which ignores anything that is not an input with string engine, name and
+  description, a known audience and an object definition) whose engine is installed skips the audience step and
+  opens the form in Simple with the input's name, description, audience and definition, status `draft`, and its
+  origin, which saving sends (`model/form.ts::draftFromInput`, `model/prefill.ts::newTemplateStart`). Without
+  usable state (for example after a refresh that lost it, or an engine that is not installed) it starts the
+  blank flow with the first installed engine: first "For kids" or "General audience", with the note that the audience
   cannot be changed later (kids pipelines always upload as made for kids); "Continue" stays disabled until
   one is chosen. Then the form: name (required, at most 80 characters after trimming, checked before
   sending), description, the audience read-only, and the definition rendered by `SchemaForm` from the first
@@ -1342,7 +1373,9 @@ pipeline type when it is served), `/automations/:id`, `/pipelines`, `/pipelines/
   as draft" and "Save and make ready" send status `draft` or `ready`; success opens `/pipelines/:id`. Server
   field errors show at their fields, definition errors (`definition.<path>`) inside the form.
 - Pipeline (`/pipelines/:id`): a user template opens the same form with the audience read-only, a "Ready to
-  use in automations" switch (draft or ready) and "Revision <n>"; "Save changes" keeps the chosen status. A
+  use in automations" switch (draft or ready) and "Revision <n>"; "Save changes" keeps the chosen status. "Delete" uses the list's delete flow (same
+  confirmation and `template_in_use` handling); success returns to `/pipelines` without asking to discard
+  unsaved changes. A
   built-in opens read-only with "Duplicate to customise", which opens the duplicate dialog. An unknown id
   shows "Pipeline not found" with a link back; a template whose engine is not installed shows a warning
   instead of the form. The editor fills the definition schema's defaults into the draft before it compares

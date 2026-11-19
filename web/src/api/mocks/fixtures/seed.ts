@@ -10,6 +10,7 @@ import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import { providerConfig, providerDescriptors, secrets } from "@/api/mocks/fixtures/providers";
 import { seedRuns } from "@/api/mocks/fixtures/runs";
 import { type MockStorage, SETTINGS, STORAGE } from "@/api/mocks/fixtures/settings";
+import type { SuggestionOutcome } from "@/api/mocks/fixtures/suggestions";
 import { narratedEngine } from "@/api/mocks/fixtures/templateEngine";
 import { USER_TEMPLATES } from "@/api/mocks/fixtures/templates";
 import type {
@@ -42,6 +43,7 @@ export interface MockState {
   secrets: SecretInfo[];
   settings: AppSettings;
   storage: MockStorage;
+  suggestionOutcome: SuggestionOutcome;
 }
 
 const BEDTIME = makeAutomation({
@@ -190,6 +192,7 @@ const SEED: Omit<MockState, "runs"> = {
   secrets,
   settings: SETTINGS,
   storage: STORAGE,
+  suggestionOutcome: "ideas",
 };
 
 export function seedState(): MockState {
