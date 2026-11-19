@@ -13,7 +13,10 @@ from autotube.domain.template_suggestions import (
 )
 from autotube.domain.trends import TrendingVideo
 from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
+from autotube.pipelines.narrated_video.settings.series import BANNED_WORDS
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
+from autotube.pipelines.narrated_video.template.settings_model import settings_model_for
+from autotube.pipelines.narrated_video.template.suggestion_prompt import SuggestionWriting
 from tests.fixtures.fake_providers import EchoTextGenerator, WriterResolver
 from tests.fixtures.kids_fakes import FakeWriter
 from tests.fixtures.suggestion_data import TRENDS, idea_dict, ideas_writer, raw_writer
@@ -24,10 +27,21 @@ def brief(audience: TemplateAudience = TemplateAudience.GENERAL, count: int = 3)
 
 
 def suggest(
-    writer: TextGenerator | None, chosen: SuggestionBrief | None = None
+    writer: TextGenerator | None,
+    chosen: SuggestionBrief | None = None,
+    writing: SuggestionWriting | None = None,
 ) -> SuggestionDrafts:
     providers = WriterResolver([], EchoTextGenerator(), writer)
-    return NarratedVideoEngine().suggested_definitions(chosen or brief(), providers)
+    return NarratedVideoEngine(writing).suggested_definitions(chosen or brief(), providers)
+
+
+def trend_data(*trends: TrendingVideo, writing: SuggestionWriting | None = None) -> str:
+    writer = ideas_writer(idea_dict())
+    suggest(
+        writer, SuggestionBrief(audience=TemplateAudience.GENERAL, count=2, trends=trends), writing
+    )
+    [request] = writer.requests
+    return request.prompt.split("<trend_data>\n")[1].split("\n</trend_data>")[0]
 
 
 def test_a_valid_idea_comes_back_with_its_trend_titles_and_a_lean_definition() -> None:
@@ -47,7 +61,10 @@ def test_a_valid_idea_comes_back_with_its_trend_titles_and_a_lean_definition() -
         {"definition": {"structure": "opera"}},
         {"definition": {"settings": {"story": {}}}},
         {"definition": {"hidden": ["story.tone"]}},
+        {"definition": {"basic": ["story.tone"]}},
         {"based_on": [7]},
+        {"based_on": [0]},
+        {"based_on": [-1]},
         {"based_on": []},
         {"name": ""},
         {"reason": ""},
@@ -70,6 +87,18 @@ def test_a_kids_idea_may_speak_about_children() -> None:
     aimed = idea_dict(name="Kitchen songs", description="Cooking songs for kids", definition={})
     drafts = suggest(ideas_writer(aimed), brief(TemplateAudience.KIDS))
     assert [idea.name for idea in drafts.ideas] == ["Kitchen songs"]
+
+
+def test_a_kids_idea_cannot_lower_the_kids_floor_and_keeps_it() -> None:
+    lowered = idea_dict(
+        name="Open kitchen", definition={"settings": {"safety": {"banned_words": []}}}
+    )
+    drafts = suggest(ideas_writer(idea_dict(), lowered), brief(TemplateAudience.KIDS))
+    [kept] = drafts.ideas
+    definition = NarratedDefinition.model_validate(kept.definition)
+    settings = settings_model_for(definition, TemplateAudience.KIDS)()
+    assert drafts.dropped == 1
+    assert set(BANNED_WORDS) <= set(settings.safety.banned_words)
 
 
 def test_ideas_beyond_the_count_are_ignored() -> None:
@@ -109,6 +138,24 @@ def test_the_request_fences_the_trend_data_and_leaves_out_channel_names() -> Non
     assert "Secret Name" not in request.prompt
     assert "untrusted" in request.system
     assert "never address children" in request.system
+
+
+def test_trend_lines_are_cleaned_cut_and_limited() -> None:
+    hostile = TrendingVideo(
+        title="A" * 200,
+        category_id="<2\n7>",
+        tags=("<b>x</b>", "line\nbreak", "third"),
+        view_count=5,
+        duration_seconds=90,
+    )
+    writing = SuggestionWriting(tags_per_video=2, title_characters=10)
+    assert trend_data(hostile, writing=writing) == (
+        f"1. title: {'A' * 10} | category: 2 7 | tags: b x /b, line break | views: 5 | minutes: 1.5"
+    )
+
+
+def test_a_trend_without_tags_says_none() -> None:
+    assert "| tags: none |" in trend_data(TrendingVideo(title="Quiet rain"))
 
 
 def test_the_request_asks_for_definitions_without_expert_fields() -> None:

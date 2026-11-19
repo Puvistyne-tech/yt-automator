@@ -129,12 +129,6 @@ def test_the_sample_source_returns_bundled_neutral_videos_up_to_the_limit() -> N
     assert all(video.title and video.channel_title for video in videos)
 
 
-def test_the_sample_source_prefers_the_requested_category() -> None:
-    videos = SampleTrendSource().trending(TrendQuery(region="US", category="27", limit=50))
-    assert videos
-    assert {video.category_id for video in videos} == {"27"}
-
-
 def test_the_sample_source_flags_some_videos_made_for_kids() -> None:
     videos = SampleTrendSource().trending(TrendQuery(region="US", limit=50))
     assert {video.made_for_kids for video in videos} >= {True, False}

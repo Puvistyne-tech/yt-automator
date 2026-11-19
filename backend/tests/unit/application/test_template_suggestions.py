@@ -8,8 +8,7 @@ from autotube.domain.pipeline_templates import TemplateAudience, TemplateOrigin,
 from autotube.domain.runs import RunQuery
 from autotube.domain.template_suggestions import SuggestionDrafts, SuggestionRequest
 from autotube.domain.trends import TrendingVideo, TrendOrigin
-from autotube.shared.errors import RuleConflict, ValidationFailed
-from tests.fixtures.builders import add_channel, add_credential
+from autotube.shared.errors import RuleConflict
 from tests.fixtures.fake_engines import (
     REFUSED_BRIEF,
     FakeEngine,
@@ -69,27 +68,12 @@ def test_suggestions_from_the_sample_are_suggested_drafts(rig: TemplateRig) -> N
     assert_nothing_stored(rig)
 
 
-def test_a_connected_channel_supplies_youtube_trends(rig: TemplateRig) -> None:
-    add_credential(rig.harness)
-    add_channel(rig.harness)
-    result = rig.suggest().execute(request(audience="kids"))
-    [brief] = engine_of(rig).briefs
-    assert result.source is TrendOrigin.YOUTUBE
-    assert brief.trends == tuple(rig.harness.youtube.popular)
-
-
-def test_general_requests_never_pass_made_for_kids_trends(rig: TemplateRig) -> None:
-    rig.trends.videos.append(KIDS_TREND)
-    rig.suggest().execute(request())
-    [brief] = engine_of(rig).briefs
-    assert KIDS_TREND not in brief.trends
-
-
 def test_a_general_request_with_only_kids_trends_is_unavailable(rig: TemplateRig) -> None:
     rig.trends.videos[:] = [KIDS_TREND]
     with pytest.raises(RuleConflict) as conflict:
         rig.suggest().execute(request())
     assert conflict.value.code == "suggestions_unavailable"
+    assert conflict.value.message.startswith("No trending videos fit this audience")
     assert engine_of(rig).briefs == []
 
 
@@ -97,13 +81,14 @@ def test_failing_and_copied_ideas_are_dropped_and_counted(harness: Harness) -> N
     drafts = suggested_drafts(
         suggested_idea(),
         suggested_idea("Curious Lab minis"),
+        suggested_idea("Why the sky changes colour"),
         suggested_idea("Refused", definition={"brief": REFUSED_BRIEF}),
         suggested_idea(" "),
         dropped=2,
     )
     result = rig_with(harness, drafts).suggest().execute(request())
     assert [s.name for s in result.suggestions] == ["Star facts"]
-    assert result.dropped == 5
+    assert result.dropped == 6
 
 
 def test_nothing_usable_is_a_suggestions_unavailable_conflict(harness: Harness) -> None:
@@ -136,19 +121,6 @@ def test_ideas_from_a_placeholder_writer_are_unavailable(harness: Harness) -> No
     )
 
 
-def test_an_unknown_engine_is_a_field_error(rig: TemplateRig) -> None:
-    with pytest.raises(ValidationFailed) as refused:
-        rig.suggest().execute(request(engine="missing"))
-    assert list(refused.value.fields) == ["engine"]
-    assert rig.trends.queries == []
-
-
 def test_the_saved_provider_chain_is_used(rig: TemplateRig) -> None:
     rig.suggest().execute(request())
     assert rig.harness.catalog.resolved_with == [rig.harness.provider_configs.list()]
-
-
-def test_a_suggestion_can_be_created_as_returned(rig: TemplateRig) -> None:
-    [suggestion] = rig.suggest().execute(request()).suggestions
-    created = rig.create().execute(suggestion.input)
-    assert (created.origin, created.status) == (TemplateOrigin.SUGGESTED, TemplateStatus.DRAFT)

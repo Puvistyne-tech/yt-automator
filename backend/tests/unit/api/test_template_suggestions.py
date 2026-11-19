@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from autotube.domain.capabilities import TextGenerator
 from autotube.domain.template_suggestions import SUGGESTION_COUNT_MAX
+from autotube.domain.trends import TrendingVideo
 from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides
 from tests.fixtures.fake_providers import WriterCatalog
@@ -90,6 +91,29 @@ def test_a_kids_request_yields_kids_drafts(config: RuntimeConfig, overrides: Ove
     assert (suggestion["input"]["audience"], created["audience"]) == ("kids", "kids")
 
 
+@pytest.mark.parametrize("count", [1, SUGGESTION_COUNT_MAX])
+def test_the_count_bounds_are_accepted_and_reach_the_writer(
+    config: RuntimeConfig, overrides: Overrides, count: int
+) -> None:
+    writer = ideas_writer(idea_dict())
+    with served(config, overrides, writer) as client:
+        ok(client.post(PATH, json=body(count=count)))
+    [request] = writer.requests
+    assert request.json_schema is not None
+    assert request.json_schema["properties"]["ideas"]["maxItems"] == count  # type: ignore[index, call-overload]
+
+
+def test_a_chart_of_only_kids_videos_has_nothing_for_a_general_request(
+    config: RuntimeConfig, overrides: Overrides, youtube: FakeYouTube
+) -> None:
+    youtube.popular = [TrendingVideo(title="Counting ducks", made_for_kids=True)]
+    with served(config, overrides, ideas_writer(idea_dict())) as client:
+        Api(client, client.app.state.runtime).channel()  # type: ignore[attr-defined]
+        conflict = error_of(client.post(PATH, json=body()), 409)
+    assert conflict["code"] == "suggestions_unavailable"
+    assert conflict["message"].startswith("No trending videos fit this audience")
+
+
 @pytest.mark.parametrize(
     ("changes", "fields"),
     [
@@ -99,6 +123,7 @@ def test_a_kids_request_yields_kids_drafts(config: RuntimeConfig, overrides: Ove
         ({"category": "music"}, ["category"]),
         ({"audience": "teens"}, ["audience"]),
         ({"engine": "missing"}, ["engine"]),
+        ({"engine": ""}, ["engine"]),
     ],
 )
 def test_bad_fields_are_refused_without_asking_the_writer(

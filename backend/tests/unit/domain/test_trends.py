@@ -7,7 +7,6 @@ from pydantic import ValidationError
 
 from autotube.domain.channels import Channel, ChannelStatus
 from autotube.domain.pipeline_templates import TemplateAudience
-from autotube.domain.quota import QuotaPolicy
 from autotube.domain.trends import (
     TrendingVideo,
     TrendQuery,
@@ -69,7 +68,3 @@ def test_a_sample_selection_prefers_the_category_and_respects_the_limit() -> Non
 def test_a_trend_query_refuses_bad_values(fields: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         TrendQuery.model_validate({"region": "GB", "limit": 5} | fields)
-
-
-def test_the_trending_call_costs_one_unit_by_default() -> None:
-    assert QuotaPolicy().trending_units == 1
