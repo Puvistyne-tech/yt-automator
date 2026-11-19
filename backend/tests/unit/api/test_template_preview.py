@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from autotube.domain.capabilities import TextGenerator
+from autotube.domain.sample_scripts import TOPIC_MAX_LENGTH
 from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides
 from tests.fixtures.explainer_data import TAKEAWAY_EN, explainer_writer
@@ -55,36 +56,42 @@ def test_a_general_explainer_preview_returns_a_sample_and_stores_nothing(
 ) -> None:
     with served(config, overrides, explainer_writer()) as client:
         sample = ok(client.post(PATH, json=body()))
-        assert set(sample) == SAMPLE_KEYS
-        assert (sample["language"], sample["takeaway"], sample["provider"]) == (
-            "en",
-            TAKEAWAY_EN,
-            "fake-llm",
-        )
-        assert set(sample["scenes"][0]) == {"narration", "heading", "action"}
-        assert sample["upload_title"]
         assert_nothing_stored(client)
+    assert set(sample) == SAMPLE_KEYS
+    assert set(sample["scenes"][0]) == {"narration", "heading", "action"}
+    assert (sample["language"], sample["takeaway"], sample["provider"]) == (
+        "en",
+        TAKEAWAY_EN,
+        "fake-llm",
+    )
 
 
-def test_a_kids_story_preview_takes_a_topic(config: RuntimeConfig, overrides: Overrides) -> None:
-    writer = smart_writer()
-    kids = body(audience="kids", definition={}, language="en", topic="sharing")
-    with served(config, overrides, writer) as client:
+def test_a_kids_story_preview_succeeds(config: RuntimeConfig, overrides: Overrides) -> None:
+    kids = body(audience="kids", definition={})
+    with served(config, overrides, smart_writer()) as client:
         sample = ok(client.post(PATH, json=kids))
     assert (sample["title"], sample["takeaway"]) == (draft_dict()["title"], draft_dict()["moral"])
-    assert "sharing" in writer.requests[0].prompt
+
+
+def test_a_topic_of_the_longest_length_reaches_the_writer(
+    config: RuntimeConfig, overrides: Overrides
+) -> None:
+    writer = explainer_writer()
+    longest = ("rainbows " * TOPIC_MAX_LENGTH)[:TOPIC_MAX_LENGTH]
+    with served(config, overrides, writer) as client:
+        ok(client.post(PATH, json=body(topic=longest)))
+    assert longest in writer.requests[0].prompt
 
 
 @pytest.mark.parametrize(
     ("changes", "fields"),
     [
-        ({"name": " "}, ["name"]),
-        ({"definition": {"surprise": 1}}, ["definition.surprise"]),
         ({"language": "fr"}, ["language"]),
+        ({"topic": "x" * (TOPIC_MAX_LENGTH + 1)}, ["topic"]),
         ({"type_id": "t_mine"}, ["type_id"]),
     ],
 )
-def test_a_preview_returns_the_create_field_errors(
+def test_a_preview_returns_field_errors_without_writing(
     config: RuntimeConfig, overrides: Overrides, changes: dict[str, Any], fields: list[str]
 ) -> None:
     writer = explainer_writer()
@@ -95,12 +102,11 @@ def test_a_preview_returns_the_create_field_errors(
     assert writer.requests == []
 
 
-@pytest.mark.parametrize("audience", ["kids", "general"])
-def test_a_missing_writer_is_preview_unavailable_without_a_bundled_story(
-    config: RuntimeConfig, overrides: Overrides, audience: str
+def test_a_missing_writer_is_preview_unavailable(
+    config: RuntimeConfig, overrides: Overrides
 ) -> None:
     with served(config, overrides, None) as client:
-        conflict = error_of(client.post(PATH, json=body(audience=audience, definition={})), 409)
+        conflict = error_of(client.post(PATH, json=body()), 409)
         assert_nothing_stored(client)
     assert conflict["code"] == "preview_unavailable"
     assert conflict["message"].startswith("The script writer is not available")

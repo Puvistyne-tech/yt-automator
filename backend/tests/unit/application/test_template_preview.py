@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 
+from autotube.domain.pipeline_templates import TemplateStatus
 from autotube.domain.runs import RunQuery
 from autotube.domain.sample_scripts import TemplatePreviewInput
 from autotube.shared.errors import RuleConflict, ValidationFailed
@@ -47,6 +48,16 @@ def test_a_preview_writes_a_sample_in_the_first_language_by_default(rig: Templat
 def test_a_preview_uses_the_chosen_language_and_topic(rig: TemplateRig) -> None:
     sample = rig.preview().execute(preview_input(language="ta", topic="comets"))
     assert (sample.language, sample.title) == ("ta", "Space facts: comets")
+
+
+@pytest.mark.parametrize("status", list(TemplateStatus))
+def test_a_preview_works_the_same_for_draft_and_ready_input(
+    rig: TemplateRig, status: TemplateStatus
+) -> None:
+    sample = rig.preview().execute(preview_input(status=status))
+    [(template, _, _)] = sample_engine(rig).samples
+    assert (sample.title, template.status) == ("Space facts: planets", status)
+    assert_nothing_stored(rig)
 
 
 def test_a_preview_resolves_the_saved_provider_chain(rig: TemplateRig) -> None:

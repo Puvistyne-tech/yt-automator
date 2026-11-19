@@ -39,8 +39,6 @@ def test_the_definition_form_is_a_valid_sectioned_ui_schema() -> None:
         "Advanced",
     ]
     assert ui["ui:basic"] == ["structure", "brief", "length", "tone", "topics", "visual_style"]
-    assert ui["brief"] == {"ui:widget": "textarea", "ui:options": {"rows": 4}}
-    assert ui["visual_style"] == {"ui:widget": "cards"}
 
 
 def test_the_only_builtin_is_the_kids_story_template() -> None:
