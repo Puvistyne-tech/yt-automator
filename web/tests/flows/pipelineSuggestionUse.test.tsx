@@ -86,15 +86,27 @@ describe("Pipelines: save a suggested idea as a draft", () => {
     );
   });
 
-  it("reports a failed save as a notification", async () => {
-    failWith("post", "/templates", 500, { message: "Disk is full." });
+  it.each<[number, Parameters<typeof failWith>[3]]>([
+    [500, { message: "Disk is full." }],
+    [
+      400,
+      {
+        message: "name must be at most 80 characters",
+        fields: { name: "name must be at most 80 characters" },
+      },
+    ],
+    [409, { code: "template_type_taken", message: "pipeline type 't_x' already exists" }],
+  ])("reports a %i save failure as a notification", async (status, body) => {
+    failWith("post", "/templates", status, body);
     const { user } = await openSuggestions();
     const idea = await findIdea(user, "Little sea lights");
 
     await user.click(idea.getByRole("button", { name: "Save as draft" }));
 
-    await findToast("Disk is full.");
+    await findToast(body.message);
     expect(idea.getByRole("button", { name: "Save as draft" })).toBeEnabled();
+    expect(screen.queryByRole("listitem", { name: "Little sea lights" })).toBeNull();
+    expect(db.state.templates).toHaveLength(2);
   });
 
   it("creates only one draft on a double click", async () => {
