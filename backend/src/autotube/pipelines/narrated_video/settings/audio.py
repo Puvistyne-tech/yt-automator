@@ -29,6 +29,33 @@ def speed_for_every_language(value: object) -> object:
     return dict.fromkeys(LocalizedSpeed.model_fields, value)
 
 
+class NarrationCheck(SettingsSection):
+    enabled: bool = Field(
+        default=True,
+        title="Check the narration",
+        description="Transcribe each spoken line back and compare it with the text that was read.",
+    )
+    languages: list[str] = Field(
+        default_factory=lambda: ["ta"],
+        title="Languages to check",
+        description="Language codes whose narration is checked.",
+    )
+    max_error_rate: float = Field(
+        default=0.25,
+        ge=0,
+        le=1,
+        title="Highest error rate",
+        description="Share of characters heard wrongly above which a line is spoken again.",
+    )
+    retries: int = Field(
+        default=2,
+        ge=0,
+        le=10,
+        title="Retries",
+        description="How many more times a line is spoken when it fails the check.",
+    )
+
+
 class VoiceSettings(SettingsSection):
     narrator_voice: LocalizedVoice = Field(
         default_factory=LocalizedVoice,
@@ -45,6 +72,11 @@ class VoiceSettings(SettingsSection):
     )
     include_outro: bool = Field(
         default=True, title="Speak the outro line", description="Narrate the series outro line."
+    )
+    quality_check: NarrationCheck = Field(
+        default_factory=NarrationCheck,
+        title="Narration check",
+        description="Hear each line back and speak it again when too many words come out wrong.",
     )
 
     @field_validator("speed", mode="before")

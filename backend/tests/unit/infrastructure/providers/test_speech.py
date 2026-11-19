@@ -77,6 +77,16 @@ def test_espeak_upgrades_timings_with_alignment(tmp_path: Path) -> None:
     assert [word.word for word in speech.words] == ["Hello", "there", "world"]
     assert speech.words[1].start_seconds >= 0.5
     assert speech.words[1].end_seconds <= 0.6
+    assert speech.transcript == "Hello, world"
+
+
+def test_alignment_keeps_what_whisper_heard_even_when_it_does_not_match(tmp_path: Path) -> None:
+    runner = RecordingRunner(effect=writes_wav_after("-w", 1.0))
+    aligner = FixedAligner([heard(" banana ", 0.1, 0.5)])
+    adapter = EspeakSpeech(EspeakOptions(), make_context(tmp_path, runner=runner), aligner=aligner)
+    speech = adapter.synthesize(SpeechRequest(text="hello", language="en"), tmp_path / "a.wav")
+    assert speech.timing_source is TimingSource.ESTIMATE
+    assert speech.transcript == "banana"
 
 
 def test_espeak_skips_alignment_when_disabled(tmp_path: Path) -> None:
