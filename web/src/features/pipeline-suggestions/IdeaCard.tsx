@@ -5,6 +5,7 @@ import type { EngineSummary, TemplateSuggestion } from "@/api/types";
 import { formatTitle } from "@/features/pipeline-suggestions/model/results";
 import { type IdeaActions, useIdeaActions } from "@/features/pipeline-suggestions/useIdeaActions";
 import { Badge, Button, ButtonLink } from "@/shared/ui";
+import { withUniqueKeys } from "@/shared/uniqueKeys";
 
 const DREW_ON = "Trending videos it drew on";
 
@@ -57,8 +58,8 @@ export function IdeaCard({ engine, idea }: { engine: EngineSummary; idea: Templa
       <div className="subtle">
         <span>{DREW_ON}:</span>
         <ul className="idea-trends" aria-label={DREW_ON}>
-          {idea.based_on.map((title) => (
-            <li key={title}>{title}</li>
+          {withUniqueKeys(idea.based_on, (title) => title).map(({ key, item }) => (
+            <li key={key}>{item}</li>
           ))}
         </ul>
       </div>

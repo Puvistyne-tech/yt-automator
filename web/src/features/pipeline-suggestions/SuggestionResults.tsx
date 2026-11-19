@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import type { EngineSummary, TemplateSuggestions } from "@/api/types";
 import { IdeaCard } from "@/features/pipeline-suggestions/IdeaCard";
 import { droppedText, sourceText } from "@/features/pipeline-suggestions/model/results";
+import { withUniqueKeys } from "@/shared/uniqueKeys";
 
 function SourceNote({ result, region }: { result: TemplateSuggestions; region: string }) {
   const dropped = droppedText(result.dropped);
@@ -30,8 +31,8 @@ export function SuggestionResults({
     <div className="stack">
       <SourceNote result={result} region={region} />
       <div className="idea-list">
-        {result.suggestions.map((idea) => (
-          <IdeaCard key={idea.name} engine={engine} idea={idea} />
+        {withUniqueKeys(result.suggestions, (idea) => idea.name).map(({ key, item }) => (
+          <IdeaCard key={key} engine={engine} idea={item} />
         ))}
       </div>
     </div>

@@ -1,4 +1,6 @@
-import { waitFor } from "@testing-library/react";
+import { waitFor, within } from "@testing-library/react";
+import { HttpResponse, http } from "msw";
+import type { TemplateInput } from "@/api/types";
 import type { User } from "../helpers/renderApp";
 import { failWith, server } from "../helpers/server";
 import {
@@ -12,6 +14,15 @@ import {
 const PATH = "/templates/suggestions";
 const YOUTUBE_SOURCE = /trending on YouTube/;
 const DROPPED = /left out because/;
+const IDEA_INPUT: TemplateInput = {
+  engine: "narrated_video",
+  name: "Twins",
+  description: "",
+  audience: "kids",
+  status: "draft",
+  origin: "suggested",
+  definition: { structure: "story" },
+};
 
 async function searchAgain(user: User) {
   await user.click(panel().getByRole("button", FIND));
@@ -79,5 +90,30 @@ describe("Pipelines: replacing suggested ideas", () => {
 
     expect(await panel().findAllByRole("article")).toHaveLength(4);
     expect(panel().queryByText(shown)).not.toBeInTheDocument();
+  });
+
+  it("keeps two ideas with the same name and trends apart", async () => {
+    const twin = { ...IDEA_INPUT, definition: { structure: "quiz" } };
+    const idea = { name: "Twins", description: "", reason: "Same.", input: IDEA_INPUT };
+    const reply = {
+      suggestions: [
+        { ...idea, based_on: ["One", "One"] },
+        { ...idea, based_on: ["One"], input: twin },
+      ],
+      source: "youtube",
+      dropped: 0,
+      provider: "ollama",
+    };
+    server.use(http.post(`/api${PATH}`, () => HttpResponse.json(reply)));
+    const errors = vi.spyOn(console, "error");
+    const { user } = await openSuggestions();
+    const [first, second] = (await findIdeas(user)).map((card) => within(card));
+
+    await user.click(first?.getByRole("button", { name: "Save as draft" }) as HTMLElement);
+
+    expect(await first?.findByRole("link", { name: "Open Twins" })).toBeInTheDocument();
+    expect(second?.getByRole("button", { name: "Save as draft" })).toBeEnabled();
+    expect(first?.getAllByRole("listitem")).toHaveLength(2);
+    expect(errors).not.toHaveBeenCalledWith(expect.stringMatching(/same key/), expect.anything());
   });
 });
