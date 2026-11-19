@@ -7,6 +7,7 @@ from autotube.application.template_lookup import TemplateLookup
 from autotube.application.trend_finder import TrendFinder
 from autotube.domain.pipeline_engine import PipelineEngine
 from autotube.domain.ports import Clock, ProviderCatalog, ProviderConfigRepository
+from autotube.domain.providers import is_placeholder
 from autotube.domain.suggestion_screen import screened_suggestions, suggestion_input
 from autotube.domain.template_inputs import TemplateInput, input_errors, new_template
 from autotube.domain.template_suggestions import (
@@ -22,6 +23,7 @@ from autotube.shared.errors import RuleConflict
 
 SUGGESTIONS_UNAVAILABLE = "suggestions_unavailable"
 SUGGESTION_TEMPLATE_ID = "suggestion"
+NO_TEXT_MODEL = "Connect a text model under Providers to get suggestions."
 NO_TRENDS = "No trending videos fit this audience. Try another region or category."
 NOTHING_USABLE = (
     "None of the suggested ideas passed the checks. Try again, or pick another region or category."
@@ -49,19 +51,23 @@ class SuggestTemplates:
         brief = SuggestionBrief(audience=request.audience, count=request.count, trends=offered)
         make = partial(suggestion_input, engine.engine_id, request.audience)
         checks = partial(self.problems, engine)
-        kept, dropped = screened_suggestions(
-            self.drafts(engine, brief), report.videos, make, checks
-        )
+        drafts = self.drafts(engine, brief)
+        kept, dropped = screened_suggestions(drafts, report.videos, make, checks)
         if not kept:
             raise RuleConflict(SUGGESTIONS_UNAVAILABLE, NOTHING_USABLE)
-        return TemplateSuggestions(suggestions=kept, source=report.origin, dropped=dropped)
+        return TemplateSuggestions(
+            suggestions=kept, source=report.origin, dropped=dropped, provider=drafts.provider
+        )
 
     def drafts(self, engine: PipelineEngine, brief: SuggestionBrief) -> SuggestionDrafts:
         providers = self.catalog.resolver(self.provider_configs.list())
         try:
-            return engine.suggested_definitions(brief, providers)
+            drafts = engine.suggested_definitions(brief, providers)
         except SuggestionsUnavailableError as error:
             raise RuleConflict(SUGGESTIONS_UNAVAILABLE, str(error)) from error
+        if is_placeholder(drafts.provider, self.catalog.descriptors()):
+            raise RuleConflict(SUGGESTIONS_UNAVAILABLE, NO_TEXT_MODEL)
+        return drafts
 
     def problems(self, engine: PipelineEngine, data: TemplateInput) -> dict[str, str]:
         errors = input_errors(data)

@@ -61,6 +61,7 @@ class SuggestedIdea(DomainModel):
 class SuggestionDrafts(DomainModel):
     ideas: tuple[SuggestedIdea, ...]
     dropped: int = Field(default=0, ge=0)
+    provider: str = ""
 
 
 class TemplateSuggestion(DomainModel):
@@ -75,3 +76,4 @@ class TemplateSuggestions(DomainModel):
     suggestions: tuple[TemplateSuggestion, ...]
     source: TrendOrigin = Field(description="Where the trends came from")
     dropped: int = Field(ge=0, description="Ideas left out because they failed a check")
+    provider: str = Field(description="Which text model wrote the ideas")

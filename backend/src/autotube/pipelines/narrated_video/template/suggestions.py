@@ -70,18 +70,19 @@ def parsed_idea(item: JsonValue, brief: SuggestionBrief) -> SuggestedIdea | None
     )
 
 
-def parsed_drafts(raw: str, brief: SuggestionBrief) -> SuggestionDrafts:
+def parsed_drafts(raw: str, brief: SuggestionBrief, provider: str) -> SuggestionDrafts:
     found = [parsed_idea(item, brief) for item in reply_items(raw)[: brief.count]]
     ideas = tuple(idea for idea in found if idea is not None)
-    return SuggestionDrafts(ideas=ideas, dropped=len(found) - len(ideas))
+    return SuggestionDrafts(ideas=ideas, dropped=len(found) - len(ideas), provider=provider)
 
 
 def written_reply(
     brief: SuggestionBrief, providers: ProviderResolver, writing: SuggestionWriting
-) -> str:
+) -> tuple[str, str]:
     request = suggestion_request(brief, writing)
     try:
-        return providers.resolve(Capability.LLM).generate(request)
+        llm = providers.resolve(Capability.LLM)
+        return llm.generate(request), llm.provider_id
     except Exception as error:
         raise SuggestionsUnavailableError(UNAVAILABLE) from error
 
@@ -89,4 +90,5 @@ def written_reply(
 def template_suggestions(
     brief: SuggestionBrief, providers: ProviderResolver, writing: SuggestionWriting
 ) -> SuggestionDrafts:
-    return parsed_drafts(written_reply(brief, providers, writing), brief)
+    raw, provider = written_reply(brief, providers, writing)
+    return parsed_drafts(raw, brief, provider)

@@ -6,6 +6,7 @@ from typing import Any
 
 from autotube.domain.capabilities import TextRequest
 from autotube.domain.trends import TrendingVideo, TrendQuery
+from tests.fixtures.fake_providers import PLACEHOLDER_LLM
 from tests.fixtures.kids_fakes import FakeWriter
 
 TRENDS = (
@@ -64,3 +65,9 @@ class StaticTrends:
     def trending(self, query: TrendQuery) -> list[TrendingVideo]:
         self.queries.append(query)
         return list(self.videos)
+
+
+def placeholder_writer(*ideas: dict[str, Any]) -> FakeWriter:
+    writer = ideas_writer(*ideas)
+    writer.provider_id = PLACEHOLDER_LLM.provider_id
+    return writer

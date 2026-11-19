@@ -110,11 +110,11 @@ class FakeEngine:
     def suggested_definitions(
         self, brief: SuggestionBrief, providers: ProviderResolver
     ) -> SuggestionDrafts:
-        providers.resolve(Capability.LLM)
+        provider = providers.resolve(Capability.LLM).provider_id
         self.briefs.append(brief)
         if self.suggestions is None:
             raise SuggestionsUnavailableError("the writer is resting")
-        return self.suggestions
+        return self.suggestions.model_copy(update={"provider": provider})
 
     def builtin_templates(self) -> list[PipelineTemplate]:
         general = TemplateAudience.GENERAL

@@ -33,7 +33,7 @@ def suggest(
 def test_a_valid_idea_comes_back_with_its_trend_titles_and_a_lean_definition() -> None:
     drafts = suggest(ideas_writer(idea_dict(based_on=[2, 1, 2, 9])))
     [idea] = drafts.ideas
-    assert (idea.name, drafts.dropped) == ("Cupboard cooking", 0)
+    assert (idea.name, drafts.dropped, drafts.provider) == ("Cupboard cooking", 0, "fake-llm")
     assert idea.based_on == ("Why the sky changes colour", "Ten minute pantry dinners")
     assert idea.definition == {
         "structure": "explainer",

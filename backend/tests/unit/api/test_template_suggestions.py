@@ -13,7 +13,7 @@ from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides
 from tests.fixtures.fake_providers import WriterCatalog
 from tests.fixtures.fake_youtube import FakeYouTube
-from tests.fixtures.suggestion_data import idea_dict, ideas_writer
+from tests.fixtures.suggestion_data import idea_dict, ideas_writer, placeholder_writer
 from tests.unit.api.client import Api, error_of, ok, wired
 
 PATH = "/api/templates/suggestions"
@@ -43,7 +43,7 @@ def test_without_a_channel_suggestions_come_from_the_sample(
     with served(config, overrides, ideas_writer(idea_dict(), idea_dict(based_on=[99]))) as client:
         result = ok(client.post(PATH, json=body()))
         assert_nothing_stored(client)
-    assert (result["source"], result["dropped"]) == ("sample", 1)
+    assert (result["source"], result["dropped"], result["provider"]) == ("sample", 1, "fake-llm")
     [suggestion] = result["suggestions"]
     assert set(suggestion) == SUGGESTION_KEYS
     assert suggestion["based_on"] == ["Ten minute pantry dinners for busy weeknights"]
@@ -112,14 +112,18 @@ def test_bad_fields_are_refused_without_asking_the_writer(
 
 
 @pytest.mark.parametrize(
-    "writer",
-    [None, ideas_writer(idea_dict(name="Fun cooking for kids"))],
+    ("writer", "message"),
+    [
+        (None, "The text model is not available"),
+        (ideas_writer(idea_dict(name="Fun cooking for kids")), "None of the suggested ideas"),
+        (placeholder_writer(idea_dict()), "Connect a text model under Providers"),
+    ],
 )
 def test_no_usable_ideas_is_suggestions_unavailable(
-    config: RuntimeConfig, overrides: Overrides, writer: TextGenerator | None
+    config: RuntimeConfig, overrides: Overrides, writer: TextGenerator | None, message: str
 ) -> None:
     with served(config, overrides, writer) as client:
         conflict = error_of(client.post(PATH, json=body()), 409)
         assert_nothing_stored(client)
     assert conflict["code"] == "suggestions_unavailable"
-    assert conflict["message"]
+    assert conflict["message"].startswith(message)

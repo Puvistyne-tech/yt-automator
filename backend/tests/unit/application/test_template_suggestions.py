@@ -17,8 +17,9 @@ from tests.fixtures.fake_engines import (
     suggested_drafts,
     suggested_idea,
 )
+from tests.fixtures.fake_providers import WriterCatalog
 from tests.fixtures.harness import Harness
-from tests.fixtures.suggestion_data import TRENDS
+from tests.fixtures.suggestion_data import TRENDS, placeholder_writer
 from tests.fixtures.template_rig import TemplateRig
 
 KIDS_TREND = TrendingVideo(title="Counting ducks", channel_title="Pond Pals", made_for_kids=True)
@@ -48,7 +49,7 @@ def assert_nothing_stored(rig: TemplateRig) -> None:
 def test_suggestions_from_the_sample_are_suggested_drafts(rig: TemplateRig) -> None:
     result = rig.suggest().execute(request(category="26", count=3))
     [suggestion] = result.suggestions
-    assert (result.source, result.dropped) == (TrendOrigin.SAMPLE, 0)
+    assert (result.source, result.dropped, result.provider) == (TrendOrigin.SAMPLE, 0, "fake-llm")
     assert (suggestion.name, suggestion.reason, suggestion.based_on) == (
         "Star facts",
         "Space videos are popular",
@@ -122,6 +123,17 @@ def test_an_unavailable_writer_is_a_suggestions_unavailable_conflict(harness: Ha
         "the writer is resting",
     )
     assert_nothing_stored(rig)
+
+
+def test_ideas_from_a_placeholder_writer_are_unavailable(harness: Harness) -> None:
+    harness.catalog = WriterCatalog(placeholder_writer())
+    rig = TemplateRig(harness)
+    with pytest.raises(RuleConflict) as conflict:
+        rig.suggest().execute(request())
+    assert (conflict.value.code, conflict.value.message) == (
+        "suggestions_unavailable",
+        "Connect a text model under Providers to get suggestions.",
+    )
 
 
 def test_an_unknown_engine_is_a_field_error(rig: TemplateRig) -> None:
