@@ -67,6 +67,21 @@ def test_a_general_explainer_screens_child_directed_scripts() -> None:
     assert story_problems(addressed, explainer_settings(KIDS)) == []
 
 
+@pytest.mark.parametrize(
+    ("action", "found"),
+    [
+        ("The little ones wave at the rainbow.", "never address children"),
+        ("The monster lifts the rainbow.", "remove these words: monster"),
+        ("A Lego tower glows under the rainbow.", "remove these brand names: Lego"),
+    ],
+)
+def test_the_scene_action_is_screened_like_the_narration(action: str, found: str) -> None:
+    first, *rest = explainer_story().scenes
+    acted = explainer_story(scenes=[first.model_copy(update={"action": action}), *rest])
+    settings = explainer_settings(GENERAL, safety={"banned_words": ["monster"]})
+    assert any(found in item for item in story_problems(acted, settings))
+
+
 @pytest.mark.parametrize("audience", [KIDS, GENERAL])
 @pytest.mark.parametrize("structure", STRUCTURES)
 def test_a_blank_template_of_every_structure_and_audience_has_no_problems(

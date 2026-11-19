@@ -74,7 +74,8 @@ def ending_problems(story: Story, settings: KidsStorySettings) -> list[str]:
 
 def all_text(story: Story) -> str:
     parts = [story.title, story.moral, story.hook_line, *story.questions]
-    return " ".join([*parts, *(scene.narration for scene in story.scenes)])
+    scenes = [text for scene in story.scenes for text in (scene.narration, scene.action)]
+    return " ".join([*parts, *scenes])
 
 
 def listed_phrases(text: str, phrases: list[str]) -> list[str]:
