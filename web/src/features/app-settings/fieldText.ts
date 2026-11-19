@@ -40,6 +40,10 @@ export const SETTING_TEXT: Record<AppSettingName, SettingText> = {
     label: "Log entries kept per run",
     hint: "Older entries are dropped once a run has this many.",
   },
+  fallback_reason_chars: {
+    label: "Fallback reason length",
+    hint: "Characters of a failed provider's error shown when a run falls back to another provider.",
+  },
   log_level: {
     label: "Server log level",
     hint: "How much detail the server writes to its log.",

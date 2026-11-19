@@ -21,6 +21,7 @@ def fell_back(
 def test_short_reason_keeps_the_first_line_within_the_limit() -> None:
     assert short_reason(GATED, 200) == "GatedRepoError: 403 Client Error."
     assert short_reason("abcdefghij", 5) == "abcd…"
+    assert short_reason("abcde", 5) == "abcde"
     assert short_reason("\n\n", 200) == "no reason given"
 
 
@@ -38,6 +39,13 @@ def test_fallback_warnings_group_repeated_calls() -> None:
         "image provider comfy failed (down); used offline_image instead",
     ]
     assert fallback_warnings([], 200) == []
+
+
+def test_grouped_warnings_keep_the_earliest_reason() -> None:
+    warnings = fallback_warnings([fell_back(reason="first"), fell_back(reason="second")], 200)
+    assert warnings == [
+        "image provider mflux failed (first); used offline_image instead for 2 calls"
+    ]
 
 
 def test_stand_in_sources_name_the_providers_a_picture_replaced() -> None:

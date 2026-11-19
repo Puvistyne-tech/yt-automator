@@ -108,6 +108,7 @@ AppSettings     timezone = "UTC", max_parallel_runs = 1 (>= 1), keep_runs_days =
                 keep_intermediate_days = 0 (>= 0), auto_cleanup_enabled = false,
                 cleanup_interval_hours = 24 (>= 0, whole hours),
                 caption_track_name = "", max_run_log_entries = 2000 (>= 1),
+                fallback_reason_chars = 200 (>= 20),
                 log_level: debug | info | warning | error | critical = info,
                 doctor_min_free_gb = 10 (>= 0),
                 data_dir (read-only), locked: {field: reason} (read-only),
@@ -365,7 +366,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   resolver recorded during it and logs one `warning` tagged with the stage per (capability, failed provider,
   used provider): "image provider mflux failed (<reason>); used offline_image instead for 12 calls" (the count
   only when above one). The reason is the first non-blank line of the failure, cut to
-  `RunLogPolicy.fallback_reason_chars` (default 200, >= 20) with a trailing "…", or "no reason given".
+  the `fallback_reason_chars` app setting (default 200, >= 20, read at every stage) with a trailing "…",
+  or "no reason given".
   No warning is logged when the first provider serves every call or when every provider fails (the stage
   error already lists each failure).
 - Deleting a `queued`, `running` or `publishing` run is refused; cancel it first.
@@ -494,8 +496,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
 - A keychain that cannot be used (locked, or access denied) raises the same 409 `secrets_unreadable`
   as an unreadable secrets file; the message names the keychain error type, never a value.
 - App settings come from three places, strongest first: an `AUTOTUBE_*` environment variable that is set
-  (`AUTOTUBE_YOUTUBE_CAPTION_TRACK_NAME`, `AUTOTUBE_MAX_RUN_LOG_ENTRIES`, `AUTOTUBE_LOG_LEVEL`,
-  `AUTOTUBE_DOCTOR_MIN_FREE_GB`, `AUTOTUBE_CLEANUP_INTERVAL_HOURS`), the stored value, the default.
+  (`AUTOTUBE_YOUTUBE_CAPTION_TRACK_NAME`, `AUTOTUBE_MAX_RUN_LOG_ENTRIES`, `AUTOTUBE_FALLBACK_REASON_CHARS`,
+  `AUTOTUBE_LOG_LEVEL`, `AUTOTUBE_DOCTOR_MIN_FREE_GB`, `AUTOTUBE_CLEANUP_INTERVAL_HOURS`), the stored value,
+  the default.
   A field set by the environment is listed in `locked` with the reason naming the variable. `PUT /settings`
   changes only the fields it sends; a field left out keeps its current value. Saving a locked
   field with a value other than the environment's is a 400 naming the field; saving it unchanged keeps the

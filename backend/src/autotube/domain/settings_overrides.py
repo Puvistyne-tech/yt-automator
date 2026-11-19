@@ -46,7 +46,10 @@ def storable_settings(
 
 
 def run_log_policy(settings: AppSettingsInput) -> RunLogPolicy:
-    return RunLogPolicy(max_entries=settings.max_run_log_entries)
+    return RunLogPolicy(
+        max_entries=settings.max_run_log_entries,
+        fallback_reason_chars=settings.fallback_reason_chars,
+    )
 
 
 def doctor_policy(base: DoctorPolicy, settings: AppSettingsInput) -> DoctorPolicy:

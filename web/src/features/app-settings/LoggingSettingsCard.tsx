@@ -11,6 +11,7 @@ export function LoggingSettingsCard(card: SettingsCardProps) {
       <div className="stack">
         <div className="grid-3">
           <NumberSetting {...card} name="max_run_log_entries" min={1} />
+          <NumberSetting {...card} name="fallback_reason_chars" min={20} />
           <SettingField name="log_level" settings={settings} errors={errors}>
             {(locked) => (
               <Select

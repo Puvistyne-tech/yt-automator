@@ -37,7 +37,7 @@ class ChainResolver:
         self.configs = {config.capability: config for config in configs}
         self.context = context
         self.skipped: dict[Capability, list[str]] = {}
-        self.fallback_log = FallbackLog(context.secrets, secret_names)
+        self.fallback_log = FallbackLog(context, secret_names)
 
     def fallbacks(self) -> tuple[ProviderFallback, ...]:
         return tuple(self.fallback_log.entries)

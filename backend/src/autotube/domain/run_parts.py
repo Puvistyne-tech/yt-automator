@@ -65,13 +65,14 @@ class RunLog(DomainModel):
 
 DEFAULT_MAX_RUN_LOGS = 2000
 DEFAULT_FALLBACK_REASON_CHARS = 200
+MIN_FALLBACK_REASON_CHARS = 20
 
 
 class RunLogPolicy(DomainModel):
     max_entries: int = Field(default=DEFAULT_MAX_RUN_LOGS, ge=1)
     fallback_reason_chars: int = Field(
         default=DEFAULT_FALLBACK_REASON_CHARS,
-        ge=20,
+        ge=MIN_FALLBACK_REASON_CHARS,
         title="Fallback reason length",
         description="Characters of a failed provider's error shown in a fallback warning.",
     )
