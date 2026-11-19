@@ -1,6 +1,8 @@
 import { isJsonObject } from "@/shared/isJsonObject";
 
 export type FieldPath = readonly (string | number)[];
+export type SettingPath = readonly string[];
+export type Concealed = (path: string) => boolean;
 
 const PREVIEW_LENGTH = 48;
 
@@ -63,21 +65,42 @@ export function isChanged(value: unknown, defaults: unknown, path: FieldPath): b
   );
 }
 
-function changedLeaves(value: unknown, defaults: unknown, path: string[]): string[] {
+function changedLeaves(value: unknown, defaults: unknown, path: string[]): string[][] {
   const fallback = valueAt(defaults, path);
   const current = valueAt(value, path);
   if (isJsonObject(fallback) && isJsonObject(current)) {
     return Object.keys(fallback).flatMap((key) => changedLeaves(value, defaults, [...path, key]));
   }
-  return isChanged(value, defaults, path) ? [path.join(".")] : [];
+  return isChanged(value, defaults, path) ? [path] : [];
+}
+
+function revealedLeaves(
+  value: unknown,
+  defaults: unknown,
+  paths: readonly SettingPath[],
+  concealed: Concealed | undefined,
+): string[][] {
+  return paths
+    .flatMap((path) => changedLeaves(value, defaults, [...path]))
+    .filter((leaf) => concealed === undefined || !concealed(leaf.join(".")));
+}
+
+export function revealedChanges(
+  value: unknown,
+  defaults: unknown,
+  paths: readonly SettingPath[],
+  concealed: Concealed | undefined,
+): string[] {
+  return revealedLeaves(value, defaults, paths, concealed).map((leaf) => leaf.join("."));
 }
 
 export function changedPaths(value: unknown, defaults: unknown, names: string[]): string[] {
-  return names.flatMap((name) => changedLeaves(value, defaults, [name]));
-}
-
-export function changedCount(value: unknown, defaults: unknown, names: string[]): number {
-  return changedPaths(value, defaults, names).length;
+  return revealedChanges(
+    value,
+    defaults,
+    names.map((name) => [name]),
+    undefined,
+  );
 }
 
 export function resetField<T>(value: T, defaults: unknown, path: FieldPath): T {
@@ -85,8 +108,15 @@ export function resetField<T>(value: T, defaults: unknown, path: FieldPath): T {
   return fallback === undefined ? value : withValueAt(value, path, structuredClone(fallback));
 }
 
-export function resetFields<T>(value: T, defaults: unknown, names: string[]): T {
-  return names.reduce((next, name) => resetField(next, defaults, [name]), value);
+export function resetRevealed<T>(
+  value: T,
+  defaults: unknown,
+  paths: readonly SettingPath[],
+  concealed: Concealed | undefined,
+): T {
+  const targets =
+    concealed === undefined ? paths : revealedLeaves(value, defaults, paths, concealed);
+  return targets.reduce((next, path) => resetField(next, defaults, path), value);
 }
 
 function shortened(text: string): string {

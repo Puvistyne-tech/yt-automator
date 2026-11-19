@@ -1,6 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { shownBy, visiblePathSet } from "@/shared/schema-form/fieldFilter";
+import {
+  concealedBy,
+  shownBy,
+  visiblePathSet,
+  withoutConcealed,
+} from "@/shared/schema-form/fieldFilter";
 import { SchemaForm } from "@/shared/schema-form/SchemaForm";
 import { schemaFields } from "@/shared/schema-form/schemaFields";
 
@@ -34,7 +39,13 @@ const uiSchema = {
 const value = { title: "Moon", music: { enabled: true, volume: 0.3 }, cast: [{ name: "Ada" }] };
 const defaults = { ...value, title: "Sun" };
 
-const showing = (paths: string[]) => visiblePathSet(schemaFields(schema), shownBy(paths));
+const fields = schemaFields(schema);
+const showing = (paths: string[]) => visiblePathSet(fields, shownBy(paths));
+
+function hiding(paths: string[]) {
+  const rule = withoutConcealed(undefined, concealedBy(fields, paths));
+  return rule === undefined ? undefined : visiblePathSet(fields, rule);
+}
 
 function renderForm(visible?: ReadonlySet<string>, ui: Record<string, unknown> = uiSchema) {
   render(
@@ -84,5 +95,26 @@ describe("SchemaForm visibility", () => {
     renderForm(showing(["title"]), {});
     expect(screen.getByLabelText("Title")).toBeInTheDocument();
     expect(screen.queryByText("Music")).not.toBeInTheDocument();
+  });
+
+  it("leaves hidden settings out of the whole form", () => {
+    renderForm(hiding(["music.volume", "title"]));
+    expect(screen.getByLabelText("Background music")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Ada")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Volume")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
+  });
+
+  it("leaves out a whole group whose path is hidden", () => {
+    renderForm(hiding(["music"]));
+    expect(screen.queryByRole("heading", { name: "Sound" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Volume")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toBeInTheDocument();
+  });
+
+  it("leaves out a group whose every setting is hidden", () => {
+    renderForm(hiding(["music.enabled", "music.volume"]));
+    expect(screen.queryByRole("heading", { name: "Sound" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Background music")).not.toBeInTheDocument();
   });
 });

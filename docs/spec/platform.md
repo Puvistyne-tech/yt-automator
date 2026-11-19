@@ -137,6 +137,14 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     field names. The kids story pipeline lists twelve paths: series name, visual style, theme mode and themes,
     tone, target length, narrator voice, music on or off and its mood, subtitles on or off, the Short on or off,
     and the episode resolution.
+  - `ui:hidden` (root only, optional, `domain/ui_hidden.py`): a list of dotted settings paths that the editor
+    never shows, so a pipeline type can hide settings that do not apply to it. Entries follow the `ui:basic`
+    rules (shared in `domain/ui_paths.py`), except that an empty list is valid. It is also a problem when a
+    path is in both `ui:basic` and `ui:hidden`, when a `ui:basic` path lies under a hidden path, when every
+    setting under a `ui:basic` path is hidden (it would show nothing), and when a hidden path names a setting
+    its parent requires that nothing fills: it has no default of its own (on the property or its `$ref`
+    target) and no enclosing setting's default holds a value for it (`domain/setting_fill.py`). A hidden
+    object hides all of its children. The kids story pipeline lists no hidden paths.
   - Any other key names a settings property and holds the hints for it; `items` holds the hints for the
     items of an array property. Nesting follows the settings schema, resolving local `$ref`s (`#/...`) and,
     for an optional property written as `anyOf`/`oneOf`, its first non-null branch (`domain/json_schema.py`).
@@ -754,11 +762,16 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   policy, target playlist, target publish timing and auto-reject. A quiet line says "<n> more options in All
   settings" (hidden pipeline fields plus the finer rules that apply to the draft: timezone and limits only for a
   schedule that is not manual, playlist and publish timing only with at least one target), adds ", <n> changed" for hidden pipeline fields
-  changed from their defaults, and offers "Show all settings". Hidden fields keep their values and still
+  changed from their defaults, and offers "Show all settings". The pipeline's `ui:hidden` fields (and a group
+  whose every field is hidden) show in neither view, are not counted in "more options" or "changed", and are
+  never matched by search or Changed only. Change marks, field resets, section "changed" counts and section
+  resets leave hidden fields out: an object's mark and reset (including an optional object's) consider only
+  its shown children, and a reset never changes a hidden value. Hidden fields keep their values and still
   validate; when a save fails (client or server) on a field hidden in Simple, the editor switches to All
   settings so the error shows at its field. A pipeline field with an error is always shown, in both views
   and whatever the search or Changed only filter, together with its parent groups. Section "changed" counts and
-  section resets show only while the form is unfiltered. All settings adds, above the Content form, a search box that filters pipeline fields by
+  section resets show only while the form is unfiltered: no `ui:basic` rule in Simple and no search or
+  Changed only in All settings (`ui:hidden` alone does not filter). All settings adds, above the Content form, a search box that filters pipeline fields by
   title and description (a match keeps its parent groups and all its children; sections with no match are
   hidden; array items are not searched) and a "Changed only" switch that keeps fields changed from their
   defaults; both combine. When nothing is left and no setting has an error, an empty state offers

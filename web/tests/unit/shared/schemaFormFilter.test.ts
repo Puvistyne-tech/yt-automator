@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changedCount, changedPaths } from "@/shared/schema-form/defaults";
+import { changedPaths } from "@/shared/schema-form/defaults";
 import {
   hiddenLeafCount,
   matchingPaths,
@@ -10,42 +10,7 @@ import {
   visibleProperties,
 } from "@/shared/schema-form/fieldFilter";
 import { schemaFields } from "@/shared/schema-form/schemaFields";
-
-const schema = {
-  type: "object",
-  properties: {
-    series: { $ref: "#/$defs/Series", title: "Series" },
-    tone: {
-      type: "string",
-      title: "Tone",
-      description: "How the story feels.",
-      oneOf: [{ const: "calm", title: "Calm" }],
-    },
-    music: {
-      anyOf: [{ $ref: "#/$defs/Music" }, { type: "null" }],
-      title: "Music",
-    },
-    cast: { type: "array", title: "Cast", items: { $ref: "#/$defs/Member" } },
-  },
-  $defs: {
-    Series: {
-      type: "object",
-      properties: {
-        name: { type: "object", title: "Series name", properties: { en: { title: "English" } } },
-        tagline: { type: "string", title: "Tagline", description: "A short line for covers." },
-      },
-    },
-    Music: {
-      type: "object",
-      title: "Music settings",
-      properties: {
-        enabled: { type: "boolean", title: "Background music" },
-        volume: { type: "number", title: "Volume" },
-      },
-    },
-    Member: { type: "object", properties: { name: { type: "string", title: "Name" } } },
-  },
-};
+import { filterSchema as schema } from "../../helpers/filterSchema";
 
 const fields = schemaFields(schema);
 
@@ -178,10 +143,9 @@ describe("hiddenLeafCount", () => {
 describe("changedPaths", () => {
   const defaults = { name: { en: "Story Time", ta: "Kathai" }, minutes: 5, tags: ["a"] };
 
-  it("lists the changed leaves that changedCount counts", () => {
+  it("lists the changed leaves of the named settings", () => {
     const value = { name: { en: "Bedtime", ta: "Kathai" }, minutes: 5, tags: ["b"] };
     const names = ["name", "minutes", "tags"];
     expect(changedPaths(value, defaults, names)).toEqual(["name.en", "tags"]);
-    expect(changedCount(value, defaults, names)).toBe(2);
   });
 });
