@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from autotube.api.container import App
 from autotube.api.schemas.requests import DuplicateTemplateRequest
 from autotube.api.schemas.responses import CREATED, ERROR_RESPONSES, NO_CONTENT_RESPONSE
+from autotube.domain.sample_scripts import SampleScript, TemplatePreviewInput
 from autotube.domain.template_inputs import TemplateInput
 from autotube.domain.template_views import EngineSummary, TemplateSummary
 
@@ -24,6 +25,14 @@ def list_templates(app: App) -> list[TemplateSummary]:
 @router.post("/templates", status_code=CREATED, summary="Create a pipeline template")
 def create_template(body: TemplateInput, app: App) -> TemplateSummary:
     return app.templates.create.execute(body)
+
+
+@router.post(
+    "/templates/preview-script",
+    summary="Write a sample script for an unsaved template without storing anything",
+)
+def preview_script(body: TemplatePreviewInput, app: App) -> SampleScript:
+    return app.templates.preview.execute(body)
 
 
 @router.get("/templates/{template_id}", summary="Get one pipeline template")

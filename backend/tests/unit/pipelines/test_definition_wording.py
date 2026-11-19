@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from autotube.domain.pipeline_descriptors import settings_schema_of
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 
 SHORT_SENTENCE = 90
 
 
 def definition_fields() -> list[dict[str, Any]]:
-    return list(settings_schema_of(NarratedDefinition)["properties"].values())
+    return list(NarratedDefinition.model_json_schema()["properties"].values())
 
 
 def shown_texts() -> list[str]:
@@ -29,5 +28,5 @@ def test_every_definition_field_is_described_in_one_short_sentence() -> None:
 
 
 def test_an_empty_style_keeps_the_default_style() -> None:
-    style = settings_schema_of(NarratedDefinition)["properties"]["visual_style"]
+    style = NarratedDefinition.model_json_schema()["properties"]["visual_style"]
     assert style["oneOf"][0] == {"const": "", "title": "Keep the default style"}
