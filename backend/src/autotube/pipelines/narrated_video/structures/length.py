@@ -70,9 +70,29 @@ def window_problem(settings: KidsStorySettings, language: str, scenes: int) -> s
     )
 
 
-def length_problem(settings: KidsStorySettings) -> str:
+def reach_problem(settings: KidsStorySettings, language: str) -> str:
+    fewest, most = scene_range(settings)
+    shortest, longest = (
+        spoken_window(settings, language, fewest)[0],
+        spoken_window(settings, language, most)[1],
+    )
+    low, high = length_window(settings, language)
+    if shortest <= high and longest >= low:
+        return ""
+    return (
+        f"{fewest} to {most} scenes read in {shortest:.0f} to {longest:.0f} s in "
+        f"{language_name(language)} at these words per scene, but the length is {low:.0f} to "
+        f"{high:.0f} s; change the scene count, the words per scene or the length"
+    )
+
+
+def language_problem(settings: KidsStorySettings, language: str) -> str:
     count = fixed_scene_count(settings)
     if count is None:
-        return ""
-    found = (window_problem(settings, language.value, count) for language in StoryLanguage)
+        return reach_problem(settings, language)
+    return window_problem(settings, language, count)
+
+
+def length_problem(settings: KidsStorySettings) -> str:
+    found = (language_problem(settings, language.value) for language in StoryLanguage)
     return next((problem for problem in found if problem), "")

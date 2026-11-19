@@ -861,8 +861,26 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   gate and the episode duration score item (the union of the windows of the run's languages) all use it.
   `length_problem(settings)` reports a fixed count whose window misses 30–600 s in any language ("N scenes read
   in A to B s in <language> at these words per scene, but an episode lasts 30 to 600 s; choose another length
-  or count"): it is a settings validation error of every template settings model and the template problem
+  or count"), or, for a scene range, a range that cannot reach the length window in any language ("A to B
+  scenes read in X to Y s in <language> at these words per scene, but the length is L to H s; change the scene
+  count, the words per scene or the length"; X uses the fewest scenes at the fewest words, Y the most at the
+  most): it is a settings validation error of every template settings model and the template problem
   `definition.length` at save.
+- Word budget (`structures/word_budget.py::word_budget(settings, language)`): `total` is the word range of the
+  length window (target ± tolerance) at the speaking rate, rounded inwards (`story/reading.py::word_range`:
+  ceiling of the low end, floor of the high end); `target` the rounded words of the target; `per_scene` the
+  configured words per scene narrowed so that any scene count in `scene_range` at any per-scene count in it
+  lands inside `total` (ceil(total low / fewest scenes) to floor(total high / most scenes)); when that is
+  empty, narrowed so that some scene count fits (ceil(total low / most) to floor(total high / fewest)); when
+  that is empty too, the configured range. The story prompt states both: "Each scene's narration has between
+  A and B words" and "The whole narration has between L and H words in total, about T, so it reads aloud in
+  about N seconds at R words per minute. Fewer than L words is too short and more than H is too long: count
+  them." The words-per-scene gate still checks the configured range. The duration gate's message names the
+  measured words against the same range: "the story is too short: N words, need at least L; it reads in about
+  S s, aim for T s (within D s)" (or "too long: N words, use at most H"). With the defaults (8 to 10 scenes,
+  150 ± 30 s) English asks for 30 to 36 words per scene and 240 to 360 in total. The long explainer (14 to 18
+  scenes, 300 ± 45 s) asks for 37 to 38 words per scene and 510 to 690 in total; its answer of about 4000
+  tokens fits the default `story.max_tokens` of 6000.
 
 - Answer schemas (`story/answer_schema.py`): the story request sends `draft_schema(settings)` and the
   translation request `text_schema(settings, script)` as `TextRequest.json_schema`, so a local model with a

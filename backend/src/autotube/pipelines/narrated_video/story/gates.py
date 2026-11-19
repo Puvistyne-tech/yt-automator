@@ -18,6 +18,8 @@ from autotube.pipelines.narrated_video.story.reading import (
     estimated_seconds,
     reading_metrics,
     reading_text,
+    total_words,
+    word_range,
 )
 from autotube.pipelines.narrated_video.story.words import contains_phrase, word_count
 
@@ -55,6 +57,12 @@ def configured_duration(settings: KidsStorySettings, language: str) -> tuple[int
     return settings.story.target_duration_seconds, settings.story.duration_tolerance_seconds
 
 
+def length_verdict(words: int, low: int, high: int) -> str:
+    if words < low:
+        return f"too short: {words} words, need at least {low}"
+    return f"too long: {words} words, use at most {high}"
+
+
 def duration_problems(
     story: Story, settings: KidsStorySettings, duration: DurationTarget = configured_duration
 ) -> list[str]:
@@ -63,7 +71,12 @@ def duration_problems(
     target, tolerance = duration(settings, story.language)
     if abs(seconds - target) <= tolerance:
         return []
-    return [f"the story reads in about {seconds:.0f} s; aim for {target} s (within {tolerance} s)"]
+    low, high = word_range(target - tolerance, target + tolerance, rate)
+    verdict = length_verdict(total_words(story), low, high)
+    return [
+        f"the story is {verdict}; it reads in about {seconds:.0f} s, "
+        f"aim for {target} s (within {tolerance} s)"
+    ]
 
 
 def ending_text(story: Story, scenes: int) -> str:

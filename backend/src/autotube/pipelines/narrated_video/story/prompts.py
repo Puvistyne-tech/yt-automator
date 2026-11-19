@@ -19,6 +19,7 @@ from autotube.pipelines.narrated_video.story.prompt_parts import (
 )
 from autotube.pipelines.narrated_video.structures.length import duration_target, scene_line
 from autotube.pipelines.narrated_video.structures.registry import spec_of
+from autotube.pipelines.narrated_video.structures.word_budget import word_budget
 
 SYSTEM_PROMPT = "story_system.txt"
 USER_PROMPT = "story_user.txt"
@@ -63,14 +64,18 @@ def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str
     rules = settings.story
     spec = spec_of(settings)
     target_seconds, _ = duration_target(settings, language)
+    budget = word_budget(settings, language)
     return render_prompt(
         USER_PROMPT,
         language=language_name(language),
         series=settings.series.name.for_language(language),
         theme=theme,
         scene_count=scene_line(settings),
-        words_min=f"{rules.words_per_scene_min.for_language(language):g}",
-        words_max=f"{rules.words_per_scene_max.for_language(language):g}",
+        words_min=budget.per_scene[0],
+        words_max=budget.per_scene[1],
+        total_min=budget.total[0],
+        total_max=budget.total[1],
+        total_words=budget.target,
         target_seconds=target_seconds,
         words_per_minute=f"{rules.words_per_minute.for_language(language):g}",
         cameras=", ".join(move.value for move in CameraMove),
