@@ -4,7 +4,7 @@ import "@/shared/settings-view/settings-view.css";
 
 interface SettingsSearchProps {
   search: SettingsSearchState;
-  offerChangedOnly?: boolean;
+  offerChangedOnly?: boolean | undefined;
 }
 
 export function SettingsSearch({ search, offerChangedOnly = true }: SettingsSearchProps) {

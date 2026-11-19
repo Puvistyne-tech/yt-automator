@@ -5,7 +5,7 @@ export function NoSettingsMatch({
   hint = "Try another word, or turn off Changed only.",
 }: {
   onClear: () => void;
-  hint?: string;
+  hint?: string | undefined;
 }) {
   return (
     <EmptyState
