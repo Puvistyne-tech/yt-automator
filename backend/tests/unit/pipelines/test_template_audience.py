@@ -49,6 +49,7 @@ def test_the_derived_ui_schema_hides_the_audience_and_general_age_fields() -> No
         "story.age_min",
         "story.age_max",
         "story.reading_level",
+        "story.source",
     ]
     assert general["ui:basic"] == own["ui:basic"]
 

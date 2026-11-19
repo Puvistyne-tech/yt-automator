@@ -130,9 +130,13 @@ def test_the_derived_model_pins_the_template_audience(audience: TemplateAudience
     assert model().safety.audience is audience
 
 
+def no_default(section: str) -> object:
+    return {"section": section}
+
+
 def test_pinning_leaves_input_it_cannot_read_to_validation() -> None:
-    assert with_audience("nonsense", KIDS, {}) == "nonsense"
-    assert with_audience({"safety": 3}, KIDS, {}) == {"safety": 3}
+    assert with_audience("nonsense", KIDS, no_default) == "nonsense"
+    assert with_audience({"safety": 3}, KIDS, no_default) == {"safety": 3}
 
 
 def test_metadata_placeholders_match_the_filled_values() -> None:

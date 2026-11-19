@@ -13,6 +13,7 @@ from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
 from autotube.pipelines.narrated_video.template.merging import deep_merged
 from tests.fixtures.harness import Harness
 from tests.fixtures.kids_data import smart_writer
+from tests.fixtures.kids_fakes import FakeWriter, failing_writer
 from tests.fixtures.pipeline_runs import PAIRS, executed_run, pairs, planned_uploads
 from tests.fixtures.quick_sections import QUICK_SECTIONS
 from tests.fixtures.template_records import template
@@ -25,10 +26,10 @@ GENERAL_DEFINITION: dict[str, Any] = {
 }
 
 
-def run_of(harness: Harness, pipeline: Pipeline, story: str) -> Run:
+def run_of(harness: Harness, pipeline: Pipeline, writer: FakeWriter) -> Run:
     settings = deep_merged(pipeline.descriptor.default_settings, QUICK_SECTIONS)
     type_id = pipeline.descriptor.type_id
-    return executed_run(harness, [pipeline], type_id, settings, smart_writer(name=story))
+    return executed_run(harness, [pipeline], type_id, settings, writer)
 
 
 def assert_complete(run: Run) -> None:
@@ -40,7 +41,7 @@ def assert_complete(run: Run) -> None:
 
 def test_a_general_story_template_runs_offline_and_is_not_made_for_kids(harness: Harness) -> None:
     general = template(audience=TemplateAudience.GENERAL, definition=GENERAL_DEFINITION)
-    run = run_of(harness, NarratedVideoEngine().pipeline(general), "leaf_boat")
+    run = run_of(harness, NarratedVideoEngine().pipeline(general), smart_writer(name="leaf_boat"))
     assert_complete(run)
     metadata = [item for item in run.artifacts if item.meta.get("role") == "upload_metadata"]
     assert metadata and all(item.meta["made_for_kids"] is False for item in metadata)
@@ -55,7 +56,15 @@ def test_a_general_story_template_runs_offline_and_is_not_made_for_kids(harness:
 def test_the_kids_builtin_runs_offline_through_the_engine(harness: Harness) -> None:
     engine = NarratedVideoEngine()
     [builtin] = engine.builtin_templates()
-    run = run_of(harness, engine.pipeline(builtin), "golden_mango")
+    run = run_of(harness, engine.pipeline(builtin), smart_writer())
     assert_complete(run)
     plans = planned_uploads(harness, run)
     assert plans and all(plan.made_for_kids for plan in plans)
+
+
+def test_a_general_run_fails_instead_of_using_a_bundled_story(harness: Harness) -> None:
+    general = template(audience=TemplateAudience.GENERAL, definition=GENERAL_DEFINITION)
+    run = run_of(harness, NarratedVideoEngine().pipeline(general), failing_writer())
+    assert run.status is RunStatus.FAILED
+    assert "never falls back" in (run.error or "")
+    assert pairs(run, ArtifactKind.METADATA) == set()

@@ -614,8 +614,9 @@ class PipelineEngine(Protocol):
   lines, editorial rules, question style, judge criteria, music mood, sound-effect prompt, description, tags and
   hashtags), the values mapped from the definition, the `settings` overlay, then the kids floor (kids only).
 - `safety.audience` (`kids` | `general`, default `kids`) is pinned: a before-validator forces the template's
-  audience whatever the input says. The `kids_story` pipeline uses the same pinned model with audience kids, so
-  stored `kids_story` settings validate unchanged.
+  audience whatever the input says. For general templates `story.source` is pinned to `llm_with_fallback` the
+  same way. The `kids_story` pipeline uses the same pinned model with audience kids, so stored `kids_story`
+  settings validate unchanged.
 - The descriptor's `default_settings` come from this model.
 
 #### Derived descriptor
@@ -623,7 +624,7 @@ class PipelineEngine(Protocol):
 - `type_id`, `name` and `description` from the template; `version` is `"<engine version>+r<revision>"`.
 - `ui_schema` is the engine's with `ui:basic` from the definition (or the engine's list) and `ui:hidden` = the
   definition's `hidden`, then `safety.audience`, then for general templates `story.age_min`, `story.age_max`
-  and `story.reading_level`. The engine's own `ui:hidden` is `["safety.audience"]`.
+  `story.reading_level` and `story.source`. The engine's own `ui:hidden` is `["safety.audience"]`.
 - Capabilities: a kids template keeps `kids_content`; a general template never has it. `domain/kids_rules.py`
   stays the only place that decides the upload's made-for-kids flag.
 
@@ -640,8 +641,11 @@ class PipelineEngine(Protocol):
   value instead of `true`.
 - Child-directed term screen (`story/child_terms.py`, terms in `story/child_terms.json`, English and Tamil,
   whole-phrase match): a heuristic, not a guarantee. For general templates it runs on the name, brief, tags,
-  hashtags and series text, and as an always-on script gate on every written and translated script. Bundled
-  fallback stories are not screened. Uploads stay private and reviewed by default.
+  hashtags and series text, and as an always-on script gate on every written and translated script. Uploads
+  stay private and reviewed by default.
+- A general template never uses the bundled stories, which are children's stories: when the writer is missing,
+  fails or never passes the gates, the story stage fails with "…never falls back to the bundled children's
+  stories" instead.
 
 #### Problems
 

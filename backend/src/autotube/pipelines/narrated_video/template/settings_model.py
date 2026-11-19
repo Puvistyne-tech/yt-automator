@@ -25,8 +25,11 @@ class AudiencePinnedSettings(KidsStorySettings):
     @model_validator(mode="before")
     @classmethod
     def pin_audience(cls, data: object) -> object:
-        safety_default = cls.model_fields["safety"].get_default(call_default_factory=True)
-        return with_audience(data, cls.pinned_audience, safety_default)
+        return with_audience(data, cls.pinned_audience, cls.section_default)
+
+    @classmethod
+    def section_default(cls, section: str) -> object:
+        return cls.model_fields[section].get_default(call_default_factory=True)
 
 
 def engine_defaults() -> JsonObject:
