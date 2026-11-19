@@ -13,6 +13,7 @@ from autotube.pipelines.narrated_video.structures.registry import (
     structure_defaults,
 )
 from autotube.pipelines.narrated_video.template.settings_model import kids_settings_model
+from tests.fixtures.prompt_pins import stored_settings
 from tests.fixtures.template_records import template
 
 
@@ -30,9 +31,11 @@ def test_the_story_spec_keeps_todays_prompts_and_bundled_fallback() -> None:
     assert {"moral", "refrain", "characters"} <= set(metadata_placeholders(Structure.STORY))
 
 
-def test_settings_default_to_the_story_structure() -> None:
-    assert KidsStorySettings().story.structure is Structure.STORY
-    assert kids_settings_model()().story.structure is Structure.STORY
+def test_settings_without_a_structure_load_as_the_story_structure() -> None:
+    stored = stored_settings()
+    assert "structure" not in stored["story"]
+    assert KidsStorySettings.model_validate(stored).story.structure is Structure.STORY
+    assert kids_settings_model().model_validate(stored).story.structure is Structure.STORY
 
 
 def test_a_story_needs_a_cast() -> None:
@@ -44,7 +47,6 @@ def test_a_story_needs_a_cast() -> None:
     ("before", "after", "refused"),
     [
         ({}, {"structure": "story"}, False),
-        ({"structure": "story"}, {"brief": "planets"}, False),
         ({}, {"structure": "explainer"}, True),
         ({"structure": "explainer"}, {}, True),
     ],

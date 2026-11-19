@@ -8,6 +8,10 @@ from autotube.domain.pipeline_descriptors import KIDS_CONTENT
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.artifacts import EPISODE
 from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
+from autotube.pipelines.narrated_video.publishing.audience_check import (
+    ChildDirectedMetadataError,
+    checked_audience,
+)
 from autotube.pipelines.narrated_video.publishing.metadata import upload_metadata
 from autotube.pipelines.narrated_video.settings.series import (
     BANNED_WORDS,
@@ -80,6 +84,24 @@ def test_the_scene_action_is_screened_like_the_narration(action: str, found: str
     acted = explainer_story(scenes=[first.model_copy(update={"action": action}), *rest])
     settings = explainer_settings(GENERAL, safety={"banned_words": ["monster"]})
     assert any(found in item for item in story_problems(acted, settings))
+
+
+@pytest.mark.parametrize("audience", [KIDS, GENERAL])
+def test_explainer_upload_details_are_screened_for_a_general_audience(
+    audience: TemplateAudience,
+) -> None:
+    metadata = {
+        "title_template": {"en": "{title} for kids"},
+        "tags": {"en": ["bedtime stories"]},
+    }
+    details = upload_metadata(
+        explainer_story(), explainer_settings(audience, metadata=metadata), EPISODE
+    )
+    if audience is KIDS:
+        assert checked_audience(details) == details
+        return
+    with pytest.raises(ChildDirectedMetadataError, match="never address children; remove: kids"):
+        checked_audience(details)
 
 
 @pytest.mark.parametrize("audience", [KIDS, GENERAL])

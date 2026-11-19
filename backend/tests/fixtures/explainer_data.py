@@ -6,7 +6,7 @@ from autotube.domain.capabilities import TextRequest
 from autotube.domain.pipeline import Pipeline
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.story.model import Story
+from autotube.pipelines.narrated_video.story.model import Story, StoryText, with_text
 from tests.fixtures.kids_data import is_judge, is_translation
 from tests.fixtures.kids_fakes import FakeWriter, as_json
 from tests.fixtures.template_settings import model_for, pipeline_of
@@ -14,6 +14,10 @@ from tests.fixtures.template_settings import model_for, pipeline_of
 EXPLAINER = {"structure": "explainer"}
 TAKEAWAY_EN = "Sunlight bends in raindrops and spreads into colours to make a rainbow."
 TAKEAWAY_TA = "சூரிய ஒளி மழைத்துளிகளில் வளைந்து நிறங்களாகப் பிரிந்து வானவில் ஆகிறது."
+HOOKLESS = (
+    "Sunlight is really many colours mixed together, and every single drop of rain in the sky "
+    "splits those colours apart for us to see."
+)
 NARRATIONS_EN = [
     "Have you ever seen a rainbow after the rain? Where do all those bright colours come from? "
     "Today we find out, one small step at a time. Let us look up at the wet sky together.",
@@ -91,6 +95,21 @@ def explainer_text_ta() -> dict[str, Any]:
 def explainer_story(language: str = "en", **changes: Any) -> Story:
     fields = {**explainer_draft(), "language": language, "theme": "how a rainbow forms"}
     return Story.model_validate(fields | changes)
+
+
+def without_hook() -> Story:
+    first, *rest = explainer_story().scenes
+    return explainer_story(scenes=[first.model_copy(update={"narration": HOOKLESS}), *rest])
+
+
+def without_hook_or_takeaway() -> Story:
+    scenes = without_hook().scenes
+    return explainer_story(scenes=[*scenes[:-1], scenes[1]])
+
+
+def tamil_explainer(narrations: list[str] | None = None) -> Story:
+    text = explainer_text_ta() | ({"narrations": narrations} if narrations else {})
+    return with_text(explainer_story(), StoryText.model_validate(text), "ta")
 
 
 def explainer_writer(judge_answer: str = "1") -> FakeWriter:

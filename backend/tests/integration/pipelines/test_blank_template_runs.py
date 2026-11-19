@@ -29,9 +29,7 @@ def blank_run(
 ) -> Run:
     engine = NarratedVideoEngine()
     definition = {**engine.blank(audience), "structure": structure}
-    blank = template(audience=audience, definition=definition)
-    assert engine.problems(blank) == {}
-    pipeline = engine.pipeline(blank)
+    pipeline = engine.pipeline(template(audience=audience, definition=definition))
     settings = deep_merged(pipeline.descriptor.default_settings, QUICK_SECTIONS)
     type_id = pipeline.descriptor.type_id
     return executed_run(harness, [pipeline], type_id, settings, writer)

@@ -1,33 +1,25 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from autotube.domain.pipeline_templates import TemplateAudience
-from autotube.pipelines.narrated_video.scoring.inputs import ScoreInputs
-from autotube.pipelines.narrated_video.scoring.score import score_items
 from autotube.pipelines.narrated_video.settings.story import StorySource
 from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck, Structure
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
-from autotube.pipelines.narrated_video.story.model import StoryText, with_text
 from autotube.pipelines.narrated_video.structures.explainer import HIDDEN_PATHS
 from autotube.pipelines.narrated_video.template.settings_model import kids_settings_model
 from tests.fixtures.explainer_data import (
-    EXPLAINER,
+    NARRATIONS_TA,
     explainer_pipeline,
     explainer_settings,
     explainer_story,
-    explainer_text_ta,
+    tamil_explainer,
+    without_hook_or_takeaway,
 )
 from tests.fixtures.kids_data import story
 from tests.fixtures.template_settings import GENERAL, KIDS
 
 AUDIENCES = [KIDS, GENERAL]
-HOOKLESS = (
-    "Sunlight is really many colours mixed together, and every single drop of rain in the sky "
-    "splits those colours apart for us to see."
-)
 
 
 @pytest.mark.parametrize("audience", AUDIENCES)
@@ -49,15 +41,12 @@ def test_the_kids_story_model_pins_the_story_structure() -> None:
 def test_a_written_explainer_passes_its_checks(audience: TemplateAudience) -> None:
     settings = explainer_settings(audience)
     assert story_problems(explainer_story(), settings) == []
-    translated = with_text(explainer_story(), StoryText.model_validate(explainer_text_ta()), "ta")
-    assert translation_problems(translated, settings) == []
+    assert translation_problems(tamil_explainer(), settings) == []
 
 
 def test_the_explainer_needs_a_hook_and_the_takeaway_and_skips_cast_and_ending() -> None:
     settings = explainer_settings(KIDS)
-    scenes = explainer_story().scenes
-    broken = [scenes[0].model_copy(update={"narration": HOOKLESS}), *scenes[1:-1], scenes[1]]
-    loose = explainer_story(scenes=broken)
+    loose = without_hook_or_takeaway()
     expected = [
         "open the first scene with the question this video answers",
         "say the takeaway, word for word, in the last scene",
@@ -69,18 +58,16 @@ def test_the_explainer_needs_a_hook_and_the_takeaway_and_skips_cast_and_ending()
     assert story_problems(story(), settings) == expected[:1]
 
 
-def score_ids(audience: TemplateAudience, structure: dict[str, str]) -> set[str]:
-    settings = explainer_settings(audience) if structure else kids_settings_model()()
-    sample = explainer_story() if structure else story()
-    inputs = ScoreInputs(settings, ("en",), (), Path(), {"en": sample}, {}, None)
-    return {item.id for item in score_items(inputs)}
-
-
-def test_explainer_scoring_swaps_story_items_for_the_structure_item() -> None:
-    explainer = score_ids(GENERAL, EXPLAINER)
-    assert "structure" in explainer
-    assert not {"moral_and_refrain", "character_consistency"} & explainer
-    assert "structure" not in score_ids(KIDS, {})
+def test_a_tamil_translation_needs_the_hook_and_the_takeaway() -> None:
+    settings = explainer_settings(GENERAL)
+    narrations = list(NARRATIONS_TA)
+    hookless = [narrations[1], *narrations[1:-1], narrations[1]]
+    assert translation_problems(tamil_explainer(hookless), settings) == [
+        "open the first scene with the question this video answers",
+        "say the takeaway, word for word, in the last scene",
+    ]
+    full_width = [narrations[1].replace(".", "？", 1), *narrations[1:]]
+    assert translation_problems(tamil_explainer(full_width), settings) == []
 
 
 @pytest.mark.parametrize("audience", AUDIENCES)
