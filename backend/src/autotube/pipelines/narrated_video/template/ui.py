@@ -7,10 +7,17 @@ from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.domain.ui_basic import BASIC_KEY
 from autotube.domain.ui_hidden import HIDDEN_KEY
 from autotube.domain.ui_paths import listed_paths
+from autotube.pipelines.narrated_video.resources import resource_object
 from autotube.pipelines.narrated_video.structures.registry import structure_spec
 from autotube.pipelines.narrated_video.template.audience import audience_hidden_paths
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.structure_pins import structure_hidden_paths
+
+DEFINITION_UI_FILE = "definition.json"
+
+
+def definition_ui_schema() -> JsonObject:
+    return resource_object("ui", DEFINITION_UI_FILE)
 
 
 def derived_hidden(

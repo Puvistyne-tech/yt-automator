@@ -23,6 +23,7 @@ from autotube.pipelines.narrated_video.template.descriptor import template_descr
 from autotube.pipelines.narrated_video.template.problems import template_problems
 from autotube.pipelines.narrated_video.template.revisions import structure_change_problems
 from autotube.pipelines.narrated_video.template.settings_model import settings_model_for
+from autotube.pipelines.narrated_video.template.ui import definition_ui_schema
 
 ENGINE_ID = "narrated_video"
 ENGINE_NAME = "Narrated video"
@@ -62,7 +63,7 @@ class NarratedVideoEngine:
 
     @property
     def definition_ui_schema(self) -> JsonObject:
-        return {}
+        return definition_ui_schema()
 
     def blank(self, audience: TemplateAudience) -> JsonObject:  # noqa: ARG002
         return NarratedDefinition().model_dump(mode="json", exclude_defaults=True)

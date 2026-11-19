@@ -633,6 +633,14 @@ class PipelineEngine(Protocol):
 | `hidden` | dotted settings paths | added to the derived `ui:hidden` |
 | `settings` | sparse JSON object | merged over everything above |
 
+The engine's `definition_ui_schema` is `ui/definition.json`, written to the same `ui_schema` contract as the
+automation form and valid against the definition schema: sections "What it makes" (`structure`, `brief`, `length`,
+`tone`, `topics`), "Look and sound" (`visual_style`, `music_mood`), "Publishing" (the three title and description
+templates, `tags`, `hashtags`, `category`) and "Advanced" (`basic`, `hidden`, `settings`); `ui:basic` is
+`structure`, `brief`, `length`, `tone`, `topics`, `visual_style`; `brief`, `tone`, `music_mood` and the description
+template are text areas, `structure` and `length` radios, `category` a select, and `visual_style` the cards
+widget over the same style library choices as `look.visual_style`.
+
 #### Derived settings model (`template/settings_model.py`)
 
 - `settings_model_for(definition, audience)` builds a subclass of the engine settings model with
