@@ -82,7 +82,7 @@ def scene_motion(settings: KidsStorySettings, scene: StoryScene | None) -> str:
 
 
 def style_declaration(settings: KidsStorySettings) -> str:
-    declared = resolve_style(settings).motion_prompt.strip().rstrip(".")
+    declared = sentence_body(resolve_style(settings).motion_prompt)
     return f"{declared}." if declared else ""
 
 

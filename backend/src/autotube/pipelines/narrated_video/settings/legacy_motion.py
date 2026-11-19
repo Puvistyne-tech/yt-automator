@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-MOTION_PROMPT = "{action}. Mood: {mood}. Gentle, slow movement, no sudden changes."
-GENERAL_MOTION_PROMPT = "{action}. Mood: {mood}. Soft natural movement, no sudden changes."
+from autotube.pipelines.narrated_video.settings.motion_defaults import (
+    GENERAL_MOTION_PROMPT,
+    MOTION_PROMPT,
+)
+
 LEGACY_MOTION_PROMPTS = {
     "Gentle, slow animation of a children's picture-book scene: {visual}. Mood: {mood}. "
     "Soft natural movement, no sudden changes.": MOTION_PROMPT,

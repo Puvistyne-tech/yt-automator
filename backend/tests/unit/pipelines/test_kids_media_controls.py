@@ -104,8 +104,9 @@ def test_the_default_motion_prompt_leads_with_the_scene_action() -> None:
     assert scene_part in motion_prompt(quick_settings(), scene)
 
 
-def test_a_scene_without_an_action_animates_its_visual_once() -> None:
-    scene = SCENE.model_copy(update={"visual": "a fox naps."})
+@pytest.mark.parametrize("blank", ["", "  ", "."])
+def test_a_scene_without_an_action_animates_its_visual_once(blank: str) -> None:
+    scene = SCENE.model_copy(update={"visual": "a fox naps.", "action": blank})
     prompt = motion_prompt(quick_settings(), scene)
     assert "a fox naps. Mood: sleepy. Gentle" in prompt
     assert prompt.count("a fox naps") == 1 and ".." not in prompt
@@ -122,6 +123,11 @@ def test_a_card_motion_prompt_reveals_the_title_card() -> None:
 def test_a_stored_legacy_default_motion_prompt_gains_the_action(legacy: str, upgraded: str) -> None:
     visuals = quick_settings(visuals={"motion_prompt": legacy}).visuals
     assert visuals.motion_prompt == upgraded and "{action}" in upgraded
+
+
+def test_a_motion_prompt_that_is_not_text_is_rejected() -> None:
+    with pytest.raises(ValidationError, match="motion_prompt"):
+        quick_settings(visuals={"motion_prompt": 5})
 
 
 def test_the_judge_criteria_setting_reaches_the_judge(tmp_path: Path) -> None:

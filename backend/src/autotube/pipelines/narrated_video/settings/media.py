@@ -14,11 +14,9 @@ from autotube.pipelines.narrated_video.settings.choices import (
     CORNER_CHOICES,
     SHORT_ART_CHOICES,
 )
-from autotube.pipelines.narrated_video.settings.legacy_motion import (
-    MOTION_PROMPT,
-    upgraded_motion_prompt,
-)
+from autotube.pipelines.narrated_video.settings.legacy_motion import upgraded_motion_prompt
 from autotube.pipelines.narrated_video.settings.logo import LogoSettings
+from autotube.pipelines.narrated_video.settings.motion_defaults import MOTION_PROMPT
 from autotube.pipelines.narrated_video.text.templates import unknown_placeholders
 
 STYLE_MOTION_NOTE = "Used when Move the way the style suggests is off, or for a custom style."

@@ -138,7 +138,6 @@ def test_general_defaults_replace_the_childrens_story_frame() -> None:
     assert general["look"]["visual_style"] != ENGINE["look"]["visual_style"]
     assert general["story"]["themes"] != ENGINE["story"]["themes"]
     assert general["story"]["tone"] != ENGINE["story"]["tone"]
-    assert general["visuals"]["motion_prompt"] != ENGINE["visuals"]["motion_prompt"]
     assert {general["visuals"]["motion_prompt"], ENGINE["visuals"]["motion_prompt"]} == set(
         LEGACY_MOTION_PROMPTS.values()
     )
