@@ -34,6 +34,10 @@ def question_pairs(story: Story) -> list[tuple[StoryScene, StoryScene | None]]:
     ]
 
 
+def is_marked(scene: StoryScene) -> bool:
+    return scene.question.rstrip().endswith(QUESTION_MARKS)
+
+
 def unasked(scene: StoryScene) -> bool:
     return not (asks(scene) or reveals(scene))
 
@@ -65,7 +69,7 @@ def reveal_problems(number: int, reveal: StoryScene | None) -> list[str]:
 def pair_problems(
     number: int, question: StoryScene, reveal: StoryScene | None, wanted: int
 ) -> list[str]:
-    marked = question.question.rstrip().endswith(QUESTION_MARKS)
+    marked = is_marked(question)
     answer = reveal.answer if reveal is not None else ""
     return [
         *([] if marked else [f"end question {number} with a question mark"]),

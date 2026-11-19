@@ -54,7 +54,8 @@ class StoryWritingSettings(StructureShapeSettings):
         title="Ending",
         description="How a story ends. Story prompts, translations and the ending check follow "
         "it. Bundled stories drop the refrain when the ending has none, but keep the moral "
-        "their characters say.",
+        "their characters say. On an explainer, the first choice ends the recap with a takeaway "
+        "and the other two end it without one; an explainer never speaks a refrain.",
     )
     question_style: str = Field(
         default=QUESTION_STYLE,
@@ -92,6 +93,14 @@ class StoryWritingSettings(StructureShapeSettings):
         title="Story checks",
         description="Checks a written story must pass, or it is rewritten. Banned words and "
         "brand names are always checked.",
+    )
+    repair_slips: bool = Field(
+        default=True,
+        title="Repair small slips",
+        description="When a written script fails only checks the app can fix without inventing "
+        "anything, the app fixes it and checks it again: it adds the moral, takeaway or refrain "
+        "the script or the series already holds to the ending, numbers list items in order, and "
+        "ends a quiz question with a question mark. It never writes a missing moral.",
     )
     preview_attempts: int = Field(
         default=1,

@@ -55,6 +55,15 @@ def test_removing_working_files_keeps_final_outputs_and_is_idempotent(
     assert storage.remove_intermediate("missing", FINAL) == 0
 
 
+def test_removing_working_files_removes_rejected_story_attempts(
+    storage: FileRunStorage, tmp_path: Path
+) -> None:
+    attempt = tmp_path / "runs" / "run-2" / "workspace" / "story" / "attempt-1-en.json"
+    write(attempt, 7)
+    assert storage.remove_intermediate("run-2", frozenset()) == 12
+    assert not attempt.exists()
+
+
 def test_deleting_a_run_reports_what_it_freed_and_is_idempotent(
     storage: FileRunStorage, tmp_path: Path
 ) -> None:

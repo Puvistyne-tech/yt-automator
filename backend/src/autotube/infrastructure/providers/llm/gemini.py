@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import Field
 
 from autotube.domain.capabilities import Capability, TextRequest
+from autotube.domain.schema_levels import SchemaLevel, schema_at
 from autotube.infrastructure.providers.context import ProviderContext
 from autotube.infrastructure.providers.http_retry import HttpOptions, post_provider_json
 from autotube.infrastructure.providers.json_response import dig
@@ -13,6 +14,7 @@ from autotube.infrastructure.providers.spec import ProviderSpec
 from autotube.shared.errors import UpstreamFailure
 
 SECRET = "gemini_api_key"
+SCHEMA_LEVEL: SchemaLevel = "portable"
 
 
 class GeminiOptions(HttpOptions):
@@ -45,7 +47,7 @@ def generation_config(request: TextRequest) -> dict[str, Any]:
     }
     if request.json_schema is not None:
         config["responseMimeType"] = "application/json"
-        config["responseJsonSchema"] = request.json_schema
+        config["responseJsonSchema"] = schema_at(request.json_schema, SCHEMA_LEVEL)
     return config
 
 

@@ -55,7 +55,12 @@ THEME_MODE_CHOICES = titled_choices(
 )
 AUDIENCE_CHOICES = enum_choices(TemplateAudience, {"kids": "Kids", "general": "General audience"})
 READING_LEVEL_CHOICES = titled_choices(
-    {"toddler": "Toddler", "preschool": "Preschool", "early_reader": "Early reader"}
+    {
+        "toddler": "Toddler",
+        "preschool": "Preschool",
+        "early_reader": "Early reader",
+        "general": "General",
+    }
 )
 CAMERA_MOVE_CHOICES = titled_choices(
     {

@@ -8,19 +8,24 @@ from autotube.pipelines.narrated_video.audience_prompts import audience_prompt
 from autotube.pipelines.narrated_video.languages import language_name
 from autotube.pipelines.narrated_video.resources import render_prompt, resource_json
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.story.model import StoryDraft, StoryText, text_of
+from autotube.pipelines.narrated_video.story.answer_schema import draft_schema, text_schema
+from autotube.pipelines.narrated_video.story.model import StoryDraft, draft_dump, text_of
 from autotube.pipelines.narrated_video.story.prompt_parts import (
     action_rule,
     avoided_topics,
     bullet_lines,
     extra_requirements,
+    scene_words_rule,
     sound_effect_rule,
 )
 from autotube.pipelines.narrated_video.structures.length import duration_target, scene_line
 from autotube.pipelines.narrated_video.structures.registry import spec_of
+from autotube.pipelines.narrated_video.structures.word_budget import word_budget
 
 SYSTEM_PROMPT = "story_system.txt"
 USER_PROMPT = "story_user.txt"
+RETRY_PROMPT = "story_retry.txt"
+REVISE_PROMPT = "story_revise.txt"
 NO_RECURRING_CHARACTERS = "none, there are no recurring characters"
 
 
@@ -62,14 +67,17 @@ def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str
     rules = settings.story
     spec = spec_of(settings)
     target_seconds, _ = duration_target(settings, language)
+    budget = word_budget(settings, language)
     return render_prompt(
         USER_PROMPT,
         language=language_name(language),
         series=settings.series.name.for_language(language),
         theme=theme,
         scene_count=scene_line(settings),
-        words_min=f"{rules.words_per_scene_min.for_language(language):g}",
-        words_max=f"{rules.words_per_scene_max.for_language(language):g}",
+        scene_words=scene_words_rule(budget.per_scene),
+        total_min=budget.total[0],
+        total_max=budget.total[1],
+        total_words=budget.target,
         target_seconds=target_seconds,
         words_per_minute=f"{rules.words_per_minute.for_language(language):g}",
         cameras=", ".join(move.value for move in CameraMove),
@@ -82,8 +90,18 @@ def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str
     )
 
 
-def feedback_text(feedback: Sequence[str]) -> str:
-    return render_prompt("story_retry.txt", feedback=bullet_lines(feedback)) if feedback else ""
+def draft_json(story: StoryDraft) -> str:
+    return json.dumps(draft_dump(story), ensure_ascii=False)
+
+
+def feedback_text(feedback: Sequence[str], previous: StoryDraft | None = None) -> str:
+    if not feedback:
+        return ""
+    if previous is None:
+        return render_prompt(RETRY_PROMPT, feedback=bullet_lines(feedback))
+    return render_prompt(
+        REVISE_PROMPT, feedback=bullet_lines(feedback), previous=draft_json(previous)
+    )
 
 
 def story_request(
@@ -92,15 +110,16 @@ def story_request(
     language: str,
     feedback: Sequence[str] = (),
     seed: str = "",
+    previous: StoryDraft | None = None,
 ) -> TextRequest:
     user = story_user(settings, theme, language, seed)
-    retry = feedback_text(feedback)
+    retry = feedback_text(feedback, previous)
     return TextRequest(
         prompt=f"{user}\n\n{retry}" if retry else user,
         system=story_system(settings, language),
         max_tokens=settings.story.max_tokens,
         temperature=settings.story.temperature,
-        json_schema=StoryDraft.model_json_schema(),
+        json_schema=draft_schema(settings),
     )
 
 
@@ -140,5 +159,5 @@ def translation_request(
         system=system,
         max_tokens=settings.story.max_tokens,
         temperature=settings.story.translation_temperature,
-        json_schema=StoryText.model_json_schema(),
+        json_schema=text_schema(settings, story),
     )

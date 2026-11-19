@@ -36,11 +36,15 @@ def item_count_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     return [] if found == wanted else [f"write exactly {wanted} numbered items, not {found}"]
 
 
-def order_problems(story: Story, descending: bool) -> list[str]:
+def numbers_in_order(story: Story, descending: bool) -> bool:
     numbers = [scene.number for scene in numbered(story)]
-    if numbers == expected_numbers(len(numbers), descending):
+    return numbers == expected_numbers(len(numbers), descending)
+
+
+def order_problems(story: Story, descending: bool) -> list[str]:
+    if numbers_in_order(story, descending):
         return []
-    return [f"number the items {order_text(len(numbers), descending)}"]
+    return [f"number the items {order_text(len(numbered(story)), descending)}"]
 
 
 def heading_problems(story: Story) -> list[str]:

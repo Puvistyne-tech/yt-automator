@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 from autotube.pipelines.narrated_video.story.model import StoryDraft
 from autotube.pipelines.narrated_video.story.words import sentences_of, word_count, words_of
 from autotube.pipelines.narrated_video.text.graphemes import grapheme_length
+
+SECONDS_PER_MINUTE = 60.0
 
 
 @dataclass(frozen=True)
@@ -42,4 +45,13 @@ def reading_metrics(text: str, long_word_graphemes: float) -> ReadingMetrics:
 
 
 def estimated_seconds(story: StoryDraft, words_per_minute: float) -> float:
-    return total_words(story) * 60.0 / max(words_per_minute, 1.0)
+    return total_words(story) / words_per_second(words_per_minute)
+
+
+def words_per_second(words_per_minute: float) -> float:
+    return max(words_per_minute, 1.0) / SECONDS_PER_MINUTE
+
+
+def word_range(low_seconds: float, high_seconds: float, words_per_minute: float) -> tuple[int, int]:
+    rate = words_per_second(words_per_minute)
+    return math.ceil(max(low_seconds, 0.0) * rate), math.floor(high_seconds * rate)

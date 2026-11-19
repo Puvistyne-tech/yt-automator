@@ -197,7 +197,13 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   `missing=""`; other callers keep unknown placeholders as written). An episode or Short title that renders
   empty falls back to the script's title, and `UploadMetadata.title` must not be empty. The series name must not be blank in any language. When no bundled story fits the
   automation's cast ids and languages, the story stage fails naming both what the automation has and what
-  the bundled stories need.
+  the bundled stories need. Among the bundled stories that fit the cast and languages, the fallback keeps those that fit
+  the requested length (`story/bundled_fit.py`: a scene count inside `scene_range(settings)` and an estimated
+  reading time in the writing language, with its refrain, inside `length_window`); when none fits, those with
+  the smallest scene-count gap. The theme choice then runs among them. Stories are never cut. When the chosen
+  story does not fit, the stage logs a `warning` (shown with the run's other warnings): 'the fallback story
+  "<title>" has N scenes and reads in about S s, so it ignores the requested length of A to B scenes and L to
+  H s: no bundled story fits it'. The three bundled stories have 9 scenes and fit the default length.
 - Kids story writing, voice and sound controls. Every default renders the translation, motion and judge
   prompts and the story user prompt exactly as before these settings existed, and stored settings without
   them load unchanged. The default editorial rules no longer include "End with the moral said plainly, then
@@ -210,8 +216,12 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   - `story.ending_style`: `moral_and_refrain` (default), `refrain_only` or `open`. The story prompt, the
     translation rules and the ending gate (and so the `moral_and_refrain` score item) follow it: the moral is
     required only for `moral_and_refrain`, the refrain (when the language has one) for every style but `open`.
+    A blank refrain is never asked for: the prompt's ending line then reads "The last scene says the moral word
+    for word." (`moral_and_refrain`) or "Do not say the moral aloud; let the story show it." (`refrain_only`).
     Bundled stories get an empty refrain for `open`; they keep the moral their characters say, because it is
-    part of the written dialogue, and no gate runs on them.
+    part of the written dialogue, and no gate runs on them. The choice labels are the same for every
+    structure; the field description adds that on an explainer the first choice ends the recap with a
+    takeaway and the other two end it without one, and that an explainer never speaks a refrain.
   - `story.cast_per_episode` (0, the default, means the whole cast) and `story.lead_mode` (`fixed`: the first
     cast member leads; `per_episode`: the lead is picked from a hash of the run id, as stages have no episode
     counter, so a lead can repeat). The episode cast is the lead followed by the next cast members in cast
@@ -692,8 +702,9 @@ class PipelineEngine(Protocol):
   any child character, its banned words keep violent words but allow suspense words, and its picture exclusions
   replace the defaults with a list that includes gore, blood, wounds, weapons, corpses, children and babies; it
   leaves out the defaults' "scary", "gloomy" and "sharp teeth" on purpose, because a suspense picture may be
-  dark. Only `scary_stories` has a `safety` overlay; the other built-ins keep the default banned words, and a
-  kids template built from its definition gets the full kids floor back.
+  dark. Only `scary_stories` has a `safety` overlay; the other built-ins keep their audience's default banned words
+  (the kids list for kids, an empty list for general), and a kids template built from its definition gets the
+  full kids floor back.
 - A packaged file that fails `PackagedTemplate` validation, or repeats another file's id
   (`DuplicateBuiltinError`), stops startup, because the registry loads the built-ins when it is built; the tests
   load every file, so CI catches either before release.
@@ -752,6 +763,12 @@ and an empty value is called "the default", never "the engine's".
   editorial rules, the `ink_and_wash` style, a single adult cast member (`mira`), tone, writing style, an open
   ending, themes, morals, question style, judge criteria, the motion prompt default, music mood, sound-effect
   prompt, description, tags and hashtags. A test screens every text default of a blank general template.
+- The general defaults carry no kids safety defaults: `safety.banned_words` is empty (user-editable),
+  `story.age_min`/`age_max` are 13 and 99, `story.reading_level` is `general` ("Clear sentences and everyday
+  words for teenagers and adults.") and `story.enabled_checks` leaves out `reading_level` (the reading level
+  gate never runs for a general audience anyway). Brand names and the picture exclusions stay. Tested over
+  every general built-in; every kids template keeps the kids banned words, an age range at most 12, a kids
+  reading level and the `reading_level` check.
 - `safety.audience` (`kids` | `general`, default `kids`) is pinned: a before-validator forces the template's
   audience whatever the input says. For general templates `story.source` is pinned to `llm_with_fallback` the
   same way. The `kids_story` pipeline uses the same pinned model with audience kids, so stored `kids_story`
@@ -788,7 +805,11 @@ and an empty value is called "the default", never "the engine's".
   - `story.enabled_checks` always contains `reading_level`, the only switchable check that guards
     age-appropriate language (scene count, words per scene, duration, ending, cast and structure are form
     checks);
-  - `story.age_min`/`age_max` stay capped at 12 by validation.
+  - `story.age_max` (field bound 1 to 99) must be at most 12 and `story.reading_level` must not be `general`
+    for a kids audience: the settings model refuses either ("a kids video is for children aged 12 or under",
+    "a kids video needs a kids reading level, not general"), reported on `definition.settings` at save.
+    A kids settings model's JSON Schema leaves `general` out of the `reading_level` choices
+    (`template/audience_schema.py::audience_schema`), so a kids form never offers it.
   The banned-word and brand gates are always on, and kids templates of every structure always use the kids
   system prompt (`story_system.txt`, with the age range and reading level).
   Behaviour change: a stored kids automation whose settings removed a floored entry gets it back silently when
@@ -815,7 +836,11 @@ and an empty value is called "the default", never "the engine's".
   Uploads stay private and reviewed by default.
 - A general template never uses the bundled stories, which are children's stories: when the writer is missing,
   fails or never passes the gates, the story stage fails with "…never falls back to the bundled children's
-  stories" instead.
+  stories" instead. Every no-fallback failure (general, or a structure without bundled scripts) appends why,
+  after "; ": "story writer unavailable: <error>", or "the last story attempt N failed checks: <checks>" /
+  "the last translation to <language> attempt N failed: <problems>" (`authored_scripts` raises
+  `ScriptRejectedError` with the last failure the author logged; a template sample maps it to its "did not
+  write a script that passed the checks" message).
 
 #### Structures (`pipelines/narrated_video/structures/`)
 
@@ -852,9 +877,71 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   gate and the episode duration score item (the union of the windows of the run's languages) all use it.
   `length_problem(settings)` reports a fixed count whose window misses 30–600 s in any language ("N scenes read
   in A to B s in <language> at these words per scene, but an episode lasts 30 to 600 s; choose another length
-  or count"): it is a settings validation error of every template settings model and the template problem
+  or count"), or, for a scene range, a range that cannot reach the length window in any language ("A to B
+  scenes read in X to Y s in <language> at these words per scene, but the length is L to H s; change the scene
+  count, the words per scene or the length"; X uses the fewest scenes at the fewest words, Y the most at the
+  most): it is a settings validation error of every template settings model and the template problem
   `definition.length` at save.
+- Word budget (`structures/word_budget.py::word_budget(settings, language)`): `total` is the word range of the
+  length window (target ± tolerance) at the speaking rate, rounded inwards (`story/reading.py::word_range`:
+  ceiling of the low end, floor of the high end); `target` the rounded words of the target; `per_scene` the
+  configured words per scene narrowed so that any scene count in `scene_range` at any per-scene count in it
+  lands inside `total` (ceil(total low / fewest scenes) to floor(total high / most scenes)); when that is
+  empty, narrowed so that some scene count fits (ceil(total low / most) to floor(total high / fewest)); when
+  that is empty too, the configured range. The story prompt states both: "Each scene's narration has between
+  A and B words", or, when B - A is at most 1 (`story/prompt_parts.py::scene_words_rule`), "Write about M
+  words in each scene's narration, from A to B" (M is the midpoint rounded up; ", from A to B" is left out
+  when A equals B), and "The whole narration has between L and H words in total, about T, so it reads aloud in
+  about N seconds at R words per minute. Fewer than L words is too short and more than H is too long: count
+  them." The words-per-scene gate still checks the configured range. The duration gate's message names the
+  measured words against the same range: "the story is too short: N words, need at least L; it reads in about
+  S s, aim for T s (within D s)" (or "too long: N words, use at most H"). With the defaults (8 to 10 scenes,
+  150 ± 30 s) English asks for 30 to 36 words per scene and 240 to 360 in total. The long explainer (14 to 18
+  scenes, 300 ± 45 s) asks for 37 to 38 words per scene and 510 to 690 in total; its answer of about 4000
+  tokens fits the default `story.max_tokens` of 6000.
 
+- Story retries (`story/authoring.py::StoryAuthor.written`): each attempt is an `Attempt` (`story/attempts.py`:
+  number, language, raw answer, parsed script or none, failed checks). The next request appends the failed
+  checks of the previous attempt; when that attempt parsed, it uses `story_revise.txt`, which also carries the
+  rejected script as compact JSON (the `StoryDraft` fields only) and asks the writer to edit it rather than
+  start over; when it did not parse, `story_retry.txt` with the checks only. Only the previous attempt's
+  checks are sent.
+- A rejected story attempt logs `warning` "story attempt N failed checks (W words, S scenes, about T s):
+  <checks>" (or "(an answer of C characters that is not a script)") and is saved in the run workspace as
+  `story/attempt-<N>-<language>.json` (`story/attempts.py::attempt_record`): `attempt`, `language`,
+  `failed_checks`, and `script` (the `StoryDraft` fields) or, when the answer did not parse, `answer` (the raw
+  text). They hold only model output and check messages, never settings or secrets, are not artifacts, and
+  go with the workspace under storage cleanup (intermediate files and run deletion). Accepted attempts and
+  template samples write no file. The story stage deletes every `story/attempt-*.json` when it starts
+  (`story/attempts.py::clear_attempts`), so a retried run shows only its own attempts.
+- Slip repair (`story.repair_slips`, default true, "Repair small slips", shown only in the full form): when a
+  written script in the writing language fails any check, `story/repairing.py::repaired_script(story,
+  settings)` runs the structure's `repairs` (each a pure `(story, settings) -> (story, notes)`), then every gate
+  runs again. The repaired script is accepted only if it passes them all, and the stage logs "story attempt N
+  passed after repair: <notes>"; otherwise the attempt fails with its original checks and script. Repairs
+  never write content that is not already in the script or the settings: story (`story/ending_repair.py`): the
+  moral (from `moral`, only when the ending style says it and `moral` is not blank) and then the language's
+  series refrain (when the style has one) are appended to the last scene's narration when the last
+  `story.ending_scenes` scenes do not say them; explainer: the takeaway in `moral` is appended to the last
+  scene when the ending style wants a takeaway; list and countdown: with exactly `item_count` scenes between the
+  intro and the closing, their `number` is set to the gate's order (intro and closing to null) unless a scene's
+  narration names other digits; quiz: a question without a final question mark gets "?". Each appended line is
+  closed as a sentence first. Translations are not repaired: the translation prompt already carries the
+  repaired narration, and its rules ask for the target language's moral and refrain.
+- Answer schemas (`story/answer_schema.py`): the story request sends `draft_schema(settings)` and the
+  translation request `text_schema(settings, script)` as `TextRequest.json_schema`, so a local model with a
+  grammar (Ollama `format`) cannot leave out what a gate demands. Both start from the Pydantic schema
+  (`StoryDraft`, `StoryText`) and add: `moral` required with `minLength` 1 when
+  `StructureSpec.moral_required(settings)`; for the draft, `scenes` required with `minItems`/`maxItems` from
+  `scene_range(settings)`, or, when the structure declares `scene_shapes(settings)`, an exact `prefixItems`
+  list with one scene schema per scene (list and countdown: an unnumbered intro and closing with
+  `number` null and an empty `heading`, and item scenes with `number` fixed by `const` in the gate's order and a
+  non-empty `heading`; quiz: an intro and closing with empty `question` and `answer`, then per question an ask
+  scene with a non-empty `question`, an empty `answer` and exactly `story.answer_choices` non-empty `choices`,
+  and a reveal scene with an empty `question` and a non-empty `answer`); for the translation, exactly one
+  narration per scene and, when the script has labels, `scene_labels` required with one entry per scene. The
+  keywords used are limited to `type`, `const`, `minLength`, `maxLength`, `minItems`, `maxItems`, `prefixItems`,
+  `required` and `$ref`. Pydantic validation of the answer is unchanged.
 - Script checks (`story/checks.py`): the size gates (scene count, words per scene, duration), then the
   structure's extra gates, then the safety gates (banned words, brand names, child-directed terms), then the
   reading level. Translations run the structure's translation gates, then the safety gates.
@@ -869,8 +956,12 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   plus the structure's own. The descriptions of `metadata.title_template`, `short_title_template` and
   `description_template` name every structure's own placeholders (tested).
 - Script model (`story/model.py`): `moral` is optional (default empty) on the draft, the stored script and the
-  translation text; `story` and `explainer` still require it through an always-on gate ('write the moral in
-  "moral"'), on written and translated scripts. Every scene also carries optional `number` (an integer from
+  translation text; `story` always requires it through an always-on gate ('write the moral in "moral"'), and
+  `explainer` requires it as the takeaway ('write the takeaway in "moral"') only when `story.ending_style` is
+  `moral_and_refrain`, on written and translated scripts. `StructureSpec.moral_required(settings)` says which (story: always;
+  explainer: when the ending style says the moral; list, countdown, quiz: never). Every built-in whose
+  description uses `{takeaway}` or `{moral}` requires it (tested over all eight built-ins);
+  `history_in_five_minutes` and `daily_motivation` set `story.ending_style` to `moral_and_refrain` for that. Every scene also carries optional `number` (an integer from
   1, default null: the item's number in a list) and the scene labels `heading`, `question`, `choices` (list)
   and `answer` (default empty), so stored scripts validate. The banned-word, brand-name and child-directed
   term gates read every label with the narration, and the kids reading level gate reads each non-empty
@@ -898,6 +989,11 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   or speaker line and an empty example character list. The fragment says the first
   scene asks the question the video answers, the middle scenes explain it, the last scene recaps and says the
   takeaway word for word; `moral` holds the takeaway; `characters` is empty and `speaker` is the narrator.
+  With `story.ending_style` `refrain_only` or `open` (they behave the same on an explainer) the recap sums up
+  in its own words and `moral` is an empty string: the takeaway field gate, the takeaway gate and the
+  translation's takeaway rule do not apply. An explainer never speaks a refrain, whatever the ending style:
+  its prompt has no ending line, it runs no ending gate and its translation rules name no refrain. The explainer shows
+  `story.ending_style` (its only shown story path among the cast paths).
   Gate (check `structure`, in `story.enabled_checks`): the first narration contains a question mark ("open the
   first scene with the question this video answers") and the last scene contains the takeaway ("say the
   takeaway, word for word, in the last scene"); translations run the same gate, and their prompt names no
@@ -1149,6 +1245,16 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   `--output`, `--quantize` when set, and `--image-path`/`--image-strength` (`reference_strength`) for the
   first reference image; `HF_TOKEN` is set when the `huggingface_token` secret is. The result is fitted to the
   exact request size.
+- The `ollama` text provider posts to `<base_url>/api/chat` with `options` `temperature`, `num_predict`
+  (`TextRequest.max_tokens`) and `num_ctx` (option `context_tokens`, "Context size", default 16384, 512 to
+  262144), plus `format` set to `TextRequest.json_schema` when there is one. Without `num_ctx` Ollama ran the
+  model at its maximum context (131072 for gemma3:12b). 16384 holds the long explainer's prompt, the
+  rejected script a retry carries and an answer of `story.max_tokens`.
+- Text providers send a JSON schema at one of two levels (`domain/schema_levels.py::schema_at`). `full`
+  (Ollama) sends it unchanged. `portable` (Gemini, Groq) drops `prefixItems`, `const`, `minLength` and
+  `maxLength`, keeps `required`, `minItems` and `maxItems`, and turns `prefixItems` into one `items` schema
+  taken from the first shape, without that shape's own `minItems`/`maxItems`. The story gates still check
+  every shape the portable schema leaves out.
 - `MotionRequest.held_frame_rate` (nullable, at least 1): when below `fps` the clip changes picture only that
   many times a second (a held, stop-motion feel) while keeping `fps`. The ffmpeg pan-and-zoom and LTX providers
   honour it; DepthFlow ignores it.

@@ -15,11 +15,12 @@ from autotube.pipelines.narrated_video.settings.cast import Character
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck, Structure
 from autotube.pipelines.narrated_video.story.casting import episode_cast
+from autotube.pipelines.narrated_video.story.ending_gate import ending_problems
+from autotube.pipelines.narrated_video.story.ending_repair import repaired_ending
 from autotube.pipelines.narrated_video.story.gates import (
     MORAL_GATE,
     CheckedGate,
     cast_problems,
-    ending_problems,
 )
 from autotube.pipelines.narrated_video.story.prompt_parts import (
     SPEAKER_RULE,
@@ -28,7 +29,7 @@ from autotube.pipelines.narrated_video.story.prompt_parts import (
     following_bullets,
     translation_ending_rules,
 )
-from autotube.pipelines.narrated_video.structures.spec import StructureSpec
+from autotube.pipelines.narrated_video.structures.spec import StructureSpec, always_moral
 
 ENDING_GATE: CheckedGate = (StoryCheck.ENDING, ending_problems)
 
@@ -82,4 +83,6 @@ STORY_SPEC = StructureSpec(
     placeholders=STORY_PLACEHOLDERS,
     placeholder_values=story_values,
     uses_bundled=True,
+    moral_required=always_moral,
+    repairs=(repaired_ending,),
 )

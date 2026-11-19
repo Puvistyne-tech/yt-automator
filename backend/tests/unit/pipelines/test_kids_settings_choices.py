@@ -64,8 +64,13 @@ def property_schema(path: Path) -> dict[str, Any]:
     return node
 
 
+GENERAL_ONLY = {"general"}
+
+
 def with_value(path: Path, value: str) -> dict[str, Any]:
     data: dict[str, Any] = KidsStorySettings().model_dump(mode="json")
+    if value in GENERAL_ONLY:
+        data["safety"]["audience"] = "general"
     node: Any = data
     for step in path[:-1]:
         node = node[step]

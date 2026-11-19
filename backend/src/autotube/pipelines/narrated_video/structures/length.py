@@ -11,10 +11,10 @@ from autotube.pipelines.narrated_video.story.gates import (
     configured_duration,
     configured_scene_range,
 )
+from autotube.pipelines.narrated_video.story.reading import words_per_second
 from autotube.pipelines.narrated_video.structures.registry import spec_of
 
 Window = tuple[float, float]
-SECONDS_PER_MINUTE = 60.0
 
 
 def fixed_scene_count(settings: KidsStorySettings) -> int | None:
@@ -34,7 +34,7 @@ def scene_line(settings: KidsStorySettings) -> str:
 
 def spoken_window(settings: KidsStorySettings, language: str, scenes: int) -> Window:
     rules = settings.story
-    per_second = max(rules.words_per_minute.for_language(language), 1.0) / SECONDS_PER_MINUTE
+    per_second = words_per_second(rules.words_per_minute.for_language(language))
     low = rules.words_per_scene_min.for_language(language)
     high = rules.words_per_scene_max.for_language(language)
     return scenes * low / per_second, scenes * high / per_second
@@ -70,9 +70,29 @@ def window_problem(settings: KidsStorySettings, language: str, scenes: int) -> s
     )
 
 
-def length_problem(settings: KidsStorySettings) -> str:
+def reach_problem(settings: KidsStorySettings, language: str) -> str:
+    fewest, most = scene_range(settings)
+    shortest, longest = (
+        spoken_window(settings, language, fewest)[0],
+        spoken_window(settings, language, most)[1],
+    )
+    low, high = length_window(settings, language)
+    if shortest <= high and longest >= low:
+        return ""
+    return (
+        f"{fewest} to {most} scenes read in {shortest:.0f} to {longest:.0f} s in "
+        f"{language_name(language)} at these words per scene, but the length is {low:.0f} to "
+        f"{high:.0f} s; change the scene count, the words per scene or the length"
+    )
+
+
+def language_problem(settings: KidsStorySettings, language: str) -> str:
     count = fixed_scene_count(settings)
     if count is None:
-        return ""
-    found = (window_problem(settings, language.value, count) for language in StoryLanguage)
+        return reach_problem(settings, language)
+    return window_problem(settings, language, count)
+
+
+def length_problem(settings: KidsStorySettings) -> str:
+    found = (language_problem(settings, language.value) for language in StoryLanguage)
     return next((problem for problem in found if problem), "")

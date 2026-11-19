@@ -6,13 +6,13 @@ import pytest
 
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
+from autotube.pipelines.narrated_video.story.ending_gate import ending_problems
 from autotube.pipelines.narrated_video.story.gates import (
     Gate,
     banned_word_problems,
     brand_problems,
     cast_problems,
     duration_problems,
-    ending_problems,
     reading_level_problems,
     scene_count_problems,
     words_per_scene_problems,
@@ -149,10 +149,13 @@ def test_a_good_story_passes_every_gate() -> None:
 
 def test_duration_gate_on_both_sides_and_per_language() -> None:
     long = quick_settings(story={"target_duration_seconds": 60, "duration_tolerance_seconds": 5})
-    assert duration_problems(story(), long)[0].startswith("the story reads in about")
+    assert duration_problems(story(), long)[0].startswith(
+        "the story is too long: 258 words, use at most 130"
+    )
     assert "aim for 60 s (within 5 s)" in duration_problems(story(), long)[0]
     short = quick_settings(story={"target_duration_seconds": 600, "duration_tolerance_seconds": 5})
     assert "aim for 600 s" in duration_problems(story(), short)[0]
+    assert "too short: 258 words, need at least 1190" in duration_problems(story(), short)[0]
     slow_tamil = quick_settings(story={"words_per_minute": {"en": 120, "ta": 10}})
     assert duration_problems(story("ta"), slow_tamil) != []
     assert duration_problems(story("en"), slow_tamil) == []

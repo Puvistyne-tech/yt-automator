@@ -4,8 +4,8 @@ $structure_rules
 
 Requirements:
 - $scene_count
-- Each scene's narration has between $words_min and $words_max words, written in $language.
-- The whole narration reads aloud in about $target_seconds seconds at $words_per_minute words per minute.
+- $scene_words, written in $language.
+- The whole narration has between $total_min and $total_max words in total, about $total_words, so it reads aloud in about $target_seconds seconds at $words_per_minute words per minute. Fewer than $total_min words is too short and more than $total_max is too long: count them.
 - $writing_style$extra_instructions$ending
 - "visual" describes what the picture shows in English, with no words, letters or signs in the picture.
 - $action

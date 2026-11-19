@@ -6,9 +6,9 @@ from autotube.domain.run_parts import Artifact
 from autotube.pipelines.narrated_video.artifacts import Role, text, with_role
 from autotube.pipelines.narrated_video.scoring.inputs import ScoreInputs
 from autotube.pipelines.narrated_video.scoring.measures import FULL, average
+from autotube.pipelines.narrated_video.story.ending_gate import ending_problems
 from autotube.pipelines.narrated_video.story.gates import (
     Gate,
-    ending_problems,
     reading_level_problems,
 )
 

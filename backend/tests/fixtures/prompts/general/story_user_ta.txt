@@ -10,8 +10,8 @@ Choose one moral from this list, or a close gentle variation of one:
 
 Requirements:
 - Between 8 and 10 scenes.
-- Each scene's narration has between 8 and 40 words, written in Tamil.
-- The whole narration reads aloud in about 150 seconds at 80 words per minute.
+- Each scene's narration has between 20 and 24 words, written in Tamil.
+- The whole narration has between 160 and 240 words in total, about 200, so it reads aloud in about 150 seconds at 80 words per minute. Fewer than 160 words is too short and more than 240 is too long: count them.
 - Clear sentences, everyday words, a calm and confident voice.
 - The story ends openly and gently, without saying the moral aloud or a refrain, so viewers can wonder what happens next.
 - "visual" describes what the picture shows in English, with no words, letters or signs in the picture.

@@ -28,10 +28,11 @@ def overlay_safety(item: PipelineTemplate) -> object:
 
 
 @pytest.mark.parametrize("template_id", sorted(set(PACKAGED_FORMATS) - {RELAXED}))
-def test_every_other_builtin_keeps_the_default_banned_words(template_id: str) -> None:
+def test_every_other_builtin_keeps_its_audience_banned_words(template_id: str) -> None:
     item = BUILTINS[template_id]
     assert overlay_safety(item) is None
-    assert settings_of(item).safety.banned_words == BANNED_WORDS
+    expected = BANNED_WORDS if item.audience is KIDS else []
+    assert settings_of(item).safety.banned_words == expected
 
 
 def test_scary_stories_applies_its_own_banned_words() -> None:

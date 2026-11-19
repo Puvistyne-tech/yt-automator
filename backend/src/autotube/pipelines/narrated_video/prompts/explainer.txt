@@ -1,6 +1,5 @@
 Shape of the explainer:
 - The first scene is the hook: it asks the one question this video answers, with a question mark.
 - The middle scenes explain the answer step by step, one idea per scene, using only true facts.
-- The last scene is the recap: it sums up the answer and says the takeaway word for word.
-- "moral" holds the takeaway: one short sentence the viewer should remember.
+$recap
 - There are no recurring characters: "characters" is always an empty list and "speaker" is always "narrator".

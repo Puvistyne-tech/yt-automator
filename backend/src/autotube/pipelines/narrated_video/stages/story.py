@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import partial
 
 from autotube.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from autotube.domain.pipeline_descriptors import StageDescriptor
@@ -12,12 +13,24 @@ from autotube.pipelines.narrated_video.settings.story import StorySource
 from autotube.pipelines.narrated_video.settings.story_choices import says_refrain
 from autotube.pipelines.narrated_video.stages.media_types import JSON
 from autotube.pipelines.narrated_video.stages.run_settings import kids_settings
+from autotube.pipelines.narrated_video.story.attempts import (
+    Attempt,
+    attempt_filename,
+    attempt_record,
+    clear_attempts,
+)
 from autotube.pipelines.narrated_video.story.authoring import (
+    ScriptRejectedError,
     WriterUnavailableError,
     Written,
     authored_scripts,
 )
 from autotube.pipelines.narrated_video.story.bundled import BundledChoice, pick_bundled
+from autotube.pipelines.narrated_video.story.bundled_fit import (
+    length_pool,
+    length_wish,
+    misfit_warning,
+)
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.shaping import shaped
 from autotube.pipelines.narrated_video.story.themes import choose_theme
@@ -65,6 +78,7 @@ class StoryStage:
         order = ordered_languages(primary, context.languages)
         theme = choose_theme(settings.story, context.run_id)
         context.log(f"story theme: {theme}")
+        clear_attempts(folder(context, "story"))
         stories, provider = self.authored(context, settings, order, theme)
         artifacts = [self.saved(context, shaped(story, settings)) for story in stories.values()]
         first = stories[primary]
@@ -81,7 +95,7 @@ class StoryStage:
             return self.written_only(context, settings, order, theme)
         if settings.story.source is StorySource.LLM_WITH_FALLBACK:
             written = self.from_writer(context, settings, order, theme)
-            if written is not None:
+            if not isinstance(written, str):
                 return written
             context.log(
                 "falling back to a bundled story",
@@ -93,23 +107,24 @@ class StoryStage:
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
     ) -> Written:
         written = self.from_writer(context, settings, order, theme)
-        if written is None:
-            raise ScriptUnavailableError(no_fallback_reason(settings))
+        if isinstance(written, str):
+            raise ScriptUnavailableError(f"{no_fallback_reason(settings)}; {written}")
         return written
 
     def from_writer(
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
-    ) -> Written | None:
+    ) -> Written | str:
         try:
+            keep = partial(self.kept_attempt, context)
             return authored_scripts(
-                context.providers, settings, context.log, context.run_id, theme, order
+                context.providers, settings, context.log, context.run_id, theme, order, keep
             )
+        except ScriptRejectedError as error:
+            return f"the last {error}"
         except (LookupError, WriterUnavailableError) as error:
-            context.log(
-                f"story writer unavailable: {error}",
-                LogLevel.WARNING,
-            )
-            return None
+            reason = f"story writer unavailable: {error}"
+            context.log(reason, LogLevel.WARNING)
+            return reason
 
     def from_bundle(
         self, context: StageContext, settings: KidsStorySettings, order: Sequence[str], theme: str
@@ -122,13 +137,20 @@ class StoryStage:
             avoid=settings.story.avoid_repeat_last,
             seed=context.run_id,
         )
-        bundled = pick_bundled(choice)
+        wish = length_wish(settings, order[0], bundled_refrain(settings, order[0]))
+        bundled = pick_bundled(choice, partial(length_pool, wish=wish))
         context.log(f"using bundled story {bundled.id}")
+        warning = misfit_warning(bundled, wish)
+        if warning:
+            context.log(warning, LogLevel.WARNING)
         stories = {
             language: bundled.to_story(language, bundled_refrain(settings, language))
             for language in order
         }
         return stories, BUNDLED_PROVIDER
+
+    def kept_attempt(self, context: StageContext, attempt: Attempt) -> None:
+        write_json(folder(context, "story") / attempt_filename(attempt), attempt_record(attempt))
 
     def saved(self, context: StageContext, story: Story) -> NewArtifact:
         path = folder(context, "story") / f"story-{story.language}.json"

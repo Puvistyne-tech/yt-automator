@@ -12,6 +12,7 @@ from tests.fixtures.kids_fakes import FakeWriter, as_json
 from tests.fixtures.template_settings import model_for, pipeline_of
 
 EXPLAINER = {"structure": "explainer"}
+TAKEAWAY_ENDING = {"ending_style": "moral_and_refrain"}
 TAKEAWAY_EN = "Sunlight bends in raindrops and spreads into colours to make a rainbow."
 TAKEAWAY_TA = "சூரிய ஒளி மழைத்துளிகளில் வளைந்து நிறங்களாகப் பிரிந்து வானவில் ஆகிறது."
 HOOKLESS = (

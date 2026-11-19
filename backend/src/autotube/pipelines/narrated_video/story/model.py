@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -74,6 +75,10 @@ class StoryText(BaseModel):
     questions: list[str] = Field(default_factory=list)
     hook_line: str = ""
     scene_labels: list[SceneLabels] | None = None
+
+
+def draft_dump(story: StoryDraft) -> dict[str, Any]:
+    return story.model_dump(mode="json", include=set(StoryDraft.model_fields))
 
 
 def text_of(story: StoryDraft) -> StoryText:

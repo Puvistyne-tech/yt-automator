@@ -93,6 +93,7 @@ def test_a_stored_kids_template_differs_from_kids_story_only_in_its_identity() -
     assert changed_from_kids_story(TemplateAudience.KIDS) == identity
     assert changed_from_kids_story(TemplateAudience.GENERAL) == identity | {
         "ui_schema",
+        "settings_schema",
         "default_settings",
         "capabilities",
     }

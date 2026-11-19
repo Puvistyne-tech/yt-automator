@@ -6,7 +6,7 @@ import pytest
 
 from autotube.pipelines.narrated_video.stages.story import StoryStage
 from autotube.pipelines.narrated_video.story.casting import episode_cast
-from autotube.pipelines.narrated_video.story.gates import ending_problems
+from autotube.pipelines.narrated_video.story.ending_gate import ending_problems
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.shaping import shaped
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, smart_writer, story

@@ -10,8 +10,8 @@ Choose one moral from this list, or a close gentle variation of one:
 
 Requirements:
 - Between 8 and 10 scenes.
-- Each scene's narration has between 18 and 50 words, written in English.
-- The whole narration reads aloud in about 150 seconds at 120 words per minute.
+- Each scene's narration has between 30 and 36 words, written in English.
+- The whole narration has between 240 and 360 words in total, about 300, so it reads aloud in about 150 seconds at 120 words per minute. Fewer than 240 words is too short and more than 360 is too long: count them.
 - Clear sentences, everyday words, a calm and confident voice.
 - The story ends openly and gently, without saying the moral aloud or a refrain, so viewers can wonder what happens next.
 - "visual" describes what the picture shows in English, with no words, letters or signs in the picture.

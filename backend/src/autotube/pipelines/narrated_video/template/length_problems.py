@@ -14,7 +14,10 @@ LENGTH_PATH = "definition.length"
 
 
 def length_problems(definition: NarratedDefinition, audience: TemplateAudience) -> dict[str, str]:
-    structure: JsonObject = {"story": {"structure": definition.structure.value}}
+    structure: JsonObject = {
+        "story": {"structure": definition.structure.value},
+        "safety": {"audience": audience.value},
+    }
     values = deep_merged(template_defaults(definition, audience), structure)
     try:
         settings = KidsStorySettings.model_validate(values)

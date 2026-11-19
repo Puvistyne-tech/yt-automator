@@ -11,6 +11,7 @@ from autotube.pipelines.narrated_video.story.normalise import speech_rules
 from autotube.pipelines.narrated_video.story.numbers import number_to_words
 
 CUE_LANGUAGE = "en"
+NARROW_SCENE_SPAN = 1
 KIDS_LISTENERS = "children"
 GENERAL_LISTENERS = "viewers"
 OPEN_ENDING = (
@@ -18,6 +19,8 @@ OPEN_ENDING = (
     "so {listeners} can wonder what happens next."
 )
 MORAL_RULE = "The moral must appear word for word, as you translate it, inside the last narration."
+SAY_MORAL = "The last scene says the moral word for word."
+SHOW_MORAL = "Do not say the moral aloud; let the story show it."
 NO_CUES = "is always an empty list."
 SPEAKER_RULE = '"speaker" is "narrator", or a character id if that character says the whole scene.'
 ACTION_RULE = (
@@ -58,18 +61,23 @@ def action_rule(for_kids: bool) -> str:
     return ACTION_RULE.format(example=KIDS_ACTION_EXAMPLE if for_kids else GENERAL_ACTION_EXAMPLE)
 
 
+def scene_words_rule(span: tuple[int, int]) -> str:
+    low, high = span
+    if high - low > NARROW_SCENE_SPAN:
+        return f"Each scene's narration has between {low} and {high} words"
+    about = f"Write about {(low + high + 1) // 2} words in each scene's narration"
+    return about if low == high else f"{about}, from {low} to {high}"
+
+
 def ending_requirement(style: EndingStyle, refrain: str, for_kids: bool) -> str:
-    if style is EndingStyle.MORAL_AND_REFRAIN:
-        return (
-            "The last scene says the moral word for word, then ends with this exact refrain: "
-            f'"{refrain}"'
-        )
-    if style is EndingStyle.REFRAIN_ONLY:
-        return (
-            f'The last scene ends with this exact refrain: "{refrain}". Do not say the moral '
-            "aloud; let the story show it."
-        )
-    return OPEN_ENDING.format(listeners=listeners(for_kids))
+    if style is EndingStyle.OPEN:
+        return OPEN_ENDING.format(listeners=listeners(for_kids))
+    says = style is EndingStyle.MORAL_AND_REFRAIN
+    if not refrain.strip():
+        return SAY_MORAL if says else SHOW_MORAL
+    if says:
+        return f'{SAY_MORAL[:-1]}, then ends with this exact refrain: "{refrain}"'
+    return f'The last scene ends with this exact refrain: "{refrain}". {SHOW_MORAL}'
 
 
 def translation_ending_rules(style: EndingStyle, refrain: str) -> str:

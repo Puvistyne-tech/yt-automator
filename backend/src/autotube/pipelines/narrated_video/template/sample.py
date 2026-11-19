@@ -13,6 +13,7 @@ from autotube.pipelines.narrated_video.publishing.audience_check import (
 from autotube.pipelines.narrated_video.publishing.metadata import UploadMetadata, upload_metadata
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.authoring import (
+    ScriptRejectedError,
     WriterUnavailableError,
     Written,
     authored_scripts,
@@ -62,8 +63,8 @@ def written_sample(
         )
     except (LookupError, AppError, WriterUnavailableError) as error:
         raise SampleUnavailableError(UNAVAILABLE) from error
-    if written is None:
-        raise SampleUnavailableError(REJECTED)
+    except ScriptRejectedError as error:
+        raise SampleUnavailableError(REJECTED) from error
     return written
 
 

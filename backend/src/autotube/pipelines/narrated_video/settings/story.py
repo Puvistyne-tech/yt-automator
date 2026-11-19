@@ -13,11 +13,10 @@ from autotube.pipelines.narrated_video.settings.base import (
 )
 from autotube.pipelines.narrated_video.settings.choices import (
     LANGUAGE_CHOICES,
-    READING_LEVEL_CHOICES,
     STORY_SOURCE_CHOICES,
     THEME_MODE_CHOICES,
 )
-from autotube.pipelines.narrated_video.settings.story_controls import StoryWritingSettings
+from autotube.pipelines.narrated_video.settings.story_audience import StoryAudienceSettings
 
 THEMES = [
     "sharing",
@@ -43,18 +42,12 @@ class ThemeMode(StrEnum):
     FIXED = "fixed"
 
 
-class ReadingLevel(StrEnum):
-    TODDLER = "toddler"
-    PRESCHOOL = "preschool"
-    EARLY_READER = "early_reader"
-
-
 class StorySource(StrEnum):
     LLM_WITH_FALLBACK = "llm_with_fallback"
     BUNDLED_ONLY = "bundled_only"
 
 
-class StorySettings(StoryWritingSettings):
+class StorySettings(StoryAudienceSettings):
     source: StorySource = Field(
         default=StorySource.LLM_WITH_FALLBACK,
         json_schema_extra=STORY_SOURCE_CHOICES,
@@ -94,12 +87,6 @@ class StorySettings(StoryWritingSettings):
     morals: list[str] = text_list_field(
         MORALS, "Moral themes", "Morals the writer may choose from."
     )
-    age_min: int = Field(
-        default=3, ge=1, le=12, title="Youngest age", description="Youngest viewer, in years."
-    )
-    age_max: int = Field(
-        default=7, ge=1, le=12, title="Oldest age", description="Oldest viewer, in years."
-    )
     target_duration_seconds: int = episode_seconds(
         150, "Target episode length", "Seconds of narration the story should fill."
     )
@@ -124,12 +111,6 @@ class StorySettings(StoryWritingSettings):
     )
     words_per_minute: LocalizedNumber = localized_number(
         120, 80, "Estimated speaking rate", "Words per minute used to estimate story length."
-    )
-    reading_level: ReadingLevel = Field(
-        default=ReadingLevel.PRESCHOOL,
-        json_schema_extra=READING_LEVEL_CHOICES,
-        title="Reading level",
-        description="How simple the language must be.",
     )
     max_average_sentence_words: LocalizedNumber = localized_number(
         12, 9, "Longest average sentence", "Most words a narration sentence may have on average."

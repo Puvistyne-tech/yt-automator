@@ -22,6 +22,7 @@ from autotube.pipelines.narrated_video.settings.quality import QualitySettings
 from autotube.pipelines.narrated_video.settings.series import SafetySettings, SeriesSettings
 from autotube.pipelines.narrated_video.settings.sound_effects import SoundEffectSettings
 from autotube.pipelines.narrated_video.settings.story import StorySettings
+from autotube.pipelines.narrated_video.settings.story_audience import kids_audience_problem
 from autotube.pipelines.narrated_video.settings.story_choices import needs_cast
 from autotube.pipelines.narrated_video.settings.subtitles import SubtitleSettings
 from autotube.pipelines.narrated_video.settings.thumbnail import ThumbnailSettings
@@ -116,6 +117,13 @@ class KidsStorySettings(SettingsSection):
         ids = [member.id for member in self.cast]
         if len(ids) != len(set(ids)):
             raise ValueError("character ids must be unique")
+        return self
+
+    @model_validator(mode="after")
+    def check_kids_audience(self) -> KidsStorySettings:
+        problem = kids_audience_problem(self.story) if self.safety.for_kids else ""
+        if problem:
+            raise ValueError(problem)
         return self
 
     def character(self, character_id: str) -> Character | None:
