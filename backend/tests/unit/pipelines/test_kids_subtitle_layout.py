@@ -8,7 +8,10 @@ from autotube.domain.capabilities import WordTiming
 from autotube.pipelines.narrated_video.art import lettering
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.subtitles import SubtitleSettings
-from autotube.pipelines.narrated_video.subtitles.layout import subtitle_layout
+from autotube.pipelines.narrated_video.subtitles.layout import (
+    scaled_font_size,
+    subtitle_layout,
+)
 from autotube.pipelines.narrated_video.subtitles.subtitle_font import subtitle_font
 from autotube.pipelines.narrated_video.subtitles.timeline_cues import cue_rules
 from autotube.pipelines.narrated_video.subtitles.timing import segment_cues
@@ -58,6 +61,33 @@ def test_cues_stay_within_their_lines_the_usable_width_and_the_narration(
 def test_layout_reserves_the_side_margins() -> None:
     layout = subtitle_layout(quick_settings(), "ta", "short")
     assert (layout.width, layout.side_margin, layout.line_width) == (720, 29, 662)
+
+
+def test_font_size_is_a_share_of_the_frame_height_times_the_script_factor() -> None:
+    assert scaled_font_size(1920, 0.05, 1.1) == 106
+    assert scaled_font_size(1080, 0.05, 1.0) == 54
+    assert scaled_font_size(640, 0.01, 0.0) == 8
+
+
+@pytest.mark.parametrize(("language", "smallest"), [("en", 0.045), ("ta", 0.05)])
+def test_a_full_hd_short_draws_letters_readable_on_a_phone(language: str, smallest: float) -> None:
+    settings = quick_settings(short={"resolution": "1080x1920"})
+    layout = subtitle_layout(settings, language, "short")
+    assert layout.font_size >= 1920 * smallest
+
+
+def test_tamil_letters_are_larger_than_english_and_a_full_hd_episode_keeps_its_size() -> None:
+    settings = quick_settings(episode={"resolution": "1920x1080"})
+    sizes = {
+        language: subtitle_layout(settings, language, "episode").font_size for language in NARRATION
+    }
+    assert sizes["en"] == 54 and sizes["ta"] > sizes["en"]
+
+
+def test_settings_saved_with_the_old_pixel_font_sizes_take_the_frame_shares() -> None:
+    stored = {"subtitles": {"font_size": 54, "short_font_size": 64}}
+    loaded = KidsStorySettings.model_validate(stored).subtitles
+    assert loaded.short_font_size_share == SubtitleSettings().short_font_size_share
 
 
 def test_estimated_widths_grow_with_letters_and_language() -> None:

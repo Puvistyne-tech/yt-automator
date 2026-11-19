@@ -159,7 +159,7 @@ describe("Automation editor: all settings filters", () => {
   });
 
   it("reveals a hidden error that does not match the search", async () => {
-    withSetting("subtitles", { font_size: 500 });
+    withSetting("subtitles", { font_size_share: 5 });
     const { user, content } = await openBedtime();
 
     await user.type(content.getByRole("searchbox", { name: "Search settings" }), "volume");
@@ -169,6 +169,6 @@ describe("Automation editor: all settings filters", () => {
     await findToast("Fix the highlighted fields before saving.");
     expect(viewButton("All settings")).toBeInTheDocument();
     expect(content.getByLabelText(/^Font size/)).toBeInTheDocument();
-    expect(content.getByText(/must be <= 200/i)).toBeInTheDocument();
+    expect(content.getByText(/must be <= 0.2/i)).toBeInTheDocument();
   });
 });

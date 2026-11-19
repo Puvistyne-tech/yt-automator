@@ -8,6 +8,8 @@ from pydantic import Field
 from autotube.domain.image_style import HEX_COLOUR_PATTERN
 from autotube.domain.model_base import DomainModel
 
+SMALLEST_SUBTITLE_FONT_SIZE = 8
+
 
 class SubtitlePosition(StrEnum):
     BOTTOM = "bottom"
@@ -38,7 +40,7 @@ class ScreenCorner(StrEnum):
 class SubtitleStyle(DomainModel):
     burn_in: bool = False
     font_family: str = "Noto Sans"
-    font_size: int = Field(default=54, ge=8)
+    font_size: int = Field(default=54, ge=SMALLEST_SUBTITLE_FONT_SIZE)
     primary_color: str = "#FFFFFF"
     outline_color: str = "#000000"
     highlight_color: str = "#FFD54A"

@@ -11,7 +11,13 @@ export const SUBTITLES_SCHEMA = {
   title: "Subtitles",
   properties: {
     burn_in_episode: { type: "boolean", title: "Burn into the episode", default: false },
-    font_size: { type: "integer", title: "Font size", minimum: 8, maximum: 200, default: 54 },
+    font_size_share: {
+      type: "number",
+      title: "Font size",
+      minimum: 0.01,
+      maximum: 0.2,
+      default: 0.05,
+    },
     bold: { type: "boolean", title: "Bold", default: false },
     primary_color: colour("Text colour", "#FFFFFF"),
     box_background: { type: "boolean", title: "Box behind the text", default: false },

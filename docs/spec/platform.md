@@ -1191,6 +1191,12 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   narration join into one cue. A font whose name is unsafe, or none loading, means the configured
   fallback name with the letter width estimate; a script Pillow cannot shape keeps the font file for
   drawing and is measured by the estimate.
+- Kids story subtitle letters are sized from the frame, not in pixels: the font size is the frame height times
+  `subtitles.font_size_share` (episode, default 0.05) or `subtitles.short_font_size_share` (Short, default 0.05,
+  so 96 pixels in a 1080x1920 Short), times the language's `subtitles.font_scale` (default 1.0 for English and
+  1.1 for Tamil), rounded and never below 8. Lines are wrapped and measured at that size. Stored settings that
+  still hold the retired pixel keys `subtitles.font_size` or `subtitles.short_font_size` load with the keys
+  removed, so they take the frame shares.
 
 ## HTTP API
 
