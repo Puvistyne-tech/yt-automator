@@ -7,9 +7,17 @@ import { SectionChanges } from "@/shared/schema-form/ChangeMarks";
 import { visibleProperties } from "@/shared/schema-form/fieldFilter";
 import { groupIntoSections, readSections, type Section } from "@/shared/schema-form/sections";
 
+interface VisibilityContext {
+  visible?: ReadonlySet<string>;
+  filtered?: boolean;
+}
+
+function contextOf(registry: Registry): VisibilityContext {
+  return (registry.formContext as VisibilityContext | undefined) ?? {};
+}
+
 function visibilityOf(registry: Registry): ReadonlySet<string> | undefined {
-  const context = registry.formContext as { visible?: ReadonlySet<string> } | undefined;
-  return context?.visible;
+  return contextOf(registry).visible;
 }
 
 function Properties({ properties }: { properties: ObjectFieldTemplatePropertyType[] }) {
@@ -74,7 +82,7 @@ function RootObject(props: ObjectFieldTemplateProps) {
           section={section}
           registry={props.registry}
           idPrefix={props.fieldPathId.$id}
-          filtered={visible !== undefined}
+          filtered={contextOf(props.registry).filtered === true}
         />
       ))}
     </div>

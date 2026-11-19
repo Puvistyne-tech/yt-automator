@@ -120,6 +120,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   (with `type: "string"`) instead of a bare `enum`; the form shows each `title` and stores the `const`. The kids
   story pipeline titles every choice field this way through `titled_choices`, or `card_choices` when the entries
   also carry card keys (see `cards` below).
+- A choice hint may also sit on a free string field, so the backend keeps any stored value. The form's
+  select then shows a stored string that no option offers as an extra option labelled with the value itself
+  (`unlistedValue` in `web/src/shared/schema-form/choices.ts`), so it is never shown as a different choice.
 - `ui_schema` is a react-jsonschema-form uiSchema restricted to these keys, and `domain/ui_schema.py`
   (`ui_schema_problems`) checks a pipeline's `ui_schema` against its `settings_schema`:
   - `ui:sections` (root only, optional): a list of `{title: string, fields: [string]}`. Each field is a
@@ -134,6 +137,14 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     field names. The kids story pipeline lists twelve paths: series name, visual style, theme mode and themes,
     tone, target length, narrator voice, music on or off and its mood, subtitles on or off, the Short on or off,
     and the episode resolution.
+  - `ui:hidden` (root only, optional, `domain/ui_hidden.py`): a list of dotted settings paths that the editor
+    never shows, so a pipeline type can hide settings that do not apply to it. Entries follow the `ui:basic`
+    rules (shared in `domain/ui_paths.py`), except that an empty list is valid. It is also a problem when a
+    path is in both `ui:basic` and `ui:hidden`, when a `ui:basic` path lies under a hidden path, when every
+    setting under a `ui:basic` path is hidden (it would show nothing), and when a hidden path names a setting
+    its parent requires that nothing fills: it has no default of its own (on the property or its `$ref`
+    target) and no enclosing setting's default holds a value for it (`domain/setting_fill.py`). A hidden
+    object hides all of its children. The kids story pipeline lists no hidden paths.
   - Any other key names a settings property and holds the hints for it; `items` holds the hints for the
     items of an array property. Nesting follows the settings schema, resolving local `$ref`s (`#/...`) and,
     for an optional property written as `anyOf`/`oneOf`, its first non-null branch (`domain/json_schema.py`).
@@ -196,7 +207,13 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   - `sound_effects.max_per_scene` (default 2) is stated in the prompt ("zero to two…", or "always an empty
     list" for 0) and shaping drops any cue beyond it.
   - `voice.speed` is a per-language speed (0.5 to 1.5, default 0.95); a stored single number is applied to
-    every language. `music.short_mood_prompt` (default empty) replaces `music.mood_prompt` for Short beds.
+    every language. `voice.narrator_voice` (`settings/narrator_voices.py`) is a per-language voice id
+    (default empty: the provider's own default) published as a titled choice per language: empty first, then
+    for English the `mlx_audio` presets `warm_storyteller`, `qwen3_narrator`, `news_reader` and the Kokoro voices
+    `af_heart`, `af_bella`, `af_nicole`, `am_michael`, `am_fenrir`, `bf_emma`, `bm_george`; for Tamil the
+    presets `kayal`, `vaidehi`, `svara_male`. Any other stored string stays valid. Every `mlx_audio` default
+    preset is offered for each language it speaks, and every other English choice is in Kokoro's `voices`
+    (both enforced by a test). `music.short_mood_prompt` (default empty) replaces `music.mood_prompt` for Short beds.
   - `visuals.motion_prompt` (with `{visual}` and `{mood}`; a card uses "a title card" and "warm") and
     `visuals.judge_criteria` replace the fixed motion and picture-judge wording. A motion prompt naming any
     other lowercase `{placeholder}` fails validation; `$`, `{}` and `{Visual}` pass through as written, as
@@ -610,6 +627,12 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   Whisper alignment. It is unavailable when `python` or `models_root` does not exist, so hosts without
   them fall through to the next TTS provider. `python` (default `~/.autotube/venvs/mlx/bin/python`),
   `models_root` (default `~/.autotube/models`) and `hf_home` (default `~/.autotube/hf`) expand `~` when used.
+- A TTS provider refuses a requested voice it cannot speak with an upstream failure `voice_unknown`, so the
+  fallback chain passes the request on: `edge_tts` refuses a voice not matching `voice_pattern` (default
+  `^[a-z]{2,}-[A-Z]{2,}-.+Neural$`; an invalid regular expression fails option validation), and `kokoro`
+  refuses a voice not in `voices` (default the Kokoro v1.0 voice ids). With the default order a Kokoro voice
+  therefore falls through `mlx_audio` and `edge_tts` to `kokoro`, and an `mlx_audio` preset is spoken by
+  `mlx_audio`. An empty voice uses each provider's own default.
 - `SubtitleStyle` (`domain/video_look.py`): burn_in, font_family, font_file (nullable), font_size, primary,
   outline and highlight colours, margin_bottom, margin_sides, wrap_lines (default false), karaoke (default
   false), position (bottom|middle|top, ASS alignment 2, 5, 8; margin_bottom is the vertical margin from that
@@ -749,11 +772,16 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   policy, target playlist, target publish timing and auto-reject. A quiet line says "<n> more options in All
   settings" (hidden pipeline fields plus the finer rules that apply to the draft: timezone and limits only for a
   schedule that is not manual, playlist and publish timing only with at least one target), adds ", <n> changed" for hidden pipeline fields
-  changed from their defaults, and offers "Show all settings". Hidden fields keep their values and still
+  changed from their defaults, and offers "Show all settings". The pipeline's `ui:hidden` fields (and a group
+  whose every field is hidden) show in neither view, are not counted in "more options" or "changed", and are
+  never matched by search or Changed only. Change marks, field resets, section "changed" counts and section
+  resets leave hidden fields out: an object's mark and reset (including an optional object's) consider only
+  its shown children, and a reset never changes a hidden value. Hidden fields keep their values and still
   validate; when a save fails (client or server) on a field hidden in Simple, the editor switches to All
   settings so the error shows at its field. A pipeline field with an error is always shown, in both views
   and whatever the search or Changed only filter, together with its parent groups. Section "changed" counts and
-  section resets show only while the form is unfiltered. All settings adds, above the Content form, a search box that filters pipeline fields by
+  section resets show only while the form is unfiltered: no `ui:basic` rule in Simple and no search or
+  Changed only in All settings (`ui:hidden` alone does not filter). All settings adds, above the Content form, a search box that filters pipeline fields by
   title and description (a match keeps its parent groups and all its children; sections with no match are
   hidden; array items are not searched) and a "Changed only" switch that keeps fields changed from their
   defaults; both combine. When nothing is left and no setting has an error, an empty state offers

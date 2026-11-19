@@ -1,11 +1,13 @@
 import type { Registry } from "@rjsf/utils";
 import { useMemo, useRef } from "react";
 import {
-  changedCount,
+  type Concealed,
   type FieldPath,
   isChanged,
-  resetField,
-  resetFields,
+  resetRevealed,
+  revealedChanges,
+  type SettingPath,
+  tracksChanges,
   valueAt,
 } from "@/shared/schema-form/defaults";
 
@@ -16,6 +18,7 @@ export interface ChangeTracking {
   value: FormValue;
   defaults: FormValue;
   locked: boolean;
+  concealed: Concealed | undefined;
   apply: (update: Update) => void;
 }
 
@@ -24,6 +27,7 @@ export function useChangeTracking(
   defaults: FormValue | undefined,
   onChange: (value: FormValue) => void,
   locked: boolean,
+  concealed: Concealed | undefined,
 ): ChangeTracking | null {
   const latest = useRef({ value, onChange });
   latest.current = { value, onChange };
@@ -32,8 +36,8 @@ export function useChangeTracking(
       return null;
     }
     const apply = (update: Update) => latest.current.onChange(update(latest.current.value));
-    return { value, defaults, locked, apply };
-  }, [value, defaults, locked]);
+    return { value, defaults, locked, concealed, apply };
+  }, [value, defaults, locked, concealed]);
 }
 
 export function trackingOf(registry: Registry): ChangeTracking | null {
@@ -41,8 +45,19 @@ export function trackingOf(registry: Registry): ChangeTracking | null {
   return context?.changes ?? null;
 }
 
+function settingPath(path: FieldPath): SettingPath {
+  return path.map(String);
+}
+
+function revealedIn(tracking: ChangeTracking, paths: readonly SettingPath[]): string[] {
+  return revealedChanges(tracking.value, tracking.defaults, paths, tracking.concealed);
+}
+
 export function fieldChanged(tracking: ChangeTracking, path: FieldPath): boolean {
-  return isChanged(tracking.value, tracking.defaults, path);
+  if (tracking.concealed === undefined || !tracksChanges(path)) {
+    return isChanged(tracking.value, tracking.defaults, path);
+  }
+  return revealedIn(tracking, [settingPath(path)]).length > 0;
 }
 
 export function fieldDefault(tracking: ChangeTracking, path: FieldPath): unknown {
@@ -50,13 +65,23 @@ export function fieldDefault(tracking: ChangeTracking, path: FieldPath): unknown
 }
 
 export function changedIn(tracking: ChangeTracking, names: string[]): number {
-  return changedCount(tracking.value, tracking.defaults, names);
+  return revealedIn(
+    tracking,
+    names.map((name) => [name]),
+  ).length;
+}
+
+function resetRevealedIn(tracking: ChangeTracking, paths: readonly SettingPath[]): void {
+  tracking.apply((value) => resetRevealed(value, tracking.defaults, paths, tracking.concealed));
 }
 
 export function resetPath(tracking: ChangeTracking, path: FieldPath): void {
-  tracking.apply((value) => resetField(value, tracking.defaults, path));
+  resetRevealedIn(tracking, [settingPath(path)]);
 }
 
 export function resetSection(tracking: ChangeTracking, names: string[]): void {
-  tracking.apply((value) => resetFields(value, tracking.defaults, names));
+  resetRevealedIn(
+    tracking,
+    names.map((name) => [name]),
+  );
 }
