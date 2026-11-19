@@ -873,6 +873,29 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
   The script is shaped like a run's, and the upload title and description are the episode's `upload_metadata`,
   screened for a general audience like the package stage (a hit is `preview_unavailable` with that message).
   Each scene carries its narration and, where the scene has them, its heading and action.
+- Suggest (`application/suggest_templates.py::SuggestTemplates`) takes a SuggestionRequest
+  `{engine, audience, region, category?, count}` (region two capital letters, category a YouTube category id of
+  1 to 4 digits or absent for every category, count 1 to `SUGGESTION_COUNT_MAX` 10, default 5) and stores
+  nothing. An engine that is not installed is an `engine` field error (400). Trends come from
+  `application/trend_finder.py::TrendFinder`: the first connected channel's credential pays the trending call
+  through `QuotaReport` and the channel's stored authorization, inside `ChannelExpiry.watching`; with no connected
+  channel, no credential, too little remaining quota, no stored authorization, any YouTube failure or an empty
+  chart it reads `TrendSource` (the bundled sample) instead and reports `source: sample`, never failing for that
+  reason. It reads `SuggestionPolicy.trend_limit` videos (default 25, 1 to 50). A general request drops trends
+  flagged made for kids before the engine sees them; a kids request keeps every trend. With no trend left it is
+  409 `suggestions_unavailable`. It resolves providers from the saved provider configs and calls
+  `engine.suggested_definitions`; `SuggestionsUnavailableError` becomes 409 `suggestions_unavailable` with the
+  engine's message. Each idea becomes a TemplateInput with the engine, the requested audience, the trimmed name
+  and description, status `draft`, origin `suggested` and the idea's definition
+  (`domain/suggestion_screen.py::suggestion_input`). An idea is dropped, and counted with the engine's drops, when
+  the name, description, reason or any text in its definition mentions a trending channel title as whole words
+  regardless of case (`copied_channels`, over every trend read), or when it fails create's checks
+  (`input_errors`, then the engine's `problems` on the unsaved template with id `suggestion`, which include the
+  general audience's child-term screen; a kids template gets the kids floor through its settings model). With
+  no idea left it is 409 `suggestions_unavailable` "None of the suggested ideas passed the checks…". The answer is
+  TemplateSuggestions `{suggestions: [{name, description, reason, based_on: [trend titles], input:
+  TemplateInput}], source: youtube | sample, dropped}`; a suggestion is saved only by sending its `input` to
+  `POST /templates`.
 - The narrated engine's suggestions (`template/suggestions.py`, `template/suggestion_prompt.py`) send one request
   with the system prompt `suggest_system.txt` (kids) or `suggest_system_general.txt` (general) and
   `suggest_user.txt`. The JSON schema asks for `{ideas: [{name (1 to 80 characters), description, reason,
@@ -1088,6 +1111,7 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | GET `/templates/{id}` | | TemplateSummary; a built-in's id is its type id; 404 `template_not_found` |
 | POST `/templates` | `TemplateInput` | TemplateSummary, 201; 400 with field errors; 409 `template_type_taken` |
 | POST `/templates/preview-script` | `TemplatePreviewInput` | SampleScript; nothing is stored; 400 with the create field errors or `language`; 409 `preview_unavailable` |
+| POST `/templates/suggestions` | `{engine, audience, region, category?, count?}` | `{suggestions: [{name, description, reason, based_on, input: TemplateInput}], source: "youtube" \| "sample", dropped}`; nothing is stored; 400 with field errors (`engine`, `audience`, `region`, `category`, `count`); 409 `suggestions_unavailable` |
 | PUT `/templates/{id}` | `TemplateInput` | TemplateSummary; 409 `template_builtin`; 400 for an audience, engine or type id change and for field errors; 409 `template_in_use` for ready to draft while automations or open runs use it |
 | DELETE `/templates/{id}` | | 204, also for a stored row that no longer decodes; 404 `template_not_found`; 409 `template_builtin`; 409 `template_in_use` naming the automations and open runs |
 | POST `/templates/{id}/duplicate` | optional `{name?, audience?}` | TemplateSummary, 201; 400 with field errors; 404 `template_not_found`; 409 `template_type_taken` |

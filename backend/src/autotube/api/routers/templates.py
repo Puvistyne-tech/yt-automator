@@ -7,6 +7,7 @@ from autotube.api.schemas.requests import DuplicateTemplateRequest
 from autotube.api.schemas.responses import CREATED, ERROR_RESPONSES, NO_CONTENT_RESPONSE
 from autotube.domain.sample_scripts import SampleScript, TemplatePreviewInput
 from autotube.domain.template_inputs import TemplateInput
+from autotube.domain.template_suggestions import SuggestionRequest, TemplateSuggestions
 from autotube.domain.template_views import EngineSummary, TemplateSummary
 
 router = APIRouter(tags=["templates"], responses=ERROR_RESPONSES)
@@ -33,6 +34,14 @@ def create_template(body: TemplateInput, app: App) -> TemplateSummary:
 )
 def preview_script(body: TemplatePreviewInput, app: App) -> SampleScript:
     return app.templates.preview.execute(body)
+
+
+@router.post(
+    "/templates/suggestions",
+    summary="Suggest draft templates from what is trending without storing anything",
+)
+def suggest_templates(body: SuggestionRequest, app: App) -> TemplateSuggestions:
+    return app.templates.suggest.execute(body)
 
 
 @router.get("/templates/{template_id}", summary="Get one pipeline template")

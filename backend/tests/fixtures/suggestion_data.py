@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from typing import Any
 
 from autotube.domain.capabilities import TextRequest
-from autotube.domain.trends import TrendingVideo
+from autotube.domain.trends import TrendingVideo, TrendQuery
 from tests.fixtures.kids_fakes import FakeWriter
 
 TRENDS = (
@@ -53,3 +54,13 @@ def raw_writer(answer: str) -> FakeWriter:
 
 def ideas_writer(*ideas: dict[str, Any]) -> FakeWriter:
     return raw_writer(ideas_reply(*ideas))
+
+
+class StaticTrends:
+    def __init__(self, videos: Sequence[TrendingVideo] = TRENDS) -> None:
+        self.videos = list(videos)
+        self.queries: list[TrendQuery] = []
+
+    def trending(self, query: TrendQuery) -> list[TrendingVideo]:
+        self.queries.append(query)
+        return list(self.videos)

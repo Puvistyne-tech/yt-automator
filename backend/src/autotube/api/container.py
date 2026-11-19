@@ -55,6 +55,7 @@ from autotube.application.set_automation_enabled import SetAutomationEnabled
 from autotube.application.set_secret import SetSecret
 from autotube.application.start_channel_connect import StartChannelConnect
 from autotube.application.start_run import StartRun
+from autotube.application.suggest_templates import SuggestTemplates
 from autotube.application.update_automation import UpdateAutomation
 from autotube.application.update_channel_defaults import UpdateChannelDefaults
 from autotube.application.update_credential import UpdateCredential
@@ -146,6 +147,7 @@ class TemplateUseCases:
     delete: DeleteTemplate
     duplicate: DuplicateTemplate
     preview: PreviewTemplateScript
+    suggest: SuggestTemplates
 
 
 @dataclass(frozen=True)
