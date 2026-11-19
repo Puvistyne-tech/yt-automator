@@ -1,6 +1,6 @@
 import type { EngineSummary, JsonObject, TrendOrigin } from "@/api/types";
 import { regionName } from "@/features/pipeline-suggestions/model/regions";
-import { isJsonObject } from "@/shared/isJsonObject";
+import { choiceTitle, defaultChoice } from "@/shared/schema-form/choices";
 
 const FORMAT_FIELD = "structure";
 
@@ -19,19 +19,8 @@ export function droppedText(dropped: number): string | null {
     : `${dropped} ideas were left out because they did not pass the checks.`;
 }
 
-function formatField(engine: EngineSummary): Record<string, unknown> | null {
-  const properties = engine.definition_schema.properties;
-  const field = isJsonObject(properties) ? properties[FORMAT_FIELD] : undefined;
-  return isJsonObject(field) ? field : null;
-}
-
 export function formatTitle(engine: EngineSummary, definition: JsonObject): string | null {
-  const field = formatField(engine);
-  if (field === null) {
-    return null;
-  }
-  const value = definition[FORMAT_FIELD] ?? field.default;
-  const options: unknown[] = Array.isArray(field.oneOf) ? field.oneOf : [];
-  const match = options.find((option) => isJsonObject(option) && option.const === value);
-  return isJsonObject(match) && typeof match.title === "string" ? match.title : null;
+  const schema = engine.definition_schema;
+  const value = definition[FORMAT_FIELD] ?? defaultChoice(schema, FORMAT_FIELD);
+  return choiceTitle(schema, FORMAT_FIELD, value);
 }

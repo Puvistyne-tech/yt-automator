@@ -1,5 +1,5 @@
-import type { EngineSummary, JsonObject, SampleScene, SampleScript } from "@/api/types";
-import { isJsonObject } from "@/shared/isJsonObject";
+import type { EngineSummary, SampleScene, SampleScript } from "@/api/types";
+import { choiceOptions, defaultChoice } from "@/shared/schema-form/choices";
 
 export interface EngineFormat {
   id: string;
@@ -86,23 +86,17 @@ const SHAPES: Record<string, FormatShape> = {
   },
 };
 
-function structureSchema(engine: EngineSummary): JsonObject {
-  const properties = engine.definition_schema.properties;
-  const structure = isJsonObject(properties) ? properties.structure : undefined;
-  return isJsonObject(structure) ? structure : {};
-}
+const FORMAT_FIELD = "structure";
 
 export function engineFormats(engine: EngineSummary): EngineFormat[] {
-  const choices = structureSchema(engine).oneOf;
-  return (Array.isArray(choices) ? choices : []).filter(isJsonObject).map((choice) => ({
-    id: String(choice.const),
-    title: String(choice.title ?? choice.const),
+  return choiceOptions(engine.definition_schema, FORMAT_FIELD).map((choice) => ({
+    id: choice.value,
+    title: choice.title,
   }));
 }
 
 export function defaultFormat(engine: EngineSummary): string {
-  const fallback = structureSchema(engine).default;
-  return typeof fallback === "string" ? fallback : (engineFormats(engine)[0]?.id ?? "");
+  return defaultChoice(engine.definition_schema, FORMAT_FIELD) ?? "";
 }
 
 const NUMBERED_PARTS: FormatShape = {
