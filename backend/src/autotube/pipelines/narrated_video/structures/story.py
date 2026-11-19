@@ -15,12 +15,12 @@ from autotube.pipelines.narrated_video.settings.cast import Character
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck, Structure
 from autotube.pipelines.narrated_video.story.casting import episode_cast
+from autotube.pipelines.narrated_video.story.ending_gate import ending_problems
 from autotube.pipelines.narrated_video.story.ending_repair import repaired_ending
 from autotube.pipelines.narrated_video.story.gates import (
     MORAL_GATE,
     CheckedGate,
     cast_problems,
-    ending_problems,
 )
 from autotube.pipelines.narrated_video.story.prompt_parts import (
     SPEAKER_RULE,

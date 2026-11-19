@@ -11,10 +11,10 @@ from autotube.pipelines.narrated_video.story.gates import (
     configured_duration,
     configured_scene_range,
 )
+from autotube.pipelines.narrated_video.story.reading import words_per_second
 from autotube.pipelines.narrated_video.structures.registry import spec_of
 
 Window = tuple[float, float]
-SECONDS_PER_MINUTE = 60.0
 
 
 def fixed_scene_count(settings: KidsStorySettings) -> int | None:
@@ -34,7 +34,7 @@ def scene_line(settings: KidsStorySettings) -> str:
 
 def spoken_window(settings: KidsStorySettings, language: str, scenes: int) -> Window:
     rules = settings.story
-    per_second = max(rules.words_per_minute.for_language(language), 1.0) / SECONDS_PER_MINUTE
+    per_second = words_per_second(rules.words_per_minute.for_language(language))
     low = rules.words_per_scene_min.for_language(language)
     high = rules.words_per_scene_max.for_language(language)
     return scenes * low / per_second, scenes * high / per_second

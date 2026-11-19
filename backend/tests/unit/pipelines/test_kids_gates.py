@@ -6,13 +6,13 @@ import pytest
 
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
+from autotube.pipelines.narrated_video.story.ending_gate import ending_problems
 from autotube.pipelines.narrated_video.story.gates import (
     Gate,
     banned_word_problems,
     brand_problems,
     cast_problems,
     duration_problems,
-    ending_problems,
     reading_level_problems,
     scene_count_problems,
     words_per_scene_problems,

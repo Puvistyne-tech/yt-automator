@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from autotube.domain.model_base import JsonObject
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.story.model import Story, StoryDraft
+from autotube.pipelines.narrated_video.story.model import Story, draft_dump
 from autotube.pipelines.narrated_video.story.reading import estimated_seconds, total_words
 
 
@@ -47,8 +47,7 @@ def attempt_record(attempt: Attempt) -> JsonObject:
     }
     if attempt.story is None:
         return {**record, "answer": attempt.answer}
-    fields = set(StoryDraft.model_fields)
-    return {**record, "script": attempt.story.model_dump(mode="json", include=fields)}
+    return {**record, "script": draft_dump(attempt.story)}
 
 
 def attempt_filename(attempt: Attempt) -> str:

@@ -5,8 +5,6 @@ from collections.abc import Callable
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import (
     StoryCheck,
-    says_moral,
-    says_refrain,
 )
 from autotube.pipelines.narrated_video.story.casting import episode_cast
 from autotube.pipelines.narrated_video.story.child_terms import (
@@ -77,27 +75,6 @@ def duration_problems(
         f"the story is {verdict}; it reads in about {seconds:.0f} s, "
         f"aim for {target} s (within {tolerance} s)"
     ]
-
-
-def ending_text(story: Story, scenes: int) -> str:
-    return " ".join(scene.narration for scene in story.scenes[-scenes:])
-
-
-def closing_scenes(count: int) -> str:
-    return "the last scene" if count == 1 else f"the last {count} scenes"
-
-
-def ending_problems(story: Story, settings: KidsStorySettings) -> list[str]:
-    problems = []
-    style = settings.story.ending_style
-    count = settings.story.ending_scenes
-    ending = ending_text(story, count)
-    if says_moral(style) and not contains_phrase(ending, story.moral):
-        problems.append(f"say the moral, word for word, in {closing_scenes(count)}")
-    refrain = settings.series.refrain.for_language(story.language)
-    if says_refrain(style) and refrain and not contains_phrase(ending, refrain):
-        problems.append(f'say the refrain "{refrain}" in {closing_scenes(count)}')
-    return problems
 
 
 def moral_problems(story: Story, settings: KidsStorySettings) -> list[str]:  # noqa: ARG001

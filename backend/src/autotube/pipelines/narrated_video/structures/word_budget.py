@@ -4,7 +4,7 @@ import math
 from dataclasses import dataclass
 
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.story.reading import SECONDS_PER_MINUTE, word_range
+from autotube.pipelines.narrated_video.story.reading import word_range, words_per_second
 from autotube.pipelines.narrated_video.structures.length import (
     duration_target,
     length_window,
@@ -45,7 +45,7 @@ def word_budget(settings: KidsStorySettings, language: str) -> WordBudget:
     rate = settings.story.words_per_minute.for_language(language)
     total = word_range(*length_window(settings, language), rate)
     target_seconds, _ = duration_target(settings, language)
-    target = round(target_seconds * rate / SECONDS_PER_MINUTE)
+    target = round(target_seconds * words_per_second(rate))
     scenes = scene_range(settings)
     per_scene = per_scene_words(total, scenes, configured_words(settings, language))
     return WordBudget(total, target, per_scene)

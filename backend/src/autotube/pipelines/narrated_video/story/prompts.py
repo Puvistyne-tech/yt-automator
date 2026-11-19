@@ -9,7 +9,7 @@ from autotube.pipelines.narrated_video.languages import language_name
 from autotube.pipelines.narrated_video.resources import render_prompt, resource_json
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.answer_schema import draft_schema, text_schema
-from autotube.pipelines.narrated_video.story.model import StoryDraft, text_of
+from autotube.pipelines.narrated_video.story.model import StoryDraft, draft_dump, text_of
 from autotube.pipelines.narrated_video.story.prompt_parts import (
     action_rule,
     avoided_topics,
@@ -91,8 +91,7 @@ def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str
 
 
 def draft_json(story: StoryDraft) -> str:
-    draft = story.model_dump(mode="json", include=set(StoryDraft.model_fields))
-    return json.dumps(draft, ensure_ascii=False)
+    return json.dumps(draft_dump(story), ensure_ascii=False)
 
 
 def feedback_text(feedback: Sequence[str], previous: StoryDraft | None = None) -> str:

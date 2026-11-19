@@ -9,11 +9,15 @@ from autotube.pipelines.narrated_video.story.repair_text import (
     unchanged,
     with_closing_lines,
 )
-from autotube.pipelines.narrated_video.story.words import contains_phrase
-from autotube.pipelines.narrated_video.structures.explainer_checks import wants_takeaway
+from autotube.pipelines.narrated_video.structures.explainer_checks import takeaway_unsaid
 from autotube.pipelines.narrated_video.structures.framing import QUESTION_MARKS
-from autotube.pipelines.narrated_video.structures.list_checks import expected_numbers
-from autotube.pipelines.narrated_video.structures.quiz_checks import asks
+from autotube.pipelines.narrated_video.structures.list_checks import (
+    expected_numbers,
+    numbered,
+    numbers_in_order,
+    unnumbered,
+)
+from autotube.pipelines.narrated_video.structures.quiz_checks import asks, is_marked
 
 DIGITS = re.compile(r"\d+")
 QUESTION_MARK = QUESTION_MARKS[0]
@@ -21,8 +25,7 @@ QUESTION_MARK = QUESTION_MARKS[0]
 
 def repaired_takeaway(story: Story, settings: KidsStorySettings) -> Repaired:
     takeaway = story.moral.strip()
-    last = story.scenes[-1].narration
-    if not wants_takeaway(settings) or not takeaway or contains_phrase(last, takeaway):
+    if not takeaway or not takeaway_unsaid(story, settings):
         return unchanged(story)
     return with_closing_lines(story, [takeaway]), ("added the takeaway to the last scene",)
 
@@ -43,11 +46,15 @@ def renumbered(story: Story, numbers: list[int]) -> list[StoryScene]:
     return [ends[0], *items, ends[1]]
 
 
+def already_numbered(story: Story, count: int, descending: bool) -> bool:
+    framed = unnumbered(story.scenes[0]) and unnumbered(story.scenes[-1])
+    return framed and len(numbered(story)) == count and numbers_in_order(story, descending)
+
+
 def repaired_numbers(story: Story, settings: KidsStorySettings, descending: bool) -> Repaired:
     items = story.scenes[1:-1]
     numbers = expected_numbers(settings.story.item_count, descending)
-    current = [story.scenes[0].number, *(scene.number for scene in items), story.scenes[-1].number]
-    if len(items) != len(numbers) or current == [None, *numbers, None]:
+    if len(items) != len(numbers) or already_numbered(story, len(numbers), descending):
         return unchanged(story)
     if not all(agrees(scene, number) for scene, number in zip(items, numbers, strict=True)):
         return unchanged(story)
@@ -56,10 +63,9 @@ def repaired_numbers(story: Story, settings: KidsStorySettings, descending: bool
 
 
 def marked(scene: StoryScene) -> StoryScene:
-    question = scene.question.rstrip()
-    if not asks(scene) or question.endswith(QUESTION_MARKS):
+    if not asks(scene) or is_marked(scene):
         return scene
-    return scene.model_copy(update={"question": f"{question}{QUESTION_MARK}"})
+    return scene.model_copy(update={"question": f"{scene.question.rstrip()}{QUESTION_MARK}"})
 
 
 def repaired_question_marks(story: Story, settings: KidsStorySettings) -> Repaired:  # noqa: ARG001

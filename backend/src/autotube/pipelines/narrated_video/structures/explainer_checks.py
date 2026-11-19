@@ -27,10 +27,12 @@ def takeaway_field_problems(story: Story, settings: KidsStorySettings) -> list[s
     return [MISSING_TAKEAWAY]
 
 
+def takeaway_unsaid(story: Story, settings: KidsStorySettings) -> bool:
+    return wants_takeaway(settings) and not contains_phrase(story.scenes[-1].narration, story.moral)
+
+
 def takeaway_problems(story: Story, settings: KidsStorySettings) -> list[str]:
-    if not wants_takeaway(settings) or contains_phrase(story.scenes[-1].narration, story.moral):
-        return []
-    return [UNSAID_TAKEAWAY]
+    return [UNSAID_TAKEAWAY] if takeaway_unsaid(story, settings) else []
 
 
 def explainer_problems(story: Story, settings: KidsStorySettings) -> list[str]:
