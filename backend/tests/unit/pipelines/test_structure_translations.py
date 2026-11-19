@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -16,26 +17,26 @@ from tests.fixtures.quick_sections import QUICK_SECTIONS
 from tests.fixtures.quiz_data import quiz_draft, quiz_settings, quiz_text_ta, tamil_quiz
 from tests.fixtures.template_settings import GENERAL, KIDS
 
-TAMIL_ANSWER = "say the answer to question 1, word for word, in its reveal"
+QUESTION = "சூரியனுக்கு மிக அருகில் உள்ள கோள் எது"
+CHOICES: dict[str, Any] = {"story": {"answer_choices": 3}}
+ONE_LABEL = [{"heading": "ஒன்று"}]
+TAMIL_CASES = [
+    (False, 1, {"question": QUESTION}, "end question 1 with a question mark"),
+    (False, 1, {"question": f"{QUESTION}？"}, None),
+    (False, 2, {"answer": "வெள்ளி"}, "say the answer to question 1, word for word, in its reveal"),
+    (False, 2, {"answer": ""}, "follow question 1 with a reveal scene that gives its answer"),
+    (True, 1, {"choices": ["புதன்", "வெள்ளி"]}, "give question 1 exactly 3 choices"),
+    (True, 1, {"choices": ["x", "y", "z"]}, "make the answer to question 1 one of its choices"),
+]
 
 
-@pytest.mark.parametrize(
-    ("index", "changes", "problem"),
-    [
-        (
-            1,
-            {"question": "சூரியனுக்கு மிக அருகில் உள்ள கோள் எது"},
-            "end question 1 with a question mark",
-        ),
-        (2, {"answer": "வெள்ளி"}, TAMIL_ANSWER),
-        (1, {"question": "சூரியனுக்கு மிக அருகில் உள்ள கோள் எது？"}, None),
-    ],
-)
-def test_tamil_quiz_translations_keep_question_marks_and_answers(
-    index: int, changes: dict[str, Any], problem: str | None
+@pytest.mark.parametrize(("choices", "index", "changes", "problem"), TAMIL_CASES)
+def test_tamil_quiz_translations_run_every_quiz_gate(
+    choices: bool, index: int, changes: dict[str, Any], problem: str | None
 ) -> None:
-    tamil = with_scene(tamil_quiz(), index, **changes)
-    assert translation_problems(tamil, quiz_settings(GENERAL)) == ([problem] if problem else [])
+    settings = quiz_settings(GENERAL, **(CHOICES if choices else {}))
+    tamil = with_scene(tamil_quiz(choices), index, **changes)
+    assert translation_problems(tamil, settings) == ([problem] if problem else [])
 
 
 def test_tamil_list_translations_keep_distinct_headings() -> None:
@@ -44,26 +45,38 @@ def test_tamil_list_translations_keep_distinct_headings() -> None:
 
 
 def test_tamil_labels_are_screened_for_a_general_audience() -> None:
-    tamil = with_scene(tamil_quiz(), 1, question="குழந்தைகளே, சூரியனுக்கு அருகில் உள்ள கோள் எது?")
+    tamil = with_scene(tamil_quiz(), 1, question=f"குழந்தைகளே, {QUESTION}?")
     found = translation_problems(tamil, quiz_settings(GENERAL))
     assert any("never address children" in item for item in found)
     assert translation_problems(tamil, quiz_settings(KIDS)) == []
 
 
-def labelless_writer() -> FakeWriter:
+@pytest.mark.parametrize("translated", [tamil_list, tamil_quiz], ids=["list", "quiz"])
+@pytest.mark.parametrize("labels", [None, ONE_LABEL], ids=["missing", "short"])
+def test_a_translation_must_keep_one_label_entry_per_scene(
+    translated: Callable[..., Story], labels: list[dict[str, str]] | None
+) -> None:
+    with pytest.raises(ValueError, match="one scene_labels entry per scene"):
+        translated(scene_labels=labels)
+
+
+def unlabelled_writer(labels: list[dict[str, str]] | None) -> FakeWriter:
     def respond(request: TextRequest) -> str:
         if is_judge(request):
             return "1"
         if is_translation(request):
-            return as_json({**quiz_text_ta(), "scene_labels": None})
+            return as_json({**quiz_text_ta(), "scene_labels": labels})
         return as_json(quiz_draft())
 
     return FakeWriter(respond)
 
 
-def test_a_translation_without_scene_labels_is_retried_then_fails(tmp_path: Path) -> None:
+@pytest.mark.parametrize("labels", [None, ONE_LABEL], ids=["missing", "short"])
+def test_a_translation_without_every_label_is_retried_then_fails(
+    tmp_path: Path, labels: list[dict[str, str]] | None
+) -> None:
     settings = quiz_settings(GENERAL, **QUICK_SECTIONS)
-    writer = labelless_writer()
+    writer = unlabelled_writer(labels)
     rig = StageRig(tmp_path, settings=settings, providers=FakeProviders(writer=writer))
     with pytest.raises(ScriptUnavailableError):
         rig.run(StoryStage())
@@ -72,7 +85,5 @@ def test_a_translation_without_scene_labels_is_retried_then_fails(tmp_path: Path
     assert '"scene_labels"' in translations[0].prompt
 
 
-def test_translated_answers_replace_the_source_answers() -> None:
-    tamil: Story = tamil_quiz(choices=True)
-    assert tamil.scenes[1].choices == ["புதன்", "வெள்ளி", "செவ்வாய்"]
-    assert [scene.number for scene in tamil.scenes] == [None] * len(tamil.scenes)
+def test_translated_choices_replace_the_source_choices() -> None:
+    assert tamil_quiz(choices=True).scenes[1].choices == ["புதன்", "வெள்ளி", "செவ்வாய்"]

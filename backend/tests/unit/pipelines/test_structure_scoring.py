@@ -78,6 +78,12 @@ def test_inapplicable_items_are_left_out_and_the_score_renormalises() -> None:
     ("settings", "good", "broken", "title"),
     [
         (
+            list_settings(GENERAL),
+            list_story(),
+            with_scene(list_story(), 1, heading=""),
+            "List numbering and headings",
+        ),
+        (
             list_settings(GENERAL, "countdown"),
             list_story(countdown=True),
             list_story(),
@@ -90,6 +96,7 @@ def test_inapplicable_items_are_left_out_and_the_score_renormalises() -> None:
             "Quiz questions and reveals",
         ),
     ],
+    ids=["list", "countdown", "quiz"],
 )
 def test_each_structure_scores_its_own_shape(
     settings: KidsStorySettings, good: Story, broken: Story, title: str
@@ -99,13 +106,5 @@ def test_each_structure_scores_its_own_shape(
     ]
     assert (item.title, item.score, item.weight) == (title, 100.0, 1.5)
     items = scored(settings, {"en": broken})
-    assert items["structure"] == (50.0, 1.5)
-    assert not {"moral_and_refrain", "character_consistency"} & items.keys()
-
-
-def test_the_list_item_scores_its_shape_and_skips_story_items() -> None:
-    settings = list_settings(GENERAL)
-    assert scored(settings, {"en": list_story()})["structure"] == (100.0, 1.5)
-    items = scored(settings, {"en": with_scene(list_story(), 1, heading="")})
     assert items["structure"] == (50.0, 1.5)
     assert not {"moral_and_refrain", "character_consistency"} & items.keys()

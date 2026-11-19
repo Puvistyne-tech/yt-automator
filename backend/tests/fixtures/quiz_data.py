@@ -132,8 +132,8 @@ def quiz_story(choices: bool = False, **changes: Any) -> Story:
     return Story.model_validate(fields | changes)
 
 
-def tamil_quiz(choices: bool = False) -> Story:
-    text = StoryText.model_validate(quiz_text_ta(choices))
+def tamil_quiz(choices: bool = False, **changes: Any) -> Story:
+    text = StoryText.model_validate(quiz_text_ta(choices) | changes)
     return with_text(quiz_story(choices), text, "ta")
 
 

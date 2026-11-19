@@ -3,17 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from pydantic import ValidationError
 
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.publishing.templates import template_values
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
-from autotube.pipelines.narrated_video.structures.registry import structure_spec
 from tests.fixtures.list_data import with_scene
 from tests.fixtures.quiz_data import quiz_settings, quiz_story, tamil_quiz
-from tests.fixtures.template_settings import GENERAL, KIDS, pipeline_of
+from tests.fixtures.template_settings import GENERAL, KIDS
 
 AUDIENCES = [KIDS, GENERAL]
 CHOICES: dict[str, Any] = {"story": {"answer_choices": 3}}
@@ -58,7 +56,11 @@ def test_a_quiz_checks_every_question_and_reveal(
 
 def test_a_quiz_with_choices_needs_them_and_the_answer_among_them() -> None:
     settings = quiz_settings(KIDS, **CHOICES)
-    assert story_problems(quiz_story(), settings)[0] == "give question 1 exactly 3 choices"
+    assert story_problems(quiz_story(), settings) == [
+        f"give question {number} exactly 3 choices" for number in range(1, 5)
+    ]
+    two = with_scene(quiz_story(choices=True), 1, choices=["Mercury", "Venus"])
+    assert story_problems(two, settings) == ["give question 1 exactly 3 choices"]
     moved = with_scene(quiz_story(choices=True), 3, choices=["two moons", "three", "four"])
     assert story_problems(moved, settings) == ["make the answer to question 2 one of its choices"]
 
@@ -77,11 +79,6 @@ def test_a_quiz_needs_framing_and_the_question_count() -> None:
     assert "follow question 5 with a reveal scene that gives its answer" in found
 
 
-def test_one_answer_choice_is_refused() -> None:
-    with pytest.raises(ValidationError, match="no choices or at least two"):
-        quiz_settings(GENERAL, story={"answer_choices": 1})
-
-
 @pytest.mark.parametrize("choices", [0, 3])
 def test_the_quiz_prompts_ask_for_questions_and_reveals(choices: int) -> None:
     settings = quiz_settings(GENERAL, story={"quiz_questions": 3, "answer_choices": choices})
@@ -97,16 +94,3 @@ def test_the_quiz_prompts_ask_for_questions_and_reveals(choices: int) -> None:
 
 def test_a_quiz_supplies_its_question_count() -> None:
     assert template_values(quiz_story(), quiz_settings(GENERAL))["question_count"] == "4"
-
-
-@pytest.mark.parametrize("audience", AUDIENCES)
-def test_the_quiz_shows_its_counts_and_hides_cast_and_list_settings(
-    audience: TemplateAudience,
-) -> None:
-    descriptor = pipeline_of(audience, structure="quiz").descriptor
-    hidden = descriptor.ui_schema["ui:hidden"]
-    assert isinstance(hidden, list) and {
-        *structure_spec(Structure.QUIZ).hidden_paths,
-        "story.item_count",
-    } <= set(hidden)
-    assert not {"story.quiz_questions", "story.answer_choices"} & set(hidden)

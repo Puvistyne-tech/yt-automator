@@ -6,6 +6,7 @@ import pytest
 
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
 from tests.fixtures.list_data import list_settings, list_story, with_scene
+from tests.fixtures.quiz_data import quiz_settings, quiz_story
 from tests.fixtures.template_settings import GENERAL, KIDS
 
 SCREENED: list[tuple[dict[str, Any], str]] = [
@@ -24,6 +25,13 @@ def test_every_scene_label_is_screened_like_the_narration(
     settings = list_settings(GENERAL, safety={"banned_words": ["monster"]})
     assert any(found in item for item in story_problems(labelled, settings))
     assert any(found in item for item in translation_problems(labelled, settings))
+
+
+@pytest.mark.parametrize(("labels", "found"), SCREENED[1:])
+def test_quiz_scene_labels_are_screened(labels: dict[str, Any], found: str) -> None:
+    labelled = with_scene(quiz_story(choices=True), 1, **labels)
+    settings = quiz_settings(GENERAL, safety={"banned_words": ["monster"]})
+    assert any(found in item for item in story_problems(labelled, settings))
 
 
 def test_kids_scripts_may_address_children_in_their_labels() -> None:
