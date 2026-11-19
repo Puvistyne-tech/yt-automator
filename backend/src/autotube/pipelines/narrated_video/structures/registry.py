@@ -7,12 +7,13 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.structures.explainer import EXPLAINER_SPEC
 from autotube.pipelines.narrated_video.structures.numbered import COUNTDOWN_SPEC, LIST_SPEC
+from autotube.pipelines.narrated_video.structures.quiz import QUIZ_SPEC
 from autotube.pipelines.narrated_video.structures.spec import StructureSpec
 from autotube.pipelines.narrated_video.structures.story import STORY_SPEC
 
 FOLDER = "structures"
 SPECS: dict[Structure, StructureSpec] = {
-    spec.id: spec for spec in (STORY_SPEC, EXPLAINER_SPEC, LIST_SPEC, COUNTDOWN_SPEC)
+    spec.id: spec for spec in (STORY_SPEC, EXPLAINER_SPEC, LIST_SPEC, COUNTDOWN_SPEC, QUIZ_SPEC)
 }
 
 

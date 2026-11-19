@@ -623,7 +623,7 @@ class PipelineEngine(Protocol):
 
 | Field | Type | Maps to |
 | --- | --- | --- |
-| `structure` | `story` (default) \| `explainer` \| `list` \| `countdown` (see Structures) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
+| `structure` | `story` (default) \| `explainer` \| `list` \| `countdown` \| `quiz` (see Structures) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
 | `brief` | text, at most 2000 | `story.extra_instructions` as "Every video is about: <brief>" |
 | `length` | `short` \| `standard` (default) \| `long` | short: 60 s ±15, 4–6 scenes; long: 300 s ±45, 14–18 scenes; standard changes nothing |
 | `tone` | text | `story.tone` |
@@ -805,10 +805,30 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   placeholders (`{items}` in video order, so number one last), hidden and shown paths. No bundled fallback.
   Defaults (`structures/countdown_defaults.json`): ranking topics ("the fastest animals", …), a countdown
   description, tags and hashtags.
+- `quiz` (`structures/quiz.py`, `structures/quiz_checks.py`): `story.quiz_questions` questions on one topic, with
+  no recurring characters. Wording "quiz" / "quiz scripts" / "quiz script"; `$structure_rules` is `quiz.txt`:
+  an intro hook scene, then one question scene and its reveal scene per question, then a closing scene. A
+  question scene's `question` holds the question (ending with a question mark) that its narration asks; with
+  `story.answer_choices` > 0 its `choices` lists that many short answers, one of them the answer, read out in
+  the narration, and with 0 `choices` is empty (open questions). The reveal scene's `answer` holds the short
+  answer, which its narration says word for word and explains in one sentence. `heading` is empty, `number`
+  null, `moral` empty. Scene range: exactly 2 × questions + 2. Gate (check `structure`): intro and closing
+  scenes carry no question or answer ("open with an intro scene and end with a closing scene, with no question
+  or answer"); exactly `quiz_questions` question scenes ("ask exactly N questions, not M"); for question K:
+  "end question K with a question mark" (`?` or `？`), "follow question K with a reveal scene that gives its
+  answer" (the next scene has a non-empty answer), "say the answer to question K, word for word, in its
+  reveal", "give question K exactly C choices" or "ask question K as an open question, with no choices", and
+  "make the answer to question K one of its choices" (ignoring case). Translations run the same gate (so
+  Tamil questions keep their question mark and Tamil answers appear in their reveals) and are asked for
+  `scene_labels`. Score item `structure` ("Quiz questions and reveals"). Placeholder `{question_count}` (the
+  question scenes). No bundled fallback ("…quiz scripts have no bundled fallback"). Defaults
+  (`structures/quiz_defaults.json`): general-knowledge topics, a quiz description with `{question_count}`,
+  tags and hashtags. Hidden paths: the cast paths and the scene counts; shown paths `story.quiz_questions` and
+  `story.answer_choices`.
 
 - Safety across structures (tested): a kids template of any structure carries `kids_content`, uploads made for
   kids, keeps the kids floor and the kids system-prompt lines; a general template of any structure never does;
-  a general explainer, list or countdown runs the child-directed term gate and never uses the bundled stories; a blank template of
+  a general explainer, list, countdown or quiz runs the child-directed term gate and never uses the bundled stories; a blank template of
   every structure and audience has no problems and runs offline through the fake providers.
 
 #### Problems

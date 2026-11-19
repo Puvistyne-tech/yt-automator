@@ -10,6 +10,7 @@ class Structure(StrEnum):
     EXPLAINER = "explainer"
     LIST = "list"
     COUNTDOWN = "countdown"
+    QUIZ = "quiz"
 
 
 class EndingStyle(StrEnum):
@@ -52,6 +53,7 @@ STRUCTURE_CHOICES = enum_choices(
         "explainer": "Explainer",
         "list": "List",
         "countdown": "Countdown",
+        "quiz": "Quiz",
     },
 )
 ENDING_STYLE_CHOICES = enum_choices(
