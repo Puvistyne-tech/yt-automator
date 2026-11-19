@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 from autotube.domain.pipeline_templates import TemplateAudience
-from autotube.pipelines.narrated_video.settings.story import StorySource
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.structures.registry import structure_spec
-from autotube.pipelines.narrated_video.template.audience import SOURCE_PATH, Pins, audience_pins
+from autotube.pipelines.narrated_video.template.audience import (
+    SOURCE_PATH,
+    Pins,
+    audience_pins,
+    llm_only_pins,
+)
 
 
 def structure_pins(structure: Structure) -> Pins:
-    story = {"structure": structure.value}
-    if not structure_spec(structure).uses_bundled:
-        story["source"] = StorySource.LLM_WITH_FALLBACK.value
-    return {"story": story}
+    llm_only = {} if structure_spec(structure).uses_bundled else llm_only_pins()
+    return {"story": {"structure": structure.value, **llm_only}}
 
 
 def template_pins(audience: TemplateAudience, structure: Structure) -> Pins:

@@ -31,9 +31,13 @@ def ensure_editable(template: PipelineTemplate) -> None:
         )
 
 
+def immutable_message(field: str) -> str:
+    return f"{field} cannot change after creation; duplicate the template instead"
+
+
 def immutable_errors(current: PipelineTemplate, proposed: PipelineTemplate) -> dict[str, str]:
     return {
-        field: f"{field} cannot change after creation; duplicate the template instead"
+        field: immutable_message(field)
         for field in IMMUTABLE_FIELDS
         if getattr(current, field) != getattr(proposed, field)
     }

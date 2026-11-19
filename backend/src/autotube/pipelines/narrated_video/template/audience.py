@@ -29,10 +29,14 @@ def audience_hidden_paths(audience: TemplateAudience) -> tuple[str, ...]:
     return (AUDIENCE_PATH, *GENERAL_HIDDEN_PATHS)
 
 
+def llm_only_pins() -> dict[str, str]:
+    return {"source": StorySource.LLM_WITH_FALLBACK.value}
+
+
 def audience_pins(audience: TemplateAudience) -> Pins:
     pins: Pins = {"safety": {"audience": audience.value}}
     if audience is TemplateAudience.GENERAL:
-        pins["story"] = {"source": StorySource.LLM_WITH_FALLBACK.value}
+        pins["story"] = llm_only_pins()
     return pins
 
 
