@@ -5,6 +5,7 @@ from enum import StrEnum
 
 from pydantic.config import JsonDict
 
+from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.domain.video_look import SubtitlePosition, Transition, VideoQuality
 from autotube.pipelines.narrated_video.languages import LANGUAGE_NAMES
 from autotube.pipelines.narrated_video.settings.base import Placement
@@ -52,6 +53,7 @@ STORY_SOURCE_CHOICES = titled_choices(
 THEME_MODE_CHOICES = titled_choices(
     {"rotate": "Rotate through the themes", "fixed": "Always the fixed theme"}
 )
+AUDIENCE_CHOICES = enum_choices(TemplateAudience, {"kids": "Kids", "general": "General audience"})
 READING_LEVEL_CHOICES = titled_choices(
     {"toddler": "Toddler", "preschool": "Preschool", "early_reader": "Early reader"}
 )

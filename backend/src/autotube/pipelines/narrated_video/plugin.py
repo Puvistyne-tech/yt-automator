@@ -20,7 +20,6 @@ from autotube.pipelines.narrated_video.artifacts import EPISODE, SHORT
 from autotube.pipelines.narrated_video.languages import LANGUAGE_NAMES
 from autotube.pipelines.narrated_video.resources import resource_json
 from autotube.pipelines.narrated_video.scoring.score import score_run
-from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.stages.art import ArtStage
 from autotube.pipelines.narrated_video.stages.assemble import AssembleStage
 from autotube.pipelines.narrated_video.stages.motion import MotionStage
@@ -28,6 +27,7 @@ from autotube.pipelines.narrated_video.stages.music import MusicStage
 from autotube.pipelines.narrated_video.stages.package import PackageStage
 from autotube.pipelines.narrated_video.stages.story import StoryStage
 from autotube.pipelines.narrated_video.stages.voice import VoiceStage
+from autotube.pipelines.narrated_video.template.settings_model import kids_settings_model
 
 TYPE_ID = "kids_story"
 VERSION = "1.0.0"
@@ -78,8 +78,8 @@ class KidsStoryPipeline:
             name=NAME,
             description=DESCRIPTION,
             version=VERSION,
-            settings_schema=settings_schema_of(KidsStorySettings),
-            default_settings=default_settings_of(KidsStorySettings),
+            settings_schema=settings_schema_of(self.settings_model),
+            default_settings=default_settings_of(self.settings_model),
             ui_schema=ui_schema(),
             stages=tuple(stage.descriptor for stage in self.stage_list),
             languages=tuple(
@@ -91,7 +91,7 @@ class KidsStoryPipeline:
 
     @property
     def settings_model(self) -> type[BaseModel]:
-        return KidsStorySettings
+        return kids_settings_model()
 
     def stages(self) -> Sequence[Stage]:
         return self.stage_list

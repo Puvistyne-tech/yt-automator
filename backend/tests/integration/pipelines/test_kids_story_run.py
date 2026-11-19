@@ -1,91 +1,24 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
-
 import pytest
 
-from autotube.application.execute_run import ExecuteRun
 from autotube.domain.automations import TargetInput
-from autotube.domain.providers import ProviderConfig, ProviderDescriptor
-from autotube.domain.publish_plan import UploadPlan, plan_uploads
 from autotube.domain.run_enums import ArtifactKind, ReviewDecision, RunStatus, StageStatus
 from autotube.domain.runs import Run
-from autotube.domain.secrets import SecretDefinition
 from autotube.pipelines.registry import installed_pipelines
-from tests.fixtures.builders import add_automation, target_input
-from tests.fixtures.fake_pipeline import FakePipelineRegistry
+from tests.fixtures.builders import target_input
 from tests.fixtures.harness import Harness
 from tests.fixtures.kids_data import quick_settings, smart_writer
-from tests.fixtures.kids_fakes import FakeProviders
+from tests.fixtures.pipeline_runs import ALL_TARGETS, PAIRS, executed_run, pairs, planned_uploads
 from tests.fixtures.use_cases import publish_run, review_run
 
 pytestmark = pytest.mark.integration
-VARIANTS = ("episode", "short")
-PAIRS = {(language, variant) for language in ("en", "ta") for variant in VARIANTS}
-
-
-class KidsCatalog:
-    def __init__(self) -> None:
-        self.providers = FakeProviders(writer=smart_writer())
-        self.configs: list[list[ProviderConfig]] = []
-
-    def descriptors(self) -> list[ProviderDescriptor]:
-        return []
-
-    def secrets(self) -> list[SecretDefinition]:
-        return []
-
-    def option_errors(self, configs: Sequence[ProviderConfig]) -> dict[str, str]:  # noqa: ARG002
-        return {}
-
-    def resolver(self, configs: Sequence[ProviderConfig]) -> FakeProviders:
-        self.configs.append(list(configs))
-        return self.providers
-
-
-ALL_TARGETS = (
-    target_input(language="en", variants=VARIANTS),
-    target_input(language="ta", variants=VARIANTS),
-)
 
 
 def executed(harness: Harness, targets: tuple[TargetInput, ...] = ALL_TARGETS) -> Run:
-    harness.pipelines = FakePipelineRegistry(installed_pipelines())
-    automation = add_automation(
-        harness,
-        name="Bedtime tales",
-        pipeline_type="kids_story",
-        settings=quick_settings().model_dump(mode="json"),
-        languages=("en", "ta"),
-        targets=targets,
-    )
-    run = harness.start_run.execute(automation.id)
-    return ExecuteRun(
-        harness.runs,
-        harness.pipelines,
-        harness.provider_configs,
-        KidsCatalog(),
-        harness.store,
-        harness.recorder,
-        harness.progress,
-        harness.stage_runner,
-        harness.auto_publish,
-    ).execute(run.id)
-
-
-def pairs(run: Run, kind: ArtifactKind) -> set[tuple[str | None, str | None]]:
-    return {(item.language, item.variant) for item in run.artifacts if item.kind is kind}
-
-
-def planned_uploads(harness: Harness, run: Run) -> list[UploadPlan]:
-    automation = harness.automations.get(run.automation_id)
-    assert automation is not None
-    descriptor = harness.pipelines.get("kids_story")
-    assert descriptor is not None
-    channel = harness.channels.get("chan-1")
-    assert channel is not None
-    return plan_uploads(
-        run, automation.targets, {channel.id: channel}, descriptor.descriptor, harness.clock.now()
+    settings = quick_settings().model_dump(mode="json")
+    return executed_run(
+        harness, installed_pipelines(), "kids_story", settings, smart_writer(), targets
     )
 
 

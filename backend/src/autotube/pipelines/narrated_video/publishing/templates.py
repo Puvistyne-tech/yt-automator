@@ -3,6 +3,19 @@ from __future__ import annotations
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.model import Story
 
+METADATA_PLACEHOLDERS = (
+    "title",
+    "series",
+    "tagline",
+    "moral",
+    "theme",
+    "questions",
+    "hashtags",
+    "characters",
+    "refrain",
+    "hook",
+)
+
 
 def character_names(story: Story, settings: KidsStorySettings) -> str:
     members = settings.characters(story.character_ids)

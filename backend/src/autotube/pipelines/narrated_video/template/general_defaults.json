@@ -1,0 +1,49 @@
+{
+  "series": {
+    "tagline": {
+      "en": "Short stories worth sharing",
+      "ta": "பகிர வேண்டிய சிறு கதைகள்"
+    },
+    "intro_line": {
+      "en": "Welcome to {series}. Let's begin!",
+      "ta": "{series} உங்களை அன்புடன் வரவேற்கிறது. கதையைத் தொடங்குவோம்!"
+    },
+    "outro_line": {
+      "en": "Thank you for listening. See you in the next story!",
+      "ta": "கதையைக் கேட்டதற்கு நன்றி. அடுத்த கதையில் சந்திப்போம்!"
+    },
+    "editorial_rules": [
+      "Every story is warm, original and suitable for a general audience.",
+      "Never speak to the viewer as a child or as a parent of a child.",
+      "No graphic violence, cruelty, or unsafe behaviour shown as fun.",
+      "No brands, products, real people, places of worship or current events.",
+      "Use clear sentences and everyday words."
+    ]
+  },
+  "story": {
+    "question_style": "\"What do you think happens next?\" style questions for viewers"
+  },
+  "visuals": {
+    "judge_criteria": "Pick the picture that best matches the scene, keeps every character on model, looks warm and has no text in it."
+  },
+  "music": {
+    "mood_prompt": "warm acoustic music with soft piano and light strings, calm and inviting"
+  },
+  "sound_effects": {
+    "prompt_template": "soft natural sound effect for an animated story: {cue}"
+  },
+  "metadata": {
+    "description_template": {
+      "en": "{title}\n\nA story from {series} about {theme}. {tagline}.\n\n{moral}\n\nWhat do you think happens next?\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் ஒரு கதை. {tagline}.\n\n{moral}\n\nஅடுத்து என்ன நடக்கும் என்று நினைக்கிறீர்கள்?\n{questions}\n\n{hashtags}"
+    },
+    "tags": {
+      "en": ["stories", "short stories", "animated stories", "story time"],
+      "ta": ["தமிழ் கதைகள்", "சிறு கதைகள்", "Tamil stories"]
+    },
+    "hashtags": {
+      "en": ["#Stories", "#AnimatedStories", "#ShortStories"],
+      "ta": ["#தமிழ்கதைகள்", "#Stories", "#AnimatedStories"]
+    }
+  }
+}

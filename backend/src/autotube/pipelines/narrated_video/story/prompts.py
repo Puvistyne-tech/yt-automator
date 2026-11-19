@@ -33,16 +33,24 @@ def reading_level_text(settings: KidsStorySettings) -> str:
     return str(levels[level]) if isinstance(levels, dict) and level in levels else level
 
 
+def system_values(settings: KidsStorySettings, language: str) -> dict[str, object]:
+    return {
+        "series": settings.series.name.for_language(language),
+        "tagline": settings.series.tagline.for_language(language),
+        "tone": settings.story.tone,
+        "rules": bullet_lines(settings.series.editorial_rules),
+        "avoid_topics": avoided_topics(settings.safety.avoid_topics),
+    }
+
+
 def story_system(settings: KidsStorySettings, language: str) -> str:
+    if not settings.safety.for_kids:
+        return render_prompt("story_system_general.txt", **system_values(settings, language))
     return render_prompt(
         "story_system.txt",
-        series=settings.series.name.for_language(language),
-        tagline=settings.series.tagline.for_language(language),
+        **system_values(settings, language),
         age_min=settings.story.age_min,
         age_max=settings.story.age_max,
-        tone=settings.story.tone,
-        rules=bullet_lines(settings.series.editorial_rules),
-        avoid_topics=avoided_topics(settings.safety.avoid_topics),
         reading_level=reading_level_text(settings),
     )
 

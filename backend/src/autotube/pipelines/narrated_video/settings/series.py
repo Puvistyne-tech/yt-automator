@@ -2,20 +2,23 @@ from __future__ import annotations
 
 from pydantic import Field, field_validator
 
+from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.settings.base import (
     LocalizedText,
     SettingsSection,
     localized_text,
     text_list_field,
 )
+from autotube.pipelines.narrated_video.settings.choices import AUDIENCE_CHOICES
 
 PICTURE_EXCLUSIONS = (
     "text, letters, words, captions, watermark, logo, signature, scary, gloomy, "
     "violence, weapons, sharp teeth, distorted faces, extra limbs"
 )
+NO_HARM_RULE = "No violence, fear, danger, villains, punishment or unsafe behaviour."
 EDITORIAL_RULES = [
     "Every story is gentle, warm and safe for children aged three to seven.",
-    "No violence, fear, danger, villains, punishment or unsafe behaviour.",
+    NO_HARM_RULE,
     "Problems are small and everyday, and the friends solve them by being kind.",
     "No brands, products, real people, places of worship or current events.",
     "Use short sentences and simple words a young child understands.",
@@ -116,6 +119,13 @@ class SeriesSettings(SettingsSection):
 
 
 class SafetySettings(SettingsSection):
+    audience: TemplateAudience = Field(
+        default=TemplateAudience.KIDS,
+        json_schema_extra=AUDIENCE_CHOICES,
+        title="Audience",
+        description="Who the videos are for, fixed by the pipeline template. Kids videos keep "
+        "the kids safety rules and are always made for kids.",
+    )
     banned_words: list[str] = text_list_field(
         BANNED_WORDS,
         "Banned words",
@@ -138,3 +148,7 @@ class SafetySettings(SettingsSection):
         description="Sent to the image model as the negative prompt for every picture, "
         "whatever the visual style.",
     )
+
+    @property
+    def for_kids(self) -> bool:
+        return self.audience is TemplateAudience.KIDS

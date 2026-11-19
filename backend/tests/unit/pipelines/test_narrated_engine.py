@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from autotube.domain.pipeline_descriptors import KIDS_CONTENT
 from autotube.domain.pipeline_engine import PipelineEngine
 from autotube.domain.pipeline_templates import TemplateAudience, TemplateOrigin
 from autotube.pipelines.narrated_video.engine import ENGINE_ID, NarratedVideoEngine
@@ -46,14 +45,18 @@ def test_the_builtin_serves_the_kids_story_pipeline() -> None:
     assert pipeline.descriptor == KidsStoryPipeline().descriptor
 
 
-def test_a_stored_template_reuses_the_pipeline_under_its_own_type_and_name() -> None:
-    pipeline = engine().pipeline(template(name="Fact videos"))
-    expected = KidsStoryPipeline().descriptor.model_copy(
-        update={"type_id": "t_tpl-1", "name": "Fact videos"}
+def test_a_stored_template_reuses_the_stages_under_its_own_type_and_name() -> None:
+    pipeline = engine().pipeline(template(name="Fact videos", description="Facts", revision=3))
+    own = KidsStoryPipeline().descriptor
+    descriptor = pipeline.descriptor
+    assert (descriptor.type_id, descriptor.name, descriptor.description) == (
+        "t_tpl-1",
+        "Fact videos",
+        "Facts",
     )
-    assert pipeline.descriptor == expected
-    assert pipeline.settings_model is KidsStorySettings
-    assert KIDS_CONTENT in pipeline.descriptor.capabilities
+    assert descriptor.version == f"{own.version}+r3"
+    assert descriptor.stages == own.stages and descriptor.variants == own.variants
+    assert issubclass(pipeline.settings_model, KidsStorySettings)
     assert len(pipeline.stages()) == len(KidsStoryPipeline().stages())
     assert pipeline.descriptor is pipeline.descriptor
 
