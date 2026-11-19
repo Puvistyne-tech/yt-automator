@@ -34,9 +34,7 @@ def needs_retry(result: CheckedSpeech, check: NarrationCheck) -> bool:
 
 
 def better(best: CheckedSpeech, candidate: CheckedSpeech) -> CheckedSpeech:
-    improved = candidate.error_rate is not None and (
-        best.error_rate is None or candidate.error_rate < best.error_rate
-    )
+    improved = candidate.error_rate is not None and candidate.error_rate < (best.error_rate or 0.0)
     kept = candidate if improved else best
     return CheckedSpeech(kept.speech, kept.error_rate, candidate.attempts, checked=True)
 

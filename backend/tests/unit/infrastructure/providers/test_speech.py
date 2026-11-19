@@ -64,6 +64,7 @@ def test_espeak_command_voice_and_estimated_timings(tmp_path: Path) -> None:
     assert speech.timing_source is TimingSource.ESTIMATE
     assert [word.word for word in speech.words] == ["ஒரு", "காட்டில்", "யானை"]
     assert speech.words[-1].end_seconds <= 1.2
+    assert speech.transcript == ""
 
 
 def test_espeak_upgrades_timings_with_alignment(tmp_path: Path) -> None:
@@ -82,7 +83,7 @@ def test_espeak_upgrades_timings_with_alignment(tmp_path: Path) -> None:
 
 def test_alignment_keeps_what_whisper_heard_even_when_it_does_not_match(tmp_path: Path) -> None:
     runner = RecordingRunner(effect=writes_wav_after("-w", 1.0))
-    aligner = FixedAligner([heard(" banana ", 0.1, 0.5)])
+    aligner = FixedAligner([heard(" ", 0.0, 0.1), heard(" banana ", 0.1, 0.5)])
     adapter = EspeakSpeech(EspeakOptions(), make_context(tmp_path, runner=runner), aligner=aligner)
     speech = adapter.synthesize(SpeechRequest(text="hello", language="en"), tmp_path / "a.wav")
     assert speech.timing_source is TimingSource.ESTIMATE
