@@ -2,20 +2,22 @@ import { KIDS_CAPABILITY } from "@/api/capabilities";
 import { ruleConflict } from "@/api/mocks/db";
 import type { MockState } from "@/api/mocks/fixtures/seed";
 import { BUILTIN_TEMPLATES } from "@/api/mocks/fixtures/templates";
+import { automationsUsing } from "@/api/mocks/templateUsage";
 import type {
+  JsonObject,
   PipelineDescriptor,
   PipelineTemplate,
   TemplateInput,
   TemplateSummary,
 } from "@/api/types";
 
-const NAME_MAX_LENGTH = 80;
-export const COPY_SUFFIX = " (copy)";
-export const DELETE_REMEDY = "move the automations to another pipeline and finish their runs first";
-export const DRAFT_REMEDY =
-  "it must stay ready until they move to another pipeline and their runs finish";
+type Errors = Record<string, string>;
 
-export function nameErrors(name: string): Record<string, string> {
+const NAME_MAX_LENGTH = 80;
+const COPY_SUFFIX = " (copy)";
+const IMMUTABLE_FIELDS = ["audience", "engine"] as const;
+
+export function nameErrors(name: string): Errors {
   const trimmed = name.trim();
   if (trimmed === "") {
     return { name: "name is required" };
@@ -25,28 +27,47 @@ export function nameErrors(name: string): Record<string, string> {
     : {};
 }
 
-export function definitionErrors(input: Pick<TemplateInput, "definition">): Record<string, string> {
-  const brief = input.definition.brief;
-  return typeof brief === "string" && brief.trim() === ""
-    ? { "definition.brief": "Describe what the videos are about." }
+export function copyName(name: string): string {
+  return `${name
+    .trim()
+    .slice(0, NAME_MAX_LENGTH - COPY_SUFFIX.length)
+    .trimEnd()}${COPY_SUFFIX}`;
+}
+
+export function originErrors(input: Pick<TemplateInput, "origin">): Errors {
+  return input.origin === "builtin"
+    ? { origin: "built-in templates come only from installed engines" }
     : {};
 }
 
-export function usersOf(state: MockState, typeId: string): string[] {
-  return state.automations
-    .filter((automation) => automation.pipeline_type === typeId)
-    .map((automation) => automation.name)
-    .sort();
+function definitionErrors(schema: JsonObject, definition: JsonObject): Errors {
+  const known = Object.keys((schema.properties ?? {}) as JsonObject);
+  const required = (schema.required ?? []) as string[];
+  const unknown = Object.keys(definition).filter((key) => !known.includes(key));
+  const missing = required.filter((key) => !(key in definition));
+  return Object.fromEntries([
+    ...unknown.map((key) => [`definition.${key}`, "Extra inputs are not permitted"]),
+    ...missing.map((key) => [`definition.${key}`, "Field required"]),
+  ]);
 }
 
-export function inUseConflict(state: MockState, typeId: string, remedy: string) {
-  const users = usersOf(state, typeId);
-  return users.length === 0
-    ? null
-    : ruleConflict(
-        "template_in_use",
-        `template is used by automations: ${users.join(", ")}; ${remedy}`,
-      );
+export function engineErrors(
+  state: MockState,
+  input: Pick<TemplateInput, "engine" | "definition">,
+): Errors {
+  const engine = state.engines.find((candidate) => candidate.engine_id === input.engine);
+  return engine === undefined
+    ? { engine: `engine '${input.engine}' is not installed` }
+    : definitionErrors(engine.definition_schema, input.definition);
+}
+
+export function immutableErrors(current: PipelineTemplate, input: TemplateInput): Errors {
+  return Object.fromEntries(
+    IMMUTABLE_FIELDS.filter((field) => current[field] !== input[field]).map((field) => [
+      field,
+      `${field} cannot change after creation; duplicate the template instead`,
+    ]),
+  );
 }
 
 export function builtinConflict(template: PipelineTemplate) {
@@ -64,7 +85,7 @@ export function summaryOf(state: MockState, template: PipelineTemplate): Templat
   return {
     ...template,
     builtin: template.origin === "builtin",
-    automations_using: usersOf(state, template.type_id).length,
+    automations_using: automationsUsing(state, template.type_id).length,
   };
 }
 

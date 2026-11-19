@@ -52,14 +52,18 @@ describe("Pipeline editor: create", () => {
     await user.click(screen.getByRole("button", { name: "Save as draft" }));
     expect(await screen.findByText("Give the pipeline a name.")).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText(/^Name/), "No brief");
+    failWith("post", "/templates", 400, {
+      message: "Validation failed",
+      fields: { "definition.brief": "The brief speaks to children." },
+    });
+    await user.type(screen.getByLabelText(/^Name/), "Bad brief");
     await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await findToast("Validation failed");
     expect(screen.getByLabelText(/^Brief/)).toHaveAccessibleDescription(
-      /Describe what the videos are about/,
+      /The brief speaks to children/,
     );
-    expect(stored("No brief")).toBeUndefined();
+    expect(stored("Bad brief")).toBeUndefined();
   });
 
   it("does not show the form until an audience is chosen", async () => {

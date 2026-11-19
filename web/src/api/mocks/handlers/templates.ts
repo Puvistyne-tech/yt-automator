@@ -4,14 +4,14 @@ import { USER_TYPE_PREFIX } from "@/api/mocks/fixtures/templates";
 import {
   allTemplates,
   builtinConflict,
-  COPY_SUFFIX,
-  DELETE_REMEDY,
-  DRAFT_REMEDY,
-  definitionErrors,
-  inUseConflict,
+  copyName,
+  engineErrors,
+  immutableErrors,
   nameErrors,
+  originErrors,
   summaryOf,
 } from "@/api/mocks/templateRules";
+import { DELETE_REMEDY, DRAFT_REMEDY, inUseConflict } from "@/api/mocks/templateUsage";
 import type { DuplicateTemplateRequest, PipelineTemplate, TemplateInput } from "@/api/types";
 
 const findTemplate = (id: unknown) => allTemplates(db.state).find((t) => t.id === id);
@@ -43,10 +43,11 @@ function created(
 }
 
 function updated(current: PipelineTemplate, input: TemplateInput) {
-  const errors = { ...nameErrors(input.name), ...definitionErrors(input) };
-  if (input.audience !== current.audience) {
-    errors.audience = "audience cannot change after creation; duplicate the template instead";
-  }
+  const errors = {
+    ...immutableErrors(current, input),
+    ...nameErrors(input.name),
+    ...engineErrors(db.state, { ...input, engine: current.engine }),
+  };
   if (Object.keys(errors).length > 0) {
     return validationFailed(errors);
   }
@@ -87,10 +88,6 @@ function removed(current: PipelineTemplate) {
   return noContent();
 }
 
-function copyName(name: string): string {
-  return `${name.slice(0, 80 - COPY_SUFFIX.length)}${COPY_SUFFIX}`;
-}
-
 export const templateHandlers = [
   http.get("/api/template-engines", () => HttpResponse.json(db.state.engines)),
   http.get("/api/templates", () =>
@@ -102,7 +99,11 @@ export const templateHandlers = [
   }),
   http.post("/api/templates", async ({ request }) => {
     const input = (await request.json()) as TemplateInput;
-    const errors = { ...nameErrors(input.name), ...definitionErrors(input) };
+    const errors = {
+      ...originErrors(input),
+      ...nameErrors(input.name),
+      ...engineErrors(db.state, input),
+    };
     if (Object.keys(errors).length > 0) {
       return validationFailed(errors);
     }
@@ -121,7 +122,8 @@ export const templateHandlers = [
     }
     const body = ((await request.json().catch(() => null)) ?? {}) as DuplicateTemplateRequest;
     const name = body.name ?? copyName(source.name);
-    const errors = nameErrors(name);
+    const audience = body.audience ?? source.audience;
+    const errors = { ...nameErrors(name), ...engineErrors(db.state, source) };
     if (Object.keys(errors).length > 0) {
       return validationFailed(errors);
     }
@@ -136,7 +138,7 @@ export const templateHandlers = [
     return created({
       ...rest,
       name: name.trim(),
-      audience: body.audience ?? source.audience,
+      audience,
       status: "draft",
       origin: "duplicate",
     });
