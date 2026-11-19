@@ -1,14 +1,11 @@
-import { AUDIENCE_LABELS } from "@/api/labels";
-import type { TemplateAudience } from "@/api/types";
+import { audienceOptions } from "@/api/labels";
 import { YOUTUBE_CATEGORIES } from "@/features/pipeline-suggestions/model/categories";
 import { COMMON_REGIONS, regionName } from "@/features/pipeline-suggestions/model/regions";
 import { COUNT_OPTIONS, OTHER_REGION } from "@/features/pipeline-suggestions/model/request";
 import type { SuggestionsState } from "@/features/pipeline-suggestions/usePipelineSuggestions";
-import { Button, FormField, Input, type RadioCardOption, RadioCards, Select } from "@/shared/ui";
+import { Button, FormField, Input, RadioCards, Select } from "@/shared/ui";
 
-const AUDIENCE_OPTIONS: RadioCardOption<TemplateAudience>[] = (
-  Object.keys(AUDIENCE_LABELS) as TemplateAudience[]
-).map((value) => ({ value, label: AUDIENCE_LABELS[value].label }));
+const AUDIENCE_OPTIONS = audienceOptions();
 
 const REGION_OPTIONS = [
   ...COMMON_REGIONS.map((code) => ({ value: code, label: regionName(code) })),

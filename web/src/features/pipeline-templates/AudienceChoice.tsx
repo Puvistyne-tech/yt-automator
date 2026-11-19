@@ -1,6 +1,6 @@
-import { AUDIENCE_LABELS } from "@/api/labels";
+import { audienceOptions } from "@/api/labels";
 import type { TemplateAudience } from "@/api/types";
-import { type RadioCardOption, RadioCards } from "@/shared/ui";
+import { RadioCards } from "@/shared/ui";
 
 export const AUDIENCE_NOTE =
   "The audience cannot be changed later. To change it, duplicate the pipeline and pick another audience.";
@@ -15,13 +15,7 @@ export function audienceDescription(audience: TemplateAudience): string {
   return AUDIENCE_DESCRIPTIONS[audience];
 }
 
-const AUDIENCE_OPTIONS: RadioCardOption<TemplateAudience>[] = (
-  Object.keys(AUDIENCE_DESCRIPTIONS) as TemplateAudience[]
-).map((value) => ({
-  value,
-  label: AUDIENCE_LABELS[value].label,
-  description: AUDIENCE_DESCRIPTIONS[value],
-}));
+const AUDIENCE_OPTIONS = audienceOptions(AUDIENCE_DESCRIPTIONS);
 
 export function AudienceChoice({
   value,
