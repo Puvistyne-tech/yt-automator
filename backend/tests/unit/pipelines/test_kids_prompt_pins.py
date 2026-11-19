@@ -14,4 +14,6 @@ def test_default_settings_render_the_pinned_prompts(name: str) -> None:
 
 
 def test_stored_settings_without_new_fields_load_as_the_defaults() -> None:
-    assert KidsStorySettings.model_validate(stored_settings()) == KidsStorySettings()
+    loaded = KidsStorySettings.model_validate(stored_settings())
+    assert loaded == KidsStorySettings()
+    assert KidsStorySettings.model_validate(loaded.model_dump(mode="json")) == loaded
