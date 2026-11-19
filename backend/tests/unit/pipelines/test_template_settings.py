@@ -40,7 +40,7 @@ def changed_paths(before: Any, after: Any, prefix: str = "") -> set[str]:
 def test_an_empty_kids_definition_keeps_every_engine_default() -> None:
     assert defaults_for() == ENGINE
     assert settings_schema_of(settings_model_for(NarratedDefinition(), KIDS)) == (
-        settings_schema_of(KidsStorySettings)
+        settings_schema_of(kids_settings_model())
     )
 
 

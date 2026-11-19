@@ -808,6 +808,8 @@ and an empty value is called "the default", never "the engine's".
   - `story.age_max` (field bound 1 to 99) must be at most 12 and `story.reading_level` must not be `general`
     for a kids audience: the settings model refuses either ("a kids video is for children aged 12 or under",
     "a kids video needs a kids reading level, not general"), reported on `definition.settings` at save.
+    A kids settings model's JSON Schema leaves `general` out of the `reading_level` choices
+    (`template/audience_schema.py::audience_schema`), so a kids form never offers it.
   The banned-word and brand gates are always on, and kids templates of every structure always use the kids
   system prompt (`story_system.txt`, with the age range and reading level).
   Behaviour change: a stored kids automation whose settings removed a floored entry gets it back silently when

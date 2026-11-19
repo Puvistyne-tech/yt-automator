@@ -14,6 +14,7 @@ from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.structures.length import length_problem
 from autotube.pipelines.narrated_video.structures.registry import structure_defaults
 from autotube.pipelines.narrated_video.template.audience import audience_defaults, with_pins
+from autotube.pipelines.narrated_video.template.audience_schema import audience_schema
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.kids_floor import audience_floor
 from autotube.pipelines.narrated_video.template.mapping import definition_settings
@@ -40,6 +41,10 @@ class PinnedSettings(KidsStorySettings):
         if problem:
             raise ValueError(problem)
         return self
+
+    @classmethod
+    def model_json_schema(cls, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return audience_schema(super().model_json_schema(*args, **kwargs), cls.pinned_audience)
 
     @classmethod
     def section_default(cls, section: str) -> object:
