@@ -17,10 +17,21 @@ from autotube.api.routers import (
     runs,
     storage,
     system,
+    templates,
 )
 
 API_PREFIX = "/api"
-ROUTERS = (system, credentials, channels, automations, runs, events, configuration, storage)
+ROUTERS = (
+    system,
+    credentials,
+    channels,
+    automations,
+    runs,
+    events,
+    configuration,
+    storage,
+    templates,
+)
 Lifespan = Callable[[FastAPI], AbstractAsyncContextManager[None]]
 
 

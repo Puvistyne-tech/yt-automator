@@ -29,9 +29,9 @@ def enforce_kids_content(
 
 
 def effective_made_for_kids(
-    target: TargetFields, defaults: ChannelDefaults, descriptor: PipelineDescriptor | None
+    target: TargetFields, defaults: ChannelDefaults, descriptor: PipelineDescriptor
 ) -> bool:
-    if descriptor is not None and descriptor.makes_kids_content:
+    if descriptor.makes_kids_content:
         return True
     return defaults.made_for_kids if target.made_for_kids is None else target.made_for_kids
 

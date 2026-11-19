@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from autotube.domain.ports import (
     Clock,
+    EngineCatalog,
     IdGenerator,
     PipelineRegistry,
     ProviderCatalog,
@@ -19,6 +20,7 @@ class Overrides:
     youtube: YouTubeGateway | None = None
     catalog: ProviderCatalog | None = None
     pipelines: PipelineRegistry | None = None
+    engines: EngineCatalog | None = None
     secrets: SecretStore | None = None
     clock: Clock | None = None
     ids: IdGenerator | None = None

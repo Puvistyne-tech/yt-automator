@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from autotube.domain.port_catalogs import PipelineRegistry, ProviderCatalog
+from autotube.domain.port_catalogs import EngineCatalog, PipelineRegistry, ProviderCatalog
 from autotube.domain.port_repositories import (
     AppSettingsRepository,
     AutomationRepository,
@@ -33,6 +33,7 @@ __all__ = [
     "ChannelRepository",
     "Clock",
     "CredentialRepository",
+    "EngineCatalog",
     "IdGenerator",
     "PipelineRegistry",
     "ProviderCatalog",

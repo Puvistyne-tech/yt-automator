@@ -22,6 +22,7 @@ from autotube.domain.quota import QuotaPolicy, upload_cost
 from autotube.domain.run_enums import ArtifactKind, UploadStatus
 from autotube.domain.run_parts import Artifact, Upload
 from autotube.domain.runs import Run
+from autotube.shared.errors import RuleConflict
 
 
 class UploadPlan(DomainModel):
@@ -78,7 +79,7 @@ def plan_target_variant(
     target: Target,
     variant: str,
     channel: Channel | None,
-    descriptor: PipelineDescriptor | None,
+    descriptor: PipelineDescriptor,
     now: datetime,
 ) -> UploadPlan:
     defaults = channel.defaults if channel is not None else ChannelDefaults()
@@ -101,6 +102,17 @@ def plan_target_variant(
     )
 
 
+def require_publishing_descriptor(
+    run: Run, descriptor: PipelineDescriptor | None
+) -> PipelineDescriptor:
+    if descriptor is None:
+        raise RuleConflict(
+            "pipeline_missing",
+            f"pipeline {run.pipeline_type!r} is no longer installed; run {run.id} cannot publish",
+        )
+    return descriptor
+
+
 def plan_uploads(
     run: Run,
     targets: Sequence[Target],
@@ -108,8 +120,9 @@ def plan_uploads(
     descriptor: PipelineDescriptor | None,
     now: datetime,
 ) -> list[UploadPlan]:
+    known = require_publishing_descriptor(run, descriptor)
     return [
-        plan_target_variant(run, target, variant, channels.get(target.channel_id), descriptor, now)
+        plan_target_variant(run, target, variant, channels.get(target.channel_id), known, now)
         for target in targets
         for variant in target.variants
     ]

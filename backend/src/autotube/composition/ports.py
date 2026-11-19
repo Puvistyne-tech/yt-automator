@@ -18,6 +18,7 @@ from autotube.domain.ports import (
     ChannelRepository,
     Clock,
     CredentialRepository,
+    EngineCatalog,
     IdGenerator,
     PipelineRegistry,
     ProviderCatalog,
@@ -57,6 +58,7 @@ class Ports:
     queue: RunQueue
     events: RunEvents
     pipelines: PipelineRegistry
+    engines: EngineCatalog
     catalog: ProviderCatalog
     youtube: YouTubeGateway
     inspector: SystemInspector

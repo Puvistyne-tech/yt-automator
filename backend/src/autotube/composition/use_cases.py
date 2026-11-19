@@ -61,6 +61,7 @@ from autotube.composition.ports import (
     current_doctor_policy,
 )
 from autotube.composition.storage import storage_use_cases
+from autotube.composition.templates import template_use_cases
 
 
 def channel_use_cases(p: Ports, c: Collaborators) -> ChannelUseCases:
@@ -187,5 +188,6 @@ def build_use_cases(ports: Ports) -> UseCases:
         runs=run_use_cases(ports, shared),
         config=config_use_cases(ports, shared),
         storage=storage_use_cases(ports, shared),
+        templates=template_use_cases(ports),
         events=ports.events,
     )

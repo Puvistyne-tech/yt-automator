@@ -6,7 +6,10 @@ from autotube.domain.automations import Automation
 from autotube.domain.channels import Channel
 from autotube.domain.run_state import ACTIVE_STATUSES
 from autotube.domain.runs import Run
+from autotube.domain.template_usage import ensure_unused
 from autotube.shared.errors import RuleConflict
+
+TEMPLATE_DELETE_REMEDY = "move the automations to another pipeline and finish their runs first"
 
 
 def ensure_channel_deletable(channel_id: str, automations: Iterable[Automation]) -> None:
@@ -31,3 +34,9 @@ def ensure_run_deletable(run: Run) -> None:
         raise RuleConflict(
             "run_active", f"run {run.id} is {run.status.value}; cancel it before deleting"
         )
+
+
+def ensure_template_deletable(
+    type_id: str, automations: Iterable[Automation], runs: Iterable[Run]
+) -> None:
+    ensure_unused(type_id, automations, runs, TEMPLATE_DELETE_REMEDY)
