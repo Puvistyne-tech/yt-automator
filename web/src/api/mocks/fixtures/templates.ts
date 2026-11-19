@@ -1,7 +1,8 @@
+import packagedBuiltins from "@/api/mocks/fixtures/builtinTemplates.json";
 import { hoursAgo } from "@/api/mocks/fixtures/factories";
 import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import { narratedEngine } from "@/api/mocks/fixtures/templateEngine";
-import type { PipelineTemplate } from "@/api/types";
+import type { JsonObject, PipelineTemplate, TemplateAudience } from "@/api/types";
 
 export const USER_TYPE_PREFIX = "t_";
 
@@ -31,27 +32,46 @@ export function makeTemplate(overrides: Partial<PipelineTemplate> = {}): Pipelin
   };
 }
 
+const BUILTIN_RELEASED_AT = "2026-01-01T00:00:00Z";
+
+interface BuiltinEntry {
+  id: string;
+  name: string;
+  description: string;
+  audience: string;
+  definition: JsonObject;
+}
+
+function builtinTemplate(entry: BuiltinEntry): PipelineTemplate {
+  const audience: TemplateAudience = entry.audience === "kids" ? "kids" : "general";
+  return makeTemplate({
+    ...entry,
+    type_id: entry.id,
+    audience,
+    origin: "builtin",
+    revision: 1,
+    created_at: BUILTIN_RELEASED_AT,
+    updated_at: BUILTIN_RELEASED_AT,
+  });
+}
+
 export const BUILTIN_TEMPLATES: PipelineTemplate[] = [
-  makeTemplate({
+  builtinTemplate({
     id: kidsStoryPipeline.type_id,
-    type_id: kidsStoryPipeline.type_id,
     name: kidsStoryPipeline.name,
     description: kidsStoryPipeline.description,
     audience: "kids",
-    origin: "builtin",
-    revision: 1,
     definition: {},
-    created_at: "2026-01-01T00:00:00Z",
-    updated_at: "2026-01-01T00:00:00Z",
   }),
+  ...packagedBuiltins.map(builtinTemplate),
 ];
 
 export const USER_TEMPLATES: PipelineTemplate[] = [
   makeTemplate(),
   makeTemplate({
     id: "history-five",
-    name: "History in five minutes",
-    description: "One historical event told from start to finish.",
+    name: "Ancient empires",
+    description: "One ancient empire told from its rise to its fall.",
     status: "draft",
     revision: 1,
     definition: {

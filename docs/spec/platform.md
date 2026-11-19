@@ -657,6 +657,9 @@ class PipelineEngine(Protocol):
   The samples are not part of the package, so no run can read them; the general and non-story built-ins keep their
   `story.source` pin and have no bundled fallback. A parametrised integration test runs every built-in through the
   fake providers in English and Tamil and checks the score, the audience flags and the upload details.
+- The web mock mode lists the same built-ins: `web/src/api/mocks/fixtures/builtinTemplates.json` holds each packaged
+  built-in's id, name, description, audience and definition, generated from `packaged_templates`, and a backend
+  test fails when it drifts.
 
 #### Narrated definition (`pipelines/narrated_video/template/definition.py`)
 

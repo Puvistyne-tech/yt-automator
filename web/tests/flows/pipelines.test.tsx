@@ -42,10 +42,10 @@ describe("Pipelines list", () => {
     expect(space.getByText("Used by 1 automation")).toBeInTheDocument();
     expect(space.queryByText("Draft")).not.toBeInTheDocument();
 
-    const history = await findPipeline("History in five minutes");
+    const history = await findPipeline("Ancient empires");
     expect(history.getByText("Draft")).toBeInTheDocument();
     expect(history.getByText("Not used by any automation")).toBeInTheDocument();
-    expect(history.getByRole("link", { name: "Edit History in five minutes" })).toHaveAttribute(
+    expect(history.getByRole("link", { name: "Edit Ancient empires" })).toHaveAttribute(
       "href",
       "/pipelines/history-five",
     );
@@ -53,7 +53,7 @@ describe("Pipelines list", () => {
 
   it("offers a new automation only for ready pipelines, with the type chosen", async () => {
     const { user, router } = renderApp("/pipelines");
-    const history = await findPipeline("History in five minutes");
+    const history = await findPipeline("Ancient empires");
     expect(history.queryByRole("link", { name: /New automation/ })).not.toBeInTheDocument();
 
     const space = await findPipeline("Space facts");
@@ -146,7 +146,7 @@ describe("Pipelines: duplicate", () => {
 describe("Pipelines: cancelled dialogs", () => {
   it.each([
     ["Duplicate", "Space facts", /^Duplicate/],
-    ["Delete", "History in five minutes", "Delete pipeline?"],
+    ["Delete", "Ancient empires", "Delete pipeline?"],
   ])("changes nothing when %s is cancelled", async (action, item, title) => {
     const { user } = await openDialog(item, action, title);
 
@@ -158,13 +158,13 @@ describe("Pipelines: cancelled dialogs", () => {
 
 describe("Pipelines: delete", () => {
   it("deletes an unused pipeline after confirming", async () => {
-    const { user } = await openDialog("History in five minutes", "Delete", "Delete pipeline?");
+    const { user } = await openDialog("Ancient empires", "Delete", "Delete pipeline?");
 
     await confirmDialog(user, "Delete pipeline?", "Delete pipeline");
 
-    await findToast("Deleted “History in five minutes”.");
+    await findToast("Deleted “Ancient empires”.");
     await waitFor(() =>
-      expect(screen.queryByRole("listitem", { name: "History in five minutes" })).toBeNull(),
+      expect(screen.queryByRole("listitem", { name: "Ancient empires" })).toBeNull(),
     );
     expect(db.state.templates.map((t) => t.id)).toEqual(["space-facts"]);
   });
