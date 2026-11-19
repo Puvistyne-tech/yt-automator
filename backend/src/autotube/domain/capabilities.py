@@ -85,6 +85,7 @@ class Speech(DomainModel):
     duration_seconds: float = Field(gt=0)
     words: tuple[WordTiming, ...] = ()
     timing_source: TimingSource = TimingSource.ESTIMATE
+    transcript: str = ""
 
 
 class MusicRequest(DomainModel):

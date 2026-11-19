@@ -95,6 +95,10 @@ class WhisperAligner:
         return None
 
 
+def transcript_of(recognised: list[WordTiming]) -> str:
+    return " ".join(word for timing in recognised if (word := timing.word.strip()))
+
+
 def refine(
     speech: Speech, request: SpeechRequest, aligner: WordAligner, options: AlignmentOptions
 ) -> Speech:
@@ -103,11 +107,12 @@ def refine(
     recognised = aligner.recognise(speech.path, request.language)
     if not recognised:
         return speech
+    heard = speech.model_copy(update={"transcript": transcript_of(recognised)})
     words = spoken_words(request.text)
     aligned = align_words(words, recognised, speech.duration_seconds, options.min_match)
     if aligned is None:
-        return speech
-    return speech.model_copy(update={"words": aligned, "timing_source": TimingSource.ALIGNMENT})
+        return heard
+    return heard.model_copy(update={"words": aligned, "timing_source": TimingSource.ALIGNMENT})
 
 
 def estimated_speech(
