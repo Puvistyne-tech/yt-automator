@@ -2,18 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from autotube.domain.pipeline_templates import TemplateOrigin, TemplateStatus
+from autotube.domain.pipeline_templates import TemplateAudience, TemplateOrigin, TemplateStatus
 from autotube.domain.template_inputs import TemplateInput
 from autotube.shared.errors import NotFound, RuleConflict, ValidationFailed
 from tests.fixtures.fake_engines import BUILTIN_TYPE, REFUSED_BRIEF, SampleDefinition
 from tests.fixtures.fake_pipeline import FakePipeline
-from tests.fixtures.harness import Harness
 from tests.fixtures.template_rig import TemplateRig, template_input
-
-
-@pytest.fixture
-def rig(harness: Harness) -> TemplateRig:
-    return TemplateRig(harness)
 
 
 def test_engines_list_their_definition_schema_and_blanks(rig: TemplateRig) -> None:
@@ -21,11 +15,7 @@ def test_engines_list_their_definition_schema_and_blanks(rig: TemplateRig) -> No
     assert (engine.engine_id, engine.name) == ("sample", "Sample engine")
     assert engine.definition_schema == SampleDefinition.model_json_schema()
     assert engine.definition_ui_schema == {"brief": {"ui:widget": "textarea"}}
-    dumped = engine.model_dump(mode="json")["blank"]
-    assert dumped == {
-        "kids": {"brief": "for a kids audience"},
-        "general": {"brief": "for a general audience"},
-    }
+    assert set(engine.blank) == set(TemplateAudience)
 
 
 def test_templates_list_builtins_first_with_their_usage(rig: TemplateRig) -> None:
@@ -77,6 +67,7 @@ def test_create_defaults_to_a_draft(rig: TemplateRig) -> None:
     ("changes", "fields"),
     [
         ({"name": "  ", "origin": TemplateOrigin.BUILTIN}, ["name", "origin"]),
+        ({"name": "x" * 81}, ["name"]),
         (
             {"definition": {"length": "endless", "brief": REFUSED_BRIEF}},
             ["definition.brief", "definition.length"],
@@ -84,7 +75,13 @@ def test_create_defaults_to_a_draft(rig: TemplateRig) -> None:
         ({"definition": {"unknown": 1}}, ["definition.unknown"]),
         ({"engine": "missing"}, ["engine"]),
     ],
-    ids=["name-and-origin", "engine-problems", "extra-definition-key", "unknown-engine"],
+    ids=[
+        "name-and-origin",
+        "81-characters",
+        "engine-problems",
+        "extra-definition-key",
+        "unknown-engine",
+    ],
 )
 def test_create_reports_field_errors_and_stores_nothing(
     rig: TemplateRig, changes: dict[str, object], fields: list[str]

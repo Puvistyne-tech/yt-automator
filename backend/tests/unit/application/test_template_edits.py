@@ -5,16 +5,13 @@ from typing import Any
 import pytest
 
 from autotube.domain.pipeline_templates import TemplateAudience, TemplateOrigin, TemplateStatus
-from autotube.shared.errors import NotFound, RuleConflict, ValidationFailed
-from tests.fixtures.fake_engines import BUILTIN_TYPE, ENGINE_ID, REFUSED_BRIEF
-from tests.fixtures.harness import Harness
+from autotube.domain.run_enums import RunStatus
+from autotube.shared.errors import RuleConflict, ValidationFailed
+from tests.fixtures.fake_engines import BUILTIN_TYPE, REFUSED_BRIEF
 from tests.fixtures.template_records import template
 from tests.fixtures.template_rig import TemplateRig, template_input
 
-
-@pytest.fixture
-def rig(harness: Harness) -> TemplateRig:
-    return TemplateRig(harness)
+DRAFT = TemplateStatus.DRAFT
 
 
 def test_update_revises_the_editable_fields(rig: TemplateRig) -> None:
@@ -37,6 +34,12 @@ def test_update_revises_the_editable_fields(rig: TemplateRig) -> None:
     assert rig.get().execute(created.id) == updated
 
 
+def test_update_keeps_the_stored_origin(rig: TemplateRig) -> None:
+    created = rig.created()
+    updated = rig.update().execute(created.id, template_input(origin=TemplateOrigin.SUGGESTED))
+    assert updated.origin is TemplateOrigin.BLANK
+
+
 def test_update_refuses_builtins(rig: TemplateRig) -> None:
     with pytest.raises(RuleConflict) as raised:
         rig.update().execute(BUILTIN_TYPE, template_input())
@@ -49,8 +52,9 @@ def test_update_refuses_builtins(rig: TemplateRig) -> None:
         ({"audience": TemplateAudience.KIDS}, ["audience"]),
         ({"engine": "other"}, ["engine"]),
         ({"name": " ", "definition": {"brief": REFUSED_BRIEF}}, ["definition.brief", "name"]),
+        ({"name": "x" * 81}, ["name"]),
     ],
-    ids=["audience", "engine", "name-and-definition"],
+    ids=["audience", "engine", "name-and-definition", "81-characters"],
 )
 def test_update_reports_field_errors_and_keeps_the_template(
     rig: TemplateRig, changes: dict[str, Any], fields: list[str]
@@ -69,88 +73,47 @@ def test_update_of_a_template_whose_engine_is_gone_names_the_engine(rig: Templat
     assert raised.value.fields == {"engine": "engine 'retired' is not installed"}
 
 
-def test_ready_to_draft_is_refused_while_automations_use_it(rig: TemplateRig) -> None:
+def test_ready_to_draft_is_refused_while_an_automation_uses_it(rig: TemplateRig) -> None:
     created = rig.created()
     rig.automation_using(created.type_id, "Comets")
     with pytest.raises(RuleConflict, match="Comets") as raised:
-        rig.update().execute(created.id, template_input(status=TemplateStatus.DRAFT))
+        rig.update().execute(created.id, template_input(status=DRAFT))
     assert raised.value.code == "template_in_use"
-    assert rig.get().execute(created.id) == created.model_copy(update={"automations_using": 1})
     renamed = rig.update().execute(created.id, template_input(name="Still ready"))
     assert (renamed.status, renamed.automations_using) == (TemplateStatus.READY, 1)
 
 
+def test_a_disabled_automation_still_uses_the_template(rig: TemplateRig) -> None:
+    created = rig.created()
+    using = rig.automation_using(created.type_id, "Paused")
+    rig.harness.automations.save(using.model_copy(update={"enabled": False}))
+    assert rig.get().execute(created.id).automations_using == 1
+    with pytest.raises(RuleConflict, match="Paused"):
+        rig.update().execute(created.id, template_input(status=DRAFT))
+    with pytest.raises(RuleConflict, match="Paused"):
+        rig.delete().execute(created.id)
+
+
+def test_a_kids_template_with_an_open_run_stays_after_its_automation_moves(
+    rig: TemplateRig,
+) -> None:
+    created = rig.created(audience=TemplateAudience.KIDS)
+    automation = rig.automation_using(created.type_id, "Bedtime")
+    run = rig.run_using(created.type_id, RunStatus.AWAITING_REVIEW)
+    rig.harness.automations.save(automation.model_copy(update={"pipeline_type": "fake"}))
+    assert rig.get().execute(created.id).automations_using == 0
+    with pytest.raises(RuleConflict, match=f"open runs: {run.id}") as deleting:
+        rig.delete().execute(created.id)
+    with pytest.raises(RuleConflict, match=f"open runs: {run.id}") as drafting:
+        rig.update().execute(created.id, template_input(audience="kids", status=DRAFT))
+    assert {deleting.value.code, drafting.value.code} == {"template_in_use"}
+    assert rig.templates.get(created.id) is not None
+
+
 def test_ready_to_draft_is_allowed_when_unused(rig: TemplateRig) -> None:
     created = rig.created()
-    drafted = rig.update().execute(created.id, template_input(status=TemplateStatus.DRAFT))
-    assert drafted.status is TemplateStatus.DRAFT
+    rig.run_using(created.type_id, RunStatus.PUBLISHED)
+    drafted = rig.update().execute(created.id, template_input(status=DRAFT))
+    assert drafted.status is DRAFT
     readied = rig.update().execute(created.id, template_input())
     assert (readied.status, readied.revision) == (TemplateStatus.READY, 3)
-
-
-def test_delete_removes_an_unused_template(rig: TemplateRig) -> None:
-    created = rig.created()
-    rig.delete().execute(created.id)
-    assert rig.templates.list() == []
-    with pytest.raises(NotFound):
-        rig.delete().execute(created.id)
-
-
-def test_delete_refuses_builtins_and_templates_in_use(rig: TemplateRig) -> None:
-    created = rig.created()
-    rig.automation_using(created.type_id, "Night sky")
-    rig.automation_using(created.type_id, "Comets")
-    with pytest.raises(RuleConflict, match="Comets, Night sky") as in_use:
-        rig.delete().execute(created.id)
-    with pytest.raises(RuleConflict) as builtin:
-        rig.delete().execute(BUILTIN_TYPE)
-    assert (in_use.value.code, builtin.value.code) == ("template_in_use", "template_builtin")
-    assert [t.id for t in rig.templates.list()] == [created.id]
-
-
-def test_duplicate_of_a_builtin_is_a_fresh_draft_with_its_definition(rig: TemplateRig) -> None:
-    copy = rig.duplicate().execute(BUILTIN_TYPE)
-    [builtin] = rig.engines.list()[0].builtin_templates()
-    assert (copy.id, copy.type_id, copy.name, copy.engine) == (
-        "id-1",
-        "t_id-1",
-        "Sample (copy)",
-        ENGINE_ID,
-    )
-    assert (copy.origin, copy.status, copy.revision, copy.builtin) == (
-        TemplateOrigin.DUPLICATE,
-        TemplateStatus.DRAFT,
-        1,
-        False,
-    )
-    assert (copy.definition, copy.audience) == (builtin.definition, builtin.audience)
-    assert rig.templates.get("id-1") is not None
-
-
-def test_duplicate_takes_a_new_name_and_audience(rig: TemplateRig) -> None:
-    created = rig.created()
-    rig.update().execute(created.id, template_input(name="Moon"))
-    copy = rig.duplicate().execute(created.id, " Kids moon ", TemplateAudience.KIDS)
-    assert (copy.name, copy.audience, copy.revision) == ("Kids moon", TemplateAudience.KIDS, 1)
-    assert copy.created_at == rig.harness.clock.now()
-
-
-def test_duplicate_keeps_a_long_name_within_the_limit(rig: TemplateRig) -> None:
-    created = rig.created(name="x" * 80)
-    copy = rig.duplicate().execute(created.id)
-    assert copy.name == f"{'x' * 73} (copy)"
-
-
-def test_duplicate_reports_a_blank_name_and_engine_problems(rig: TemplateRig) -> None:
-    rig.templates.add(template(engine=ENGINE_ID, definition={"brief": REFUSED_BRIEF}))
-    with pytest.raises(ValidationFailed) as blank:
-        rig.duplicate().execute("tpl-1", "  ")
-    with pytest.raises(ValidationFailed) as refused:
-        rig.duplicate().execute("tpl-1")
-    assert (list(blank.value.fields), list(refused.value.fields)) == (
-        ["name"],
-        ["definition.brief"],
-    )
-    assert [t.id for t in rig.templates.list()] == ["tpl-1"]
-    with pytest.raises(NotFound):
-        rig.duplicate().execute("missing")

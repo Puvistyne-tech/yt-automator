@@ -14,6 +14,7 @@ from autotube.domain.pipeline_templates import (
     TemplateStatus,
     builtin_template,
 )
+from autotube.infrastructure.pipelines.engine_catalog import InstalledEngineCatalog
 from autotube.infrastructure.pipelines.pipeline_index import DuplicatePipelineError
 from autotube.infrastructure.pipelines.template_registry import TemplatePipelineRegistry
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
@@ -48,7 +49,9 @@ def registry(
     templates: InMemoryTemplates, *static: Pipeline, engines: tuple[PipelineEngine, ...] = ()
 ) -> TemplatePipelineRegistry:
     return TemplatePipelineRegistry(
-        (*installed_pipelines(), *static), engines or installed_engines(), templates
+        (*installed_pipelines(), *static),
+        InstalledEngineCatalog(engines or installed_engines()),
+        templates,
     )
 
 

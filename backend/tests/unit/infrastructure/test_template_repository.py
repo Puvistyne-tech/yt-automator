@@ -31,6 +31,7 @@ def test_added_templates_round_trip_and_are_found_by_type_id(
     assert templates.get("tpl-1") == stored
     assert templates.find_by_type_id("t_tpl-1") == stored
     assert templates.find_by_type_id("t_missing") is None
+    assert (templates.type_id_of("tpl-1"), templates.type_id_of("missing")) == ("t_tpl-1", None)
     assert templates.get("missing") is None
 
 
@@ -89,6 +90,9 @@ def test_rows_that_no_longer_decode_are_skipped(database: Database) -> None:
     assert templates.list() == [template()]
     assert templates.find_by_type_id("t_broken") is None
     assert templates.get("broken") is None
+    assert templates.type_id_of("broken") == "t_broken"
+    templates.delete("broken")
+    assert templates.type_id_of("broken") is None
 
 
 def test_migration_creates_the_templates_table(database: Database) -> None:

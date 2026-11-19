@@ -13,9 +13,11 @@ from autotube.application.template_lookup import TemplateLookup
 from autotube.application.update_template import UpdateTemplate
 from autotube.domain.automations import Automation
 from autotube.domain.pipeline_templates import TemplateAudience, TemplateStatus
+from autotube.domain.run_enums import RunStatus
+from autotube.domain.runs import Run
 from autotube.domain.template_inputs import TemplateInput
 from autotube.domain.template_views import TemplateSummary
-from tests.fixtures.builders import add_automation
+from tests.fixtures.builders import add_automation, started_run
 from tests.fixtures.fake_engines import ENGINE_ID, FakeEngineCatalog
 from tests.fixtures.fake_repositories import InMemoryTemplates
 from tests.fixtures.harness import Harness
@@ -42,7 +44,7 @@ class TemplateRig:
     @property
     def lookup(self) -> TemplateLookup:
         h = self.harness
-        return TemplateLookup(self.engines, self.templates, h.automations, h.pipelines)
+        return TemplateLookup(self.engines, self.templates, h.automations, h.runs, h.pipelines)
 
     def list_engines(self) -> ListTemplateEngines:
         return ListTemplateEngines(self.engines)
@@ -73,3 +75,10 @@ class TemplateRig:
         using = made.model_copy(update={"pipeline_type": type_id})
         self.harness.automations.save(using)
         return using
+
+    def run_using(self, type_id: str, status: RunStatus) -> Run:
+        started = started_run(self.harness, name="Runner")
+        stored = started.model_copy(update={"pipeline_type": type_id, "status": status})
+        self.harness.runs.save(stored)
+        self.harness.automations.delete(started.automation_id)
+        return stored
