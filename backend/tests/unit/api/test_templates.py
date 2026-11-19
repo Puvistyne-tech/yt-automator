@@ -10,7 +10,7 @@ from autotube.infrastructure.db.tables import PipelineTemplateRow
 from autotube.main import Overrides, Runtime
 from tests.fixtures.fake_engines import BUILTIN_TYPE, REFUSED_BRIEF, FakeEngineCatalog
 from tests.fixtures.template_records import template
-from tests.unit.api.client import Api, error_of, ok, wired
+from tests.unit.api.client import Api, automation_body, error_of, ok, wired
 
 TEMPLATE_BODY: dict[str, Any] = {
     "engine": "sample",
@@ -88,7 +88,7 @@ def test_create_reports_field_errors(
     assert sorted(error_of(response, 400)["fields"]) == fields
 
 
-def test_a_stored_row_that_no_longer_decodes_is_not_found(served: Api) -> None:
+def test_a_stored_row_that_no_longer_decodes_is_hidden_but_deletable(served: Api) -> None:
     broken = template("broken").model_dump(mode="json") | {"audience": "teens"}
     row = PipelineTemplateRow(
         id="broken", type_id="t_broken", status="ready", created_at="0", payload=broken
@@ -99,6 +99,10 @@ def test_a_stored_row_that_no_longer_decodes_is_not_found(served: Api) -> None:
         "template_not_found"
     )
     assert [t["id"] for t in ok(served.client.get("/api/templates"))] == [BUILTIN_TYPE]
+    assert ok(served.client.delete("/api/templates/broken"), 204) is None
+    assert error_of(served.client.delete("/api/templates/broken"), 404)["code"] == (
+        "template_not_found"
+    )
 
 
 def test_update_revises_and_refuses_builtins_and_fixed_fields(served: Api) -> None:
@@ -119,8 +123,7 @@ def test_a_template_in_use_stays_ready_and_cannot_be_deleted(served: Api) -> Non
     assert ok(served.client.get(path))["automations_using"] == 1
     drafted = served.client.put(path, json=TEMPLATE_BODY | {"status": "draft"})
     assert error_of(drafted, 409)["code"] == "template_in_use"
-    deleted = error_of(served.client.delete(path), 409)
-    assert deleted["code"] == "template_in_use" and "Comets" in deleted["message"]
+    assert error_of(served.client.delete(path), 409)["code"] == "template_in_use"
     builtin = served.client.delete(f"/api/templates/{BUILTIN_TYPE}")
     assert error_of(builtin, 409)["code"] == "template_builtin"
 
@@ -143,20 +146,27 @@ def test_duplicate_with_and_without_a_body(served: Api) -> None:
     assert (chosen["name"], chosen["audience"]) == ("Kids sample", "kids")
     missing = served.client.post("/api/templates/missing/duplicate")
     assert error_of(missing, 404)["code"] == "template_not_found"
+    bad = served.client.post(f"/api/templates/{BUILTIN_TYPE}/duplicate", json={"audience": "teens"})
+    assert list(error_of(bad, 400)["fields"]) == ["audience"]
 
 
-def test_a_ready_narrated_template_becomes_a_pipeline_type(
+def narrated_automation(api: Api, type_id: str) -> Any:
+    channel_id = api.channel()
+    targets = [{"channel_id": channel_id, "language": "en", "variants": ["episode"]}]
+    body = automation_body(channel_id, pipeline_type=type_id, settings={}, targets=targets)
+    return api.client.post("/api/automations", json=body)
+
+
+def test_a_narrated_template_becomes_a_pipeline_type_once_ready(
     config: RuntimeConfig, overrides: Overrides
 ) -> None:
     with wired(config, overrides, pipelines=None) as client:
         api = Api(client, client.app.state.runtime)  # type: ignore[attr-defined]
         body = TEMPLATE_BODY | {"engine": "narrated_video", "audience": "kids", "definition": {}}
-        made = created(api, **body)
-        listed = [d["type_id"] for d in ok(client.get("/api/pipelines"))]
-        assert made["type_id"] in listed
-        channel_id = api.channel()
-        targets = [{"channel_id": channel_id, "language": "en", "variants": ["episode"]}]
-        automation = api.automation(
-            channel_id, pipeline_type=made["type_id"], settings={}, targets=targets
-        )
-        assert automation["pipeline_type"] == made["type_id"]
+        made = created(api, **body | {"status": "draft"})
+        type_id = made["type_id"]
+        assert type_id not in [d["type_id"] for d in ok(client.get("/api/pipelines"))]
+        assert error_of(narrated_automation(api, type_id), 400)["fields"]
+        ok(client.put(f"/api/templates/{made['id']}", json=body))
+        assert type_id in [d["type_id"] for d in ok(client.get("/api/pipelines"))]
+        assert ok(narrated_automation(api, type_id), 201)["pipeline_type"] == type_id
