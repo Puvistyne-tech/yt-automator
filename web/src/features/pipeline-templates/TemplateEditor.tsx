@@ -60,6 +60,7 @@ function Editor({ engine, template, initial, startIn }: EditorProps) {
   const mode = useDefinitionViewMode(engine, startIn);
   const editor = useTemplateEditor({
     engineId: engine.engine_id,
+    definitionSchema: engine.definition_schema,
     template,
     initial,
     onErrorsShown: mode.revealErrors,

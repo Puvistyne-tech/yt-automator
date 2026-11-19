@@ -1152,7 +1152,9 @@ pipeline type when it is served), `/automations/:id`, `/pipelines`, `/pipelines/
   use in automations" switch (draft or ready) and "Revision <n>"; "Save changes" keeps the chosen status. A
   built-in opens read-only with "Duplicate to customise", which opens the duplicate dialog. An unknown id
   shows "Pipeline not found" with a link back; a template whose engine is not installed shows a warning
-  instead of the form.
+  instead of the form. The editor fills the definition schema's defaults into the draft before it compares
+  it with the saved one (`model/form.ts::settledDraft`, on open and after each save), so an opened pipeline
+  or an untouched new one shows "All changes saved" and leaving it does not ask to discard changes.
 - Pipeline settings views (new, saved and built-in pipelines): the same "Simple" / "All settings" toggle as
   the automation editor (`shared/settings-view/`), sharing its remembered choice
   (`autotube.editor.settings-view`). A new pipeline always opens in Simple without changing the remembered

@@ -8,6 +8,7 @@ import {
   draftProblems,
   duplicateRequest,
   newTemplateDraft,
+  settledDraft,
   templateInput,
 } from "@/features/pipeline-templates/model/form";
 import {
@@ -82,6 +83,16 @@ describe("template form", () => {
   it("asks for a duplicate with only the choices made", () => {
     expect(duplicateRequest("  ", "kids")).toEqual({ audience: "kids" });
     expect(duplicateRequest(" Mine ", "general")).toEqual({ name: "Mine", audience: "general" });
+  });
+});
+
+describe("settledDraft", () => {
+  it("fills the schema defaults the form would add and keeps the chosen values", () => {
+    const draft = draftFromTemplate(makeTemplate());
+    const settled = settledDraft(draft, narratedEngine.definition_schema);
+    expect(settled.definition).toMatchObject({ ...draft.definition, structure: "story" });
+    expect(settledDraft(settled, narratedEngine.definition_schema)).toEqual(settled);
+    expect(draft.definition).not.toHaveProperty("structure");
   });
 });
 
