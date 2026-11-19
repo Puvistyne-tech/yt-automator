@@ -736,7 +736,8 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
 - Score items: subtitle timing, episode and Short duration, speaking rate and reading level, then the
   structure's score rules, then metadata limits, loudness and completeness.
 - Metadata placeholders: `{title} {series} {tagline} {theme} {questions} {hashtags} {hook}` for every structure,
-  plus the structure's own.
+  plus the structure's own. The descriptions of `metadata.title_template`, `short_title_template` and
+  `description_template` name every structure's own placeholders (tested).
 - Script model (`story/model.py`): `moral` is optional (default empty) on the draft, the stored script and the
   translation text; `story` and `explainer` still require it through an always-on gate ('write the moral in
   "moral"'), on written and translated scripts. Every scene also carries optional `number` (an integer from
