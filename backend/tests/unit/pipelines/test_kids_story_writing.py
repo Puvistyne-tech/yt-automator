@@ -72,6 +72,21 @@ def test_each_retry_carries_only_the_latest_feedback() -> None:
     assert "not 3" not in writer.requests[2].prompt
 
 
+def test_a_retry_edits_the_rejected_script_and_names_the_measured_numbers() -> None:
+    long = {**draft_dict(), "title": "A Long Mango Tale"}
+    settings = quick_settings(
+        story={"target_duration_seconds": 60, "duration_tolerance_seconds": 5}
+    )
+    writer = scripted_writer([as_json(long), "nonsense", as_json(long)])
+    StoryAuthor(writer, settings, LogBook()).written("sharing", "en")
+    second = writer.requests[1].prompt
+    assert "Edit it instead of starting over" in second and '"A Long Mango Tale"' in second
+    assert "too long: 258 words, use at most 130" in second
+    assert '"language"' not in second
+    third = writer.requests[2].prompt
+    assert "answer with one JSON object" in third and "Edit it instead" not in third
+
+
 def test_author_reports_a_shape_problem_and_accepts_fenced_json() -> None:
     fenced = "```json\n" + as_json(draft_dict()) + "\n```"
     writer = scripted_writer([as_json({**draft_dict(), "scenes": []}), fenced])

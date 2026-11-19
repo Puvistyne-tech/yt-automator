@@ -882,6 +882,12 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   scenes, 300 ± 45 s) asks for 37 to 38 words per scene and 510 to 690 in total; its answer of about 4000
   tokens fits the default `story.max_tokens` of 6000.
 
+- Story retries (`story/authoring.py::StoryAuthor.written`): each attempt is an `Attempt` (`story/attempts.py`:
+  number, language, raw answer, parsed script or none, failed checks). The next request appends the failed
+  checks of the previous attempt; when that attempt parsed, it uses `story_revise.txt`, which also carries the
+  rejected script as compact JSON (the `StoryDraft` fields only) and asks the writer to edit it rather than
+  start over; when it did not parse, `story_retry.txt` with the checks only. Only the previous attempt's
+  checks are sent.
 - Answer schemas (`story/answer_schema.py`): the story request sends `draft_schema(settings)` and the
   translation request `text_schema(settings, script)` as `TextRequest.json_schema`, so a local model with a
   grammar (Ollama `format`) cannot leave out what a gate demands. Both start from the Pydantic schema

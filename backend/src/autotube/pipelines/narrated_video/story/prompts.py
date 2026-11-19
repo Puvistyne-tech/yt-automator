@@ -23,6 +23,8 @@ from autotube.pipelines.narrated_video.structures.word_budget import word_budget
 
 SYSTEM_PROMPT = "story_system.txt"
 USER_PROMPT = "story_user.txt"
+RETRY_PROMPT = "story_retry.txt"
+REVISE_PROMPT = "story_revise.txt"
 NO_RECURRING_CHARACTERS = "none, there are no recurring characters"
 
 
@@ -88,8 +90,19 @@ def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str
     )
 
 
-def feedback_text(feedback: Sequence[str]) -> str:
-    return render_prompt("story_retry.txt", feedback=bullet_lines(feedback)) if feedback else ""
+def draft_json(story: StoryDraft) -> str:
+    draft = story.model_dump(mode="json", include=set(StoryDraft.model_fields))
+    return json.dumps(draft, ensure_ascii=False)
+
+
+def feedback_text(feedback: Sequence[str], previous: StoryDraft | None = None) -> str:
+    if not feedback:
+        return ""
+    if previous is None:
+        return render_prompt(RETRY_PROMPT, feedback=bullet_lines(feedback))
+    return render_prompt(
+        REVISE_PROMPT, feedback=bullet_lines(feedback), previous=draft_json(previous)
+    )
 
 
 def story_request(
@@ -98,9 +111,10 @@ def story_request(
     language: str,
     feedback: Sequence[str] = (),
     seed: str = "",
+    previous: StoryDraft | None = None,
 ) -> TextRequest:
     user = story_user(settings, theme, language, seed)
-    retry = feedback_text(feedback)
+    retry = feedback_text(feedback, previous)
     return TextRequest(
         prompt=f"{user}\n\n{retry}" if retry else user,
         system=story_system(settings, language),

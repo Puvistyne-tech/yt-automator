@@ -1,0 +1,6 @@
+
+Your previous answer did not pass these checks:
+$feedback
+
+Here is your previous answer. Edit it instead of starting over: keep everything the checks do not mention, change only what they ask for, and answer with the whole corrected script as one JSON object.
+$previous
