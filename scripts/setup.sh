@@ -24,8 +24,29 @@ MUSIC_DIR="$DATA_DIR/assets/music"
 SERVICE_LABEL="com.autotube.app"
 SERVICE_PLIST="$HOME/Library/LaunchAgents/$SERVICE_LABEL.plist"
 SETUP_EXTRA_PATH="${SETUP_EXTRA_PATH-$HOME/.local/bin:/opt/homebrew/bin}"
-MODEL_GROUPS=(ollama images motion speech music fonts)
+MODEL_GROUPS=(ollama images motion speech music fonts video voices)
 PYTHON_EXTRAS=(tts align mac)
+MLX_AUDIO_PACKAGE="${MLX_AUDIO_PACKAGE:-mlx-audio==0.6.6}"
+LTX_MLX_SOURCE="${LTX_MLX_SOURCE:-https://github.com/dgrauet/ltx-2-mlx}"
+LTX_MODEL_REPO="${LTX_MODEL_REPO:-reverie-studio/ltx-2.5-mlx-q4-distilled}"
+MODELS_FROM="${AUTOTUBE_MODELS_FROM:-}"
+LTX_PACKAGES=(ltx-core-mlx ltx-pipelines-mlx)
+SVARA_REPO="mlx-community/svara-tts-v1-4bit"
+VOICE_MODELS=(
+  mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-8bit
+  mlx-community/Qwen3-TTS-12Hz-1.7B-CustomVoice-8bit
+  mlx-community/chatterbox-turbo-4bit
+  aruntemme/maya2-native-mlx-8bit
+  "$SVARA_REPO"
+  mlx-community/whisper-large-v3-turbo
+)
+VOICE_CACHE_REPOS=(
+  mlx-community/S3TokenizerV2
+  kyutai/moshiko-pytorch-bf16
+  aufklarer/SpeechBrain-ECAPA-VoxCeleb-20M-MLX
+  mlx-community/snac_24khz
+)
+MLX_DONE=" "
 
 DRY_RUN=0
 NO_BASE=0
@@ -51,6 +72,8 @@ backend and web dependencies, and the built UI.
   --speech             edge-tts, Kokoro, espeak-ng and Whisper alignment
   --music              ACE-Step in its own venv and the CC0 music folder
   --fonts              Noto Sans, Noto Sans Tamil and libraqm
+  --video              LTX-2.5 image-to-video (ltx-2-mlx) and its weights
+  --voices             mlx-audio voices, mlx-whisper and their weights
   --models             all of the model groups above
   --service            start the app at login with a launchd agent
   --uninstall-service  remove the launchd agent
@@ -67,6 +90,11 @@ SETUP_EXTRA_PATH is prepended to PATH (default ~/.local/bin:/opt/homebrew/bin).
 SETUP_BACKEND_PYTHON is the backend venv Python asked for the app's defaults
 (default backend/.venv/bin/python). OLLAMA_WAIT_SECONDS and
 SERVICE_STOP_WAIT_SECONDS are whole numbers of seconds.
+--video and --voices share the venv <data dir>/venvs/mlx and put weights in
+<data dir>/models with the Hugging Face cache in <data dir>/hf.
+AUTOTUBE_MODELS_FROM links weights from <folder>/local/<owner>__<repo> and the
+cache from <folder>/hf instead of downloading. MLX_AUDIO_PACKAGE (default
+mlx-audio==0.6.6), LTX_MLX_SOURCE and LTX_MODEL_REPO override what is installed.
 USAGE
 }
 
@@ -355,6 +383,151 @@ install_fonts() {
   brew_cask font-noto-sans-tamil
 }
 
+mlx_paths() {
+  MLX_VENV="$DATA_DIR/venvs/mlx"
+  MLX_PYTHON="$MLX_VENV/bin/python"
+  MLX_HF="$MLX_VENV/bin/hf"
+  MODELS_DIR="$DATA_DIR/models"
+  HF_DIR="$DATA_DIR/hf"
+  LTX_CLONE="$DATA_DIR/tools/ltx-2-mlx"
+  LTX_LINK="$HOME/.local/bin/ltx-2-mlx"
+}
+
+model_folder() {
+  printf '%s' "${1/\//__}"
+}
+
+mlx_venv_ready() {
+  [ -x "$1" ] && "$1" -c "import mlx_audio, mlx_whisper, huggingface_hub" >/dev/null 2>&1
+}
+
+install_mlx_venv() {
+  [ -x "$MLX_PYTHON" ] || run uv venv --python "$PYTHON_VERSION" "$MLX_VENV"
+  run uv pip install --python "$MLX_PYTHON" "$MLX_AUDIO_PACKAGE" mlx-whisper "huggingface_hub[cli]"
+}
+
+once() {
+  case "$MLX_DONE" in *" $1 "*) return 0 ;; esac
+  MLX_DONE="$MLX_DONE$1 "
+  "$@"
+}
+
+ensure_mlx_venv() {
+  require_uv
+  ensure "mlx venv at $MLX_VENV" mlx_venv_ready "$MLX_PYTHON" install_mlx_venv
+}
+
+link_shared_cache() {
+  if [ -n "$MODELS_FROM" ] && [ -d "$MODELS_FROM/hf" ] && [ ! -e "$HF_DIR" ]; then
+    run ln -s "$MODELS_FROM/hf" "$HF_DIR"
+    installed "Hugging Face cache $HF_DIR linked to $MODELS_FROM/hf"
+  fi
+}
+
+ensure_model_storage() {
+  run mkdir -p "$MODELS_DIR"
+  link_shared_cache
+}
+
+place_model() {
+  local repo="$1" target="$2" source
+  source="$MODELS_FROM/local/$(model_folder "$repo")"
+  if [ -n "$MODELS_FROM" ] && [ -d "$source" ]; then
+    run ln -s "$source" "$target"
+    return 0
+  fi
+  run env HF_HOME="$HF_DIR" "$MLX_HF" download "$repo" --local-dir "$target"
+}
+
+fetch_model() {
+  local target
+  target="$MODELS_DIR/$(model_folder "$1")"
+  ensure "model $1" is_dir "$target" place_model "$1" "$target"
+}
+
+hf_cached() {
+  [ -d "$HF_DIR/hub/models--${1/\//--}" ]
+}
+
+cache_repo() {
+  ensure "cached repo $1" hf_cached "$1" run env HF_HOME="$HF_DIR" "$MLX_HF" download "$1"
+}
+
+ltx_ready() {
+  [ -x "$1" ]
+}
+
+install_ltx() {
+  local package args=()
+  if [ ! -d "$LTX_CLONE/.git" ]; then
+    run mkdir -p "$(dirname "$LTX_CLONE")"
+    run git clone "$LTX_MLX_SOURCE" "$LTX_CLONE"
+  fi
+  for package in "${LTX_PACKAGES[@]}"; do args+=(-e "$LTX_CLONE/packages/$package"); done
+  run uv pip install --python "$MLX_PYTHON" "${args[@]}"
+}
+
+link_ltx() {
+  run mkdir -p "$(dirname "$LTX_LINK")"
+  run ln -sf "$MLX_VENV/bin/ltx-2-mlx" "$LTX_LINK"
+}
+
+fix_svara_tokenizer() {
+  local folder
+  folder="$MODELS_DIR/$(model_folder "$SVARA_REPO")"
+  if is_dry_run; then
+    say "    would set tokenizer_name in $folder/config.json to $folder"
+    return 0
+  fi
+  "$MLX_PYTHON" - "$folder" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+folder = Path(sys.argv[1])
+config = folder / "config.json"
+data = json.loads(config.read_text(encoding="utf-8"))
+data["tokenizer_name"] = str(folder)
+config.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+  say "    tokenizer_name in $folder/config.json points at $folder"
+}
+
+hf_login_note() {
+  note "If a download is refused, log in with: HF_HOME=$HF_DIR $MLX_HF auth login, and accept the terms on the model page."
+  note "Set AUTOTUBE_MODELS_FROM to a folder with local/<owner>__<repo> and hf/ to reuse weights instead of downloading."
+}
+
+install_video() {
+  section "video: LTX-2.5 image-to-video with ltx-2-mlx"
+  mlx_paths
+  once ensure_mlx_venv
+  require_git
+  ensure "ltx-2-mlx in $MLX_VENV" ltx_ready "$MLX_VENV/bin/ltx-2-mlx" install_ltx
+  ensure "$LTX_LINK" ltx_ready "$LTX_LINK" link_ltx
+  once ensure_model_storage
+  fetch_model "$LTX_MODEL_REPO"
+  note "The LTX-2.5 q4 weights are about 20 GB."
+  once hf_login_note
+}
+
+install_voices() {
+  local repo
+  section "voices: mlx-audio voices and Whisper alignment"
+  mlx_paths
+  once ensure_mlx_venv
+  once ensure_model_storage
+  for repo in "${VOICE_MODELS[@]}"; do fetch_model "$repo"; done
+  for repo in "${VOICE_CACHE_REPOS[@]}"; do cache_repo "$repo"; done
+  fix_svara_tokenizer
+  note "The voice models are about 15 GB in total."
+  once hf_login_note
+}
+
+require_git() {
+  have git || is_dry_run || fail "git is missing: install the Xcode command line tools with xcode-select --install"
+}
+
 saved_extras() {
   [ -f "$EXTRAS_FILE" ] || return 0
   cat "$EXTRAS_FILE"
@@ -522,7 +695,9 @@ select_models() {
 
 parse_flag() {
   case "$1" in
-    --ollama | --images | --motion | --speech | --music | --fonts | --service | --uninstall-service)
+    --ollama | --images | --motion | --speech | --music | --fonts | --video | --voices)
+      select_group "${1#--}" ;;
+    --service | --uninstall-service)
       select_group "${1#--}" ;;
     --models) select_models ;;
     --all) select_models && select_group service ;;
