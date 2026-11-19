@@ -29,6 +29,13 @@ from tests.fixtures.template_settings import defaults_for, model_for, pipeline_o
 
 KIDS, GENERAL = TemplateAudience.KIDS, TemplateAudience.GENERAL
 ENGINE = KidsStorySettings().model_dump(mode="json")
+ENGINE_HIDDEN = [
+    "safety.audience",
+    "story.structure",
+    "story.item_count",
+    "story.quiz_questions",
+    "story.answer_choices",
+]
 WEAKENED = {
     "series": {"editorial_rules": ["Be fun."]},
     "safety": {"banned_words": [], "brand_names": ["Acme"], "picture_exclusions": "blur"},
@@ -58,10 +65,9 @@ def test_only_kids_templates_carry_the_kids_capability() -> None:
 def test_the_derived_ui_schema_hides_the_audience_and_general_age_fields() -> None:
     own = KidsStoryPipeline().descriptor.ui_schema
     kids, general = descriptor_of(KIDS).ui_schema, descriptor_of(GENERAL).ui_schema
-    assert kids == own and own["ui:hidden"] == ["safety.audience", "story.structure"]
+    assert kids == own and own["ui:hidden"] == ENGINE_HIDDEN
     assert general["ui:hidden"] == [
-        "safety.audience",
-        "story.structure",
+        *ENGINE_HIDDEN,
         "story.age_min",
         "story.age_max",
         "story.reading_level",
@@ -75,8 +81,7 @@ def test_the_definition_sets_basic_and_adds_hidden_paths() -> None:
     assert ui["ui:basic"] == ["story.tone"]
     assert ui["ui:hidden"] == [
         "story.morals",
-        "safety.audience",
-        "story.structure",
+        *ENGINE_HIDDEN,
         "story.age_min",
         "story.age_max",
         "story.reading_level",

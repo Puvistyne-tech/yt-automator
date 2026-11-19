@@ -18,6 +18,7 @@ from tests.fixtures.explainer_data import (
     without_hook_or_takeaway,
 )
 from tests.fixtures.kids_data import story
+from tests.fixtures.list_data import list_settings, list_story, with_scene
 from tests.fixtures.template_settings import GENERAL
 
 
@@ -70,3 +71,11 @@ def test_inapplicable_items_are_left_out_and_the_score_renormalises() -> None:
         score_items(inputs_of(kids_settings_model()(), {"en": story()}))
     ) == pytest.approx(250 / 4.5)
     assert scored(explainer_settings(GENERAL), {}) == {"completeness": (0.0, 2.0)}
+
+
+def test_the_list_item_scores_its_shape_and_skips_story_items() -> None:
+    settings = list_settings(GENERAL)
+    assert scored(settings, {"en": list_story()})["structure"] == (100.0, 1.5)
+    items = scored(settings, {"en": with_scene(list_story(), 1, heading="")})
+    assert items["structure"] == (50.0, 1.5)
+    assert not {"moral_and_refrain", "character_consistency"} & items.keys()

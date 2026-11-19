@@ -60,13 +60,14 @@ def style_values(settings: KidsStorySettings) -> dict[str, str]:
 def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str = "") -> str:
     rules = settings.story
     spec = spec_of(settings)
+    scene_min, scene_max = spec.scene_range(settings)
     return render_prompt(
         USER_PROMPT,
         language=language_name(language),
         series=settings.series.name.for_language(language),
         theme=theme,
-        scene_min=rules.scene_count_min,
-        scene_max=rules.scene_count_max,
+        scene_min=scene_min,
+        scene_max=scene_max,
         words_min=f"{rules.words_per_scene_min.for_language(language):g}",
         words_max=f"{rules.words_per_scene_max.for_language(language):g}",
         target_seconds=rules.target_duration_seconds,
@@ -119,7 +120,9 @@ def translation_user(
         question_count=len(text.questions),
         ending_rules=spec_of(settings).translation_rules(settings, target),
         names=names or NO_RECURRING_CHARACTERS,
-        story=json.dumps(text.model_dump(mode="json"), ensure_ascii=False, indent=2),
+        story=json.dumps(
+            text.model_dump(mode="json", exclude_none=True), ensure_ascii=False, indent=2
+        ),
     )
 
 

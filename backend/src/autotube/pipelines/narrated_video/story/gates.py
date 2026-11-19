@@ -22,10 +22,17 @@ from autotube.pipelines.narrated_video.story.reading import (
 from autotube.pipelines.narrated_video.story.words import contains_phrase, word_count
 
 Gate = Callable[[Story, KidsStorySettings], list[str]]
+SceneRange = Callable[[KidsStorySettings], tuple[int, int]]
 
 
-def scene_count_problems(story: Story, settings: KidsStorySettings) -> list[str]:
-    low, high = settings.story.scene_count_min, settings.story.scene_count_max
+def configured_scene_range(settings: KidsStorySettings) -> tuple[int, int]:
+    return settings.story.scene_count_min, settings.story.scene_count_max
+
+
+def scene_count_problems(
+    story: Story, settings: KidsStorySettings, scene_range: SceneRange = configured_scene_range
+) -> list[str]:
+    low, high = scene_range(settings)
     if low <= len(story.scenes) <= high:
         return []
     return [f"use between {low} and {high} scenes, not {len(story.scenes)}"]
@@ -72,9 +79,15 @@ def ending_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     return problems
 
 
+def moral_problems(story: Story, settings: KidsStorySettings) -> list[str]:  # noqa: ARG001
+    return [] if story.moral.strip() else ['write the moral in "moral"']
+
+
 def all_text(story: Story) -> str:
     parts = [story.title, story.moral, story.hook_line, *story.questions]
-    scenes = [text for scene in story.scenes for text in (scene.narration, scene.action)]
+    scenes = [
+        text for scene in story.scenes for text in (scene.narration, scene.action, *scene.texts)
+    ]
     return " ".join([*parts, *scenes])
 
 
@@ -136,8 +149,8 @@ def cast_problems(story: Story, settings: KidsStorySettings, seed: str = "") -> 
 
 
 CheckedGate = tuple[StoryCheck | None, Gate]
-SIZE_GATES: tuple[CheckedGate, ...] = (
-    (StoryCheck.SCENE_COUNT, scene_count_problems),
+MORAL_GATE: CheckedGate = (None, moral_problems)
+LENGTH_GATES: tuple[CheckedGate, ...] = (
     (StoryCheck.WORDS_PER_SCENE, words_per_scene_problems),
     (StoryCheck.DURATION, duration_problems),
 )

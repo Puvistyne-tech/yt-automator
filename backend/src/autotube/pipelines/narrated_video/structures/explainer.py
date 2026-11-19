@@ -5,36 +5,26 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.prompt_parts import following_bullets
+from autotube.pipelines.narrated_video.structures.castless import NO_STORY_LINES
 from autotube.pipelines.narrated_video.structures.explainer_checks import (
     EXPLAINER_GATES,
-    explainer_seeded_gates,
-    explainer_shape,
+    explainer_problems,
 )
-from autotube.pipelines.narrated_video.structures.spec import StructureSpec
+from autotube.pipelines.narrated_video.structures.paths import CAST_PATHS
+from autotube.pipelines.narrated_video.structures.shape_score import structure_item
+from autotube.pipelines.narrated_video.structures.spec import StructureSpec, unseeded
 
 WORDING = {
     "format": "narrated explainer",
     "pieces": "explainer scripts",
     "piece": "explainer script",
 }
-NO_STORY_LINES = {"ending": "", "speaker": "", "characters": ""}
 TRANSLATION_RULES = (
     "The first narration still asks the question the video answers, with a question mark.",
     'The takeaway in "moral" must appear word for word, as you translate it, inside the last '
     "narration.",
 )
-HIDDEN_PATHS = (
-    "cast",
-    "story.morals",
-    "story.ending_style",
-    "story.ending_scenes",
-    "story.lead_mode",
-    "story.cast_per_episode",
-    "series.refrain",
-    "visuals.character_sheets",
-    "quality.weights.moral_and_refrain",
-    "quality.weights.character_consistency",
-)
+HIDDEN_PATHS = CAST_PATHS
 
 
 def explainer_values(
@@ -59,9 +49,9 @@ EXPLAINER_SPEC = StructureSpec(
     wording=WORDING,
     prompt_values=explainer_values,
     translation_rules=explainer_rules,
-    extra_gates=explainer_seeded_gates,
+    extra_gates=unseeded(EXPLAINER_GATES),
     translation_gates=EXPLAINER_GATES,
-    score_rules=(explainer_shape,),
+    score_rules=(structure_item("Explainer hook and takeaway", explainer_problems),),
     placeholders=("takeaway",),
     placeholder_values=takeaway_values,
     hidden_paths=HIDDEN_PATHS,

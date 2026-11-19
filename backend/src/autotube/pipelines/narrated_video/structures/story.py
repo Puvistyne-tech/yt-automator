@@ -16,6 +16,7 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck, Structure
 from autotube.pipelines.narrated_video.story.casting import episode_cast
 from autotube.pipelines.narrated_video.story.gates import (
+    MORAL_GATE,
     CheckedGate,
     cast_problems,
     ending_problems,
@@ -66,7 +67,7 @@ def ending_rules(settings: KidsStorySettings, language: str) -> str:
 
 
 def story_gates(seed: str) -> tuple[CheckedGate, ...]:
-    return (ENDING_GATE, (StoryCheck.CAST, partial(cast_problems, seed=seed)))
+    return (MORAL_GATE, ENDING_GATE, (StoryCheck.CAST, partial(cast_problems, seed=seed)))
 
 
 STORY_SPEC = StructureSpec(
@@ -76,7 +77,7 @@ STORY_SPEC = StructureSpec(
     prompt_values=cast_values,
     translation_rules=ending_rules,
     extra_gates=story_gates,
-    translation_gates=(ENDING_GATE,),
+    translation_gates=(MORAL_GATE, ENDING_GATE),
     score_rules=(moral_and_refrain, character_consistency),
     placeholders=STORY_PLACEHOLDERS,
     placeholder_values=story_values,

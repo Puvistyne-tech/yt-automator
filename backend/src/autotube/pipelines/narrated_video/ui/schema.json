@@ -77,7 +77,10 @@
   ],
   "ui:hidden": [
     "safety.audience",
-    "story.structure"
+    "story.structure",
+    "story.item_count",
+    "story.quiz_questions",
+    "story.answer_choices"
   ],
   "series": {
     "ui:order": [
@@ -247,6 +250,9 @@
   "story": {
     "ui:order": [
       "structure",
+      "item_count",
+      "quiz_questions",
+      "answer_choices",
       "source",
       "primary_language",
       "tone",
