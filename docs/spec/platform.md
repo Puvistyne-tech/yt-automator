@@ -1152,6 +1152,29 @@ pipeline type when it is served), `/automations/:id`, `/pipelines`, `/pipelines/
   built-in opens read-only with "Duplicate to customise", which opens the duplicate dialog. An unknown id
   shows "Pipeline not found" with a link back; a template whose engine is not installed shows a warning
   instead of the form.
+- Pipeline settings views (new, saved and built-in pipelines): the same "Simple" / "All settings" toggle as
+  the automation editor (`shared/settings-view/`), sharing its remembered choice
+  (`autotube.editor.settings-view`). A new pipeline always opens in Simple without changing the remembered
+  choice; a saved or built-in pipeline opens in the remembered view. Simple shows only the definition's
+  `ui:basic` fields under their `ui:sections` titles and says "<n> more options in All settings" with "Show
+  all settings"; name, description and audience show in both views. All settings shows every section and a
+  search box over field titles and descriptions ("No settings match" with "Clear search" when nothing is
+  left); there is no "Changed only" switch, because a definition has no defaults to compare against. A
+  definition field with an error is always shown, and when a save or a sample fails on a field Simple hides,
+  the editor switches to All settings.
+- "Try a sample script" card (new, saved and built-in pipelines), below the definition: a language select,
+  an optional topic and "Write a sample script". It sends the unsaved form (`TemplatePreviewInput`: the
+  draft with its current status, the chosen language and the topic) to `POST /templates/preview-script` and
+  never saves; the card says it writes only the script, with no pictures or voice. While writing, the button
+  shows "Writing…" and is disabled and a progress line says "Writing a sample script". The result shows
+  the title, the scenes in order (heading when present, narration, and the action in a muted line), the
+  takeaway when present, the YouTube title and description, and "Written by <provider>". A 400 puts its field
+  errors on the matching fields (`language` and `topic` in the card, `definition.<path>` in the form, `name`
+  on the name) and shows a toast; a 409 `preview_unavailable` shows the server's message as a calm info
+  notice with "Open Providers" (`/providers`); other failures show as a toast. Known limit: `EngineSummary`
+  carries no languages, so the select offers the languages of the served pipelines built from this engine's
+  templates (`model/preview.ts::engineLanguages`), the first preselected; with none served it sends `null`
+  and the server uses the pipeline's first language.
 - Run detail: live stage timeline, logs, score breakdown, approve or reject with notes, publish, retry from
   stage. A `status` event refetches the open run so score, score details and timestamps update live.
   Artifacts list final outputs first (kinds `video`, `thumbnail`, `subtitle`, `metadata` with a language),
