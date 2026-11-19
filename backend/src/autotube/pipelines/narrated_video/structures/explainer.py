@@ -12,7 +12,12 @@ from autotube.pipelines.narrated_video.structures.explainer_checks import (
 )
 from autotube.pipelines.narrated_video.structures.spec import StructureSpec
 
-FORMAT = "explainer"
+WORDING = {
+    "format": "narrated explainer",
+    "pieces": "explainer scripts",
+    "piece": "explainer script",
+}
+NO_STORY_LINES = {"ending": "", "speaker": "", "characters": ""}
 TRANSLATION_RULES = (
     "The first narration still asks the question the video answers, with a question mark.",
     'The takeaway in "moral" must appear word for word, as you translate it, inside the last '
@@ -37,7 +42,7 @@ def explainer_values(
     language: str,  # noqa: ARG001
     seed: str,  # noqa: ARG001
 ) -> dict[str, str]:
-    return {"format": FORMAT, "structure_rules": render_prompt("explainer.txt")}
+    return {**NO_STORY_LINES, "structure_rules": render_prompt("explainer.txt")}
 
 
 def explainer_rules(settings: KidsStorySettings, language: str) -> str:  # noqa: ARG001
@@ -51,8 +56,7 @@ def takeaway_values(story: Story, settings: KidsStorySettings) -> dict[str, str]
 EXPLAINER_SPEC = StructureSpec(
     id=Structure.EXPLAINER,
     title="Explainer",
-    system_prompt="script_system.txt",
-    user_prompt="script_user.txt",
+    wording=WORDING,
     prompt_values=explainer_values,
     translation_rules=explainer_rules,
     extra_gates=explainer_seeded_gates,

@@ -1,23 +1,17 @@
-Write a new $language story for "$series" about the theme: $theme.
+Write a new $language $piece for "$series" about the theme: $theme.
 
-Cast (use only these characters, refer to them in "characters" by their id; $lead leads the story):
-$cast
-
-Choose one moral from this list, or a close gentle variation of one:
-$morals
+$structure_rules
 
 Requirements:
 - Between $scene_min and $scene_max scenes.
 - Each scene's narration has between $words_min and $words_max words, written in $language.
 - The whole narration reads aloud in about $target_seconds seconds at $words_per_minute words per minute.
-- $writing_style$extra_instructions
-- $ending
+- $writing_style$extra_instructions$ending
 - "visual" describes what the picture shows in English, with no words, letters or signs in the picture.
 - $action
 - "camera" is one of: $cameras.
 - Mark exactly $hero_count of the most beautiful scenes with "hero": true.
-- "sound_effects" $sound_effects
-- "speaker" is "narrator", or a character id if that character says the whole scene.
+- "sound_effects" $sound_effects$speaker
 - "questions" holds exactly $question_count $question_style, in $language.
 - "short_scenes" lists the zero-based indexes of up to $short_scenes scenes that make the best vertical Short.
 - "hook_line" is one $hook_style sentence in $language that opens the Short. No clickbait.
@@ -32,7 +26,7 @@ Answer with JSON in exactly this shape:
       "narration": "...",
       "visual": "...",
       "action": "...",
-      "characters": ["$lead"],
+      "characters": [$characters],
       "setting": "...",
       "mood": "...",
       "camera": "push_in",

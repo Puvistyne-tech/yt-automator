@@ -24,11 +24,8 @@ def test_every_structure_has_exactly_one_spec() -> None:
 def test_the_story_spec_keeps_todays_prompts_and_bundled_fallback() -> None:
     spec = spec_of(KidsStorySettings())
     assert spec.id is Structure.STORY
-    assert (spec.system_prompt, spec.user_prompt, spec.uses_bundled) == (
-        "story_system.txt",
-        "story_user.txt",
-        True,
-    )
+    assert spec.uses_bundled is True
+    assert spec.wording == {"format": "animated story", "pieces": "stories", "piece": "story"}
     assert structure_defaults(Structure.STORY) == {}
     assert {"moral", "refrain", "characters"} <= set(metadata_placeholders(Structure.STORY))
 

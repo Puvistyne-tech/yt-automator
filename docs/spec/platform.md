@@ -678,12 +678,12 @@ class PipelineEngine(Protocol):
     age-appropriate language (scene count, words per scene, duration, ending, cast and structure are form
     checks);
   - `story.age_min`/`age_max` stay capped at 12 by validation.
-  The banned-word and brand gates are always on, and kids templates always use the kids system prompt of their
-  structure (`story_system.txt` or `script_system.txt`, both with the age range and reading level).
+  The banned-word and brand gates are always on, and kids templates of every structure always use the kids
+  system prompt (`story_system.txt`, with the age range and reading level).
   Behaviour change: a stored kids automation whose settings removed a floored entry gets it back silently when
   it is loaded; defaults that already meet the floor are unchanged.
-- General templates: every prompt with a `_general` variant (`story_system`, `script_system`,
-  `translate_system`, `image_scene`, `image_thumbnail`, `judge`) is chosen by audience (`audience_prompts.py`); the story system prompt has no age
+- General templates: every prompt with a `_general` variant (`story_system`, `translate_system`, `image_scene`,
+  `image_thumbnail`, `judge`) is chosen by audience (`audience_prompts.py`); the story system prompt has no age
   range or reading level and says "The audience is general: the script must never address children…"; an open
   ending lets "viewers" rather than "children" wonder what happens next. The kids prompts are unchanged and
   pinned, and the general prompts are pinned in `tests/fixtures/prompts/general/`; the reading-level gate does not
@@ -712,9 +712,9 @@ A structure is the shape of every script. `settings.story.structure` (`story` by
 the built-in `kids_story` are unchanged) selects one `StructureSpec` from `structures/registry.py::SPECS`:
 
 ```
-StructureSpec   id, title, system_prompt, user_prompt (prompt file names; the system prompt gets its
-                `_general` variant by audience), prompt_values(settings, language, seed) -> the structure's
-                own prompt values, translation_rules(settings, language) -> its translation rule lines,
+StructureSpec   id, title, wording ({format, pieces, piece}: the words the shared story_system and
+                story_user prompts use for this structure), prompt_values(settings, language, seed) -> the
+                structure's own story_user values (structure_rules, ending, speaker, characters), translation_rules(settings, language) -> its translation rule lines,
                 extra_gates(seed), translation_gates, score_rules, placeholders (metadata placeholders beyond
                 the common ones), placeholder_values(story, settings), uses_bundled (may fall back to the
                 bundled stories), basic_paths (the derived `ui:basic` when the definition has none; empty
@@ -735,13 +735,17 @@ StructureSpec   id, title, system_prompt, user_prompt (prompt file names; the sy
   riverbank) or, for general audiences, a neutral one (a baker at an oven), and shows it in the JSON shape. The
   motion prompt does not use it yet. The banned-word, brand-name and child-directed term gates read it with the
   narration.
-- `story`: the existing `story_system.txt` and `story_user.txt` with the cast, lead and morals; ending and cast
+- Every structure shares `story_system.txt` (or its `_general` variant) and `story_user.txt`; a structure fills
+  `$format`, `$pieces` and `$piece`, puts its own block in `$structure_rules`, and may add the ending and
+  speaker requirements and the example character id. The rendered story prompts are unchanged and pinned.
+- `story`: wording "animated story" / "stories" / "story"; `$structure_rules` is `story_cast.txt` with the
+  episode cast, lead and morals; the ending requirement, the speaker line and the lead as example character; ending and cast
   gates; ending translation gate; `moral_and_refrain` and `character_consistency` score items; placeholders
   `{moral} {characters} {refrain}`; bundled fallback. Its cast needs at least one member (validated on the
   settings, "a story needs at least one cast member"); other structures may have an empty cast.
-- `explainer`: a narrated explanation of one topic with no recurring characters. Prompts `script_system.txt`
-  (kids: the same age range, "a parent is happy to play for a small child" and reading-level lines as the story
-  prompt) or `script_system_general.txt`, and `script_user.txt` with the `explainer.txt` fragment: the first
+- `explainer`: a narrated explanation of one topic with no recurring characters. Wording "narrated explainer" /
+  "explainer scripts" / "explainer script"; `$structure_rules` is the `explainer.txt` fragment, with no ending
+  or speaker line and an empty example character list. The fragment says the first
   scene asks the question the video answers, the middle scenes explain it, the last scene recaps and says the
   takeaway word for word; `moral` holds the takeaway; `characters` is empty and `speaker` is the narrator.
   Gate (check `structure`, in `story.enabled_checks`): the first narration contains a question mark ("open the

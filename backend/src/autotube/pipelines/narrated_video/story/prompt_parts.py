@@ -19,6 +19,7 @@ OPEN_ENDING = (
 )
 MORAL_RULE = "The moral must appear word for word, as you translate it, inside the last narration."
 NO_CUES = "is always an empty list."
+SPEAKER_RULE = '"speaker" is "narrator", or a character id if that character says the whole scene.'
 ACTION_RULE = (
     "For each scene, also write `action`: one short present-tense sentence describing the one "
     "main visible movement in the picture, with one subject doing one thing (for example: "

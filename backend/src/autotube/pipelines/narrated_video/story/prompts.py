@@ -13,12 +13,13 @@ from autotube.pipelines.narrated_video.story.prompt_parts import (
     action_rule,
     avoided_topics,
     bullet_lines,
-    ending_requirement,
     extra_requirements,
     sound_effect_rule,
 )
 from autotube.pipelines.narrated_video.structures.registry import spec_of
 
+SYSTEM_PROMPT = "story_system.txt"
+USER_PROMPT = "story_user.txt"
 NO_RECURRING_CHARACTERS = "none, there are no recurring characters"
 
 
@@ -31,7 +32,7 @@ def reading_level_text(settings: KidsStorySettings) -> str:
 def story_system(settings: KidsStorySettings, language: str) -> str:
     spec = spec_of(settings)
     return render_prompt(
-        audience_prompt(spec.system_prompt, settings),
+        audience_prompt(SYSTEM_PROMPT, settings),
         series=settings.series.name.for_language(language),
         tagline=settings.series.tagline.for_language(language),
         age_min=settings.story.age_min,
@@ -40,17 +41,15 @@ def story_system(settings: KidsStorySettings, language: str) -> str:
         rules=bullet_lines(settings.series.editorial_rules),
         avoid_topics=avoided_topics(settings.safety.avoid_topics),
         reading_level=reading_level_text(settings),
-        **spec.prompt_values(settings, language, ""),
+        **spec.wording,
     )
 
 
-def style_values(settings: KidsStorySettings, language: str) -> dict[str, str]:
+def style_values(settings: KidsStorySettings) -> dict[str, str]:
     rules = settings.story
-    refrain = settings.series.refrain.for_language(language)
     return {
         "writing_style": rules.writing_style,
         "extra_instructions": extra_requirements(rules.extra_instructions),
-        "ending": ending_requirement(rules.ending_style, refrain, settings.safety.for_kids),
         "sound_effects": sound_effect_rule(settings.sound_effects.max_per_scene),
         "question_style": rules.question_style,
         "hook_style": settings.short.hook_style,
@@ -62,7 +61,7 @@ def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str
     rules = settings.story
     spec = spec_of(settings)
     return render_prompt(
-        spec.user_prompt,
+        USER_PROMPT,
         language=language_name(language),
         series=settings.series.name.for_language(language),
         theme=theme,
@@ -76,7 +75,8 @@ def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str
         hero_count=settings.visuals.hero_scene_count,
         question_count=rules.question_count,
         short_scenes=settings.short.max_scenes,
-        **style_values(settings, language),
+        **style_values(settings),
+        **spec.wording,
         **spec.prompt_values(settings, language, seed),
     )
 

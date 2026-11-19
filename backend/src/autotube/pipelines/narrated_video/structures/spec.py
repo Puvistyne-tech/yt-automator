@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from autotube.pipelines.narrated_video.scoring.inputs import ScoreRule
@@ -19,8 +19,7 @@ SeededGates = Callable[[str], tuple[CheckedGate, ...]]
 class StructureSpec:
     id: Structure
     title: str
-    system_prompt: str
-    user_prompt: str
+    wording: Mapping[str, str]
     prompt_values: PromptValues
     translation_rules: TranslationRules
     extra_gates: SeededGates
