@@ -554,7 +554,8 @@ bad row never breaks `GET /pipelines`), `ProviderConfigRepository` (list, save_a
 resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
 exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists,
 popular_videos(auth, TrendQuery) -> [TrendingVideo]: `videos.list` with `chart=mostPopular`, `regionCode`, the
-optional `videoCategoryId` and `maxResults`; items without a title are skipped),
+optional `videoCategoryId` and `maxResults`; a part of the reply that is not the expected object or list counts as
+empty, and items without a title are skipped, so a malformed reply gives no videos),
 `TrendSource` (trending(TrendQuery) -> [TrendingVideo]; `infrastructure/youtube/sample_trends.py::SampleTrendSource`
 serves the bundled neutral `sample_trends.json`, preferring the query's category and falling back to every sample,
 cut to the limit),

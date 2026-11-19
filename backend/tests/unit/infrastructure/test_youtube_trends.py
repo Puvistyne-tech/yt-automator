@@ -79,6 +79,27 @@ def test_untitled_and_malformed_items_are_skipped(
     ]
 
 
+@pytest.mark.parametrize(
+    "response",
+    ["garbage", None, {"items": "many"}, {"items": [{"snippet": "odd"}]}],
+)
+def test_a_malformed_reply_gives_no_videos(
+    gateway: GoogleYouTubeGateway, service: FakeService, response: object
+) -> None:
+    service.respond("videos", "list", response)
+    assert gateway.popular_videos(auth(), QUERY) == []
+
+
+def test_malformed_parts_of_an_item_take_safe_defaults() -> None:
+    odd = {
+        "snippet": {"title": "Quiet rain", "tags": "rain"},
+        "statistics": [],
+        "contentDetails": "PT1M",
+        "status": {"madeForKids": "true"},
+    }
+    assert trending_video(odd) == TrendingVideo(title="Quiet rain")
+
+
 def test_a_sparse_item_takes_safe_defaults() -> None:
     video = trending_video({"snippet": {"title": "Quiet rain"}, "statistics": {"viewCount": "x"}})
     assert video == TrendingVideo(title="Quiet rain")
@@ -86,7 +107,17 @@ def test_a_sparse_item_takes_safe_defaults() -> None:
 
 @pytest.mark.parametrize(
     ("text", "seconds"),
-    [("PT4M13S", 253), ("PT1H", 3600), ("P1DT2S", 86402), ("PT45S", 45), ("soon", 0), ("", 0)],
+    [
+        ("PT4M13S", 253),
+        ("PT1H", 3600),
+        ("PT1H2M3S", 3723),
+        ("P1W", 0),
+        ("PT1.5S", 0),
+        ("P1DT2S", 86402),
+        ("PT45S", 45),
+        ("soon", 0),
+        ("", 0),
+    ],
 )
 def test_iso_durations_become_seconds(text: str, seconds: int) -> None:
     assert duration_seconds(text) == seconds
