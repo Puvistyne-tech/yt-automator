@@ -40,6 +40,12 @@ PipelineTemplate    id, type_id, engine, name (non-empty; see the template rules
                     audience: kids | general, status: draft | ready = draft,
                     origin: builtin | blank | duplicate | suggested, revision: int >= 1 = 1,
                     definition (object described by the engine's definition model), created_at, updated_at
+TemplateSummary     PipelineTemplate + builtin: bool + automations_using: int (automations whose
+                    pipeline_type is the template's type_id)
+TemplateInput       engine, name, description = "", audience, status = draft, origin = blank,
+                    definition (object) = {}; no other field is accepted
+EngineSummary       engine_id, name, definition_schema (JSON Schema of the definition model),
+                    definition_ui_schema (object), blank: {kids: object, general: object}
 
 Automation      id, name, description, pipeline_type, settings (object), languages: [code],
                 targets: [Target], schedule, review_policy, retry_policy, enabled, created_at,
@@ -510,10 +516,11 @@ delete_if(run_id, check) -> the deleted run, or None when it is missing or `chec
 `ChannelRepository` (get, find_by_youtube_id, list, save, delete),
 `TemplateRepository` (get, find_by_type_id, list ordered by `created_at`, add, update, delete; add refuses a
 stored id with `RuleConflict("template_exists")`; add and update refuse a type id held by another template with
-`RuleConflict("template_type_taken")`; list and find_by_type_id skip stored rows that no longer decode, so one
+`RuleConflict("template_type_taken")`; get, list and find_by_type_id skip stored rows that no longer decode, so one
 bad row never breaks `GET /pipelines`), `ProviderConfigRepository` (list, save_all),
 `AppSettingsRepository` (get, save), `QuotaLedger` (used_today(credential_id, day), record(credential_id, units, day)),
 `SecretStore` (get, set, delete, has), `Clock` (now), `IdGenerator` (new), `PipelineRegistry` (list, get),
+`EngineCatalog` (list, get(engine_id) -> PipelineEngine or None; the installed template engines),
 `ProviderCatalog` (descriptors, secrets, option_errors(configs) -> {path: message},
 resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
 exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
@@ -583,6 +590,31 @@ class PipelineEngine(Protocol):
 - The `narrated_video` engine has one built-in, `kids_story` (audience kids), served by the kids story pipeline,
   so its descriptor is unchanged. A stored template is served by the same pipeline under the template's
   `type_id` and `name`. Its definition model is still empty.
+
+Template use cases (`application/*_template*.py`, sharing `application/template_lookup.py`) reach engines only
+through `EngineCatalog`, which the composition root builds from `installed_engines()`
+(`infrastructure/pipelines/engine_catalog.py`). They treat `definition` as opaque and validate it only through
+`engine.problems(template)`.
+
+- A template id is looked up among the engines' built-ins first (a built-in's id is its type id), then among
+  stored templates. An unknown id, or a stored row that no longer decodes, is `template_not_found`.
+- List returns every engine's built-ins, then the stored templates by `created_at`, each as a TemplateSummary.
+- Create assigns a fresh id and type id `t_<id>`, revision 1 and `created_at = updated_at = now`, and stores the
+  name trimmed. Field errors (400): `origin: builtin` (`origin`), the name rules (`name`), an engine that is not
+  installed (`engine`), then the engine's `problems`. A type id already served or built in is
+  `template_type_taken` (409).
+- Update replaces name, description, audience, status and definition. A built-in is refused first with
+  `template_builtin` (409). Field errors (400), reported together: an audience change (`audience`), an engine
+  change (`engine`), the name rules, the engine's `problems` (or `engine` when it is no longer installed); the
+  `origin` sent is ignored, and a `type_id` in the body is refused by the request schema. Setting a `ready`
+  template to `draft` while any automation's `pipeline_type` is its type id is `template_in_use` (409), naming
+  the automations; otherwise any status change is allowed. The revision then increments through `revised`.
+- Delete refuses a built-in with `template_builtin` and a template any automation uses with `template_in_use`
+  naming the automations in name order (`domain/deletion_rules.py`).
+- Duplicate works for built-ins and stored templates. The copy has a fresh id and type id, origin `duplicate`,
+  status `draft`, revision 1, the source's engine, description and definition, the requested audience or the
+  source's, and the requested name or the source name shortened to fit with " (copy)" appended. It is
+  validated like a new template: the name rules, the engine's `problems`, a free type id.
 
 `infrastructure/pipelines/template_registry.py` holds `TemplatePipelineRegistry(static, engines, templates)`, the
 `PipelineRegistry` adapter the composition root builds from the index and the `TemplateRepository`:
@@ -778,6 +810,13 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | GET `/storage` | | StorageReport |
 | GET `/storage/cleanup` | | CleanupReport with `dry_run: true`; removes nothing |
 | POST `/storage/cleanup` | | CleanupReport with `dry_run: false` and what was removed |
+| GET `/template-engines` | | `[EngineSummary]` |
+| GET `/templates` | | `[TemplateSummary]`, built-ins first |
+| GET `/templates/{id}` | | TemplateSummary; a built-in's id is its type id; 404 `template_not_found` |
+| POST `/templates` | `TemplateInput` | TemplateSummary, 201; 400 with field errors; 409 `template_type_taken` |
+| PUT `/templates/{id}` | `TemplateInput` | TemplateSummary; 409 `template_builtin`; 400 for an audience, engine or type id change and for field errors; 409 `template_in_use` for ready to draft while in use |
+| DELETE `/templates/{id}` | | 204; 409 `template_builtin`; 409 `template_in_use` naming the automations |
+| POST `/templates/{id}/duplicate` | optional `{name?, audience?}` | TemplateSummary, 201; 400 with field errors |
 
 `AutomationInput` is Automation without `id`, timestamps and derived fields. Target `id` is optional on input.
 

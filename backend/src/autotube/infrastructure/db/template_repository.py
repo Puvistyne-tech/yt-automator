@@ -43,6 +43,10 @@ class SqlTemplateRepository(RowRepository[PipelineTemplate, PipelineTemplateRow]
         except ValidationError:
             return None
 
+    def get(self, row_id: str) -> PipelineTemplate | None:
+        with self.db.session() as session:
+            return self.readable(session.get(PipelineTemplateRow, row_id))
+
     def list(self) -> list[PipelineTemplate]:
         return [template for row in self.rows() if (template := self.readable(row)) is not None]
 

@@ -88,6 +88,7 @@ def test_rows_that_no_longer_decode_are_skipped(database: Database) -> None:
     templates.add(template())
     assert templates.list() == [template()]
     assert templates.find_by_type_id("t_broken") is None
+    assert templates.get("broken") is None
 
 
 def test_migration_creates_the_templates_table(database: Database) -> None:

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from datetime import datetime
 
-from autotube.domain.pipeline_templates import PipelineTemplate
+from autotube.domain.deletion_rules import template_in_use
+from autotube.domain.pipeline_templates import PipelineTemplate, TemplateOrigin
 from autotube.shared.errors import RuleConflict, raise_if_invalid
 
 NAME_MAX_LENGTH = 80
@@ -33,6 +34,33 @@ def immutable_errors(current: PipelineTemplate, proposed: PipelineTemplate) -> d
         for field in IMMUTABLE_FIELDS
         if getattr(current, field) != getattr(proposed, field)
     }
+
+
+def engine_change_errors(current: PipelineTemplate, engine: str) -> dict[str, str]:
+    if engine == current.engine:
+        return {}
+    return {"engine": f"engine cannot change after creation; it stays {current.engine!r}"}
+
+
+def missing_engine_errors(engine_id: str) -> dict[str, str]:
+    return {"engine": f"engine {engine_id!r} is not installed"}
+
+
+def origin_errors(origin: TemplateOrigin) -> dict[str, str]:
+    if origin is TemplateOrigin.BUILTIN:
+        return {"origin": "built-in templates come only from installed engines"}
+    return {}
+
+
+def copy_name(name: str, suffix: str) -> str:
+    return f"{name.strip()[: NAME_MAX_LENGTH - len(suffix)].rstrip()}{suffix}"
+
+
+def ensure_draft_allowed(
+    current: PipelineTemplate, proposed: PipelineTemplate, users: Sequence[str]
+) -> None:
+    if users and current.is_ready and not proposed.is_ready:
+        raise template_in_use(users, "it must stay ready while they use it")
 
 
 def ensure_type_id_free(type_id: str, taken: Collection[str]) -> None:
