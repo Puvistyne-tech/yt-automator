@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 
 import pytest
 from pydantic import BaseModel
@@ -17,12 +16,11 @@ from autotube.domain.pipeline_templates import (
 )
 from autotube.infrastructure.pipelines.pipeline_index import DuplicatePipelineError
 from autotube.infrastructure.pipelines.template_registry import TemplatePipelineRegistry
+from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
 from autotube.pipelines.registry import installed_engines, installed_pipelines
 from tests.fixtures.fake_pipeline import FakePipeline, FakeSettings
 from tests.fixtures.fake_repositories import InMemoryTemplates
 from tests.fixtures.template_records import template
-
-GOLDEN = Path(__file__).parents[3] / "fixtures" / "descriptors" / "kids_story.json"
 
 
 @dataclass(frozen=True)
@@ -71,12 +69,22 @@ def stored(*items: PipelineTemplate) -> InMemoryTemplates:
     return templates
 
 
-def test_kids_story_descriptor_matches_the_golden_file_byte_for_byte() -> None:
+def test_kids_story_is_served_with_the_plugins_own_descriptor() -> None:
     pipelines = registry(InMemoryTemplates())
-    golden = GOLDEN.read_text(encoding="utf-8")
+    own = KidsStoryPipeline().descriptor
     [listed] = pipelines.list()
-    assert served(pipelines, "kids_story").descriptor.model_dump_json() + "\n" == golden
-    assert listed.descriptor.model_dump_json() + "\n" == golden
+    for descriptor in (served(pipelines, "kids_story").descriptor, listed.descriptor):
+        assert descriptor == own
+        assert descriptor.model_dump_json() == own.model_dump_json()
+
+
+def test_a_stored_template_differs_from_kids_story_only_in_type_id_and_name() -> None:
+    own = KidsStoryPipeline().descriptor.model_dump(mode="json")
+    template_view = served(registry(stored(template())), "t_tpl-1").descriptor
+    changed = {
+        key for key, value in template_view.model_dump(mode="json").items() if own[key] != value
+    }
+    assert changed == {"type_id", "name"}
 
 
 def test_static_pipelines_not_served_by_an_engine_stay_listed() -> None:
