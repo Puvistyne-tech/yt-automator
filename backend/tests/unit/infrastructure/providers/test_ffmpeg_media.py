@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -170,3 +171,24 @@ def test_availability_needs_ffmpeg_and_ffprobe(
 ) -> None:
     context = make_context(tmp_path, probe=host(binaries=frozenset(binaries)))
     assert FfmpegMedia(FfmpegOptions(), context).available() == reason
+
+
+def test_availability_needs_the_libass_subtitle_filter(tmp_path: Path) -> None:
+    probe = host(binaries=frozenset({"ffmpeg", "ffprobe"}), filters=frozenset({"subtitles"}))
+    reason = FfmpegMedia(FfmpegOptions(), make_context(tmp_path, probe=probe)).available()
+    assert reason is not None
+    assert reason.startswith("ffmpeg has no 'ass' filter")
+    assert "brew install ffmpeg-full" in reason
+
+
+def test_availability_asks_the_configured_ffmpeg_for_its_filters(tmp_path: Path) -> None:
+    asked: list[tuple[str, float]] = []
+
+    def no_filters(binary: str, timeout_seconds: float) -> frozenset[str]:
+        asked.append((binary, timeout_seconds))
+        return frozenset()
+
+    probe = replace(host(binaries=frozenset({"/x/ffmpeg", "ffprobe"})), ffmpeg_filters=no_filters)
+    options = FfmpegOptions(ffmpeg_binary="/x/ffmpeg", probe_timeout_seconds=7)
+    assert FfmpegMedia(options, make_context(tmp_path, probe=probe)).available()
+    assert asked == [("/x/ffmpeg", 7.0)]

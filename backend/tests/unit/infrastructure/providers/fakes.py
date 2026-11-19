@@ -60,6 +60,7 @@ def host(
     paths: frozenset[str] = frozenset(),
     system: str = "Linux",
     machine: str = "x86_64",
+    filters: frozenset[str] = frozenset({"ass"}),
 ) -> HostProbe:
     return HostProbe(
         which=lambda name: f"/usr/bin/{name}" if name in binaries else None,
@@ -67,6 +68,7 @@ def host(
         has_path=lambda path: path in paths,
         system=system,
         machine=machine,
+        ffmpeg_filters=lambda _binary, _timeout: filters,
     )
 
 

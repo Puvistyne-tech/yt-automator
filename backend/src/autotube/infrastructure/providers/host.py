@@ -7,6 +7,8 @@ import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from autotube.infrastructure.providers.ffmpeg_filters import ffmpeg_filter_names
+
 
 def module_installed(name: str) -> bool:
     try:
@@ -22,6 +24,7 @@ class HostProbe:
     has_path: Callable[[str], bool] = os.path.exists
     system: str = platform.system()
     machine: str = platform.machine()
+    ffmpeg_filters: Callable[[str, float], frozenset[str]] = ffmpeg_filter_names
 
     def missing_binary(self, name: str) -> str | None:
         return None if self.which(name) else f"{name} is not installed or not on PATH"
@@ -33,6 +36,11 @@ class HostProbe:
         if self.has_module(module):
             return None
         return f"Python package {module!r} is not installed (uv sync --extra {extra})"
+
+    def missing_ffmpeg_filter(self, binary: str, name: str, timeout_seconds: float) -> str | None:
+        if name in self.ffmpeg_filters(binary, timeout_seconds):
+            return None
+        return f"{binary} has no {name!r} filter"
 
     def not_apple_silicon(self) -> str | None:
         if self.system == "Darwin" and self.machine == "arm64":

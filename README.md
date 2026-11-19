@@ -24,9 +24,9 @@ what is already installed. Pick only what you need:
 
 | Flag | Installs |
 | --- | --- |
-| (none) | uv, just, ffmpeg, node, pnpm, backend and web dependencies, the built UI |
+| (none) | uv, just, ffmpeg-full (ffmpeg with libass for burned-in subtitles), node, pnpm, backend and web dependencies, the built UI |
 | `--ollama` | Ollama as a background service and the app's default model, `gemma3:12b` (set `OLLAMA_MODEL` to pull another model, then choose it in the Ollama provider's Model option under Providers) |
-| `--images` | mflux (`mflux-generate`) for FLUX image models on Apple silicon |
+| `--images` | mflux (`mflux-generate`) for FLUX image models on Apple silicon, and the FLUX.2 klein 4B weights (roughly 16 GB) in `<data dir>/models/black-forest-labs__FLUX.2-klein-4B` |
 | `--motion` | DepthFlow parallax motion (`uv tool install depthflow`) |
 | `--speech` | edge-tts, Kokoro, espeak-ng and Whisper alignment (Python extras `tts`, `align`, `mac`) |
 | `--music` | ACE-Step in its own venv at `<data dir>/tools/ace-step` and the folder `<data dir>/assets/music` |
@@ -43,14 +43,21 @@ and add it as the `huggingface_token` secret in the UI. The script records the P
 installed in `<data dir>/setup/extras`; `just setup` alone removes them, so run `scripts/setup.sh`
 again afterwards.
 
-`--video` and `--voices` download their weights during setup instead. If a repo is refused, run
+`--images`, `--video` and `--voices` download their weights during setup instead. If a repo is refused, run
 `HF_HOME=<data dir>/hf <data dir>/venvs/mlx/bin/hf auth login` and accept the terms on the model page.
 To reuse weights you already downloaded, point `AUTOTUBE_MODELS_FROM` at a folder holding
 `local/<owner>__<repo>` folders and an `hf/` cache; the script links them instead of downloading:
 
 ```sh
-AUTOTUBE_MODELS_FROM=/path/to/models scripts/setup.sh --no-base --video --voices
+AUTOTUBE_MODELS_FROM=/path/to/models scripts/setup.sh --no-base --images --video --voices
 ```
+
+Homebrew's default `ffmpeg` has no libass, so its `ass` filter is missing and subtitles cannot be
+burned in. The base step installs the keg-only `ffmpeg-full` instead. The service, `just dev-api` and
+`just doctor` put `/opt/homebrew/opt/ffmpeg-full/bin` first on PATH (set `FFMPEG_FULL_BIN` for another
+location). If you start the app another way, add that folder to PATH or set the ffmpeg provider's
+ffmpeg and ffprobe command options to the full paths. `just doctor` reports the ffmpeg media provider
+as unavailable when the ffmpeg it uses lacks the `ass` filter.
 
 The script adds `~/.local/bin` (where `just`, `mflux-generate` and `depthflow` live) to your shell
 profile with `uv tool update-shell`. Open a new terminal afterwards so the commands are on PATH.

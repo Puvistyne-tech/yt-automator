@@ -467,6 +467,7 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   Only three conditions are errors: Python below `min_python`, a data directory that cannot be created
   or written, and a database that cannot be read or whose revision is unknown to this app (newer).
   Low disk space, a missing ffmpeg or ffprobe, a missing UI build and unreadable secrets are warnings.
+  A missing ffmpeg or ffprobe check suggests `brew install ffmpeg-full`.
   A database that does not exist yet, or is behind the newest migration, is ok: startup migrates it.
 - The doctor reports one capability check per capability: ok with the available providers in
   registry order, or a warning listing every provider's reason (offline fallbacks exist, so a
@@ -479,6 +480,13 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   `python -m autotube.doctor --print-defaults` prints `KEY=value` lines (`DATA_DIR`, `APP_HOST`,
   `APP_PORT`, `REDIRECT_BASE_URL`, `OLLAMA_MODEL`, `OLLAMA_URL`, `ACE_STEP_DIR`, `MUSIC_DIR`) that
   `scripts/setup.sh` reads once the backend venv exists; before that it uses the same defaults.
+- `scripts/setup.sh` installs Homebrew's keg-only `ffmpeg-full` (it has libass; the default `ffmpeg` formula
+  does not) instead of `ffmpeg`. The app keeps `ffmpeg` and `ffprobe` as its default commands: the launchd
+  agent's `PATH`, `just dev-api` and `just doctor` put `<brew prefix>/opt/ffmpeg-full/bin` first
+  (`FFMPEG_FULL_BIN` overrides it for `just`), so every ffmpeg-based provider gets the libass build.
+  `--images` installs mflux and places `black-forest-labs/FLUX.2-klein-4B` (roughly 16 GB) in
+  `<data dir>/models/black-forest-labs__FLUX.2-klein-4B`, linked from `AUTOTUBE_MODELS_FROM` or downloaded
+  with the shared mlx venv's `hf`, and skipped when the folder exists.
 - The OAuth redirect URI is `<redirect base>/api/oauth/callback`. The redirect base is the runtime
   setting `redirect_base_url` when set, otherwise `http://<host>:<port>` with `127.0.0.1` in place
   of a wildcard host (`0.0.0.0`, `::`), so it follows `AUTOTUBE_PORT` in both start modes.
@@ -1193,6 +1201,12 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   so the producer wraps to fit. An `.ass` file is drawn as authored. Text is shaped with complex
   shaping (needed for Tamil and other Indic scripts). When `font_file` is set its folder is the font
   folder, otherwise the provider's configured fonts folder, otherwise the system fonts.
+- The `ffmpeg` media provider is unavailable when its `ffmpeg_binary` or `ffprobe_binary` is not found, or
+  when `<ffmpeg_binary> -hide_banner -filters` (run once per availability check, within
+  `probe_timeout_seconds`, through `HostProbe.ffmpeg_filters`) does not list the libass `ass` filter, or fails.
+  The reason is "`<ffmpeg_binary>` has no 'ass' filter: subtitles need an ffmpeg built with libass: brew
+  install ffmpeg-full, then set the ffmpeg command option to /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg or put
+  that folder first on PATH", so the doctor's `media` capability check warns with it.
 - `domain/srt.py` parses SRT into entries (start, end, lines); producers and the media toolkit share it.
 - The kids story pipeline wraps each cue line to the measured frame width and splits a cue that needs more than
   `max_lines` lines into consecutive screens, each shown for at least `min_cue_seconds`, using free time

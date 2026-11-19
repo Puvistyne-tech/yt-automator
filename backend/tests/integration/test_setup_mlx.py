@@ -1,16 +1,12 @@
 from __future__ import annotations
 
 import json
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
 from autotube.infrastructure.providers.tts.mlx_audio_presets import default_presets
-from tests.fixtures.setup_script import hermetic_bin, planned, setup_run, stub
-
-Run = subprocess.CompletedProcess[str]
+from tests.fixtures.setup_script import folder_name, logged, mlx_host, mlx_run, planned, stub
 
 VOICE_MODELS = (
     "mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-8bit",
@@ -27,14 +23,8 @@ CACHED_REPOS = (
     "mlx-community/snac_24khz",
 )
 SVARA = "mlx-community__svara-tts-v1-4bit"
-LOCAL_DIR = '[ "$3" = --local-dir ] && mkdir -p "$4"; exit 0'
-MAC_UNAME = 'case "$1" in -s) echo Darwin ;; -m) echo arm64 ;; *) echo Darwin ;; esac'
 
 pytestmark = pytest.mark.integration
-
-
-def folder_name(repo: str) -> str:
-    return repo.replace("/", "__")
 
 
 def hf_download(data: Path, repo: str) -> str:
@@ -69,34 +59,8 @@ def test_video_plan_installs_ltx_and_links_its_command(tmp_path: Path) -> None:
     assert f"ln -sf {data}/venvs/mlx/bin/ltx-2-mlx {tmp_path}/home/.local/bin/ltx-2-mlx" in plan
 
 
-def logging_stub(folder: Path, name: str, then: str = "exit 0") -> None:
-    stub(folder, name, f'echo "{name} $*" >> "$TOOL_LOG"; {then}')
-
-
-def mlx_host(tmp_path: Path, ready: bool, tools: tuple[str, ...] = ("uv", "git")) -> Path:
-    folder = hermetic_bin(tmp_path)
-    for name in tools:
-        logging_stub(folder, name)
-    stub(folder, "uname", MAC_UNAME)
-    venv_bin = tmp_path / "home" / "data" / "venvs" / "mlx" / "bin"
-    venv_bin.mkdir(parents=True)
-    stub(venv_bin, "python", f'[ "$1" = -c ] && exit {int(not ready)}; exec {sys.executable} "$@"')
-    logging_stub(venv_bin, "hf", LOCAL_DIR)
-    return tmp_path / "home" / "data"
-
-
-def mlx_run(tmp_path: Path, *flags: str, extra: dict[str, str] | None = None) -> Run:
-    tool_log = {"TOOL_LOG": str(tmp_path / "tools.log")}
-    return setup_run(tmp_path, "--no-base", *flags, extra=tool_log | (extra or {}))
-
-
-def logged(tmp_path: Path) -> str:
-    log = tmp_path / "tools.log"
-    return log.read_text(encoding="utf-8") if log.exists() else ""
-
-
-def test_video_and_voices_share_one_venv_and_one_login_note(tmp_path: Path) -> None:
-    plan = planned(tmp_path, "--video", "--voices", "--no-base")
+def test_mlx_groups_share_one_venv_and_one_login_note(tmp_path: Path) -> None:
+    plan = planned(tmp_path, "--images", "--video", "--voices", "--no-base")
     assert plan.count("would run: uv venv") == 1
     assert plan.count("    note: If a download is refused") == 1
 

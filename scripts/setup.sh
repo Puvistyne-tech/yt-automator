@@ -31,6 +31,8 @@ LTX_MLX_SOURCE="${LTX_MLX_SOURCE:-https://github.com/dgrauet/ltx-2-mlx}"
 LTX_MODEL_REPO="${LTX_MODEL_REPO:-reverie-studio/ltx-2.5-mlx-q4-distilled}"
 MODELS_FROM="${AUTOTUBE_MODELS_FROM:-}"
 LTX_PACKAGES=(ltx-core-mlx ltx-pipelines-mlx)
+FLUX_KLEIN_REPO="black-forest-labs/FLUX.2-klein-4B"
+FFMPEG_FORMULA="ffmpeg-full"
 SVARA_REPO="mlx-community/svara-tts-v1-4bit"
 VOICE_MODELS=(
   mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-8bit
@@ -64,10 +66,11 @@ Usage: scripts/setup.sh [options]
 
 Sets up AutoTube on an Apple-silicon Mac. Safe to run again.
 With no option it installs the base: uv, just, ffmpeg, node, pnpm, the
-backend and web dependencies, and the built UI.
+backend and web dependencies, and the built UI. ffmpeg comes from
+Homebrew's keg-only ffmpeg-full, which has libass for burned-in subtitles.
 
   --ollama             Ollama and the app's default model ($OLLAMA_MODEL)
-  --images             mflux (FLUX image models on Apple silicon)
+  --images             mflux and the FLUX.2 klein 4B weights (about 16 GB)
   --motion             DepthFlow parallax motion
   --speech             edge-tts, Kokoro, espeak-ng and Whisper alignment
   --music              ACE-Step in its own venv and the CC0 music folder
@@ -90,7 +93,7 @@ SETUP_EXTRA_PATH is prepended to PATH (default ~/.local/bin:/opt/homebrew/bin).
 SETUP_BACKEND_PYTHON is the backend venv Python asked for the app's defaults
 (default backend/.venv/bin/python). OLLAMA_WAIT_SECONDS and
 SERVICE_STOP_WAIT_SECONDS are whole numbers of seconds.
---video and --voices share the venv <data dir>/venvs/mlx and put weights in
+--images, --video and --voices share the venv <data dir>/venvs/mlx and put weights in
 <data dir>/models with the Hugging Face cache in <data dir>/hf.
 AUTOTUBE_MODELS_FROM links weights from <folder>/local/<owner>__<repo> and the
 cache from <folder>/hf instead of downloading. MLX_AUDIO_PACKAGE (default
@@ -186,6 +189,14 @@ brew_has_formula() {
 
 brew_has_cask() {
   have brew && brew list --cask "$1" >/dev/null 2>&1
+}
+
+homebrew_prefix() {
+  brew --prefix 2>/dev/null || printf '/opt/homebrew'
+}
+
+ffmpeg_full_bin() {
+  printf '%s/opt/%s/bin' "$(homebrew_prefix)" "$FFMPEG_FORMULA"
 }
 
 brew_formula() {
@@ -294,13 +305,14 @@ backend_venv_ready() {
 }
 
 install_base() {
-  section "base: uv, just, ffmpeg, node, pnpm, dependencies and the UI build"
+  section "base: uv, just, ffmpeg-full, node, pnpm, dependencies and the UI build"
   require_brew
   ensure uv have uv run brew install uv
   ensure just have just run uv tool install rust-just
   run uv tool update-shell
   note "Open a new terminal afterwards so ~/.local/bin (just, mflux-generate, depthflow) is on PATH."
-  ensure ffmpeg have ffmpeg run brew install ffmpeg
+  brew_formula "$FFMPEG_FORMULA"
+  note "$FFMPEG_FORMULA is keg-only: the service, just dev-api and just doctor put $(ffmpeg_full_bin) first on PATH."
   ensure node have node run brew install node
   ensure_pnpm
   run uv python install "$PYTHON_VERSION"
@@ -330,10 +342,15 @@ install_ollama() {
 }
 
 install_images() {
-  section "images: mflux, FLUX image models running on Apple silicon"
+  section "images: mflux and FLUX.2 klein 4B on Apple silicon"
   require_uv
   uv_tool mflux-generate mflux
-  note "FLUX schnell weights download from Hugging Face on first use: free, no account, tens of GB."
+  mlx_paths
+  once ensure_mlx_venv
+  once ensure_model_storage
+  fetch_model "$FLUX_KLEIN_REPO"
+  note "The FLUX.2 klein 4B weights are roughly 16 GB."
+  once hf_login_note
   note "FLUX dev is gated: accept its licence on huggingface.co and add a read token as the huggingface_token secret in the UI."
 }
 
@@ -573,8 +590,8 @@ verify_raqm() {
     say "    would check that Pillow finds libraqm for Tamil text shaping"
   elif raqm_check; then
     say "    Pillow finds libraqm: Tamil text shaping works"
-  elif DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix)/lib" raqm_check; then
-    note "Pillow finds libraqm only with DYLD_FALLBACK_LIBRARY_PATH=$(brew --prefix)/lib. The service, just dev-api and just doctor set it."
+  elif DYLD_FALLBACK_LIBRARY_PATH="$(homebrew_prefix)/lib" raqm_check; then
+    note "Pillow finds libraqm only with DYLD_FALLBACK_LIBRARY_PATH=$(homebrew_prefix)/lib. The service, just dev-api and just doctor set it."
   else
     note "Pillow cannot find libraqm: Tamil titles on thumbnails may render with broken letters."
   fi
@@ -583,7 +600,7 @@ verify_raqm() {
 service_plist() {
   local uv_bin brew_prefix
   uv_bin="$(command -v uv || printf 'uv')"
-  brew_prefix="$(brew --prefix 2>/dev/null || printf '/opt/homebrew')"
+  brew_prefix="$(homebrew_prefix)"
   cat <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -598,7 +615,7 @@ service_plist() {
   <key>WorkingDirectory</key><string>$BACKEND_DIR</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>$HOME/.local/bin:$brew_prefix/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>PATH</key><string>$(ffmpeg_full_bin):$HOME/.local/bin:$brew_prefix/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>DYLD_FALLBACK_LIBRARY_PATH</key><string>$brew_prefix/lib</string>
     <key>AUTOTUBE_HOST</key><string>$APP_HOST</string>
     <key>AUTOTUBE_PORT</key><string>$APP_PORT</string>

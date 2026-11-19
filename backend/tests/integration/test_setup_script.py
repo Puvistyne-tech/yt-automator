@@ -6,7 +6,14 @@ from pathlib import Path
 import pytest
 
 from autotube.doctor import main as doctor_main
-from tests.fixtures.setup_script import groups_in, planned, setup_run, stub
+from tests.fixtures.setup_script import (
+    MAC_UNAME,
+    groups_in,
+    hermetic_bin,
+    planned,
+    setup_run,
+    stub,
+)
 
 MODEL_GROUPS = ("ollama", "images", "motion", "speech", "music", "fonts", "video", "voices")
 
@@ -20,6 +27,24 @@ def test_default_plan_is_the_base_only(tmp_path: Path) -> None:
     assert "would run: uv tool update-shell" in plan
     assert "Planned:" in plan and "Dry run: nothing was changed." in plan
     assert "Start the app with: just dev-api" in plan
+
+
+def test_base_installs_ffmpeg_full_for_libass_subtitles(tmp_path: Path) -> None:
+    plan = planned(tmp_path)
+    assert "would run: brew install ffmpeg-full" in plan
+    assert "brew install ffmpeg\n" not in plan
+    assert "/opt/homebrew/opt/ffmpeg-full/bin first on PATH" in plan
+
+
+def test_service_puts_ffmpeg_full_first_on_its_path(tmp_path: Path) -> None:
+    folder = hermetic_bin(tmp_path)
+    stub(folder, "uname", MAC_UNAME)
+    stub(folder, "launchctl", '[ "$1" = print ] && exit 1; exit 0')
+    result = setup_run(tmp_path, "--service", "--no-base")
+    assert result.returncode == 0, result.stderr
+    plist = tmp_path / "home" / "Library" / "LaunchAgents" / "com.autotube.app.plist"
+    path = f"<string>/opt/homebrew/opt/ffmpeg-full/bin:{tmp_path}/home/.local/bin:"
+    assert path in plist.read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize(
