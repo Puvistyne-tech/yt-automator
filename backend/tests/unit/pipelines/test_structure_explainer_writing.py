@@ -5,12 +5,10 @@ from pathlib import Path
 import pytest
 
 from autotube.domain.pipeline_templates import TemplateAudience
-from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
 from autotube.pipelines.narrated_video.stages.story import ScriptUnavailableError, StoryStage
 from autotube.pipelines.narrated_video.story.child_terms import child_terms_in
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
 from tests.fixtures.explainer_data import (
-    EXPLAINER,
     explainer_settings,
     explainer_story,
     explainer_writer,
@@ -18,7 +16,6 @@ from tests.fixtures.explainer_data import (
 from tests.fixtures.kids_data import StageRig, meta_of
 from tests.fixtures.kids_fakes import FakeProviders, failing_writer
 from tests.fixtures.quick_sections import QUICK_SECTIONS
-from tests.fixtures.template_records import template
 from tests.fixtures.template_settings import GENERAL, KIDS
 
 GENERAL_LINE = "The audience is general: the script must never address children"
@@ -77,10 +74,3 @@ def test_an_explainer_is_written_by_the_language_model(
     outcome = rig.run(StoryStage())
     assert outcome.provider != "bundled"
     assert {item.language for item in meta_of(rig, "story")} == {"en", "ta"}
-
-
-@pytest.mark.parametrize("audience", [KIDS, GENERAL])
-def test_a_blank_explainer_template_has_no_problems(audience: TemplateAudience) -> None:
-    engine = NarratedVideoEngine()
-    blank = {**engine.blank(audience), **EXPLAINER}
-    assert engine.problems(template(audience=audience, definition=blank)) == {}

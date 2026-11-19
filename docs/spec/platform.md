@@ -754,6 +754,11 @@ StructureSpec   id, title, system_prompt, user_prompt (prompt file names; the sy
   `story.cast_per_episode`, `series.refrain`, `visuals.character_sheets`, `quality.weights.moral_and_refrain`,
   `quality.weights.character_consistency`, and `story.source`.
 
+- Safety across structures (tested): a kids template of any structure carries `kids_content`, uploads made for
+  kids, keeps the kids floor and the kids system-prompt lines; a general template of any structure never does;
+  a general explainer runs the child-directed term gate and never uses the bundled stories; a blank template of
+  every structure and audience has no problems and runs offline through the fake providers.
+
 #### Problems
 
 `engine.problems(template)` returns, keyed by field path: definition validation errors (`definition.<field>`);
