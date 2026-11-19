@@ -1,10 +1,12 @@
-import { Link, useParams } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
 import { isNotFound } from "@/api/errors";
+import { prefilledInputOf } from "@/api/paths";
 import { useTemplate, useTemplateEngines } from "@/api/templates";
 import type { EngineSummary, TemplateSummary } from "@/api/types";
 import {
   BuiltinTemplateView,
   NewTemplateEditor,
+  newTemplateStart,
   SavedTemplateEditor,
 } from "@/features/pipeline-templates";
 import {
@@ -58,11 +60,16 @@ function TemplateView({
   );
 }
 
+function NewPipeline({ engines }: { engines: EngineSummary[] }) {
+  const { state } = useLocation();
+  const start = newTemplateStart(engines, prefilledInputOf(state));
+  return start === null ? <MissingEngine /> : <NewTemplateEditor start={start} />;
+}
+
 function PipelineContent({ id, engines }: { id: string | undefined; engines: EngineSummary[] }) {
   const template = useTemplate(id);
-  const [engine] = engines;
   if (id === undefined) {
-    return engine === undefined ? <MissingEngine /> : <NewTemplateEditor engine={engine} />;
+    return <NewPipeline engines={engines} />;
   }
   if (template.isPending) {
     return <LoadingState label="Loading pipeline" />;
