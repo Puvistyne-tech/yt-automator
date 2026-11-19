@@ -33,7 +33,7 @@ def test_the_builtin_has_no_problems() -> None:
 
 
 def test_an_invalid_definition_reports_only_its_own_fields() -> None:
-    found = problems(length="endless", structure="quiz", surprise=1, basic=["nowhere"])
+    found = problems(length="endless", structure="podcast", surprise=1, basic=["nowhere"])
     assert set(found) == {"definition.length", "definition.structure", "definition.surprise"}
 
 

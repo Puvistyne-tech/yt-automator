@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import BaseModel, JsonValue
 
 from autotube.domain.model_base import JsonObject
+from autotube.pipelines.narrated_video.structures.registry import structure_spec
 from autotube.pipelines.narrated_video.template.definition import Length, NarratedDefinition
 
 LENGTH_PRESETS: dict[Length, JsonObject] = {
@@ -20,7 +21,23 @@ LENGTH_PRESETS: dict[Length, JsonObject] = {
         "scene_count_max": 18,
     },
 }
+FIXED_SCENE_PRESETS: dict[Length, JsonObject] = {
+    Length.SHORT: {
+        "words_per_scene_min": {"en": 10, "ta": 6},
+        "words_per_scene_max": {"en": 20, "ta": 14},
+    },
+    Length.STANDARD: {},
+    Length.LONG: {
+        "words_per_scene_min": {"en": 40, "ta": 30},
+        "words_per_scene_max": {"en": 80, "ta": 60},
+    },
+}
 BRIEF_PREFIX = "Every video is about: "
+
+
+def length_preset(definition: NarratedDefinition) -> JsonObject:
+    fixed = structure_spec(definition.structure).fixed_scenes is not None
+    return (FIXED_SCENE_PRESETS if fixed else LENGTH_PRESETS)[definition.length]
 
 
 def filled(value: JsonValue) -> bool:
@@ -39,7 +56,7 @@ def story_values(definition: NarratedDefinition) -> JsonObject:
     brief = definition.brief.strip()
     return sparse(
         {
-            **LENGTH_PRESETS[definition.length],
+            **length_preset(definition),
             "tone": definition.tone.strip(),
             "themes": [topic for topic in definition.topics if topic.strip()],
             "extra_instructions": f"{BRIEF_PREFIX}{brief}" if brief else "",

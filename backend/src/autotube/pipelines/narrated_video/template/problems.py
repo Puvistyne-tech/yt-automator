@@ -11,6 +11,7 @@ from autotube.domain.validation import validated_settings
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.styles.library import style_ids
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
+from autotube.pipelines.narrated_video.template.length_problems import length_problems
 from autotube.pipelines.narrated_video.template.placeholder_problems import placeholder_problems
 from autotube.pipelines.narrated_video.template.settings_model import (
     pinned_settings_model,
@@ -65,10 +66,14 @@ def template_problems(template: PipelineTemplate, engine_ui: JsonObject) -> dict
     if not isinstance(definition, NarratedDefinition):
         return errors
     styled = style_problems(definition)
+    lengthy = {} if styled else length_problems(definition, template.audience)
     checked = {
         **styled,
         **placeholder_problems(definition),
         **ui_problems(definition, template.audience, engine_ui),
         **child_term_problems(template, definition),
+        **lengthy,
     }
-    return checked if styled else {**checked, **settings_problems(template, definition)}
+    if styled or lengthy:
+        return checked
+    return {**checked, **settings_problems(template, definition)}

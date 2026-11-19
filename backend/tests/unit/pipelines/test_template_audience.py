@@ -29,6 +29,14 @@ from tests.fixtures.template_settings import defaults_for, model_for, pipeline_o
 
 KIDS, GENERAL = TemplateAudience.KIDS, TemplateAudience.GENERAL
 ENGINE = KidsStorySettings().model_dump(mode="json")
+ENGINE_HIDDEN = [
+    "safety.audience",
+    "story.structure",
+    "story.preview_attempts",
+    "story.item_count",
+    "story.quiz_questions",
+    "story.answer_choices",
+]
 WEAKENED = {
     "series": {"editorial_rules": ["Be fun."]},
     "safety": {"banned_words": [], "brand_names": ["Acme"], "picture_exclusions": "blur"},
@@ -49,9 +57,6 @@ def floors_of(defaults: dict[str, Any]) -> tuple[Any, ...]:
     )
 
 
-ENGINE_HIDDEN = ("safety.audience", "story.structure", "story.preview_attempts")
-
-
 def test_only_kids_templates_carry_the_kids_capability() -> None:
     assert descriptor_of(KIDS).capabilities == (KIDS_CONTENT,)
     assert descriptor_of(GENERAL).capabilities == ()
@@ -61,7 +66,7 @@ def test_only_kids_templates_carry_the_kids_capability() -> None:
 def test_the_derived_ui_schema_hides_the_audience_and_general_age_fields() -> None:
     own = KidsStoryPipeline().descriptor.ui_schema
     kids, general = descriptor_of(KIDS).ui_schema, descriptor_of(GENERAL).ui_schema
-    assert kids == own and own["ui:hidden"] == [*ENGINE_HIDDEN]
+    assert kids == own and own["ui:hidden"] == ENGINE_HIDDEN
     assert general["ui:hidden"] == [
         *ENGINE_HIDDEN,
         "story.age_min",

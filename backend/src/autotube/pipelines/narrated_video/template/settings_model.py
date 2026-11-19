@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from functools import cache, partial
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Self
 
 from pydantic import create_model, model_validator
 from pydantic.fields import FieldInfo
@@ -11,6 +11,7 @@ from autotube.domain.model_base import JsonObject
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
+from autotube.pipelines.narrated_video.structures.length import length_problem
 from autotube.pipelines.narrated_video.structures.registry import structure_defaults
 from autotube.pipelines.narrated_video.template.audience import audience_defaults, with_pins
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
@@ -33,6 +34,13 @@ class PinnedSettings(KidsStorySettings):
         pinned = with_pins(data, pins, cls.section_default)
         return audience_floor(pinned, cls.pinned_audience)
 
+    @model_validator(mode="after")
+    def fit_length(self) -> Self:
+        problem = length_problem(self)
+        if problem:
+            raise ValueError(problem)
+        return self
+
     @classmethod
     def section_default(cls, section: str) -> object:
         return cls.model_fields[section].get_default(call_default_factory=True)
@@ -46,7 +54,7 @@ def template_defaults(definition: NarratedDefinition, audience: TemplateAudience
     return merged_all(
         engine_defaults(),
         audience_defaults(audience),
-        structure_defaults(definition.structure),
+        *structure_defaults(definition.structure),
         definition_settings(definition),
         definition.settings,
     )

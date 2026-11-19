@@ -8,6 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue
 from autotube.domain.image_style import HEX_COLOUR_PATTERN
 from autotube.domain.ui_schema import MACHINE_LOCAL_KEY
 
+SHORTEST_EPISODE = 30
+LONGEST_EPISODE = 600
 MACHINE_LOCAL: dict[str, JsonValue] = {MACHINE_LOCAL_KEY: True}
 HexColor = Annotated[str, Field(pattern=HEX_COLOUR_PATTERN, json_schema_extra={"format": "color"})]
 
@@ -75,6 +77,16 @@ class LocalizedList(SettingsSection):
 def localized_text(en: str, ta: str, title: str, description: str) -> Any:
     return Field(
         default_factory=lambda: LocalizedText(en=en, ta=ta), title=title, description=description
+    )
+
+
+def episode_seconds(default: int, title: str, description: str) -> Any:
+    return Field(
+        default=default,
+        ge=SHORTEST_EPISODE,
+        le=LONGEST_EPISODE,
+        title=title,
+        description=description,
     )
 
 
