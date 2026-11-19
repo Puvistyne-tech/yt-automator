@@ -681,7 +681,7 @@ and an empty value is called "the default", never "the engine's".
 - `ui_schema` is the engine's with `ui:basic` from the definition (or the engine's list) and `ui:hidden` = the
   definition's `hidden`, then `safety.audience`, then for general templates `story.age_min`, `story.age_max`
   `story.reading_level` and `story.source`, then the structure's hidden paths (see Structures). The engine's
-  own `ui:hidden` is `["safety.audience", "story.structure"]`.
+  own `ui:hidden` is `["safety.audience", "story.structure", "story.preview_attempts"]`.
 - Capabilities: a kids template keeps `kids_content`; a general template never has it. `domain/kids_rules.py`
   stays the only place that decides the upload's made-for-kids flag.
 
@@ -842,9 +842,12 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
   providers from the saved provider configs, calls `engine.sample_script` synchronously (each provider call keeps
   its own timeout) and maps `SampleUnavailableError` to 409 `preview_unavailable` with the engine's message.
 - The narrated engine's sample (`template/sample.py`) uses the template's derived settings defaults and the story
-  stage's own writing path (`story/authoring.py::authored_scripts`), so every script gate, the always-on
-  child-directed term gate and `story.max_attempts` apply; the theme is the topic, or `choose_theme` seeded by
-  the template id. It never uses a bundled story, for any audience. A missing or failing writer (no LLM
+  stage's own writing path (`story/authoring.py::authored_scripts`), so every script gate and the always-on
+  child-directed term gate apply. Like a run, it writes in `story.primary_language` and, when another language
+  is asked for, translates into it through the same translation request and `translation_problems` gates. Each
+  write and each translation gets `story.preview_attempts` tries (default 1, 1 to 10; hidden in the automation
+  form, settable through a template's `settings` overlay) instead of `story.max_attempts`. The theme is the
+  topic with surrounding spaces removed, or, when that is empty, `choose_theme` seeded by the template id. It never uses a bundled story, for any audience. A missing or failing writer (no LLM
   provider, `provider_unavailable`, or a failed call) gives "The script writer is not available right now…";
   a script that never passes the gates gives "The script writer did not write a script that passed the checks…".
   The script is shaped like a run's, and the upload title and description are the episode's `upload_metadata`,

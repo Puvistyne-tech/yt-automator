@@ -5,6 +5,7 @@ from autotube.domain.pipeline_templates import PipelineTemplate
 from autotube.domain.run_enums import LogLevel
 from autotube.domain.sample_scripts import SampleScene, SampleScript, SampleUnavailableError
 from autotube.pipelines.narrated_video.artifacts import EPISODE
+from autotube.pipelines.narrated_video.languages import ordered_languages
 from autotube.pipelines.narrated_video.publishing.audience_check import (
     ChildDirectedMetadataError,
     checked_audience,
@@ -41,12 +42,24 @@ def sample_scene(scene: StoryScene) -> SampleScene:
     return SampleScene.model_validate(scene.model_dump(include=set(SampleScene.model_fields)))
 
 
+def preview_settings(settings: KidsStorySettings) -> KidsStorySettings:
+    story = settings.story.model_copy(update={"max_attempts": settings.story.preview_attempts})
+    return settings.model_copy(update={"story": story})
+
+
+def sample_order(settings: KidsStorySettings, language: str) -> list[str]:
+    return ordered_languages(settings.story.primary_language.value, [language])
+
+
 def written_sample(
     settings: KidsStorySettings, language: str, topic: str, providers: ProviderResolver, seed: str
 ) -> Written:
     theme = topic.strip() or choose_theme(settings.story, seed)
+    order = sample_order(settings, language)
     try:
-        written = authored_scripts(providers, settings, unlogged, seed, theme, [language])
+        written = authored_scripts(
+            providers, preview_settings(settings), unlogged, seed, theme, order
+        )
     except (LookupError, AppError, WriterUnavailableError) as error:
         raise SampleUnavailableError(UNAVAILABLE) from error
     if written is None:

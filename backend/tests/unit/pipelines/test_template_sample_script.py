@@ -4,12 +4,13 @@ from typing import Any
 
 import pytest
 
-from autotube.domain.capabilities import Capability
+from autotube.domain.capabilities import Capability, TextRequest
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.domain.sample_scripts import SampleScene, SampleScript, SampleUnavailableError
 from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
 from autotube.pipelines.narrated_video.settings.base import LocalizedText
 from autotube.pipelines.narrated_video.story.model import StoryScene
+from autotube.pipelines.narrated_video.story.themes import choose_theme
 from autotube.pipelines.narrated_video.template.sample import (
     REJECTED,
     UNAVAILABLE,
@@ -17,11 +18,23 @@ from autotube.pipelines.narrated_video.template.sample import (
     settings_sample,
 )
 from autotube.shared.errors import RuleConflict
-from tests.fixtures.explainer_data import TAKEAWAY_EN, explainer_draft, explainer_writer
-from tests.fixtures.kids_data import draft_dict, is_judge, smart_writer
+from tests.fixtures.explainer_data import explainer_draft, explainer_writer
+from tests.fixtures.kids_data import (
+    draft_dict,
+    is_judge,
+    is_translation,
+    smart_writer,
+    tamil_text,
+)
 from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, as_json, failing_writer
 from tests.fixtures.template_records import template
-from tests.fixtures.template_settings import GENERAL, KIDS, general_writer, model_for
+from tests.fixtures.template_settings import (
+    GENERAL,
+    KIDS,
+    general_draft,
+    general_writer,
+    model_for,
+)
 
 EXPLAINER = {"structure": "explainer"}
 
@@ -30,32 +43,78 @@ def sample(
     audience: TemplateAudience,
     writer: FakeWriter | None,
     topic: str = "",
+    language: str = "en",
     **definition: Any,
 ) -> SampleScript:
     made = template(audience=audience, definition=definition)
-    return NarratedVideoEngine().sample_script(made, "en", topic, FakeProviders(writer=writer))
+    return NarratedVideoEngine().sample_script(made, language, topic, FakeProviders(writer=writer))
 
 
-def test_a_kids_story_sample_comes_from_the_writer() -> None:
-    writer = smart_writer()
-    script = sample(KIDS, writer, "sharing")
-    draft = draft_dict()
+def writing_requests(writer: FakeWriter) -> list[TextRequest]:
+    return [r for r in writer.requests if not is_judge(r) and not is_translation(r)]
+
+
+@pytest.mark.parametrize(
+    ("audience", "writer", "definition", "draft"),
+    [
+        (KIDS, smart_writer(), {}, draft_dict()),
+        (GENERAL, general_writer(), {}, general_draft()),
+        (GENERAL, explainer_writer(), EXPLAINER, explainer_draft()),
+    ],
+)
+def test_a_sample_comes_from_the_writer(
+    audience: TemplateAudience,
+    writer: FakeWriter,
+    definition: dict[str, Any],
+    draft: dict[str, Any],
+) -> None:
+    script = sample(audience, writer, **definition)
     assert (script.language, script.title, script.provider) == ("en", draft["title"], "fake-llm")
     assert script.takeaway == draft["moral"]
     assert [scene.narration for scene in script.scenes] == [s["narration"] for s in draft["scenes"]]
     assert script.upload_title and script.upload_description
+
+
+def test_the_topic_reaches_the_writer() -> None:
+    writer = smart_writer()
+    sample(KIDS, writer, "sharing")
     assert "sharing" in writer.requests[0].prompt
 
 
-def test_a_general_explainer_sample_comes_from_the_writer() -> None:
-    script = sample(GENERAL, explainer_writer(), **EXPLAINER)
-    assert (script.title, script.takeaway) == (explainer_draft()["title"], TAKEAWAY_EN)
-    assert len(script.scenes) == len(explainer_draft()["scenes"])
-    assert script.provider == "fake-llm"
+@pytest.mark.parametrize("topic", ["", "   "])
+def test_an_empty_topic_uses_the_seeded_theme(topic: str) -> None:
+    writer = smart_writer()
+    sample(KIDS, writer, topic)
+    seeded = choose_theme(model_for(KIDS)().story, template().id)
+    assert seeded and seeded in writer.requests[0].prompt
 
 
-def test_a_general_story_sample_comes_from_the_writer() -> None:
-    assert sample(GENERAL, general_writer()).provider == "fake-llm"
+def test_a_second_language_sample_is_written_first_and_translated() -> None:
+    writer = smart_writer()
+    script = sample(KIDS, writer, language="ta")
+    assert (script.language, script.title) == ("ta", tamil_text()["title"])
+    assert [is_translation(r) for r in writer.requests if not is_judge(r)] == [False, True]
+
+
+def test_a_second_language_sample_runs_the_translation_gates() -> None:
+    def respond(request: TextRequest) -> str:
+        if is_translation(request):
+            return as_json(tamil_text() | {"narrations": ["ஒன்று."]})
+        return "2" if is_judge(request) else as_json(draft_dict())
+
+    with pytest.raises(SampleUnavailableError) as refused:
+        sample(KIDS, FakeWriter(respond), language="ta")
+    assert str(refused.value) == REJECTED
+
+
+@pytest.mark.parametrize(("overlay", "attempts"), [({}, 1), ({"preview_attempts": 2}, 2)])
+def test_a_sample_tries_the_preview_attempts(overlay: dict[str, Any], attempts: int) -> None:
+    short = draft_dict() | {"scenes": draft_dict()["scenes"][:1]}
+    writer = FakeWriter(lambda _: as_json(short))
+    with pytest.raises(SampleUnavailableError) as refused:
+        sample(KIDS, writer, settings={"story": overlay})
+    assert str(refused.value) == REJECTED
+    assert len(writing_requests(writer)) == attempts
 
 
 @pytest.mark.parametrize("audience", [KIDS, GENERAL])
@@ -85,17 +144,9 @@ def child_directed_writer() -> FakeWriter:
 
 
 def test_a_general_sample_runs_the_child_term_gate() -> None:
-    writer = child_directed_writer()
     with pytest.raises(SampleUnavailableError) as refused:
-        sample(GENERAL, writer, **EXPLAINER)
+        sample(GENERAL, child_directed_writer(), **EXPLAINER)
     assert str(refused.value) == REJECTED
-    assert len(writer.requests) >= 2
-
-
-def test_a_kids_sample_runs_the_script_gates() -> None:
-    short = draft_dict() | {"scenes": draft_dict()["scenes"][:1]}
-    with pytest.raises(SampleUnavailableError, match="passed the checks"):
-        sample(KIDS, FakeWriter(lambda _: as_json(short)))
 
 
 class HeadedScene(StoryScene):

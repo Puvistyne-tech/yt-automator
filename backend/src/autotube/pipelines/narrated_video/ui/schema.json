@@ -77,7 +77,8 @@
   ],
   "ui:hidden": [
     "safety.audience",
-    "story.structure"
+    "story.structure",
+    "story.preview_attempts"
   ],
   "series": {
     "ui:order": [
@@ -282,7 +283,8 @@
       "translation_style",
       "translation_temperature",
       "max_tokens",
-      "max_attempts"
+      "max_attempts",
+      "preview_attempts"
     ],
     "source": {
       "ui:widget": "select"
