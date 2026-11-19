@@ -646,9 +646,18 @@ class PipelineEngine(Protocol):
   apply; upload metadata records `made_for_kids: false` and the metadata score check expects the audience's
   value instead of `true`.
 - Child-directed term screen (`story/child_terms.py`, terms in `story/child_terms.json`, English and Tamil,
-  whole-phrase match): a heuristic, not a guarantee. For general templates it runs on the name, brief, tags,
-  hashtags and series text, and as an always-on script gate on every written and translated script. Uploads
-  stay private and reviewed by default.
+  case-insensitive whole-phrase match, so "kidney" and longer inflected Tamil words do not match): a heuristic,
+  not a guarantee. For general templates it runs:
+  - when a template is checked (`template/term_screen.py`): on the name, the definition's `brief`, `tone`,
+    `topics`, `music_mood`, metadata templates, tags, hashtags and the chosen style's library text, and on every
+    text in the `settings` overlay except the `safety` section (including the chosen style's text). Every
+    language present is screened. Each hit is reported where the text was written: `name`,
+    `definition.<field>` or `definition.settings.<section>.<field>`;
+  - as an always-on script gate on every written and translated script, together with the series intro and
+    outro lines in the script's language;
+  - in the package stage (`publishing/audience_check.py`), on each upload's title, description, playlist title,
+    tags and hashtags. A hit fails the stage, so edits made on a general automation cannot reach an upload.
+  Uploads stay private and reviewed by default.
 - A general template never uses the bundled stories, which are children's stories: when the writer is missing,
   fails or never passes the gates, the story stage fails with "…never falls back to the bundled children's
   stories" instead.
@@ -659,8 +668,8 @@ class PipelineEngine(Protocol):
 an unknown style (`definition.visual_style`, reported alone); unknown placeholders in the metadata templates
 (`definition.title_template` and so on; the placeholders are those of `publishing/templates.py`); `ui:basic`
 and `ui:hidden` rule failures against the derived ui schema (`definition.basic`, `definition.hidden`); overlay
-validation errors (`definition.settings.<path>`); term screen hits (`name`, `definition.brief`,
-`definition.tags`, `definition.hashtags`, `definition.settings.series`); and `engine` for a foreign template.
+validation errors (`definition.settings.<path>`); term screen hits (see Audience); and `engine` for a
+foreign template. An invalid definition returns only its own errors.
 
 `infrastructure/pipelines/template_registry.py` holds `TemplatePipelineRegistry(static, engines, templates)`, the
 `PipelineRegistry` adapter the composition root builds from the index and the `TemplateRepository`:

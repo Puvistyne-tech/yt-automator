@@ -11,6 +11,7 @@ from autotube.domain.run_parts import Artifact
 from autotube.pipelines.narrated_video.publishing.metadata import upload_metadata
 from autotube.pipelines.narrated_video.scoring.inputs import ScoreInputs
 from autotube.pipelines.narrated_video.scoring.output_items import metadata_limits
+from autotube.pipelines.narrated_video.settings.base import LocalizedText
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.gates import (
     child_term_problems,
@@ -66,28 +67,50 @@ def test_general_prompts_drop_the_children_lines_and_add_the_general_line() -> N
     assert GENERAL_LINE not in (story_request(KIDS, "sharing", "en").system or "")
 
 
-def test_the_term_gate_rejects_child_directed_scripts_in_english_and_tamil() -> None:
-    english = CLEAN.model_copy(update={"hook_line": "Hey kids, listen!"})
-    tamil = CLEAN.model_copy(update={"language": "ta", "hook_line": "வணக்கம், குழந்தைகளே!"})
-    assert child_term_problems(english, GENERAL) == [
-        "the audience is general: never address children; remove: kids"
-    ]
-    assert child_term_problems(tamil, GENERAL) == [
-        "the audience is general: never address children; remove: குழந்தைகளே"
-    ]
-    assert child_term_problems(english, KIDS) == []
+@pytest.mark.parametrize(
+    ("language", "hook", "found"),
+    [("en", "Hey Kids, listen!", "kids"), ("ta", "வணக்கம், குழந்தைகளே!", "குழந்தைகளே")],
+)
+def test_the_term_gate_rejects_child_directed_scripts(language: str, hook: str, found: str) -> None:
+    addressed = CLEAN.model_copy(update={"language": language, "hook_line": hook})
+    expected = [f"the audience is general: never address children; remove: {found}"]
+    assert child_term_problems(addressed, GENERAL) == expected
+    assert child_term_problems(addressed, KIDS) == []
+
+
+@pytest.mark.parametrize("hook", ["Kidney beans for dinner.", "குழந்தைகளேயில்லாத ஊர்."])
+def test_the_term_gate_matches_whole_phrases_only(hook: str) -> None:
+    assert child_term_problems(CLEAN.model_copy(update={"hook_line": hook}), GENERAL) == []
     assert child_term_problems(CLEAN, GENERAL) == []
 
 
-def test_the_term_gate_is_always_on_for_writing_and_translation() -> None:
-    english = story().model_copy(update={"hook_line": "Hey kids, listen!"})
-    off = GENERAL.model_copy(
-        update={"story": GENERAL.story.model_copy(update={"enabled_checks": []})}
+def test_the_term_gate_screens_the_series_intro_and_outro_lines() -> None:
+    series = GENERAL.series.model_copy(
+        update={"intro_line": LocalizedText(en="Hello, little friends!", ta="வணக்கம்")}
     )
-    assert any("never address children" in problem for problem in story_problems(english, off))
+    framed = GENERAL.model_copy(update={"series": series})
+    assert child_term_problems(CLEAN, framed) == [
+        "the series intro or outro line must change in the settings: never address children; "
+        "remove: little friends"
+    ]
+
+
+def gates_off() -> KidsStorySettings:
+    story_rules = GENERAL.story.model_copy(update={"enabled_checks": []})
+    return GENERAL.model_copy(update={"story": story_rules})
+
+
+@pytest.mark.parametrize(
+    ("language", "hook"), [("en", "Hey kids, listen!"), ("ta", "வணக்கம், குழந்தைகளே!")]
+)
+def test_the_term_gate_is_always_on_for_writing_and_translation(language: str, hook: str) -> None:
+    addressed = CLEAN.model_copy(update={"language": language, "hook_line": hook})
+    off = gates_off()
+    assert any("never address children" in problem for problem in story_problems(addressed, off))
     assert any(
-        "never address children" in problem for problem in translation_problems(english, off)
+        "never address children" in problem for problem in translation_problems(addressed, off)
     )
+    assert translation_problems(CLEAN.model_copy(update={"language": language}), off) == []
 
 
 def test_general_scripts_skip_the_reading_level_check() -> None:

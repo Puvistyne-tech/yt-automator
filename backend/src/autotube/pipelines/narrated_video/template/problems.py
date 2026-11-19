@@ -10,17 +10,19 @@ from autotube.pipelines.narrated_video.publishing.templates import METADATA_PLAC
 from autotube.pipelines.narrated_video.settings.base import LocalizedText
 from autotube.pipelines.narrated_video.settings.placeholders import checked_template
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.story.child_terms import child_term_message, child_terms_in
 from autotube.pipelines.narrated_video.styles.library import style_ids
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.settings_model import (
     pinned_settings_model,
     template_defaults,
 )
+from autotube.pipelines.narrated_video.template.term_screen import (
+    SETTINGS_PREFIX,
+    child_term_problems,
+)
 from autotube.pipelines.narrated_video.template.ui import derived_ui_schema
 
 DEFINITION = "definition"
-SETTINGS_PREFIX = "definition.settings"
 
 
 def joined(problems: list[str]) -> str:
@@ -67,44 +69,11 @@ def ui_problems(
     return {path: joined(problems) for path, problems in found.items() if problems}
 
 
-def localized_texts(*values: LocalizedText) -> list[str]:
-    return [text for value in values for text in value.model_dump().values()]
-
-
-def screened_texts(template: PipelineTemplate, settings: KidsStorySettings) -> dict[str, list[str]]:
-    metadata, series = settings.metadata, settings.series
-    return {
-        "name": [template.name],
-        "definition.brief": [str(template.definition.get("brief", ""))],
-        "definition.tags": [*metadata.tags.en, *metadata.tags.ta],
-        "definition.hashtags": [*metadata.hashtags.en, *metadata.hashtags.ta],
-        f"{SETTINGS_PREFIX}.series": localized_texts(
-            series.name, series.tagline, series.refrain, series.intro_line, series.outro_line
-        ),
-    }
-
-
-def found_terms(texts: list[str]) -> list[str]:
-    return list(dict.fromkeys(term for text in texts for term in child_terms_in(text)))
-
-
-def child_term_problems(template: PipelineTemplate, settings: KidsStorySettings) -> dict[str, str]:
-    if template.audience is TemplateAudience.KIDS:
-        return {}
-    return {
-        path: child_term_message(found)
-        for path, texts in screened_texts(template, settings).items()
-        if (found := found_terms(texts))
-    }
-
-
 def settings_problems(template: PipelineTemplate, definition: NarratedDefinition) -> dict[str, str]:
     model = pinned_settings_model(template.audience)
     defaults = template_defaults(definition, template.audience)
-    settings, errors = validated_settings(model, defaults, SETTINGS_PREFIX)
-    if not isinstance(settings, KidsStorySettings):
-        return errors
-    return child_term_problems(template, settings)
+    _, errors = validated_settings(model, defaults, SETTINGS_PREFIX)
+    return errors
 
 
 def template_problems(template: PipelineTemplate, engine_ui: JsonObject) -> dict[str, str]:
@@ -116,5 +85,6 @@ def template_problems(template: PipelineTemplate, engine_ui: JsonObject) -> dict
         **styled,
         **placeholder_problems(definition),
         **ui_problems(definition, template.audience, engine_ui),
+        **child_term_problems(template, definition),
     }
     return checked if styled else {**checked, **settings_problems(template, definition)}

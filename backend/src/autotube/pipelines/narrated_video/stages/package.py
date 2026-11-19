@@ -23,6 +23,7 @@ from autotube.pipelines.narrated_video.artifacts import (
     required,
     write_json,
 )
+from autotube.pipelines.narrated_video.publishing.audience_check import checked_audience
 from autotube.pipelines.narrated_video.publishing.metadata import upload_metadata
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.thumbnail import ThumbnailSettings
@@ -114,7 +115,9 @@ class PackageStage:
     def metadata(
         self, context: StageContext, settings: KidsStorySettings, story: Story, variant: str
     ) -> NewArtifact:
-        details = upload_metadata(story, settings, variant).model_dump(mode="json")
+        details = checked_audience(upload_metadata(story, settings, variant)).model_dump(
+            mode="json"
+        )
         path = folder(context, "package") / f"metadata-{story.language}-{variant}.json"
         write_json(path, details)
         return artifact(

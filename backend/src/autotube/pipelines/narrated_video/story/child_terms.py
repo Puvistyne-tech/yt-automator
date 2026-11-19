@@ -20,5 +20,9 @@ def child_terms_in(text: str) -> list[str]:
     return [term for term in child_terms() if contains_phrase(text, term)]
 
 
+def child_terms_in_any(texts: list[str]) -> list[str]:
+    return list(dict.fromkeys(term for text in texts for term in child_terms_in(text)))
+
+
 def child_term_message(found: list[str]) -> str:
     return f"never address children; remove: {', '.join(found)}"

@@ -10,7 +10,10 @@ from autotube.pipelines.narrated_video.settings.story_choices import (
     says_refrain,
 )
 from autotube.pipelines.narrated_video.story.casting import episode_cast
-from autotube.pipelines.narrated_video.story.child_terms import child_term_message, child_terms_in
+from autotube.pipelines.narrated_video.story.child_terms import (
+    child_term_message,
+    child_terms_in_any,
+)
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.reading import (
     estimated_seconds,
@@ -89,11 +92,25 @@ def brand_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     return [f"remove these brand names: {', '.join(found)}"] if found else []
 
 
+def framing_lines(story: Story, settings: KidsStorySettings) -> list[str]:
+    series = settings.series
+    return [line.for_language(story.language) for line in (series.intro_line, series.outro_line)]
+
+
 def child_term_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     if settings.safety.for_kids:
         return []
-    found = child_terms_in(all_text(story))
-    return [f"the audience is general: {child_term_message(found)}"] if found else []
+    checked = {
+        "the audience is general": [all_text(story)],
+        "the series intro or outro line must change in the settings": framing_lines(
+            story, settings
+        ),
+    }
+    return [
+        f"{reason}: {child_term_message(found)}"
+        for reason, texts in checked.items()
+        if (found := child_terms_in_any(texts))
+    ]
 
 
 def reading_level_problems(story: Story, settings: KidsStorySettings) -> list[str]:
