@@ -81,13 +81,22 @@ def test_kids_story_is_served_with_the_plugins_own_descriptor() -> None:
         assert descriptor.model_dump_json() == own.model_dump_json()
 
 
-def test_a_stored_template_differs_from_kids_story_only_in_type_id_and_name() -> None:
+def changed_from_kids_story(audience: TemplateAudience) -> set[str]:
     own = KidsStoryPipeline().descriptor.model_dump(mode="json")
-    template_view = served(registry(stored(template())), "t_tpl-1").descriptor
-    changed = {
+    template_view = served(registry(stored(template(audience=audience))), "t_tpl-1").descriptor
+    return {
         key for key, value in template_view.model_dump(mode="json").items() if own[key] != value
     }
-    assert changed == {"type_id", "name"}
+
+
+def test_a_stored_kids_template_differs_from_kids_story_only_in_its_identity() -> None:
+    identity = {"type_id", "name", "version"}
+    assert changed_from_kids_story(TemplateAudience.KIDS) == identity
+    assert changed_from_kids_story(TemplateAudience.GENERAL) == identity | {
+        "ui_schema",
+        "default_settings",
+        "capabilities",
+    }
 
 
 def test_static_pipelines_not_served_by_an_engine_stay_listed() -> None:

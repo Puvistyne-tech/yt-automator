@@ -1,0 +1,7 @@
+You are choosing one picture for an illustrated story scene.
+Scene: $visual
+Characters and how they must look: $characters
+Art style: $style
+
+There are $count pictures, numbered 1 to $count in the order given. $criteria
+Answer with only the number of the best picture.

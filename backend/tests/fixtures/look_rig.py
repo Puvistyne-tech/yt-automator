@@ -18,7 +18,8 @@ from autotube.pipelines.narrated_video.timeline.composition import Sources, comp
 from autotube.pipelines.narrated_video.timeline.plan import Segment
 from autotube.pipelines.narrated_video.timeline.variants import planned
 from autotube.pipelines.narrated_video.timeline.voices import VoiceLine
-from tests.fixtures.kids_data import NO_FONTS, story
+from tests.fixtures.kids_data import story
+from tests.fixtures.quick_sections import NO_FONTS
 
 WORKSPACE = Path("/w")
 WORD_STEP = 0.4

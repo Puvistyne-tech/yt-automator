@@ -602,9 +602,106 @@ class PipelineEngine(Protocol):
 - Built-ins are packaged with their engine (origin `builtin`, status `ready`, revision 1) and never stored.
   User templates are stored in the `pipeline_templates` table (`id`, unique `type_id`, `status`, `created_at`,
   JSON `payload`), added by migration `0002`.
-- The `narrated_video` engine has one built-in, `kids_story` (audience kids), served by the kids story pipeline,
-  so its descriptor is unchanged. A stored template is served by the same pipeline under the template's
-  `type_id` and `name`. Its definition model is still empty.
+- The `narrated_video` engine has one built-in, `kids_story` (audience kids, empty definition), served by the
+  kids story pipeline, so its descriptor is the plugin's own. A stored template is served by the same stages
+  under a derived descriptor (below).
+
+#### Narrated definition (`pipelines/narrated_video/template/definition.py`)
+
+`NarratedDefinition` is flat, forbids extra fields, and every field is optional. An empty definition means
+"engine defaults"; an empty string, list or language means "do not override".
+
+| Field | Type | Maps to |
+| --- | --- | --- |
+| `structure` | `story` (default; more structures are added as enum members) | fixed once created |
+| `brief` | text, at most 2000 | `story.extra_instructions` as "Every video is about: <brief>" |
+| `length` | `short` \| `standard` (default) \| `long` | short: 60 s ±15, 4–6 scenes; long: 300 s ±45, 14–18 scenes; standard changes nothing |
+| `tone` | text | `story.tone` |
+| `topics` | list of text | `story.themes` |
+| `visual_style` | a style library id | `look.visual_style` |
+| `music_mood` | text | `music.mood_prompt` |
+| `title_template`, `short_title_template`, `description_template` | `{en, ta}` text | `metadata.*` per non-empty language |
+| `tags`, `hashtags` | `{en, ta}` lists | `metadata.*` per non-empty language |
+| `category` | YouTube category, default Film & Animation | `metadata.category` |
+| `basic` | dotted settings paths | the derived `ui:basic`; empty keeps the engine's list |
+| `hidden` | dotted settings paths | added to the derived `ui:hidden` |
+| `settings` | sparse JSON object | merged over everything above |
+
+#### Derived settings model (`template/settings_model.py`)
+
+- `settings_model_for(definition, audience)` builds a subclass of the engine settings model with
+  `pydantic.create_model`. Its schema equals the engine's; only the top-level section defaults change.
+- Defaults are deep-merged in this order (objects merge, lists and scalars replace): engine defaults, the
+  audience defaults (general only: `template/general_defaults.json`), the values mapped from the definition,
+  then the `settings` overlay; the kids floor is applied when the result is validated (kids only).
+- The general defaults leave nothing child-directed: tagline, an empty refrain, intro and outro lines,
+  editorial rules, the `ink_and_wash` style, a single adult cast member (`mira`), tone, writing style, an open
+  ending, themes, morals, question style, judge criteria, the motion prompt default, music mood, sound-effect
+  prompt, description, tags and hashtags. A test screens every text default of a blank general template.
+- `safety.audience` (`kids` | `general`, default `kids`) is pinned: a before-validator forces the template's
+  audience whatever the input says. For general templates `story.source` is pinned to `llm_with_fallback` the
+  same way. The `kids_story` pipeline uses the same pinned model with audience kids, so stored `kids_story`
+  settings validate unchanged.
+- The descriptor's `default_settings` come from this model.
+- Derived models are cached per (definition, audience), and the engine schema used by `problems` is built
+  once, so checking a template or listing pipelines does not rebuild models or schemas.
+
+#### Derived descriptor
+
+- `type_id`, `name` and `description` from the template (an empty description falls back to the engine's);
+  `version` is `"<engine version>+r<revision>"`.
+- `ui_schema` is the engine's with `ui:basic` from the definition (or the engine's list) and `ui:hidden` = the
+  definition's `hidden`, then `safety.audience`, then for general templates `story.age_min`, `story.age_max`
+  `story.reading_level` and `story.source`. The engine's own `ui:hidden` is `["safety.audience"]`.
+- Capabilities: a kids template keeps `kids_content`; a general template never has it. `domain/kids_rules.py`
+  stays the only place that decides the upload's made-for-kids flag.
+
+#### Audience
+
+- Kids floor (`template/kids_floor.py`), applied by the kids-pinned model's before-validator to everything it
+  validates: template defaults, automation settings, stored snapshots and the built-in `kids_story`. Neither a
+  definition, an overlay nor an automation edit can weaken it:
+  - the engine's banned words, brand names and the "No violence, fear, danger…" editorial rule are appended if
+    missing (compared ignoring case, never duplicated);
+  - every engine `picture_exclusions` term is appended if missing;
+  - `story.enabled_checks` always contains `reading_level`, the only switchable check that guards
+    age-appropriate language (scene count, words per scene, duration, ending and cast are form checks);
+  - `story.age_min`/`age_max` stay capped at 12 by validation.
+  The banned-word and brand gates are always on, and kids templates always use the kids system prompt.
+  Behaviour change: a stored kids automation whose settings removed a floored entry gets it back silently when
+  it is loaded; defaults that already meet the floor are unchanged.
+- General templates: every prompt with a `_general` variant (`story_system`, `translate_system`, `image_scene`,
+  `image_thumbnail`, `judge`) is chosen by audience (`audience_prompts.py`); the story system prompt has no age
+  range or reading level and says "The audience is general: the script must never address children…"; an open
+  ending lets "viewers" rather than "children" wonder what happens next. The kids prompts are unchanged and
+  pinned, and the general prompts are pinned in `tests/fixtures/prompts/general/`; the reading-level gate does not
+  apply; upload metadata records `made_for_kids: false` and the metadata score check expects the audience's
+  value instead of `true`.
+- Child-directed term screen (`story/child_terms.py`, terms in `story/child_terms.json`, English and Tamil,
+  case-insensitive whole-phrase match, so "kidney" and longer inflected Tamil words do not match): a heuristic,
+  not a guarantee. For general templates it runs:
+  - when a template is checked (`template/term_screen.py`): on the name, the definition's `brief`, `tone`,
+    `topics`, `music_mood`, metadata templates, tags, hashtags and the chosen style's library text, and on every
+    text in the `settings` overlay except the `safety` section (including the chosen style's text). Every
+    language present is screened. Each hit is reported where the text was written: `name`,
+    `definition.<field>` or `definition.settings.<section>.<field>`;
+  - as an always-on script gate on every written and translated script, together with the series intro and
+    outro lines in the script's language;
+  - in the package stage (`publishing/audience_check.py`), on each upload's title, description, playlist title,
+    tags and hashtags. A hit fails the stage, so edits made on a general automation cannot reach an upload.
+  Uploads stay private and reviewed by default.
+- A general template never uses the bundled stories, which are children's stories: when the writer is missing,
+  fails or never passes the gates, the story stage fails with "…never falls back to the bundled children's
+  stories" instead.
+
+#### Problems
+
+`engine.problems(template)` returns, keyed by field path: definition validation errors (`definition.<field>`);
+an unknown style (`definition.visual_style`, reported alone); unknown placeholders in the metadata templates
+(`definition.title_template` and so on; the placeholders are those of `publishing/templates.py`); `ui:basic`
+and `ui:hidden` rule failures against the derived ui schema (`definition.basic`, `definition.hidden`); overlay
+validation errors (`definition.settings.<path>`); term screen hits (see Audience); and `engine` for a
+foreign template. An invalid definition returns only its own errors.
 
 Template use cases (`application/*_template*.py`, sharing `application/template_lookup.py`) reach engines only
 through `EngineCatalog`, which the composition root builds from `installed_engines()`

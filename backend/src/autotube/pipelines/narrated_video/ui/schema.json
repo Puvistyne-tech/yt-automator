@@ -75,6 +75,9 @@
     "short.enabled",
     "episode.resolution"
   ],
+  "ui:hidden": [
+    "safety.audience"
+  ],
   "series": {
     "ui:order": [
       "name",
