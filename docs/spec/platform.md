@@ -1301,6 +1301,7 @@ pipeline type when it is served), `/automations/:id`, `/pipelines`, `/pipelines/
   `null`; names map to ids in `model/categories.ts`) and "Number of ideas" (1 to 10, default 5). "Find ideas"
   sends `{engine: first installed engine, audience, region, category, count}` to `POST /templates/suggestions`;
   while it runs the button shows "Finding ideas…" and is disabled and a progress line says "Finding ideas".
+  Starting a search clears the previous ideas, source and dropped lines and notice; a failed search shows none.
   The answer shows where the trends came from ("Based on what is trending on YouTube in <country>." or "Based on
   built-in sample trends because no YouTube channel is connected." with a "Connect a channel" link to
   `/channels`), "Written by <provider>." and, when `dropped` is above zero, "<n> ideas were left out because
