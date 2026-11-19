@@ -18,7 +18,7 @@ from autotube.domain.pipeline_descriptors import (
 from autotube.domain.quality import ScoreItem
 from autotube.pipelines.narrated_video.artifacts import EPISODE, SHORT
 from autotube.pipelines.narrated_video.languages import LANGUAGE_NAMES
-from autotube.pipelines.narrated_video.resources import resource_json
+from autotube.pipelines.narrated_video.resources import resource_object
 from autotube.pipelines.narrated_video.scoring.score import score_run
 from autotube.pipelines.narrated_video.stages.art import ArtStage
 from autotube.pipelines.narrated_video.stages.assemble import AssembleStage
@@ -55,8 +55,7 @@ VARIANTS = (
 
 
 def ui_schema() -> JsonObject:
-    loaded = resource_json("ui", "schema.json")
-    return loaded if isinstance(loaded, dict) else {}
+    return resource_object("ui", "schema.json")
 
 
 class KidsStoryPipeline:

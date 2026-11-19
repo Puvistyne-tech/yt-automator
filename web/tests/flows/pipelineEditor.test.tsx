@@ -11,19 +11,19 @@ async function startNew(audience: "For kids" | "General audience") {
   expect(await screen.findByText(/cannot be changed later/)).toBeInTheDocument();
   await app.user.click(screen.getByRole("radio", { name: new RegExp(`^${audience}`) }));
   await app.user.click(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByLabelText(/^Brief/);
+  await screen.findByLabelText(/^What the videos are about/);
   return app;
 }
 
 async function fillBasics(user: User, name: string, brief: string) {
   await user.type(screen.getByLabelText(/^Name/), name);
-  await user.type(screen.getByLabelText(/^Brief/), brief);
+  await user.type(screen.getByLabelText(/^What the videos are about/), brief);
 }
 
 describe("Pipeline editor: create", () => {
   it("creates a kids pipeline as a draft from the kids blank", async () => {
     const { user, router } = await startNew("For kids");
-    expect(screen.getByRole("combobox", { name: "Structure" })).toHaveDisplayValue("Story");
+    expect(screen.getByRole("combobox", { name: "Format" })).toHaveDisplayValue("Story");
     expect(screen.getByText("For kids")).toBeInTheDocument();
 
     await fillBasics(user, "Animal friends", "Short stories about animals helping each other.");
@@ -63,7 +63,7 @@ describe("Pipeline editor: create", () => {
     await user.click(screen.getByRole("button", { name: "Save as draft" }));
 
     await findToast("Validation failed");
-    expect(screen.getByLabelText(/^Brief/)).toHaveAccessibleDescription(
+    expect(screen.getByLabelText(/^What the videos are about/)).toHaveAccessibleDescription(
       /The brief speaks to children/,
     );
     expect(stored("Bad brief")).toBeUndefined();
@@ -102,7 +102,7 @@ describe("Pipeline editor: create", () => {
     renderApp("/pipelines/new");
 
     expect(await screen.findByRole("button", { name: "Continue" })).toBeDisabled();
-    expect(screen.queryByLabelText(/^Brief/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^What the videos are about/)).not.toBeInTheDocument();
   });
 });
 
@@ -193,7 +193,7 @@ describe("Pipeline editor: built-in", () => {
   it("opens read-only and duplicates to customise", async () => {
     const { user, router } = renderApp("/pipelines/kids_story");
     expect(await screen.findByText(/Built-in pipelines cannot be changed/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Brief/)).toBeDisabled();
+    expect(screen.getByLabelText(/^What the videos are about/)).toBeDisabled();
     expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Duplicate to customise" }));

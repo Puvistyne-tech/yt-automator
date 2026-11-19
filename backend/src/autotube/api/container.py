@@ -41,6 +41,7 @@ from autotube.application.list_template_engines import ListTemplateEngines
 from autotube.application.list_templates import ListTemplates
 from autotube.application.open_run_artifact import OpenRunArtifact
 from autotube.application.preview_cleanup import PreviewCleanup
+from autotube.application.preview_template_script import PreviewTemplateScript
 from autotube.application.publish_run import PublishRun
 from autotube.application.recover_interrupted_runs import RecoverInterruptedRuns
 from autotube.application.retry_run import RetryRun
@@ -144,6 +145,7 @@ class TemplateUseCases:
     update: UpdateTemplate
     delete: DeleteTemplate
     duplicate: DuplicateTemplate
+    preview: PreviewTemplateScript
 
 
 @dataclass(frozen=True)

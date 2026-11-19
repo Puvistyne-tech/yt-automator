@@ -49,6 +49,9 @@ def floors_of(defaults: dict[str, Any]) -> tuple[Any, ...]:
     )
 
 
+ENGINE_HIDDEN = ("safety.audience", "story.structure", "story.preview_attempts")
+
+
 def test_only_kids_templates_carry_the_kids_capability() -> None:
     assert descriptor_of(KIDS).capabilities == (KIDS_CONTENT,)
     assert descriptor_of(GENERAL).capabilities == ()
@@ -58,10 +61,9 @@ def test_only_kids_templates_carry_the_kids_capability() -> None:
 def test_the_derived_ui_schema_hides_the_audience_and_general_age_fields() -> None:
     own = KidsStoryPipeline().descriptor.ui_schema
     kids, general = descriptor_of(KIDS).ui_schema, descriptor_of(GENERAL).ui_schema
-    assert kids == own and own["ui:hidden"] == ["safety.audience", "story.structure"]
+    assert kids == own and own["ui:hidden"] == [*ENGINE_HIDDEN]
     assert general["ui:hidden"] == [
-        "safety.audience",
-        "story.structure",
+        *ENGINE_HIDDEN,
         "story.age_min",
         "story.age_max",
         "story.reading_level",
@@ -75,8 +77,7 @@ def test_the_definition_sets_basic_and_adds_hidden_paths() -> None:
     assert ui["ui:basic"] == ["story.tone"]
     assert ui["ui:hidden"] == [
         "story.morals",
-        "safety.audience",
-        "story.structure",
+        *ENGINE_HIDDEN,
         "story.age_min",
         "story.age_max",
         "story.reading_level",

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from autotube.domain.pipeline_descriptors import settings_schema_of
 from autotube.domain.pipeline_engine import PipelineEngine
 from autotube.domain.pipeline_templates import TemplateAudience, TemplateOrigin
+from autotube.domain.ui_schema import ui_schema_problems
 from autotube.pipelines.narrated_video.engine import ENGINE_ID, NarratedVideoEngine
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
+from autotube.pipelines.narrated_video.settings.base import LocalizedText
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.registry import installed_engines
 from tests.fixtures.template_records import template
@@ -21,8 +24,29 @@ def test_the_engine_describes_an_empty_definition() -> None:
     narrated = engine()
     assert narrated.name == "Narrated video"
     assert narrated.definition_model.model_json_schema()["type"] == "object"
-    assert narrated.definition_ui_schema == {}
     assert narrated.blank(TemplateAudience.KIDS) == narrated.blank(TemplateAudience.GENERAL) == {}
+
+
+def test_the_definition_form_is_a_valid_sectioned_ui_schema() -> None:
+    narrated = engine()
+    ui = narrated.definition_ui_schema
+    assert ui_schema_problems(ui, settings_schema_of(narrated.definition_model)) == []
+    sections = ui["ui:sections"]
+    assert isinstance(sections, list)
+    assert [section["title"] for section in sections if isinstance(section, dict)] == [
+        "What it makes",
+        "Look and sound",
+        "Publishing",
+        "Advanced",
+    ]
+    assert ui["ui:basic"] == ["structure", "brief", "length", "tone", "topics", "visual_style"]
+
+
+def test_every_description_language_gets_a_text_area() -> None:
+    areas = engine().definition_ui_schema["description_template"]
+    assert isinstance(areas, dict)
+    assert list(areas) == list(LocalizedText.model_fields)
+    assert {area["ui:widget"] for area in areas.values() if isinstance(area, dict)} == {"textarea"}
 
 
 def test_the_only_builtin_is_the_kids_story_template() -> None:

@@ -93,3 +93,10 @@ class StoryWritingSettings(SettingsSection):
         description="Checks a written story must pass, or it is rewritten. Banned words and "
         "brand names are always checked.",
     )
+    preview_attempts: int = Field(
+        default=1,
+        ge=1,
+        le=10,
+        title="Sample script attempts",
+        description="How often the writer may try when showing a sample script for a template.",
+    )

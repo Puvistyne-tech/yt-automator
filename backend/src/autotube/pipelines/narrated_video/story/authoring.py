@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import partial
 
-from autotube.domain.capabilities import TextGenerator
-from autotube.domain.pipeline import StageLog
+from autotube.domain.capabilities import Capability, TextGenerator
+from autotube.domain.pipeline import ProviderResolver, StageLog
 from autotube.domain.run_enums import LogLevel
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
 from autotube.pipelines.narrated_video.story.model import Story, StoryDraft, StoryText, with_text
 from autotube.pipelines.narrated_video.story.parsing import StoryFormatError, parse_model
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
+
+Written = tuple[dict[str, Story], str]
 
 
 class WriterUnavailableError(RuntimeError):
@@ -69,3 +71,25 @@ class StoryAuthor:
                 LogLevel.WARNING,
             )
         return None
+
+
+def authored_scripts(
+    providers: ProviderResolver,
+    settings: KidsStorySettings,
+    log: StageLog,
+    seed: str,
+    theme: str,
+    order: Sequence[str],
+) -> Written | None:
+    llm = providers.resolve(Capability.LLM)
+    author = StoryAuthor(llm, settings, log, seed)
+    first = author.written(theme, order[0])
+    if first is None:
+        return None
+    stories = {order[0]: first}
+    for language in order[1:]:
+        translated = author.translated(first, language)
+        if translated is None:
+            return None
+        stories[language] = translated
+    return stories, llm.provider_id

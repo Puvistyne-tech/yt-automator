@@ -46,6 +46,11 @@ TemplateInput       engine, name, description = "", audience, status = draft, or
                     definition (object) = {}; no other field is accepted
 EngineSummary       engine_id, name, definition_schema (JSON Schema of the definition model),
                     definition_ui_schema (object), blank: {kids: object, general: object}
+TemplatePreviewInput TemplateInput + language (nullable = the pipeline's first language) + topic = ""
+                    (at most 300 characters; empty lets the template choose)
+SampleScript        language, title, scenes: [SampleScene], takeaway = "", upload_title,
+                    upload_description, provider (the script writer that produced it)
+SampleScene         narration, heading = "", action = ""
 
 Automation      id, name, description, pipeline_type, settings (object), languages: [code],
                 targets: [Target], schedule, review_policy, retry_policy, enabled, created_at,
@@ -597,9 +602,13 @@ class PipelineEngine(Protocol):
     def revision_problems(self, current, proposed) -> dict[str, str]
     def pipeline(self, template) -> Pipeline
     def builtin_templates(self) -> list[PipelineTemplate]
+    def sample_script(self, template, language, topic, providers: ProviderResolver) -> SampleScript
 ```
 
 - `problems` maps a field path (`definition.<path>`, or `engine` for a template of another engine) to a message.
+- `sample_script` writes one script for a template that need not be stored, in one language, about `topic` (empty
+  lets the template choose), through the same providers a run gets. It raises
+  `domain/sample_scripts.py::SampleUnavailableError` with a plain message when no script can be shown.
 - `revision_problems` reports the definition fields the engine fixes at creation that an update would change,
   keyed the same way. Updating a template returns 400 with these, its `problems` and the rule errors below.
 - `type_id` is fixed at creation: `t_<id>` for a user template, the engine's own id for a built-in. A rename never
@@ -637,6 +646,17 @@ class PipelineEngine(Protocol):
 | `hidden` | dotted settings paths | added to the derived `ui:hidden` |
 | `settings` | sparse JSON object | merged over everything above |
 
+The engine's `definition_ui_schema` is `ui/definition.json` plus a 10-row text area for every language of
+`description_template` (generated from `LocalizedText`'s languages in `template/ui.py`), written to the same `ui_schema` contract as the
+automation form and valid against the definition schema: sections "What it makes" (`structure`, `brief`, `length`,
+`tone`, `topics`), "Look and sound" (`visual_style`, `music_mood`), "Publishing" (the three title and description
+templates, `tags`, `hashtags`, `category`) and "Advanced" (`basic`, `hidden`, `settings`); `ui:basic` is
+`structure`, `brief`, `length`, `tone`, `topics`, `visual_style`; `brief`, `tone`, `music_mood` and the description
+template are text areas, `length` radios, `structure` and `category` selects, and `visual_style` the cards
+widget over the same style library choices as `look.visual_style` (the empty choice is "Keep the default
+style"). Field titles and descriptions are plain words for a non-technical reader: one short sentence each,
+and an empty value is called "the default", never "the engine's".
+
 #### Derived settings model (`template/settings_model.py`)
 
 - `settings_model_for(definition, audience)` builds a subclass of the engine settings model with
@@ -666,7 +686,7 @@ class PipelineEngine(Protocol):
 - `ui_schema` is the engine's with `ui:basic` from the definition (or the engine's list) and `ui:hidden` = the
   definition's `hidden`, then `safety.audience`, then for general templates `story.age_min`, `story.age_max`
   `story.reading_level` and `story.source`, then the structure's hidden paths (see Structures). The engine's
-  own `ui:hidden` is `["safety.audience", "story.structure"]`.
+  own `ui:hidden` is `["safety.audience", "story.structure", "story.preview_attempts"]`.
 - Capabilities: a kids template keeps `kids_content`; a general template never has it. `domain/kids_rules.py`
   stays the only place that decides the upload's made-for-kids flag.
 
@@ -818,6 +838,26 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
   source's, and the requested name or the source name shortened to fit with `COPY_NAME_SUFFIX` " (copy)"
   appended (`domain/copy_names.py`, shared with duplicating an automation). It is validated once: the name rules
   and the engine's `problems` together (400), then a free type id (409 `template_type_taken`).
+
+- Preview (`application/preview_template_script.py::PreviewTemplateScript`) takes a TemplatePreviewInput and
+  stores nothing: no template, no run, no id. It builds the unsaved template with id `preview` (type id
+  `t_preview`, `preview_template`), then reports field errors (400) exactly as create does: `input_errors`, then
+  an engine that is not installed (`engine`) or the engine's `problems`. The language defaults to the first of
+  the template pipeline's languages; any other unoffered language is a `language` field error. It resolves
+  providers from the saved provider configs, calls `engine.sample_script` synchronously (each provider call keeps
+  its own timeout) and maps `SampleUnavailableError` to 409 `preview_unavailable` with the engine's message.
+- The narrated engine's sample (`template/sample.py`) uses the template's derived settings defaults and the story
+  stage's own writing path (`story/authoring.py::authored_scripts`), so every script gate and the always-on
+  child-directed term gate apply. Like a run, it writes in `story.primary_language` and, when another language
+  is asked for, translates into it through the same translation request and `translation_problems` gates. Each
+  write and each translation gets `story.preview_attempts` tries (default 1, 1 to 10; hidden in the automation
+  form, settable through a template's `settings` overlay) instead of `story.max_attempts`. The theme is the
+  topic with surrounding spaces removed, or, when that is empty, `choose_theme` seeded by the template id. It never uses a bundled story, for any audience. A missing or failing writer (no LLM
+  provider, `provider_unavailable`, or a failed call) gives "The script writer is not available right now…";
+  a script that never passes the gates gives "The script writer did not write a script that passed the checks…".
+  The script is shaped like a run's, and the upload title and description are the episode's `upload_metadata`,
+  screened for a general audience like the package stage (a hit is `preview_unavailable` with that message).
+  Each scene carries its narration and, where the scene has them, its heading and action.
 
 `infrastructure/pipelines/template_registry.py` holds `TemplatePipelineRegistry(static, engines: EngineCatalog,
 templates)`, the
@@ -1019,6 +1059,7 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | GET `/templates` | | `[TemplateSummary]`, built-ins first |
 | GET `/templates/{id}` | | TemplateSummary; a built-in's id is its type id; 404 `template_not_found` |
 | POST `/templates` | `TemplateInput` | TemplateSummary, 201; 400 with field errors; 409 `template_type_taken` |
+| POST `/templates/preview-script` | `TemplatePreviewInput` | SampleScript; nothing is stored; 400 with the create field errors or `language`; 409 `preview_unavailable` |
 | PUT `/templates/{id}` | `TemplateInput` | TemplateSummary; 409 `template_builtin`; 400 for an audience, engine or type id change and for field errors; 409 `template_in_use` for ready to draft while automations or open runs use it |
 | DELETE `/templates/{id}` | | 204, also for a stored row that no longer decodes; 404 `template_not_found`; 409 `template_builtin`; 409 `template_in_use` naming the automations and open runs |
 | POST `/templates/{id}/duplicate` | optional `{name?, audience?}` | TemplateSummary, 201; 400 with field errors; 404 `template_not_found`; 409 `template_type_taken` |

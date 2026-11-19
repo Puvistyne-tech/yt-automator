@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from autotube.domain.capabilities import Capability
 from autotube.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from autotube.domain.pipeline_descriptors import StageDescriptor
 from autotube.domain.run_enums import ArtifactKind, LogLevel
@@ -13,7 +12,11 @@ from autotube.pipelines.narrated_video.settings.story import StorySource
 from autotube.pipelines.narrated_video.settings.story_choices import says_refrain
 from autotube.pipelines.narrated_video.stages.media_types import JSON
 from autotube.pipelines.narrated_video.stages.run_settings import kids_settings
-from autotube.pipelines.narrated_video.story.authoring import StoryAuthor, WriterUnavailableError
+from autotube.pipelines.narrated_video.story.authoring import (
+    WriterUnavailableError,
+    Written,
+    authored_scripts,
+)
 from autotube.pipelines.narrated_video.story.bundled import BundledChoice, pick_bundled
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.shaping import shaped
@@ -29,7 +32,6 @@ NO_STRUCTURE_FALLBACK = (
     "the script writer did not produce a usable script, and {structure} scripts have no bundled "
     "fallback"
 )
-Written = tuple[dict[str, Story], str]
 
 
 def no_fallback_reason(settings: KidsStorySettings) -> str:
@@ -99,24 +101,15 @@ class StoryStage:
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
     ) -> Written | None:
         try:
-            llm = context.providers.resolve(Capability.LLM)
-            author = StoryAuthor(llm, settings, context.log, context.run_id)
-            first = author.written(theme, order[0])
-            if first is None:
-                return None
-            stories = {order[0]: first}
-            for language in order[1:]:
-                translated = author.translated(first, language)
-                if translated is None:
-                    return None
-                stories[language] = translated
+            return authored_scripts(
+                context.providers, settings, context.log, context.run_id, theme, order
+            )
         except (LookupError, WriterUnavailableError) as error:
             context.log(
                 f"story writer unavailable: {error}",
                 LogLevel.WARNING,
             )
             return None
-        return stories, llm.provider_id
 
     def from_bundle(
         self, context: StageContext, settings: KidsStorySettings, order: Sequence[str], theme: str
