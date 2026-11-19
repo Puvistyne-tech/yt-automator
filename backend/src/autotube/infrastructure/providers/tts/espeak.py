@@ -4,7 +4,7 @@ from pathlib import Path
 
 from pydantic import Field
 
-from autotube.domain.capabilities import Capability, Speech, SpeechRequest, TimingSource
+from autotube.domain.capabilities import Capability, Speech, SpeechRequest
 from autotube.infrastructure.providers.context import ProviderContext
 from autotube.infrastructure.providers.output_path import ensure_parent
 from autotube.infrastructure.providers.spec import ProviderOptions, ProviderSpec
@@ -17,9 +17,8 @@ from autotube.infrastructure.providers.tts.whisper_aligner import (
     AlignmentOptions,
     WhisperAligner,
     WordAligner,
-    refine,
+    estimated_speech,
 )
-from autotube.infrastructure.providers.tts.word_timing import estimate_timings, spoken_words
 from autotube.infrastructure.providers.wav_io import wav_duration
 
 
@@ -84,13 +83,7 @@ class EspeakSpeech:
         command = espeak_command(request, self.options, output)
         self.context.runner.run(command, self.options.timeout_seconds, stdin=request.text)
         duration = wav_duration(output)
-        speech = Speech(
-            path=output,
-            duration_seconds=duration,
-            words=estimate_timings(spoken_words(request.text), 0.0, duration),
-            timing_source=TimingSource.ESTIMATE,
-        )
-        return refine(speech, request, self.aligner, self.options.alignment)
+        return estimated_speech(output, duration, request, self.aligner, self.options.alignment)
 
 
 SPEC = ProviderSpec(

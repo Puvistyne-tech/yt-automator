@@ -11,6 +11,7 @@ afterEach(() => {
   cleanup();
   server.resetHandlers();
   db.reset();
+  window.localStorage.clear();
 });
 
 afterAll(() => server.close());

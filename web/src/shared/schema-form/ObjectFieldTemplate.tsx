@@ -4,7 +4,13 @@ import type {
   Registry,
 } from "@rjsf/utils";
 import { SectionChanges } from "@/shared/schema-form/ChangeMarks";
+import { visibleProperties } from "@/shared/schema-form/fieldFilter";
 import { groupIntoSections, readSections, type Section } from "@/shared/schema-form/sections";
+
+function visibilityOf(registry: Registry): ReadonlySet<string> | undefined {
+  const context = registry.formContext as { visible?: ReadonlySet<string> } | undefined;
+  return context?.visible;
+}
 
 function Properties({ properties }: { properties: ObjectFieldTemplatePropertyType[] }) {
   return (
@@ -24,10 +30,12 @@ function SchemaSection({
   section,
   registry,
   idPrefix,
+  filtered,
 }: {
   section: Section<ObjectFieldTemplatePropertyType>;
   registry: Registry;
   idPrefix: string;
+  filtered: boolean;
 }) {
   const title = section.title ?? "Other";
   const headingId = `${idPrefix}__section-${title.toLowerCase().replace(/\W+/g, "-")}`;
@@ -37,12 +45,14 @@ function SchemaSection({
         <h3 className="schema-section-title" id={headingId} tabIndex={-1}>
           {title}
         </h3>
-        <SectionChanges
-          registry={registry}
-          title={title}
-          names={section.properties.map((property) => property.name)}
-          headingId={headingId}
-        />
+        {!filtered && (
+          <SectionChanges
+            registry={registry}
+            title={title}
+            names={section.properties.map((property) => property.name)}
+            headingId={headingId}
+          />
+        )}
       </div>
       <Properties properties={section.properties} />
     </section>
@@ -50,9 +60,11 @@ function SchemaSection({
 }
 
 function RootObject(props: ObjectFieldTemplateProps) {
-  const sections = groupIntoSections(props.properties, readSections(props.uiSchema));
+  const visible = visibilityOf(props.registry);
+  const properties = visibleProperties(props.properties, [], visible);
+  const sections = groupIntoSections(properties, readSections(props.uiSchema));
   if (sections.length === 1 && sections[0]?.title === null) {
-    return <Properties properties={props.properties} />;
+    return <Properties properties={properties} />;
   }
   return (
     <div className="schema-sections">
@@ -62,6 +74,7 @@ function RootObject(props: ObjectFieldTemplateProps) {
           section={section}
           registry={props.registry}
           idPrefix={props.fieldPathId.$id}
+          filtered={visible !== undefined}
         />
       ))}
     </div>
@@ -73,12 +86,14 @@ export function ObjectFieldTemplate(props: ObjectFieldTemplateProps) {
     return <RootObject {...props} />;
   }
   const title = props.title;
-  const isArrayItem = typeof props.fieldPathId.path.at(-1) === "number";
+  const path = props.fieldPathId.path;
+  const isArrayItem = typeof path.at(-1) === "number";
+  const properties = visibleProperties(props.properties, path, visibilityOf(props.registry));
   return (
     <fieldset className={isArrayItem ? "schema-object schema-object-item" : "schema-object"}>
       {title && !isArrayItem && <legend className="schema-group-title">{title}</legend>}
       {props.description && <p className="field-hint">{props.description}</p>}
-      <Properties properties={props.properties} />
+      <Properties properties={properties} />
     </fieldset>
   );
 }

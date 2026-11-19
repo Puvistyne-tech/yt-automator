@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { captureDownloads } from "../helpers/downloads";
-import { findSection } from "../helpers/editor";
+import { findSection, startInAllSettings } from "../helpers/editor";
 import { findRow, findToast, renderApp } from "../helpers/renderApp";
 
 afterEach(() => vi.restoreAllMocks());
@@ -56,6 +56,8 @@ describe("Automation export", () => {
 });
 
 describe("Content settings defaults", () => {
+  beforeEach(startInAllSettings);
+
   it("marks changed settings in the editor and resets a section", async () => {
     const { user } = renderApp("/automations/auto-bedtime");
     const content = await findSection("Content");

@@ -126,6 +126,14 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     top-level settings property, and when sections are given every top-level property is in exactly one
     section. The form shows the sections in list order, each under its title; without sections the form is one
     ungrouped list.
+  - `ui:basic` (root only, optional, `domain/ui_basic.py`): a list of dotted settings paths (`story.tone`,
+    `look.visual_style`) that the editor's Simple view shows. Each path must resolve to a settings property
+    through nested objects (with the same `$ref` and `anyOf`/`oneOf` resolution as the hints below, never into
+    array `items`) and appear once; a non-list, an empty list, a non-string entry, an unknown path and a repeated
+    path are problems. A listed object shows all of its children. The key is generic: the web code knows no pipeline's
+    field names. The kids story pipeline lists twelve paths: series name, visual style, theme mode and themes,
+    tone, target length, narrator voice, music on or off and its mood, subtitles on or off, the Short on or off,
+    and the episode resolution.
   - Any other key names a settings property and holds the hints for it; `items` holds the hints for the
     items of an array property. Nesting follows the settings schema, resolving local `$ref`s (`#/...`) and,
     for an optional property written as `anyOf`/`oneOf`, its first non-null branch (`domain/json_schema.py`).
@@ -578,6 +586,19 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   the last narration clip.
 - `extract_frame` fails with an upstream failure when no frame was written, for example past the end.
 - Speech synthesizers refuse blank text with an upstream failure.
+- The `mlx_audio` TTS provider (first in the TTS registry order, before `edge_tts`) speaks with named voice presets
+  (`presets`: id -> name, model folder under `models_root`, languages, generation kwargs, sentence_split,
+  pause_ms). `SpeechRequest.voice` names a preset; empty means `default_voice` for the request language
+  (en `warm_storyteller`, ta `kayal`). No default for the language is an upstream failure
+  `language_unsupported`, an unknown preset `voice_unknown`, and a preset that does not list the language
+  `language_unsupported`. mlx-audio is not an app dependency: the provider runs
+  `<python> -I mlx_audio_worker.py` from a separate venv with `HF_HOME=<hf_home>` and `HF_HUB_OFFLINE=1`,
+  passing a JSON job `{model_dir, text, kwargs, sentence_split, pause_ms, output}` on stdin. The worker writes
+  mono 16-bit PCM WAV at the model's rate; with sentence_split it speaks each sentence (split after `.`, `!`,
+  `?`, `।`, `॥`) and joins them with pause_ms of silence. Word timings are estimated, then refined with
+  Whisper alignment. It is unavailable when `python` or `models_root` does not exist, so hosts without
+  them fall through to the next TTS provider. `python` (default `~/.autotube/venvs/mlx/bin/python`),
+  `models_root` (default `~/.autotube/models`) and `hf_home` (default `~/.autotube/hf`) expand `~` when used.
 - `SubtitleStyle` (`domain/video_look.py`): burn_in, font_family, font_file (nullable), font_size, primary,
   outline and highlight colours, margin_bottom, margin_sides, wrap_lines (default false), karaoke (default
   false), position (bottom|middle|top, ASS alignment 2, 5, 8; margin_bottom is the vertical margin from that
@@ -706,6 +727,27 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   plain-language summary of the schedule and review rules, for example "Runs every 6 hours, 08:00 to 20:00,
   at most 2 a day. Publishes privately after you approve.", built by a pure function. When a target goes public
   at a time of day, the summary names it ("Goes public at 18:00 (Asia/Kolkata).").
+  A two-way toggle at the top switches between "Simple" (the default) and "All settings"; the choice is
+  remembered per browser in localStorage (`autotube.editor.settings-view`), and an unavailable storage falls
+  back to Simple. Simple shows, in Content, only the pipeline's `ui:basic` fields under their section titles
+  (sections with no basic field are hidden, nested objects show only their basic children, a pipeline without
+  `ui:basic` shows its whole form), and in the other sections name, pipeline type, enabled, languages, targets
+  (channel, language, privacy, made for kids, outputs), the schedule kind with its hours or cron, and the review
+  mode with its minimum score and auto-publish. It hides the finer rules declared in
+  `ADVANCED_PLATFORM_FIELDS` (`model/settingsView.ts`): description, schedule timezone, schedule limits, retry
+  policy, target playlist, target publish timing and auto-reject. A quiet line says "<n> more options in All
+  settings" (hidden pipeline fields plus the finer rules that apply to the draft: timezone and limits only for a
+  schedule that is not manual, playlist and publish timing only with at least one target), adds ", <n> changed" for hidden pipeline fields
+  changed from their defaults, and offers "Show all settings". Hidden fields keep their values and still
+  validate; when a save fails (client or server) on a field hidden in Simple, the editor switches to All
+  settings so the error shows at its field. A pipeline field with an error is always shown, in both views
+  and whatever the search or Changed only filter, together with its parent groups. Section "changed" counts and
+  section resets show only while the form is unfiltered. All settings adds, above the Content form, a search box that filters pipeline fields by
+  title and description (a match keeps its parent groups and all its children; sections with no match are
+  hidden; array items are not searched) and a "Changed only" switch that keeps fields changed from their
+  defaults; both combine. When nothing is left and no setting has an error, an empty state offers
+  "Clear search", which empties the search and turns Changed only off. A visible setting whose schema lists no
+  properties (an open map) shows all of its entries.
   A saved automation without unsaved changes offers Run now; with unsaved changes it is disabled with the reason.
   A saved automation also offers Export, which always exports the saved version.
   A "Run queued" toast (list or editor) links to the new run; a toast with an action stays until it is

@@ -17,6 +17,7 @@ interface EditorInput {
   initial: AutomationDraft;
   pipelines: PipelineDescriptor[];
   channels: Channel[];
+  onErrorsShown: (errors: FieldErrors, pipeline: PipelineDescriptor | undefined) => void;
 }
 
 function scrollToSection(errors: FieldErrors) {
@@ -26,11 +27,28 @@ function scrollToSection(errors: FieldErrors) {
   }
 }
 
-export function useAutomationEditor({ automationId, initial, pipelines, channels }: EditorInput) {
+function errorRevealer(
+  onErrorsShown: EditorInput["onErrorsShown"],
+  pipeline: PipelineDescriptor | undefined,
+) {
+  return (errors: FieldErrors) => {
+    onErrorsShown(errors, pipeline);
+    scrollToSection(errors);
+  };
+}
+
+function useDraftState(initial: AutomationDraft) {
   const [draft, setDraft] = useState(initial);
   const [baseline, setBaseline] = useState(() => draftSignature(initial));
-  const pipeline = pipelines.find((p) => p.type_id === draft.pipeline_type);
   const dirty = draftSignature(draft) !== baseline;
+  const markSaved = () => setBaseline(draftSignature(draft));
+  return { draft, setDraft, dirty, markSaved };
+}
+
+export function useAutomationEditor(input: EditorInput) {
+  const { automationId, initial, pipelines, channels, onErrorsShown } = input;
+  const { draft, setDraft, dirty, markSaved } = useDraftState(initial);
+  const pipeline = pipelines.find((p) => p.type_id === draft.pipeline_type);
   const editorErrors = useEditorErrors(draft, pipeline, channels);
   const onCreated = useNavigateAfterCreate(dirty);
   const save = useSaveAutomation(automationId);
@@ -40,16 +58,17 @@ export function useAutomationEditor({ automationId, initial, pipelines, channels
     editorErrors.server.clear();
   };
   const onSaved = (saved: Automation) => {
-    setBaseline(draftSignature(draft));
+    markSaved();
     if (automationId === undefined) {
       onCreated(saved.id);
     }
   };
+  const showErrors = errorRevealer(onErrorsShown, pipeline);
   const submit = () => {
     editorErrors.reveal();
     if (hasErrors(editorErrors.clientErrors)) {
       notifier.warn("Fix the highlighted fields before saving.");
-      scrollToSection(editorErrors.clientErrors);
+      showErrors(editorErrors.clientErrors);
       return;
     }
     save.mutate(
@@ -57,11 +76,11 @@ export function useAutomationEditor({ automationId, initial, pipelines, channels
       notifier.handlers({
         success: (saved: Automation) => `Saved “${saved.name}”.`,
         onSuccess: onSaved,
-        onError: (error) => scrollToSection(editorErrors.server.setFromServer(error)),
+        onError: (error) => showErrors(editorErrors.server.setFromServer(error)),
       }),
     );
   };
-  const errors = editorErrors.errors;
+  const { errors } = editorErrors;
   return { draft, update, pipeline, errors, dirty, saving: save.isPending, submit };
 }
 

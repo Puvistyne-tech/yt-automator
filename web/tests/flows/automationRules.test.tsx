@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { db } from "@/api/mocks/db";
-import { findSection, sectionByName, targetRow } from "../helpers/editor";
+import { findSection, sectionByName, startInAllSettings, targetRow } from "../helpers/editor";
 import { findToast, renderApp } from "../helpers/renderApp";
 import { openRun } from "../helpers/runs";
 import { failWith } from "../helpers/server";
@@ -14,6 +14,8 @@ async function openEditor(id: string) {
 }
 
 describe("Automation editor: publishing and schedule rules", () => {
+  beforeEach(startInAllSettings);
+
   it("shows a configured automation's rules and a plain summary", async () => {
     await openEditor("auto-shorts");
 

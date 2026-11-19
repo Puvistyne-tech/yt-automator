@@ -78,6 +78,7 @@ export function ReviewSection({
   onChange,
   errors,
   channels,
+  shows,
 }: SectionProps & { channels: Channel[] }) {
   const policy = draft.review_policy;
   const set = (review_policy: ReviewPolicy) => onChange({ ...draft, review_policy });
@@ -96,7 +97,7 @@ export function ReviewSection({
         {policy.mode === "auto_when_score_at_least" && (
           <MinScoreField policy={policy} errors={errors} set={set} />
         )}
-        <RejectField policy={policy} errors={errors} set={set} />
+        {shows("reject_below") && <RejectField policy={policy} errors={errors} set={set} />}
         <ToggleField
           label="Publish as soon as a run is approved"
           hint="Whether the score or you approve it, the run uploads to every target without pressing Publish. Each target keeps its privacy, and kids' content stays made for kids."

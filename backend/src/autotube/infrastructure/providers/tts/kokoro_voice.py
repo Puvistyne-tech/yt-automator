@@ -18,9 +18,8 @@ from autotube.infrastructure.providers.tts.whisper_aligner import (
     AlignmentOptions,
     WhisperAligner,
     WordAligner,
-    refine,
+    estimated_speech,
 )
-from autotube.infrastructure.providers.tts.word_timing import estimate_timings, spoken_words
 from autotube.infrastructure.providers.wav_io import write_wav
 from autotube.shared.errors import UpstreamFailure
 
@@ -83,9 +82,7 @@ class KokoroSpeech:
                 words=audio.words,
                 timing_source=TimingSource.SYNTHESIZER,
             )
-        words = estimate_timings(spoken_words(request.text), 0.0, duration)
-        speech = Speech(path=output, duration_seconds=duration, words=words)
-        return refine(speech, request, self.aligner, self.options.alignment)
+        return estimated_speech(output, duration, request, self.aligner, self.options.alignment)
 
 
 SPEC = ProviderSpec(

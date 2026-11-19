@@ -1,4 +1,9 @@
 import { screen, within } from "@testing-library/react";
+import { SETTINGS_VIEW_STORAGE_KEY } from "@/features/automation-editor/model/settingsView";
+
+export function startInAllSettings() {
+  window.localStorage.setItem(SETTINGS_VIEW_STORAGE_KEY, "all");
+}
 
 export async function findSection(name: string) {
   return within(await screen.findByRole("region", { name }));

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { Channel, Schedule } from "@/api/types";
 import { withEveryHours, withScheduleKind } from "@/features/automation-editor/model/schedule";
+import type { PlatformShows } from "@/features/automation-editor/model/settingsView";
 import { automationSummary } from "@/features/automation-editor/model/summary";
 import {
   EditorSection,
@@ -59,23 +60,28 @@ function CadenceField({ schedule, errors, onChange }: ScheduleFieldsProps) {
   );
 }
 
-function TimingFields(props: ScheduleFieldsProps) {
-  const { schedule, errors, onChange } = props;
+function TimezoneField({ schedule, errors, onChange }: ScheduleFieldsProps) {
   const zones = useMemo(() => timezoneSelectOptions(schedule.timezone), [schedule.timezone]);
+  return (
+    <FormField
+      label="Timezone"
+      hint="Used for cron times, active hours and the daily cap."
+      error={errors["schedule.timezone"]}
+    >
+      <Select
+        value={schedule.timezone}
+        options={zones}
+        onChange={(e) => onChange({ ...schedule, timezone: e.target.value })}
+      />
+    </FormField>
+  );
+}
+
+function TimingFields(props: ScheduleFieldsProps & { shows: PlatformShows }) {
   return (
     <div className="grid-2">
       <CadenceField {...props} />
-      <FormField
-        label="Timezone"
-        hint="Used for cron times, active hours and the daily cap."
-        error={errors["schedule.timezone"]}
-      >
-        <Select
-          value={schedule.timezone}
-          options={zones}
-          onChange={(e) => onChange({ ...schedule, timezone: e.target.value })}
-        />
-      </FormField>
+      {props.shows("timezone") && <TimezoneField {...props} />}
     </div>
   );
 }
@@ -85,6 +91,7 @@ export function ScheduleSection({
   onChange,
   errors,
   channels,
+  shows,
 }: SectionProps & { channels: Channel[] }) {
   const schedule = draft.schedule;
   const set = (next: Schedule) => onChange({ ...draft, schedule: next });
@@ -99,17 +106,19 @@ export function ScheduleSection({
           value={schedule.kind}
           onChange={(kind) => set(withScheduleKind(schedule, kind))}
         />
-        {schedule.kind !== "manual" && <TimingFields {...fields} />}
+        {schedule.kind !== "manual" && <TimingFields {...fields} shows={shows} />}
         <p className="schedule-preview" aria-live="polite">
           <Icon name="clock" />
           <span>{describeSchedule(schedule)}</span>
         </p>
-        {schedule.kind !== "manual" && <ScheduleLimits {...fields} />}
-        <RetryFields
-          policy={draft.retry_policy}
-          errors={errors}
-          onChange={(retry_policy) => onChange({ ...draft, retry_policy })}
-        />
+        {schedule.kind !== "manual" && shows("schedule_limits") && <ScheduleLimits {...fields} />}
+        {shows("retry_policy") && (
+          <RetryFields
+            policy={draft.retry_policy}
+            errors={errors}
+            onChange={(retry_policy) => onChange({ ...draft, retry_policy })}
+          />
+        )}
         <RulesSummary text={automationSummary(draft, channels)} />
       </div>
     </EditorSection>

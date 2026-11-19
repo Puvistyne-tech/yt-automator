@@ -63,20 +63,21 @@ export function isChanged(value: unknown, defaults: unknown, path: FieldPath): b
   );
 }
 
-function changedLeaves(value: unknown, defaults: unknown, path: FieldPath): number {
+function changedLeaves(value: unknown, defaults: unknown, path: string[]): string[] {
   const fallback = valueAt(defaults, path);
   const current = valueAt(value, path);
   if (isJsonObject(fallback) && isJsonObject(current)) {
-    return Object.keys(fallback).reduce(
-      (total, key) => total + changedLeaves(value, defaults, [...path, key]),
-      0,
-    );
+    return Object.keys(fallback).flatMap((key) => changedLeaves(value, defaults, [...path, key]));
   }
-  return isChanged(value, defaults, path) ? 1 : 0;
+  return isChanged(value, defaults, path) ? [path.join(".")] : [];
+}
+
+export function changedPaths(value: unknown, defaults: unknown, names: string[]): string[] {
+  return names.flatMap((name) => changedLeaves(value, defaults, [name]));
 }
 
 export function changedCount(value: unknown, defaults: unknown, names: string[]): number {
-  return names.reduce((total, name) => total + changedLeaves(value, defaults, [name]), 0);
+  return changedPaths(value, defaults, names).length;
 }
 
 export function resetField<T>(value: T, defaults: unknown, path: FieldPath): T {
