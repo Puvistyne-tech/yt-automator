@@ -26,7 +26,7 @@
   ],
   "ui:basic": ["structure", "brief", "length", "tone", "topics", "visual_style"],
   "structure": {
-    "ui:widget": "radio"
+    "ui:widget": "select"
   },
   "brief": {
     "ui:widget": "textarea",

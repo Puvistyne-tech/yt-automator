@@ -638,8 +638,10 @@ automation form and valid against the definition schema: sections "What it makes
 `tone`, `topics`), "Look and sound" (`visual_style`, `music_mood`), "Publishing" (the three title and description
 templates, `tags`, `hashtags`, `category`) and "Advanced" (`basic`, `hidden`, `settings`); `ui:basic` is
 `structure`, `brief`, `length`, `tone`, `topics`, `visual_style`; `brief`, `tone`, `music_mood` and the description
-template are text areas, `structure` and `length` radios, `category` a select, and `visual_style` the cards
-widget over the same style library choices as `look.visual_style`.
+template are text areas, `length` radios, `structure` and `category` selects, and `visual_style` the cards
+widget over the same style library choices as `look.visual_style` (the empty choice is "Keep the default
+style"). Field titles and descriptions are plain words for a non-technical reader: one short sentence each,
+and an empty value is called "the default", never "the engine's".
 
 #### Derived settings model (`template/settings_model.py`)
 
