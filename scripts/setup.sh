@@ -590,8 +590,8 @@ verify_raqm() {
     say "    would check that Pillow finds libraqm for Tamil text shaping"
   elif raqm_check; then
     say "    Pillow finds libraqm: Tamil text shaping works"
-  elif DYLD_FALLBACK_LIBRARY_PATH="$(brew --prefix)/lib" raqm_check; then
-    note "Pillow finds libraqm only with DYLD_FALLBACK_LIBRARY_PATH=$(brew --prefix)/lib. The service, just dev-api and just doctor set it."
+  elif DYLD_FALLBACK_LIBRARY_PATH="$(homebrew_prefix)/lib" raqm_check; then
+    note "Pillow finds libraqm only with DYLD_FALLBACK_LIBRARY_PATH=$(homebrew_prefix)/lib. The service, just dev-api and just doctor set it."
   else
     note "Pillow cannot find libraqm: Tamil titles on thumbnails may render with broken letters."
   fi
