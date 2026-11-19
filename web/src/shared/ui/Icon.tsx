@@ -1,6 +1,7 @@
 const PATHS = {
   dashboard: "M3 3h8v8H3z M13 3h8v5h-8z M13 10h8v11h-8z M3 13h8v8H3z",
   automations: "M13 2 4 14h7l-1 8 9-12h-7z",
+  pipelines: "M12 2 2 7l10 5 10-5z M2 12l10 5 10-5 M2 17l10 5 10-5",
   runs: "M22 12h-4l-3 9L9 3l-3 9H2",
   channels: "M2 7h20v13H2z M17 2l-5 5-5-5",
   providers:

@@ -1,0 +1,42 @@
+.template-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.template-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.template-badges {
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.template-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.template-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.template-audience {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.template-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
