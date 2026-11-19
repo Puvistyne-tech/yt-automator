@@ -241,7 +241,11 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     narration artifact records `error_rate` (null when not checked) and `attempts`. The stage logs the rate per
     checked line, a warning when the kept rate is still above the limit, and a note when the voice gave no
     transcript, in which case the line is kept unchecked and the run continues.
-  - `visuals.motion_prompt` (with `{visual}` and `{mood}`; a card uses "a title card" and "warm") and
+  - `visuals.motion_prompt` (with `{action}`, `{visual}` and `{mood}`; `{action}` is the scene's `action`, or its
+    `visual` when the action is blank, with trailing full stops and spaces trimmed; a card uses
+    "A gentle title card reveal", "a title card" and "warm"; default
+    "{action}. Mood: {mood}. Gentle, slow movement, no sudden changes."; a stored value equal to a former default,
+    which named `{visual}` instead of `{action}`, loads as the current default of its template) and
     `visuals.judge_criteria` replace the fixed motion and picture-judge wording. A motion prompt naming any
     other lowercase `{placeholder}` fails validation; `$`, `{}` and `{Visual}` pass through as written, as
     does any text in the judge criteria, tone and extra instructions.
@@ -752,7 +756,7 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   validate): "One short present-tense sentence naming the single visible movement in this scene, for the
   video model." Every script prompt asks for it right after `visual`, with a kids example (a little fox on a
   riverbank) or, for general audiences, a neutral one (a baker at an oven), and shows it in the JSON shape. The
-  motion prompt does not use it yet. The banned-word, brand-name and child-directed term gates read it with the
+  motion prompt fills `{action}` with it. The banned-word, brand-name and child-directed term gates read it with the
   narration.
 - Every structure shares `story_system.txt` (or its `_general` variant) and `story_user.txt`; a structure fills
   `$format`, `$pieces` and `$piece`, puts its own block in `$structure_rules`, and may add the ending and
