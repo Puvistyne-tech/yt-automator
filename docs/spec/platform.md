@@ -1234,6 +1234,11 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   `--output`, `--quantize` when set, and `--image-path`/`--image-strength` (`reference_strength`) for the
   first reference image; `HF_TOKEN` is set when the `huggingface_token` secret is. The result is fitted to the
   exact request size.
+- The `ollama` text provider posts to `<base_url>/api/chat` with `options` `temperature`, `num_predict`
+  (`TextRequest.max_tokens`) and `num_ctx` (option `context_tokens`, "Context size", default 16384, 512 to
+  262144), plus `format` set to `TextRequest.json_schema` when there is one. Without `num_ctx` Ollama ran the
+  model at its maximum context (131072 for gemma3:12b). 16384 holds the long explainer's prompt, the
+  rejected script a retry carries and an answer of `story.max_tokens`.
 - `MotionRequest.held_frame_rate` (nullable, at least 1): when below `fps` the clip changes picture only that
   many times a second (a held, stop-motion feel) while keeping `fps`. The ffmpeg pan-and-zoom and LTX providers
   honour it; DepthFlow ignores it.

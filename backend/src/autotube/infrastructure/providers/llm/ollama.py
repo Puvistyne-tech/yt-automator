@@ -26,6 +26,15 @@ class OllamaOptions(HttpOptions):
         title="Server URL",
         description="Where the local Ollama server listens.",
     )
+    context_tokens: int = Field(
+        default=16384,
+        ge=512,
+        le=262144,
+        title="Context size",
+        description="Tokens of prompt and answer the model holds at once, sent as num_ctx. Unset, "
+        "Ollama uses the model's maximum, which is slow and memory hungry; too small cuts long "
+        "prompts.",
+    )
     probe_timeout_seconds: float = Field(
         default=1.0,
         gt=0,
@@ -41,14 +50,18 @@ def user_message(request: TextRequest) -> dict[str, Any]:
     return message
 
 
-def ollama_payload(request: TextRequest, model: str) -> dict[str, Any]:
+def ollama_payload(request: TextRequest, model: str, context_tokens: int) -> dict[str, Any]:
     messages = [{"role": "system", "content": request.system}] if request.system else []
     messages.append(user_message(request))
     payload: dict[str, Any] = {
         "model": model,
         "messages": messages,
         "stream": False,
-        "options": {"temperature": request.temperature, "num_predict": request.max_tokens},
+        "options": {
+            "temperature": request.temperature,
+            "num_predict": request.max_tokens,
+            "num_ctx": context_tokens,
+        },
     }
     if request.json_schema is not None:
         payload["format"] = request.json_schema
@@ -84,7 +97,7 @@ class OllamaText:
             self.options,
             self.options.base_url,
             "api/chat",
-            ollama_payload(request, self.options.model),
+            ollama_payload(request, self.options.model, self.options.context_tokens),
             {},
             "Ollama",
         )
