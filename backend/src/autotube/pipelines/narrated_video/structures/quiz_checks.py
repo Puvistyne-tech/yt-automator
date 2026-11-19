@@ -9,9 +9,8 @@ from autotube.pipelines.narrated_video.structures.list_checks import FRAMING_SCE
 SCENES_PER_QUESTION = 2
 
 
-def quiz_scene_range(settings: KidsStorySettings) -> tuple[int, int]:
-    total = settings.story.quiz_questions * SCENES_PER_QUESTION + FRAMING_SCENES
-    return total, total
+def quiz_scenes(settings: KidsStorySettings) -> int:
+    return settings.story.quiz_questions * SCENES_PER_QUESTION + FRAMING_SCENES
 
 
 def asks(scene: StoryScene) -> bool:

@@ -50,7 +50,7 @@ CASES: list[tuple[Gate, Story, dict[str, Any], list[str]]] = [
         scene_count_problems,
         story(),
         {"story": {"scene_count_max": 8}},
-        ["use between 8 and 8 scenes, not 9"],
+        ["use exactly 8 scenes, not 9"],
     ),
     (
         words_per_scene_problems,

@@ -23,6 +23,7 @@ from autotube.pipelines.narrated_video.story.words import contains_phrase, word_
 
 Gate = Callable[[Story, KidsStorySettings], list[str]]
 SceneRange = Callable[[KidsStorySettings], tuple[int, int]]
+DurationTarget = Callable[[KidsStorySettings, str], tuple[int, int]]
 
 
 def configured_scene_range(settings: KidsStorySettings) -> tuple[int, int]:
@@ -33,9 +34,11 @@ def scene_count_problems(
     story: Story, settings: KidsStorySettings, scene_range: SceneRange = configured_scene_range
 ) -> list[str]:
     low, high = scene_range(settings)
-    if low <= len(story.scenes) <= high:
+    found = len(story.scenes)
+    if low <= found <= high:
         return []
-    return [f"use between {low} and {high} scenes, not {len(story.scenes)}"]
+    wanted = f"exactly {low}" if low == high else f"between {low} and {high}"
+    return [f"use {wanted} scenes, not {found}"]
 
 
 def words_per_scene_problems(story: Story, settings: KidsStorySettings) -> list[str]:
@@ -48,11 +51,16 @@ def words_per_scene_problems(story: Story, settings: KidsStorySettings) -> list[
     ]
 
 
-def duration_problems(story: Story, settings: KidsStorySettings) -> list[str]:
+def configured_duration(settings: KidsStorySettings, language: str) -> tuple[int, int]:  # noqa: ARG001
+    return settings.story.target_duration_seconds, settings.story.duration_tolerance_seconds
+
+
+def duration_problems(
+    story: Story, settings: KidsStorySettings, duration: DurationTarget = configured_duration
+) -> list[str]:
     rate = settings.story.words_per_minute.for_language(story.language)
     seconds = estimated_seconds(story, rate)
-    target = settings.story.target_duration_seconds
-    tolerance = settings.story.duration_tolerance_seconds
+    target, tolerance = duration(settings, story.language)
     if abs(seconds - target) <= tolerance:
         return []
     return [f"the story reads in about {seconds:.0f} s; aim for {target} s (within {tolerance} s)"]
@@ -150,10 +158,6 @@ def cast_problems(story: Story, settings: KidsStorySettings, seed: str = "") -> 
 
 CheckedGate = tuple[StoryCheck | None, Gate]
 MORAL_GATE: CheckedGate = (None, moral_problems)
-LENGTH_GATES: tuple[CheckedGate, ...] = (
-    (StoryCheck.WORDS_PER_SCENE, words_per_scene_problems),
-    (StoryCheck.DURATION, duration_problems),
-)
 SAFETY_GATES: tuple[CheckedGate, ...] = (
     (None, banned_word_problems),
     (None, brand_problems),

@@ -15,3 +15,5 @@ CAST_PATHS = (
 LIST_COUNT_PATHS = ("story.item_count",)
 QUIZ_COUNT_PATHS = ("story.quiz_questions", "story.answer_choices")
 SCENE_COUNT_PATHS = ("story.scene_count_min", "story.scene_count_max")
+DURATION_PATHS = ("story.target_duration_seconds", "story.duration_tolerance_seconds")
+COUNTED_HIDDEN_PATHS = (*CAST_PATHS, *SCENE_COUNT_PATHS, *DURATION_PATHS)

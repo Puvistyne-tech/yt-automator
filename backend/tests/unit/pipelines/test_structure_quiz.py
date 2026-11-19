@@ -67,7 +67,7 @@ def test_a_quiz_needs_framing_and_the_question_count() -> None:
     scenes = quiz_story().scenes
     short = quiz_story(scenes=[*scenes[1:7], scenes[-1]])
     found = story_problems(short, quiz_settings(GENERAL))
-    assert found[0] == "use between 10 and 10 scenes, not 7"
+    assert found[0] == "use exactly 10 scenes, not 7"
     assert found[-2:] == [
         "open with an intro scene and end with a closing scene, with no question or answer",
         "ask exactly 4 questions, not 3",
@@ -86,7 +86,7 @@ def test_one_answer_choice_is_refused() -> None:
 def test_the_quiz_prompts_ask_for_questions_and_reveals(choices: int) -> None:
     settings = quiz_settings(GENERAL, story={"quiz_questions": 3, "answer_choices": choices})
     request = story_request(settings, "the night sky", "en")
-    assert "Between 8 and 8 scenes." in request.prompt
+    assert "Exactly 8 scenes." in request.prompt
     assert "exactly 3 pairs of scenes" in request.prompt
     expected = "lists exactly 3 short possible answers" if choices else "the questions are open"
     assert expected in request.prompt and "$" not in request.prompt

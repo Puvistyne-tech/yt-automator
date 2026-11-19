@@ -7,6 +7,7 @@ from pydantic import Field, model_validator
 from autotube.pipelines.narrated_video.settings.base import (
     LocalizedNumber,
     StoryLanguage,
+    episode_seconds,
     localized_number,
     text_list_field,
 )
@@ -99,12 +100,8 @@ class StorySettings(StoryWritingSettings):
     age_max: int = Field(
         default=7, ge=1, le=12, title="Oldest age", description="Oldest viewer, in years."
     )
-    target_duration_seconds: int = Field(
-        default=150,
-        ge=30,
-        le=600,
-        title="Target episode length",
-        description="Seconds of narration the story should fill.",
+    target_duration_seconds: int = episode_seconds(
+        150, "Target episode length", "Seconds of narration the story should fill."
     )
     duration_tolerance_seconds: int = Field(
         default=30,

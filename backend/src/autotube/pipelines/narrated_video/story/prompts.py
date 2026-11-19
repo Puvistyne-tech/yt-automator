@@ -16,6 +16,7 @@ from autotube.pipelines.narrated_video.story.prompt_parts import (
     extra_requirements,
     sound_effect_rule,
 )
+from autotube.pipelines.narrated_video.structures.length import duration_target, scene_line
 from autotube.pipelines.narrated_video.structures.registry import spec_of
 
 SYSTEM_PROMPT = "story_system.txt"
@@ -60,17 +61,16 @@ def style_values(settings: KidsStorySettings) -> dict[str, str]:
 def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str = "") -> str:
     rules = settings.story
     spec = spec_of(settings)
-    scene_min, scene_max = spec.scene_range(settings)
+    target_seconds, _ = duration_target(settings, language)
     return render_prompt(
         USER_PROMPT,
         language=language_name(language),
         series=settings.series.name.for_language(language),
         theme=theme,
-        scene_min=scene_min,
-        scene_max=scene_max,
+        scene_count=scene_line(settings),
         words_min=f"{rules.words_per_scene_min.for_language(language):g}",
         words_max=f"{rules.words_per_scene_max.for_language(language):g}",
-        target_seconds=rules.target_duration_seconds,
+        target_seconds=target_seconds,
         words_per_minute=f"{rules.words_per_minute.for_language(language):g}",
         cameras=", ".join(move.value for move in CameraMove),
         hero_count=settings.visuals.hero_scene_count,

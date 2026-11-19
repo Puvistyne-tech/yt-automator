@@ -10,9 +10,8 @@ def numbered(story: Story) -> list[StoryScene]:
     return [scene for scene in story.scenes if scene.number is not None]
 
 
-def list_scene_range(settings: KidsStorySettings) -> tuple[int, int]:
-    total = settings.story.item_count + FRAMING_SCENES
-    return total, total
+def list_scenes(settings: KidsStorySettings) -> int:
+    return settings.story.item_count + FRAMING_SCENES
 
 
 def expected_numbers(count: int, descending: bool) -> list[int]:

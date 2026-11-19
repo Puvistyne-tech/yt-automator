@@ -9,14 +9,13 @@ from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.prompt_parts import following_bullets
 from autotube.pipelines.narrated_video.structures.castless import LABELS_RULE, NO_STORY_LINES
 from autotube.pipelines.narrated_video.structures.paths import (
-    CAST_PATHS,
+    COUNTED_HIDDEN_PATHS,
     QUIZ_COUNT_PATHS,
-    SCENE_COUNT_PATHS,
 )
 from autotube.pipelines.narrated_video.structures.quiz_checks import (
     question_pairs,
     quiz_problems,
-    quiz_scene_range,
+    quiz_scenes,
 )
 from autotube.pipelines.narrated_video.structures.shape_score import structure_item
 from autotube.pipelines.narrated_video.structures.spec import StructureSpec, unseeded
@@ -29,7 +28,7 @@ TRANSLATION_RULES = (
     "Each translated answer appears word for word inside its reveal narration, and stays one of "
     "the translated choices when there are choices.",
 )
-HIDDEN_PATHS = (*CAST_PATHS, *SCENE_COUNT_PATHS)
+HIDDEN_PATHS = COUNTED_HIDDEN_PATHS
 QUIZ_GATES: tuple[CheckedGate, ...] = ((StoryCheck.STRUCTURE, quiz_problems),)
 
 
@@ -79,5 +78,5 @@ QUIZ_SPEC = StructureSpec(
     hidden_paths=HIDDEN_PATHS,
     shown_paths=QUIZ_COUNT_PATHS,
     defaults_file="quiz_defaults.json",
-    scene_range=quiz_scene_range,
+    fixed_scenes=quiz_scenes,
 )

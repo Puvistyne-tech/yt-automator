@@ -28,8 +28,10 @@ def derived_hidden(
 def derived_basic(engine_ui: JsonObject, definition: NarratedDefinition) -> JsonValue:
     if definition.basic:
         return list(definition.basic)
-    structure_basic = structure_spec(definition.structure).basic_paths
-    return list(structure_basic) if structure_basic else engine_ui.get(BASIC_KEY, [])
+    spec = structure_spec(definition.structure)
+    base = list(spec.basic_paths) or listed_paths(engine_ui.get(BASIC_KEY))
+    kept = [path for path in base if path not in spec.hidden_paths]
+    return [*kept, *(path for path in spec.shown_paths if path not in kept)]
 
 
 def derived_ui_schema(

@@ -12,14 +12,13 @@ from autotube.pipelines.narrated_video.story.prompt_parts import following_bulle
 from autotube.pipelines.narrated_video.structures.castless import LABELS_RULE, NO_STORY_LINES
 from autotube.pipelines.narrated_video.structures.list_checks import (
     list_problems,
-    list_scene_range,
+    list_scenes,
     numbered,
     order_text,
 )
 from autotube.pipelines.narrated_video.structures.paths import (
-    CAST_PATHS,
+    COUNTED_HIDDEN_PATHS,
     LIST_COUNT_PATHS,
-    SCENE_COUNT_PATHS,
 )
 from autotube.pipelines.narrated_video.structures.shape_score import structure_item
 from autotube.pipelines.narrated_video.structures.spec import StructureSpec, unseeded
@@ -28,7 +27,7 @@ TRANSLATION_RULES = (
     LABELS_RULE,
     "Keep every item heading different, and keep each item's number in its narration.",
 )
-HIDDEN_PATHS = (*CAST_PATHS, *SCENE_COUNT_PATHS)
+HIDDEN_PATHS = COUNTED_HIDDEN_PATHS
 
 
 def numbered_prompt_values(
@@ -78,7 +77,7 @@ def numbered_spec(
         hidden_paths=HIDDEN_PATHS,
         shown_paths=LIST_COUNT_PATHS,
         defaults_file=f"{structure.value}_defaults.json",
-        scene_range=list_scene_range,
+        fixed_scenes=list_scenes,
     )
 
 

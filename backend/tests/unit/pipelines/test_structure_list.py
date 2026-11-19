@@ -60,7 +60,7 @@ def test_a_list_needs_its_framing_count_order_and_headings() -> None:
 def test_the_list_scene_count_follows_the_item_count() -> None:
     settings = list_settings(GENERAL, story={"item_count": 5})
     found = story_problems(list_story(), settings)
-    assert "use between 7 and 7 scenes, not 9" in found
+    assert "use exactly 7 scenes, not 9" in found
     assert "write exactly 5 numbered items, not 7" in found
     switched = settings.story.model_copy(update={"enabled_checks": [StoryCheck.WORDS_PER_SCENE]})
     assert story_problems(list_story(), settings.model_copy(update={"story": switched})) == []
@@ -83,7 +83,7 @@ def test_a_list_translation_must_keep_every_scene_label() -> None:
 def test_the_list_prompts_ask_for_numbered_items(audience: TemplateAudience) -> None:
     settings = list_settings(audience, story={"item_count": 5})
     request = story_request(settings, "facts about honeybees", "en")
-    assert "Between 7 and 7 scenes." in request.prompt
+    assert "Exactly 7 scenes." in request.prompt
     assert "exactly 5 item scenes, one item per scene, numbered from 1 up to 5" in request.prompt
     assert "short numbered list videos" in (request.system or "")
     assert "$" not in request.prompt and "Cast (" not in request.prompt

@@ -6,17 +6,14 @@ from dataclasses import dataclass
 from autotube.pipelines.narrated_video.scoring.inputs import ScoreRule
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
-from autotube.pipelines.narrated_video.story.gates import (
-    CheckedGate,
-    SceneRange,
-    configured_scene_range,
-)
+from autotube.pipelines.narrated_video.story.gates import CheckedGate
 from autotube.pipelines.narrated_video.story.model import Story
 
 PromptValues = Callable[[KidsStorySettings, str, str], dict[str, str]]
 TranslationRules = Callable[[KidsStorySettings, str], str]
 PlaceholderValues = Callable[[Story, KidsStorySettings], dict[str, str]]
 SeededGates = Callable[[str], tuple[CheckedGate, ...]]
+FixedScenes = Callable[[KidsStorySettings], int]
 
 
 def unseeded(gates: tuple[CheckedGate, ...]) -> SeededGates:
@@ -43,4 +40,4 @@ class StructureSpec:
     hidden_paths: tuple[str, ...] = ()
     shown_paths: tuple[str, ...] = ()
     defaults_file: str = ""
-    scene_range: SceneRange = configured_scene_range
+    fixed_scenes: FixedScenes | None = None

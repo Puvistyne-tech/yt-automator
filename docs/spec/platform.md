@@ -629,7 +629,7 @@ class PipelineEngine(Protocol):
 | --- | --- | --- |
 | `structure` | `story` (default) \| `explainer` \| `list` \| `countdown` \| `quiz` (see Structures) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
 | `brief` | text, at most 2000 | `story.extra_instructions` as "Every video is about: <brief>" |
-| `length` | `short` \| `standard` (default) \| `long` | short: 60 s ±15, 4–6 scenes; long: 300 s ±45, 14–18 scenes; standard changes nothing |
+| `length` | `short` \| `standard` (default) \| `long` | story and explainer: short 60 s ±15, 4–6 scenes; long 300 s ±45, 14–18 scenes. List, countdown and quiz (fixed scene count, length derived, see Structures): short 10–20 English and 6–14 Tamil words per scene; long 40–80 English and 30–60 Tamil. Standard changes nothing |
 | `tone` | text | `story.tone` |
 | `topics` | list of text | `story.themes` |
 | `visual_style` | a style library id | `look.visual_style` |
@@ -667,7 +667,8 @@ class PipelineEngine(Protocol):
 
 - `type_id`, `name` and `description` from the template (an empty description falls back to the engine's);
   `version` is `"<engine version>+r<revision>"`.
-- `ui_schema` is the engine's with `ui:basic` from the definition (or the engine's list) and `ui:hidden` = the
+- `ui_schema` is the engine's with `ui:basic` from the definition (or else the structure's or the engine's list,
+  without the structure's hidden paths and followed by its shown paths) and `ui:hidden` = the
   definition's `hidden`, then `safety.audience`, then for general templates `story.age_min`, `story.age_max`
   `story.reading_level` and `story.source`, then the structure's hidden paths (see Structures), leaving out
   the structure's shown paths. The engine's own `ui:hidden` is `["safety.audience", "story.structure",
@@ -730,9 +731,21 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
                 bundled stories), basic_paths (the derived `ui:basic` when the definition has none; empty
                 keeps the engine's), hidden_paths (added to the derived `ui:hidden`), shown_paths (engine
                 hidden paths this structure shows again), defaults_file (JSON in `structures/`, merged after
-                the audience defaults), scene_range(settings) -> (fewest, most) scenes (default
-                `story.scene_count_min` and `story.scene_count_max`; used by the prompt and the scene count gate)
+                the audience defaults), fixed_scenes(settings) -> the exact scene count, or none (the
+                configured `story.scene_count_min` to `story.scene_count_max`)
 ```
+
+- Length (`structures/length.py`): `scene_range(settings)` is the fixed count twice, or the configured range;
+  the prompt says "Exactly N scenes." or "Between A and B scenes.", and the scene count gate says "use exactly N
+  scenes, not M" or "use between A and B scenes, not M". `duration_target(settings, language)` is the
+  configured `story.target_duration_seconds` and `story.duration_tolerance_seconds`, or, for a fixed count, the
+  middle and half-width (rounded) of the window "scenes × words per scene min to max, at the speaking rate"
+  clipped to 30–600 s (the bounds of `target_duration_seconds`). The prompt's "about N seconds", the duration
+  gate and the episode duration score item (the union of the windows of the run's languages) all use it.
+  `length_problem(settings)` reports a fixed count whose window misses 30–600 s in any language ("N scenes read
+  in A to B s in <language> at these words per scene, but an episode lasts 30 to 600 s; choose another length
+  or count"): it is a settings validation error of every template settings model and the template problem
+  `definition.length` at save.
 
 - Script checks (`story/checks.py`): the size gates (scene count, words per scene, duration), then the
   structure's extra gates, then the safety gates (banned words, brand names, child-directed terms), then the
@@ -791,7 +804,7 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   `$structure_rules` is `numbered_list.txt`: an intro hook scene, then one item scene per item numbered from 1
   up, each with `number` and a `heading` in the script's language and narration that starts with the number,
   then a closing scene; intro and closing have no number; headings differ; `moral` is empty; no characters.
-  Scene range: exactly items + 2 (`story.scene_count_min` and `story.scene_count_max` are hidden). Gate (check
+  Fixed scenes: items + 2 (the scene counts and the target duration and tolerance are hidden). Gate (check
   `structure`): first and last scenes unnumbered ("open with an intro scene and end with a closing scene, both
   without a number"), exactly `item_count` numbered scenes ("write exactly N numbered items, not M"), numbers
   1..M in scene order ("number the items from 1 up to M, in that order"), every item has a heading ("give
@@ -802,7 +815,8 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   fallback ("…list scripts have no bundled fallback"). Defaults (`structures/list_defaults.json`): empty cast
   and refrain, "facts about …" topics, no morals, a "Do you remember?" question style, a description with
   `{count}` and `{items}`, tags and hashtags free of child-directed terms. Hidden paths: the explainer's cast
-  paths and the scene counts; shown path `story.item_count`.
+  paths, the scene counts, `story.target_duration_seconds` and `story.duration_tolerance_seconds`; shown path
+  `story.item_count` (so in the Simple view it replaces the target duration).
 - `countdown`: the list with one change of direction (`structures/numbered.py::numbered_spec(..., descending)`
   builds both). Wording "countdown" / "countdown scripts" / "countdown script"; the same fragment numbers the
   items "from N down to 1, so the last item is number 1", and the gate wants that order ("number the items
@@ -817,7 +831,7 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   `story.answer_choices` > 0 its `choices` lists that many short answers, one of them the answer, read out in
   the narration, and with 0 `choices` is empty (open questions). The reveal scene's `answer` holds the short
   answer, which its narration says word for word and explains in one sentence. `heading` is empty, `number`
-  null, `moral` empty. Scene range: exactly 2 × questions + 2. Gate (check `structure`): intro and closing
+  null, `moral` empty. Fixed scenes: 2 × questions + 2. Gate (check `structure`): intro and closing
   scenes carry no question or answer ("open with an intro scene and end with a closing scene, with no question
   or answer"); exactly `quiz_questions` question scenes ("ask exactly N questions, not M"); for question K:
   "end question K with a question mark" (`?` or `？`), "follow question K with a reveal scene that gives its
@@ -828,7 +842,7 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   `scene_labels`. Score item `structure` ("Quiz questions and reveals"). Placeholder `{question_count}` (the
   question scenes). No bundled fallback ("…quiz scripts have no bundled fallback"). Defaults
   (`structures/quiz_defaults.json`): general-knowledge topics, a quiz description with `{question_count}`,
-  tags and hashtags. Hidden paths: the cast paths and the scene counts; shown paths `story.quiz_questions` and
+  tags and hashtags. Hidden paths: as for the list; shown paths `story.quiz_questions` and
   `story.answer_choices`.
 
 - Safety across structures (tested): a kids template of any structure carries `kids_content`, uploads made for
@@ -845,7 +859,8 @@ metadata templates (`definition.title_template`, `definition.short_title_templat
 `playlist_title`; the message names the field, the unknown placeholders and the usable ones, the common
 placeholders plus the structure's; see Structures); `ui:basic`
 and `ui:hidden` rule failures against the derived ui schema (`definition.basic`, `definition.hidden`); overlay
-validation errors (`definition.settings.<path>`); term screen hits (see Audience); and `engine` for a
+validation errors (`definition.settings.<path>`, skipped when `definition.length` is reported, see Length under
+Structures); term screen hits (see Audience); and `engine` for a
 foreign template. An invalid definition returns only its own errors.
 
 Template use cases (`application/*_template*.py`, sharing `application/template_lookup.py`) reach engines only
