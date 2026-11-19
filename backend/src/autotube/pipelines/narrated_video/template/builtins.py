@@ -16,6 +16,10 @@ from autotube.pipelines.narrated_video.resources import resource_json, resource_
 FOLDER = "builtins"
 
 
+class DuplicateBuiltinError(ValueError):
+    pass
+
+
 class PackagedTemplate(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -38,11 +42,23 @@ class PackagedTemplate(BaseModel):
         )
 
 
+def unique_entries(entries: tuple[PackagedTemplate, ...]) -> tuple[PackagedTemplate, ...]:
+    ids = [entry.id for entry in entries]
+    repeated = sorted({found for found in ids if ids.count(found) > 1})
+    if repeated:
+        raise DuplicateBuiltinError(
+            f"packaged built-in templates repeat the ids {', '.join(map(repr, repeated))}"
+        )
+    return entries
+
+
 @cache
 def packaged_entries() -> tuple[PackagedTemplate, ...]:
-    return tuple(
-        PackagedTemplate.model_validate(resource_json(FOLDER, name))
-        for name in resource_names(FOLDER, ".json")
+    return unique_entries(
+        tuple(
+            PackagedTemplate.model_validate(resource_json(FOLDER, name))
+            for name in resource_names(FOLDER, ".json")
+        )
     )
 
 

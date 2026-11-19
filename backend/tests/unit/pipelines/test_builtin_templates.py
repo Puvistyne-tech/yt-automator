@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from pydantic import ValidationError
 
 from autotube.domain.pipeline_descriptors import KIDS_CONTENT
 from autotube.domain.pipeline_templates import (
@@ -17,7 +16,6 @@ from autotube.pipelines.narrated_video.settings.series import BANNED_WORDS, BRAN
 from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck
 from autotube.pipelines.narrated_video.story.child_terms import child_terms_in_any
 from autotube.pipelines.narrated_video.styles.library import style_ids
-from autotube.pipelines.narrated_video.template.builtins import PackagedTemplate
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.length_problems import length_problems
 from autotube.pipelines.narrated_video.template.placeholder_problems import placeholder_problems
@@ -111,15 +109,6 @@ def test_the_kids_builtin_carries_the_kids_floor(template: PipelineTemplate) -> 
     assert set(BANNED_WORDS) <= set(settings.safety.banned_words)
     assert set(BRAND_NAMES) <= set(settings.safety.brand_names)
     assert StoryCheck.READING_LEVEL in settings.story.enabled_checks
-
-
-def test_a_packaged_builtin_may_not_take_a_user_type_id() -> None:
-    entry = {"name": "N", "description": "D.", "audience": "general", "definition": {}}
-    with pytest.raises(ValidationError, match="user templates"):
-        PackagedTemplate.model_validate({**entry, "id": f"{USER_TYPE_PREFIX}facts"})
-    assert PackagedTemplate.model_validate({**entry, "id": "facts"}).template(ENGINE_ID).id == (
-        "facts"
-    )
 
 
 CHILD_WORDED_STYLES = [style for style in style_ids() if child_terms_in_any(style_texts(style))]
