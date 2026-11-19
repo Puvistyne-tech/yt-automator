@@ -58,6 +58,15 @@ describe("Pipelines: use a suggested idea", () => {
     expectPrefilled();
   });
 
+  it("opens a prefilled draft whose definition has values of the wrong type", async () => {
+    const definition = { structure: "quiz", topics: "planets", length: 3, tone: ["calm"] };
+    renderApp({ pathname: "/pipelines/new", state: newPipelineState({ ...IDEA, definition }) });
+
+    expect(await screen.findByLabelText(/^Name/)).toHaveValue("Sky science quiz");
+    expect(screen.getByRole("combobox", { name: "Format" })).toHaveDisplayValue("Quiz");
+    expect(screen.getByRole("region", { name: "Try a sample script" })).toBeInTheDocument();
+  });
+
   it.each([
     ["no state, as after a refresh", null],
     ["a state that is not a draft", { prefill: { name: 3 } }],
