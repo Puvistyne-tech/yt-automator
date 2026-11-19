@@ -62,7 +62,7 @@
   },
   "visuals": {
     "judge_criteria": "Pick the picture that best matches the scene, keeps every character on model, looks natural and has no text in it.",
-    "motion_prompt": "Slow, natural animation of an illustrated story scene: {visual}. Mood: {mood}. Soft natural movement, no sudden changes."
+    "motion_prompt": "{action}. Mood: {mood}. Soft natural movement, no sudden changes."
   },
   "music": {
     "mood_prompt": "warm acoustic music with soft piano and light strings, calm and inviting"

@@ -14,15 +14,15 @@ from autotube.pipelines.narrated_video.settings.choices import (
     CORNER_CHOICES,
     SHORT_ART_CHOICES,
 )
+from autotube.pipelines.narrated_video.settings.legacy_motion import (
+    MOTION_PROMPT,
+    upgraded_motion_prompt,
+)
 from autotube.pipelines.narrated_video.settings.logo import LogoSettings
 from autotube.pipelines.narrated_video.text.templates import unknown_placeholders
 
 STYLE_MOTION_NOTE = "Used when Move the way the style suggests is off, or for a custom style."
-MOTION_PROMPT = (
-    "Gentle, slow animation of a children's picture-book scene: {visual}. Mood: {mood}. "
-    "Soft natural movement, no sudden changes."
-)
-MOTION_PLACEHOLDERS = frozenset({"visual", "mood"})
+MOTION_PLACEHOLDERS = frozenset({"action", "visual", "mood"})
 JUDGE_CRITERIA = (
     "Pick the picture that best matches the scene, keeps every character on model, "
     "looks warm and safe for small children and has no text in it."
@@ -104,8 +104,9 @@ class VisualSettings(LogoSettings):
         min_length=1,
         max_length=1000,
         title="Motion prompt",
-        description="Describes the animation of each picture. {visual} and {mood} are replaced "
-        "by the scene's picture and mood.",
+        description="Describes the animation of each picture. {action} is the scene's one "
+        "visible movement (its picture when the script names none), {visual} and {mood} are "
+        "the scene's picture and mood.",
     )
     card_camera: CameraMove = Field(
         default=CameraMove.PUSH_IN,
@@ -151,6 +152,11 @@ class VisualSettings(LogoSettings):
         description="Brand mark letter height as a share of the picture height.",
     )
 
+    @field_validator("motion_prompt", mode="before")
+    @classmethod
+    def upgrade_legacy_motion_prompt(cls, value: object) -> object:
+        return upgraded_motion_prompt(value)
+
     @field_validator("motion_prompt")
     @classmethod
     def check_motion_placeholders(cls, value: str) -> str:
@@ -158,6 +164,6 @@ class VisualSettings(LogoSettings):
         if unknown:
             names = ", ".join(f"{{{name}}}" for name in unknown)
             raise ValueError(
-                f"motion prompt may only use {{visual}} and {{mood}}; unknown: {names}"
+                f"motion prompt may only use {{action}}, {{visual}} and {{mood}}; unknown: {names}"
             )
         return value

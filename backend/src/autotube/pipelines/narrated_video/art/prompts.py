@@ -15,6 +15,7 @@ from autotube.pipelines.narrated_video.text.templates import render_template
 
 ART_LANGUAGE = "en"
 FIRST_NUMBER = re.compile(r"\d+")
+CARD_ACTION = "A gentle title card reveal"
 
 
 def descriptor_line(member: Character) -> str:
@@ -65,10 +66,19 @@ def thumbnail_prompt(settings: KidsStorySettings, story: Story) -> str:
     )
 
 
+def sentence_body(text: str) -> str:
+    return text.strip().rstrip(".").rstrip()
+
+
+def motion_values(scene: StoryScene | None) -> dict[str, str]:
+    if scene is None:
+        return {"action": CARD_ACTION, "visual": "a title card", "mood": "warm"}
+    action = sentence_body(scene.action) or sentence_body(scene.visual)
+    return {"action": action, "visual": scene.visual, "mood": scene.mood}
+
+
 def scene_motion(settings: KidsStorySettings, scene: StoryScene | None) -> str:
-    visual, mood = ("a title card", "warm") if scene is None else (scene.visual, scene.mood)
-    values = {"visual": visual, "mood": mood}
-    return render_template(settings.visuals.motion_prompt, values).strip()
+    return render_template(settings.visuals.motion_prompt, motion_values(scene)).strip()
 
 
 def style_declaration(settings: KidsStorySettings) -> str:

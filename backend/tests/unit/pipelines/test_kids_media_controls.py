@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from autotube.pipelines.narrated_video.art.prompts import judge_request, motion_prompt
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
+from autotube.pipelines.narrated_video.settings.legacy_motion import LEGACY_MOTION_PROMPTS
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.stages.music import bed_prompt
 from autotube.pipelines.narrated_video.stages.voice import Line, speech_request
@@ -94,7 +95,33 @@ def test_an_unknown_motion_placeholder_is_rejected_naming_the_field() -> None:
     with pytest.raises(
         ValidationError, match=r"motion_prompt[\s\S]*unknown: \{colour\}, \{other\}"
     ):
-        quick_settings(visuals={"motion_prompt": "{visual} {other} {colour}"})
+        quick_settings(visuals={"motion_prompt": "{action} {visual} {other} {colour}"})
+
+
+def test_the_default_motion_prompt_leads_with_the_scene_action() -> None:
+    scene = SCENE.model_copy(update={"action": "The fox curls up and yawns. "})
+    scene_part = "The fox curls up and yawns. Mood: sleepy. Gentle, slow movement"
+    assert scene_part in motion_prompt(quick_settings(), scene)
+
+
+def test_a_scene_without_an_action_animates_its_visual_once() -> None:
+    scene = SCENE.model_copy(update={"visual": "a fox naps."})
+    prompt = motion_prompt(quick_settings(), scene)
+    assert "a fox naps. Mood: sleepy. Gentle" in prompt
+    assert prompt.count("a fox naps") == 1 and ".." not in prompt
+
+
+def test_a_card_motion_prompt_reveals_the_title_card() -> None:
+    settings = quick_settings(visuals={"motion_prompt": "{action}: {visual}, {mood}."})
+    assert motion_prompt(settings, None).endswith(
+        ". A gentle title card reveal: a title card, warm."
+    )
+
+
+@pytest.mark.parametrize(("legacy", "upgraded"), list(LEGACY_MOTION_PROMPTS.items()))
+def test_a_stored_legacy_default_motion_prompt_gains_the_action(legacy: str, upgraded: str) -> None:
+    visuals = quick_settings(visuals={"motion_prompt": legacy}).visuals
+    assert visuals.motion_prompt == upgraded and "{action}" in upgraded
 
 
 def test_the_judge_criteria_setting_reaches_the_judge(tmp_path: Path) -> None:
