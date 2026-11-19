@@ -54,7 +54,8 @@ class StoryWritingSettings(StructureShapeSettings):
         title="Ending",
         description="How a story ends. Story prompts, translations and the ending check follow "
         "it. Bundled stories drop the refrain when the ending has none, but keep the moral "
-        "their characters say.",
+        "their characters say. On an explainer, the first choice ends the recap with a takeaway "
+        "and the other two end it without one; an explainer never speaks a refrain.",
     )
     question_style: str = Field(
         default=QUESTION_STYLE,

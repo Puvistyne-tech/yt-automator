@@ -219,7 +219,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     A blank refrain is never asked for: the prompt's ending line then reads "The last scene says the moral word
     for word." (`moral_and_refrain`) or "Do not say the moral aloud; let the story show it." (`refrain_only`).
     Bundled stories get an empty refrain for `open`; they keep the moral their characters say, because it is
-    part of the written dialogue, and no gate runs on them.
+    part of the written dialogue, and no gate runs on them. The choice labels are the same for every
+    structure; the field description adds that on an explainer the first choice ends the recap with a
+    takeaway and the other two end it without one, and that an explainer never speaks a refrain.
   - `story.cast_per_episode` (0, the default, means the whole cast) and `story.lead_mode` (`fixed`: the first
     cast member leads; `per_episode`: the lead is picked from a hash of the run id, as stages have no episode
     counter, so a lead can repeat). The episode cast is the lead followed by the next cast members in cast

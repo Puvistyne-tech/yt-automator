@@ -6,6 +6,7 @@ from autotube.domain.pipeline_templates import PipelineTemplate
 from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import EndingStyle
+from autotube.pipelines.narrated_video.settings.story_controls import StoryWritingSettings
 from autotube.pipelines.narrated_video.story.checks import story_problems
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
 from autotube.pipelines.narrated_video.structures.registry import spec_of
@@ -68,3 +69,8 @@ def test_the_history_template_keeps_its_takeaway_and_names_it() -> None:
     problems = story_problems(explainer_story(moral=""), settings)
     assert 'write the takeaway in "moral"' in problems
     assert "says the takeaway word for word" in story_request(settings, "maps", "en").prompt
+
+
+def test_the_ending_field_says_what_each_choice_means_on_an_explainer() -> None:
+    description = StoryWritingSettings.model_fields["ending_style"].description or ""
+    assert "On an explainer" in description and "never speaks a refrain" in description
