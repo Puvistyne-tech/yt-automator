@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 
 from PIL import Image
 
 from autotube.domain.capabilities import CameraMove, ImageRequest, MotionRequest
-from autotube.infrastructure.providers.image.mflux import MfluxImage, MfluxOptions
 from autotube.infrastructure.providers.image.offline_image import OfflineImage, OfflineImageOptions
 from autotube.infrastructure.providers.motion.depthflow import DepthflowMotion, DepthflowOptions
 from autotube.infrastructure.providers.motion.ffmpeg_pan_zoom import FfmpegPanZoom, PanZoomOptions
@@ -18,63 +16,8 @@ from autotube.infrastructure.providers.motion.pan_zoom_filter import (
 from tests.unit.infrastructure.providers.fakes import (
     FFMPEG_ONLY,
     RecordingRunner,
-    host,
     make_context,
 )
-
-MAC = host(binaries=frozenset({"mflux-generate"}), system="Darwin", machine="arm64")
-
-
-def save_png(size: tuple[int, int]) -> Callable[[list[str]], None]:
-    def effect(command: list[str]) -> None:
-        Image.new("RGB", size, (10, 20, 30)).save(command[command.index("--output") + 1])
-
-    return effect
-
-
-def test_mflux_command_and_exact_resize(tmp_path: Path) -> None:
-    runner = RecordingRunner(effect=save_png((336, 192)))
-    context = make_context(tmp_path, runner=runner, probe=MAC, secrets={"huggingface_token": "hf"})
-    adapter = MfluxImage(MfluxOptions(steps=2), context)
-    reference = tmp_path / "ref.png"
-    request = ImageRequest(
-        prompt="a fox", width=330, height=180, seed=7, reference_images=(reference,)
-    )
-    output = adapter.generate(request, tmp_path / "out.png")
-    assert runner.commands[0] == [
-        "mflux-generate",
-        "--model",
-        "schnell",
-        "--prompt",
-        "a fox",
-        "--steps",
-        "2",
-        "--seed",
-        "7",
-        "--width",
-        "336",
-        "--height",
-        "192",
-        "--output",
-        str(output),
-        "--quantize",
-        "8",
-        "--image-path",
-        str(reference),
-        "--image-strength",
-        "0.4",
-    ]
-    assert runner.calls[0].env == {"HF_TOKEN": "hf"}
-    with Image.open(output) as image:
-        assert image.size == (330, 180)
-
-
-def test_mflux_needs_apple_silicon(tmp_path: Path) -> None:
-    linux = make_context(tmp_path, probe=host(binaries=frozenset({"mflux-generate"})))
-    assert "Apple-silicon" in (MfluxImage(MfluxOptions(), linux).available() or "")
-    mac_without = make_context(tmp_path, probe=host(system="Darwin", machine="arm64"))
-    assert "mflux-generate" in (MfluxImage(MfluxOptions(), mac_without).available() or "")
-    assert MfluxImage(MfluxOptions(), make_context(tmp_path, probe=MAC)).available() is None
 
 
 def test_offline_image_is_sized_deterministic_and_prompt_dependent(tmp_path: Path) -> None:

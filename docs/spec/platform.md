@@ -1131,6 +1131,16 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   set or `scene_text` reads as night; the art direction in the prompt never decides it. Without hints, the
   prompt words decide as before. Night darkens the hinted palette. The same seed gives the same picture; hints
   without colours keep the scene-derived palette.
+- The `mflux` image provider needs an Apple-silicon Mac. Its `model` option is `flux2-klein-4b` (default),
+  `schnell`, `dev` or `krea-dev`; stored options naming a FLUX.1 model stay valid. FLUX.2 klein runs
+  `<flux2_binary> --model <model_dir>` (default `mflux-generate-flux2` and
+  `~/.autotube/models/black-forest-labs__FLUX.2-klein-4B`, `~` expanded when used) with `HF_HUB_OFFLINE=1`,
+  and is unavailable when that command is not on PATH or the model folder does not exist. FLUX.1 models run
+  `<binary> --model <model>` (default `mflux-generate`) and are unavailable when that command is missing.
+  Both add `--prompt`, `--steps`, `--seed`, `--width` and `--height` (rounded up to `size_multiple`),
+  `--output`, `--quantize` when set, and `--image-path`/`--image-strength` (`reference_strength`) for the
+  first reference image; `HF_TOKEN` is set when the `huggingface_token` secret is. The result is fitted to the
+  exact request size.
 - `MotionRequest.held_frame_rate` (nullable, at least 1): when below `fps` the clip changes picture only that
   many times a second (a held, stop-motion feel) while keeping `fps`. The ffmpeg pan-and-zoom and LTX providers
   honour it; DepthFlow ignores it.
@@ -1212,6 +1222,12 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   narration join into one cue. A font whose name is unsafe, or none loading, means the configured
   fallback name with the letter width estimate; a script Pillow cannot shape keeps the font file for
   drawing and is measured by the estimate.
+- Kids story subtitle letters are sized from the frame, not in pixels: the font size is the frame height times
+  `subtitles.font_size_share` (episode, default 0.05) or `subtitles.short_font_size_share` (Short, default 0.05,
+  so 96 pixels in a 1080x1920 Short), times the language's `subtitles.font_scale` (default 1.0 for English and
+  1.1 for Tamil), rounded and never below 8. Lines are wrapped and measured at that size. Stored settings that
+  still hold the retired pixel keys `subtitles.font_size` or `subtitles.short_font_size` load with the keys
+  removed, so they take the frame shares.
 
 ## HTTP API
 

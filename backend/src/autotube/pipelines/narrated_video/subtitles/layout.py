@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from autotube.domain.video_look import SMALLEST_SUBTITLE_FONT_SIZE
 from autotube.pipelines.narrated_video.artifacts import SHORT
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.subtitles.subtitle_font import SubtitleFont, subtitle_font
@@ -22,11 +23,16 @@ class SubtitleLayout:
         return max(1, self.width - 2 * self.side_margin)
 
 
+def scaled_font_size(height: int, share: float, scale: float) -> int:
+    return max(SMALLEST_SUBTITLE_FONT_SIZE, round(height * share * scale))
+
+
 def subtitle_layout(settings: KidsStorySettings, language: str, variant: str) -> SubtitleLayout:
     subtitles = settings.subtitles
     short = variant == SHORT
     width, height = settings.video_size(variant)
-    size = subtitles.short_font_size if short else subtitles.font_size
+    share = subtitles.short_font_size_share if short else subtitles.font_size_share
+    size = scaled_font_size(height, share, subtitles.font_scale.for_language(language))
     bottom = subtitles.short_bottom_margin_share if short else subtitles.bottom_margin_share
     return SubtitleLayout(
         font=subtitle_font(subtitles, language, size),

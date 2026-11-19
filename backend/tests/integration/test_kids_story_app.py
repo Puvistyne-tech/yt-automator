@@ -43,7 +43,7 @@ SMALL_SETTINGS: dict[str, Any] = {
     "short": {"resolution": "360x640", "max_scenes": 1, "hook_line": False},
     "music": {"enabled": False},
     "sound_effects": {"enabled": False},
-    "subtitles": {"font_size": 24, "short_font_size": 30},
+    "subtitles": {"font_size_share": 0.067, "short_font_size_share": 0.047},
     "thumbnail": {"width": 640, "height": 360},
     "visuals": {
         "image_candidates": 1,
