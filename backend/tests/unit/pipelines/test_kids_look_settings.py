@@ -7,8 +7,8 @@ from pydantic import ValidationError
 
 from autotube.domain.machine_local import portable_settings
 from autotube.domain.video_look import SubtitlePosition, Transition, VideoQuality
-from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from tests.fixtures.look_rig import STORED_SETTINGS
 
 

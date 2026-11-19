@@ -7,23 +7,23 @@ import pytest
 
 from autotube.domain.quality import ScoreItem
 from autotube.domain.srt import SrtEntry
-from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
-from autotube.pipelines.kids_story.scoring.content_items import (
+from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
+from autotube.pipelines.narrated_video.scoring.content_items import (
     character_consistency,
     reading_level,
 )
-from autotube.pipelines.kids_story.scoring.inputs import ScoreInputs, gathered
-from autotube.pipelines.kids_story.scoring.measures import (
+from autotube.pipelines.narrated_video.scoring.inputs import ScoreInputs, gathered
+from autotube.pipelines.narrated_video.scoring.measures import (
     SubtitleRules,
     range_score,
     subtitle_track,
 )
-from autotube.pipelines.kids_story.scoring.output_items import (
+from autotube.pipelines.narrated_video.scoring.output_items import (
     completeness,
     loudness,
     metadata_limits,
 )
-from autotube.pipelines.kids_story.scoring.timing_items import (
+from autotube.pipelines.narrated_video.scoring.timing_items import (
     episode_duration,
     short_duration,
     speaking_rate,

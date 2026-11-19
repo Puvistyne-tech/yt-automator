@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.stages.music import effect_cues
-from autotube.pipelines.kids_story.stages.story import StoryStage
-from autotube.pipelines.kids_story.stages.voice import VoiceStage
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.stages.music import effect_cues
+from autotube.pipelines.narrated_video.stages.story import StoryStage
+from autotube.pipelines.narrated_video.stages.voice import VoiceStage
 from tests.fixtures.kids_data import (
     StageRig,
     meta_of,

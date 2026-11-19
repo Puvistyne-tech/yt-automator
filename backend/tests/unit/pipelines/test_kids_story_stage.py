@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Any
 
 from autotube.domain.capabilities import TextRequest
-from autotube.pipelines.kids_story.stages.story import StoryStage
-from autotube.pipelines.kids_story.story.authoring import StoryAuthor
+from autotube.pipelines.narrated_video.stages.story import StoryStage
+from autotube.pipelines.narrated_video.story.authoring import StoryAuthor
 from tests.fixtures.kids_data import (
     StageRig,
     english_text,

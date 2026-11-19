@@ -7,14 +7,14 @@ from pydantic import ValidationError
 
 from autotube.domain.capabilities import CameraMove
 from autotube.domain.image_style import Outline, Texture
-from autotube.pipelines.kids_story.settings.legacy_look import (
+from autotube.pipelines.narrated_video.settings.legacy_look import (
     LEGACY_ART_STYLE,
     LEGACY_NEGATIVE_PROMPT,
 )
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.styles.colour_names import colour_name, colour_words
-from autotube.pipelines.kids_story.styles.library import style_named
-from autotube.pipelines.kids_story.styles.modifiers import (
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.styles.colour_names import colour_name, colour_words
+from autotube.pipelines.narrated_video.styles.library import style_named
+from autotube.pipelines.narrated_video.styles.modifiers import (
     BACKGROUND_PROMPTS,
     DETAIL_PROMPTS,
     LIGHTING_PROMPTS,
@@ -23,8 +23,8 @@ from autotube.pipelines.kids_story.styles.modifiers import (
     STYLE_DEFAULT,
     ColourMood,
 )
-from autotube.pipelines.kids_story.styles.palette_mood import mood_palette, to_hsv
-from autotube.pipelines.kids_story.styles.resolve import (
+from autotube.pipelines.narrated_video.styles.palette_mood import mood_palette, to_hsv
+from autotube.pipelines.narrated_video.styles.resolve import (
     ResolvedStyle,
     joined_terms,
     resolve_style,

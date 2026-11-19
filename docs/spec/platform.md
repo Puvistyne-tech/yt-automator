@@ -165,6 +165,7 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   stored value, and an import replaces each of them with the importing pipeline's default, so paths never move
   between machines. A marked property whose parent object is missing stays missing.
 - `PipelineDescriptor` rejects a `ui_schema` with any problem, so a broken plugin fails when it is loaded.
+- The `narrated_video` plugin package (`pipelines/narrated_video/`) serves the `kids_story` pipeline type.
 - The kids story pipeline (`kids_story`, shown as "Kids story videos") carries no channel identity in its
   defaults: the series name defaults to "Story Time", the brand mark text is empty (no mark is drawn), and
   `{series}` is filled in with the automation's series name in the intro line, outro line, titles,
@@ -206,7 +207,7 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     `visuals.judge_criteria` replace the fixed motion and picture-judge wording. A motion prompt naming any
     other lowercase `{placeholder}` fails validation; `$`, `{}` and `{Visual}` pass through as written, as
     does any text in the judge criteria, tone and extra instructions.
-- Kids story visual styles. The style library is data: `pipelines/kids_story/styles/library.json`, validated by
+- Kids story visual styles. The style library is data: `pipelines/narrated_video/styles/library.json`, validated by
   `styles/library.py`. Each entry has `id`, `title`, `family` (animated, illustrated, drawn, crafted, graphic,
   realistic), `description` (one sentence), `prompt`, `negative_prompt`, `palette` (4 to 6 `#RRGGBB`, ordered
   backdrop or sky first, then land from far to near, accent last), `outline` (none, thin, bold), `texture`

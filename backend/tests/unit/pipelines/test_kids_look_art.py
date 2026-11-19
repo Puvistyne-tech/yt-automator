@@ -5,9 +5,9 @@ from pathlib import Path
 from PIL import Image, ImageChops
 
 from autotube.domain.capabilities import TextRequest
-from autotube.pipelines.kids_story.art.cards import card_lettering, card_lines, thumbnail_lines
-from autotube.pipelines.kids_story.art.lettering import lettered
-from autotube.pipelines.kids_story.settings.base import Placement
+from autotube.pipelines.narrated_video.art.cards import card_lettering, card_lines, thumbnail_lines
+from autotube.pipelines.narrated_video.art.lettering import lettered
+from autotube.pipelines.narrated_video.settings.base import Placement
 from tests.fixtures.kids_data import (
     StageRig,
     is_judge,

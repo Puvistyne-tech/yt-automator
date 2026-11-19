@@ -4,13 +4,13 @@ from typing import Any
 
 import pytest
 
-from autotube.pipelines.kids_story.settings.legacy_look import (
+from autotube.pipelines.narrated_video.settings.legacy_look import (
     LEGACY_ART_STYLE,
     LEGACY_NEGATIVE_PROMPT,
     migrated_look,
 )
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.styles.resolve import resolve_style
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.styles.resolve import resolve_style
 
 
 def old_series(**values: object) -> dict[str, Any]:

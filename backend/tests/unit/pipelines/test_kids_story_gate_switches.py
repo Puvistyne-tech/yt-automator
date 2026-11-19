@@ -4,9 +4,9 @@ from typing import Any
 
 import pytest
 
-from autotube.pipelines.kids_story.settings.story_choices import StoryCheck
-from autotube.pipelines.kids_story.story.gates import story_problems, translation_problems
-from autotube.pipelines.kids_story.story.model import Story
+from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck
+from autotube.pipelines.narrated_video.story.gates import story_problems, translation_problems
+from autotube.pipelines.narrated_video.story.model import Story
 from tests.fixtures.kids_data import quick_settings, story
 
 LAST = "Kavin felt warm and bright inside and smiled at all of his dear friends today."
