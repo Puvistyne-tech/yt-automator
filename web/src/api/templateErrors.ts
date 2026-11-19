@@ -25,9 +25,11 @@ export function templateConflictOf(error: unknown): TemplateConflict | null {
 }
 
 export const PREVIEW_UNAVAILABLE = "preview_unavailable";
+export const SUGGESTIONS_UNAVAILABLE = "suggestions_unavailable";
 
-export function previewUnavailableOf(error: unknown): string | null {
-  const unavailable =
-    error instanceof ApiError && error.status === 409 && error.code === PREVIEW_UNAVAILABLE;
+export type UnavailableCode = typeof PREVIEW_UNAVAILABLE | typeof SUGGESTIONS_UNAVAILABLE;
+
+export function unavailableMessageOf(error: unknown, code: UnavailableCode): string | null {
+  const unavailable = error instanceof ApiError && error.status === 409 && error.code === code;
   return unavailable ? error.message : null;
 }

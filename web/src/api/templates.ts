@@ -5,8 +5,10 @@ import type {
   DuplicateTemplateRequest,
   EngineSummary,
   SampleScript,
+  SuggestionRequest,
   TemplateInput,
   TemplatePreviewInput,
+  TemplateSuggestions,
   TemplateSummary,
 } from "@/api/types";
 
@@ -79,5 +81,12 @@ export function usePreviewTemplateScript() {
   return useMutation({
     mutationFn: (input: TemplatePreviewInput) =>
       api.post<SampleScript>("/templates/preview-script", input),
+  });
+}
+
+export function useSuggestTemplates() {
+  return useMutation({
+    mutationFn: (request: SuggestionRequest) =>
+      api.post<TemplateSuggestions>("/templates/suggestions", request),
   });
 }

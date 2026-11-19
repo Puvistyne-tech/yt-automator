@@ -12,11 +12,6 @@
   min-width: 0;
 }
 
-.template-badges {
-  flex-wrap: wrap;
-  gap: var(--space-1);
-}
-
 .template-actions {
   display: flex;
   align-items: center;

@@ -16,7 +16,7 @@ export interface TemplateItemActions {
 
 function TemplateBadges({ template }: { template: TemplateSummary }) {
   return (
-    <span className="row template-badges">
+    <span className="badge-row">
       {templateBadges(template).map((badge) => (
         <Badge key={badge.label} tone={badge.tone}>
           {badge.label}

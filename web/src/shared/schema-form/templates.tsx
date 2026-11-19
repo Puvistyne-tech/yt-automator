@@ -12,8 +12,10 @@ import {
   MoveUpButton,
   RemoveButton,
 } from "@/shared/schema-form/arrayButtons";
+import { isArrayItem, itemLabel } from "@/shared/schema-form/arrayItems";
 import { FieldChange } from "@/shared/schema-form/ChangeMarks";
 import { ObjectFieldTemplate } from "@/shared/schema-form/ObjectFieldTemplate";
+import { isLocked } from "@/shared/schema-form/widgetProps";
 import { BaseInputTemplate } from "@/shared/schema-form/widgets";
 import { Button } from "@/shared/ui/Button";
 
@@ -25,6 +27,13 @@ function isContainer(props: FieldTemplateProps): boolean {
 
 function FieldLabel(props: FieldTemplateProps) {
   const { id, label, required } = props;
+  if (isArrayItem(props.fieldPathId.path)) {
+    return (
+      <label className="visually-hidden" htmlFor={id} id={`${id}__label`}>
+        {itemLabel(label)}
+      </label>
+    );
+  }
   return (
     <label className="field-label" htmlFor={id} id={`${id}__label`}>
       {label}
@@ -120,13 +129,8 @@ function ArrayFieldTemplate(props: ArrayFieldTemplateProps) {
           {errors.join(" ")}
         </p>
       )}
-      {props.canAdd && (
-        <Button
-          size="sm"
-          icon="plus"
-          onClick={props.onAddClick}
-          disabled={props.disabled || props.readonly}
-        >
+      {props.canAdd && !isLocked(props) && (
+        <Button size="sm" icon="plus" onClick={props.onAddClick}>
           Add {itemTitleOf(props).toLowerCase()}
         </Button>
       )}
@@ -143,7 +147,7 @@ function ArrayFieldItemTemplate(props: ArrayFieldItemTemplateProps) {
   return (
     <div className="schema-array-item">
       <div className="schema-array-item-body">{props.children}</div>
-      {props.hasToolbar && (
+      {props.hasToolbar && !isLocked(props) && (
         <div className="schema-array-item-toolbar">
           <Buttons {...props.buttonsProps} />
         </div>

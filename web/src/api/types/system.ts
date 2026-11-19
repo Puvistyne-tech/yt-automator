@@ -43,6 +43,7 @@ export interface ProviderDescriptor {
   offline: boolean;
   available: boolean;
   unavailable_reason: string;
+  placeholder: boolean;
 }
 
 export interface ProvidersResponse {

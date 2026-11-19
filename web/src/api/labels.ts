@@ -7,6 +7,7 @@ import type {
   TemplateAudience,
   UploadStatus,
 } from "@/api/types";
+import type { RadioCardOption } from "@/shared/ui/RadioCards";
 import type { Tone } from "@/shared/ui/surfaces";
 
 export interface Label {
@@ -75,3 +76,15 @@ export const AUDIENCE_LABELS: Record<TemplateAudience, Label> = {
   kids: { label: "For kids", tone: "accent" },
   general: { label: "General audience", tone: "neutral" },
 };
+
+export const AUDIENCE_ORDER = Object.keys(AUDIENCE_LABELS) as TemplateAudience[];
+
+export function audienceOptions(
+  descriptions?: Record<TemplateAudience, string>,
+): RadioCardOption<TemplateAudience>[] {
+  return AUDIENCE_ORDER.map((value) => ({
+    value,
+    label: AUDIENCE_LABELS[value].label,
+    ...(descriptions === undefined ? {} : { description: descriptions[value] }),
+  }));
+}

@@ -51,13 +51,17 @@ function definitionErrors(schema: JsonObject, definition: JsonObject): Errors {
   ]);
 }
 
+export function missingEngineErrors(engine: string): Errors {
+  return { engine: `engine '${engine}' is not installed` };
+}
+
 export function engineErrors(
   state: MockState,
   input: Pick<TemplateInput, "engine" | "definition">,
 ): Errors {
   const engine = state.engines.find((candidate) => candidate.engine_id === input.engine);
   return engine === undefined
-    ? { engine: `engine '${input.engine}' is not installed` }
+    ? missingEngineErrors(input.engine)
     : definitionErrors(engine.definition_schema, input.definition);
 }
 

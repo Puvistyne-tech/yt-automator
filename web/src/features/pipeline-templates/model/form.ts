@@ -6,6 +6,7 @@ import type {
   PipelineTemplate,
   TemplateAudience,
   TemplateInput,
+  TemplateOrigin,
   TemplateStatus,
 } from "@/api/types";
 import { withFormDefaults } from "@/shared/schema-form/formDefaults";
@@ -17,6 +18,7 @@ export interface TemplateDraft {
   description: string;
   audience: TemplateAudience;
   status: TemplateStatus;
+  origin?: TemplateOrigin;
   definition: JsonObject;
 }
 
@@ -37,6 +39,17 @@ export function draftFromTemplate(template: PipelineTemplate): TemplateDraft {
     audience: template.audience,
     status: template.status,
     definition: structuredClone(template.definition),
+  };
+}
+
+export function draftFromInput(input: TemplateInput): TemplateDraft {
+  return {
+    name: input.name,
+    description: input.description,
+    audience: input.audience,
+    status: "draft",
+    ...(input.origin === undefined ? {} : { origin: input.origin }),
+    definition: structuredClone(input.definition),
   };
 }
 
