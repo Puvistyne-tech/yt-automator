@@ -2,11 +2,12 @@ import { HttpResponse, http } from "msw";
 import { automationRuleErrors } from "@/api/mocks/automationRules";
 import { db, EMPTY_VALUE_MESSAGE, noContent, notFound, validationFailed } from "@/api/mocks/db";
 import { makeRun, stagesWith } from "@/api/mocks/fixtures/factories";
+import { servedPipelines } from "@/api/mocks/templateRules";
 import type { Automation, AutomationInput } from "@/api/types";
 
 export function inputErrors(input: AutomationInput): Record<string, string> {
   const errors: Record<string, string> = {};
-  const pipeline = db.state.pipelines.find((p) => p.type_id === input.pipeline_type);
+  const pipeline = servedPipelines(db.state).find((p) => p.type_id === input.pipeline_type);
   if (input.name === "") {
     errors.name = EMPTY_VALUE_MESSAGE;
   }

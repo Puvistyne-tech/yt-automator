@@ -4,11 +4,12 @@ import type {
   Privacy,
   RunStatus,
   StageStatus,
+  TemplateAudience,
   UploadStatus,
 } from "@/api/types";
 import type { Tone } from "@/shared/ui/surfaces";
 
-interface Label {
+export interface Label {
   label: string;
   tone: Tone;
 }
@@ -69,3 +70,8 @@ export const PRIVACY_OPTIONS: { value: Privacy; label: string }[] = PRIVACY_ORDE
 export function privacyFromValue(value: string): Privacy | null {
   return PRIVACY_ORDER.find((privacy) => privacy === value) ?? null;
 }
+
+export const AUDIENCE_LABELS: Record<TemplateAudience, Label> = {
+  kids: { label: "For kids", tone: "accent" },
+  general: { label: "General audience", tone: "neutral" },
+};

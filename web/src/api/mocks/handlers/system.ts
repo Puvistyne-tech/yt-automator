@@ -2,6 +2,7 @@ import { HttpResponse, http } from "msw";
 import { db, EMPTY_VALUE_MESSAGE, noContent, notFound, validationFailed } from "@/api/mocks/db";
 import { providerConfigErrors } from "@/api/mocks/providerRules";
 import { settingsErrors } from "@/api/mocks/settingsRules";
+import { servedPipelines } from "@/api/mocks/templateRules";
 import { settingsInput } from "@/api/settingsFields";
 import type { AppSettings, Dashboard, ProviderConfig } from "@/api/types";
 
@@ -43,9 +44,9 @@ function setSecret(name: string, isSet: boolean) {
 export const systemHandlers = [
   http.get("/api/health", () => HttpResponse.json({ status: "ok", version: "0.1.0-mock" })),
   http.get("/api/dashboard", () => HttpResponse.json(dashboard())),
-  http.get("/api/pipelines", () => HttpResponse.json(db.state.pipelines)),
+  http.get("/api/pipelines", () => HttpResponse.json(servedPipelines(db.state))),
   http.get("/api/pipelines/:typeId", ({ params }) => {
-    const pipeline = db.state.pipelines.find((p) => p.type_id === params.typeId);
+    const pipeline = servedPipelines(db.state).find((p) => p.type_id === params.typeId);
     return pipeline ? HttpResponse.json(pipeline) : notFound("pipeline", params.typeId);
   }),
   http.get("/api/providers", () =>

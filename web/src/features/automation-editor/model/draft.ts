@@ -100,13 +100,15 @@ export function initialDraft(
   pipelines: PipelineDescriptor[],
   automation: Automation | undefined,
   timezone = "UTC",
+  preferredType?: string,
 ): AutomationDraft {
   if (automation !== undefined) {
     return draftFromAutomation(automation);
   }
   const only = pipelines.length === 1 ? pipelines[0] : undefined;
+  const chosen = pipelines.find((p) => p.type_id === preferredType) ?? only;
   const empty = emptyDraft(timezone);
-  return only === undefined ? empty : applyPipeline(empty, only);
+  return chosen === undefined ? empty : applyPipeline(empty, chosen);
 }
 
 export function newTarget(

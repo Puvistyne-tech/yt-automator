@@ -4,3 +4,4 @@ export type * from "@/api/types/common";
 export type * from "@/api/types/pipelines";
 export type * from "@/api/types/runs";
 export type * from "@/api/types/system";
+export type * from "@/api/types/templates";

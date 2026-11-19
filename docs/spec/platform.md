@@ -949,8 +949,9 @@ a missing path with an extension (such as `/assets/missing.js`) and any `/api` p
 
 ## UI
 
-Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `/runs`, `/runs/:id`,
-`/channels`, `/providers`, `/settings`.
+Routes: `/` dashboard, `/automations`, `/automations/new` (optional `?pipeline=<type id>` chooses that
+pipeline type when it is served), `/automations/:id`, `/pipelines`, `/pipelines/new`, `/pipelines/:id`,
+`/runs`, `/runs/:id`, `/channels`, `/providers`, `/settings`.
 
 - Automations list: name, pipeline, languages, targets, schedule, next run, last run status, enabled switch,
   actions (run now, edit, duplicate, export, delete with confirmation). Export downloads
@@ -975,6 +976,8 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   plain-language summary of the schedule and review rules, for example "Runs every 6 hours, 08:00 to 20:00,
   at most 2 a day. Publishes privately after you approve.", built by a pure function. When a target goes public
   at a time of day, the summary names it ("Goes public at 18:00 (Asia/Kolkata).").
+  Each pipeline type in the picker and in the saved automation's summary shows its audience badge: "For kids"
+  when its capabilities include `kids_content`, otherwise "General audience".
   A two-way toggle at the top switches between "Simple" (the default) and "All settings"; the choice is
   remembered per browser in localStorage (`autotube.editor.settings-view`), and an unavailable storage falls
   back to Simple. Simple shows, in Content, only the pipeline's `ui:basic` fields under their section titles
@@ -1006,6 +1009,27 @@ Routes: `/` dashboard, `/automations`, `/automations/new`, `/automations/:id`, `
   A "Run queued" toast (list or editor) links to the new run; a toast with an action stays until it is
   used or dismissed, other toasts close after five seconds. An unknown automation id shows a not-found
   state with a link back to Automations.
+- Pipelines (the UI's name for pipeline templates; nav item "Pipelines"): a list of every template, built-ins
+  first, each with its name, description, badges ("Built-in", "For kids" or "General audience", "Draft") and
+  "Used by <n> automations" (`automations_using`). Actions: "New automation" (ready templates only; opens
+  `/automations/new?pipeline=<type id>`), Edit (View for a built-in), Duplicate, and Delete (not offered for
+  built-ins). Duplicate opens a dialog with an optional name (empty sends no name, so the server adds
+  " (copy)") and the audience (the source's by default); success opens the copy, a refused name shows at the
+  field. Delete asks for confirmation; a 409 `template_in_use` keeps the dialog open and shows the server's
+  message, which names the automations and open runs. A 409 conflict (`template_in_use`, `template_builtin`,
+  `template_type_taken`) shows as a titled alert with the server's message; other failures show as a toast.
+- New pipeline (`/pipelines/new`): first "For kids" or "General audience", with the note that the audience
+  cannot be changed later (kids pipelines always upload as made for kids); "Continue" stays disabled until
+  one is chosen. Then the form: name (required, at most 80 characters after trimming, checked before
+  sending), description, the audience read-only, and the definition rendered by `SchemaForm` from the first
+  installed engine's `definition_schema` and `definition_ui_schema`, prefilled from `blank[audience]`. "Save
+  as draft" and "Save and make ready" send status `draft` or `ready`; success opens `/pipelines/:id`. Server
+  field errors show at their fields, definition errors (`definition.<path>`) inside the form.
+- Pipeline (`/pipelines/:id`): a user template opens the same form with the audience read-only, a "Ready to
+  use in automations" switch (draft or ready) and "Revision <n>"; "Save changes" keeps the chosen status. A
+  built-in opens read-only with "Duplicate to customise", which opens the duplicate dialog. An unknown id
+  shows "Pipeline not found" with a link back; a template whose engine is not installed shows a warning
+  instead of the form.
 - Run detail: live stage timeline, logs, score breakdown, approve or reject with notes, publish, retry from
   stage. A `status` event refetches the open run so score, score details and timestamps update live.
   Artifacts list final outputs first (kinds `video`, `thumbnail`, `subtitle`, `metadata` with a language),

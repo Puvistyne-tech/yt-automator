@@ -7,7 +7,15 @@ describe("App shell", () => {
 
     expect(screen.getByText("AutoTube")).toBeInTheDocument();
     const nav = within(screen.getByRole("navigation", { name: "Main" }));
-    for (const name of ["Dashboard", "Automations", "Runs", "Channels", "Providers", "Settings"]) {
+    for (const name of [
+      "Dashboard",
+      "Automations",
+      "Pipelines",
+      "Runs",
+      "Channels",
+      "Providers",
+      "Settings",
+    ]) {
       expect(nav.getByRole("link", { name: new RegExp(name) })).toBeInTheDocument();
     }
     expect(await screen.findByRole("heading", { level: 1, name: "Dashboard" })).toBeInTheDocument();
@@ -19,6 +27,7 @@ describe("App shell", () => {
     ["/providers", "Providers"],
     ["/settings", "Settings"],
     ["/automations", "Automations"],
+    ["/pipelines", "Pipelines"],
   ])("renders %s with its page heading", async (route, heading) => {
     renderApp(route);
 
