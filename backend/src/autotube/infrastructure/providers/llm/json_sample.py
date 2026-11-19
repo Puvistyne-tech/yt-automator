@@ -80,9 +80,16 @@ def array_sample(schema: Schema, slot: Slot, context: SampleContext) -> JsonValu
     count = max(int(schema.get("minItems", 0)), context.array_items)
     if "maxItems" in schema:
         count = min(count, int(schema["maxItems"]))
-    item = schema.get("items", {})
     name = slot.name[:-1] if slot.name.endswith("s") else slot.name
-    return [sample(item, context, Slot(name, index)) for index in range(count)]
+    return [
+        sample(item_schema(schema, index), context, Slot(name, index)) for index in range(count)
+    ]
+
+
+def item_schema(schema: Schema, index: int) -> Schema:
+    prefix: list[Schema] = schema.get("prefixItems", [])
+    fallback: Schema = schema.get("items", {})
+    return prefix[index] if index < len(prefix) else fallback
 
 
 def boolean_sample(schema: Schema, slot: Slot, context: SampleContext) -> JsonValue:
