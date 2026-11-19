@@ -1,5 +1,6 @@
 import { api } from "@/api/client";
 import { db } from "@/api/mocks/db";
+import { narratedEngine } from "@/api/mocks/fixtures/templateEngine";
 import { copyName, servedPipelines } from "@/api/mocks/templateRules";
 import { DELETE_REMEDY, isOpenRun } from "@/api/mocks/templateUsage";
 import type { PipelineDescriptor, RunStatus, TemplateSummary } from "@/api/types";
@@ -86,6 +87,16 @@ describe("mock template handlers", () => {
     const copy = await api.post<TemplateSummary>("/templates/history-five/duplicate");
     expect(copy).toMatchObject({ audience: "general", type_id: `t_${copy.id}` });
     expect(copyName(`  ${"y".repeat(72)}  z`)).toBe(`${"y".repeat(72)} (copy)`);
+  });
+
+  it("seeds only definitions the engine schema accepts", async () => {
+    const templates = await api.get<TemplateSummary[]>("/templates");
+    const known = Object.keys(narratedEngine.definition_schema.properties as object);
+    for (const template of templates) {
+      expect(known).toEqual(expect.arrayContaining(Object.keys(template.definition)));
+      const saved = api.post("/templates", { ...TEMPLATE_INPUT, definition: template.definition });
+      await expect(saved).resolves.toMatchObject({ definition: template.definition });
+    }
   });
 
   it("serves ready templates as pipeline types with their audience", async () => {

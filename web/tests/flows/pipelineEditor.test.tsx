@@ -23,7 +23,7 @@ async function fillBasics(user: User, name: string, brief: string) {
 describe("Pipeline editor: create", () => {
   it("creates a kids pipeline as a draft from the kids blank", async () => {
     const { user, router } = await startNew("For kids");
-    expect(screen.getByLabelText("Structure")).toHaveDisplayValue("Story with characters");
+    expect(screen.getByRole("combobox", { name: "Structure" })).toHaveDisplayValue("Story");
     expect(screen.getByText("For kids")).toBeInTheDocument();
 
     await fillBasics(user, "Animal friends", "Short stories about animals helping each other.");
@@ -32,7 +32,10 @@ describe("Pipeline editor: create", () => {
     await findToast("Saved “Animal friends”.");
     const saved = stored("Animal friends");
     expect(saved).toMatchObject({ audience: "kids", status: "draft", origin: "blank" });
-    expect(saved?.definition).toMatchObject({ structure: "story", tone: "calm" });
+    expect(saved?.definition).toMatchObject({
+      structure: "story",
+      brief: "Short stories about animals helping each other.",
+    });
     await waitFor(() => expect(pathOf(router)).toBe(`/pipelines/${saved?.id}`));
   });
 
@@ -44,7 +47,7 @@ describe("Pipeline editor: create", () => {
 
     await findToast("Saved “Ocean wonders”.");
     expect(stored("Ocean wonders")).toMatchObject({ audience: "general", status: "ready" });
-    expect(stored("Ocean wonders")?.definition).toMatchObject({ structure: "explainer" });
+    expect(stored("Ocean wonders")?.definition).toMatchObject({ brief: "Facts about the sea." });
   });
 
   it("asks for a name before saving and shows server errors at their fields", async () => {
