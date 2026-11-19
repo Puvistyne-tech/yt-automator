@@ -1241,6 +1241,11 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   262144), plus `format` set to `TextRequest.json_schema` when there is one. Without `num_ctx` Ollama ran the
   model at its maximum context (131072 for gemma3:12b). 16384 holds the long explainer's prompt, the
   rejected script a retry carries and an answer of `story.max_tokens`.
+- Text providers send a JSON schema at one of two levels (`domain/schema_levels.py::schema_at`). `full`
+  (Ollama) sends it unchanged. `portable` (Gemini, Groq) drops `prefixItems`, `const`, `minLength` and
+  `maxLength`, keeps `required`, `minItems` and `maxItems`, and turns `prefixItems` into one `items` schema
+  taken from the first shape, without that shape's own `minItems`/`maxItems`. The story gates still check
+  every shape the portable schema leaves out.
 - `MotionRequest.held_frame_rate` (nullable, at least 1): when below `fps` the clip changes picture only that
   many times a second (a held, stop-motion feel) while keeping `fps`. The ffmpeg pan-and-zoom and LTX providers
   honour it; DepthFlow ignores it.

@@ -6,11 +6,14 @@ import httpx
 from pydantic import Field
 
 from autotube.domain.capabilities import Capability, TextRequest
+from autotube.domain.schema_levels import SchemaLevel, schema_at
 from autotube.infrastructure.providers.context import ProviderContext
 from autotube.infrastructure.providers.http_retry import HttpOptions, post_provider_json
 from autotube.infrastructure.providers.json_response import dig
 from autotube.infrastructure.providers.llm.image_payload import image_base64
 from autotube.infrastructure.providers.spec import ProviderSpec
+
+SCHEMA_LEVEL: SchemaLevel = "full"
 
 
 class OllamaOptions(HttpOptions):
@@ -64,7 +67,7 @@ def ollama_payload(request: TextRequest, model: str, context_tokens: int) -> dic
         },
     }
     if request.json_schema is not None:
-        payload["format"] = request.json_schema
+        payload["format"] = schema_at(request.json_schema, SCHEMA_LEVEL)
     return payload
 
 

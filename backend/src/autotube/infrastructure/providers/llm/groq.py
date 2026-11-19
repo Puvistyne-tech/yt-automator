@@ -5,6 +5,7 @@ from typing import Any, Literal
 from pydantic import Field
 
 from autotube.domain.capabilities import Capability, TextRequest
+from autotube.domain.schema_levels import SchemaLevel, schema_at
 from autotube.infrastructure.providers.context import ProviderContext
 from autotube.infrastructure.providers.http_retry import HttpOptions, post_provider_json
 from autotube.infrastructure.providers.json_response import dig
@@ -12,6 +13,7 @@ from autotube.infrastructure.providers.llm.image_payload import reject_images
 from autotube.infrastructure.providers.spec import ProviderSpec
 
 SECRET = "groq_api_key"
+SCHEMA_LEVEL: SchemaLevel = "portable"
 
 
 class GroqOptions(HttpOptions):
@@ -39,7 +41,7 @@ def response_format(request: TextRequest, mode: str) -> dict[str, Any] | None:
         return None
     if mode == "json_object":
         return {"type": "json_object"}
-    schema = {"name": "response", "schema": request.json_schema}
+    schema = {"name": "response", "schema": schema_at(request.json_schema, SCHEMA_LEVEL)}
     return {"type": "json_schema", "json_schema": schema}
 
 
