@@ -45,7 +45,8 @@ class ThumbnailSettings(SettingsSection):
         "{title}",
         "Thumbnail text",
         "Text drawn on the thumbnail per language, one line per row; {title} {series} {moral} "
-        "and {hook} are filled in.",
+        "and {hook} are filled in. {moral} is the story's moral and is left empty for other "
+        "formats.",
     )
     candidates: int = Field(
         default=1,
