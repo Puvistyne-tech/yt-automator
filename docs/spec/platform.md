@@ -892,6 +892,13 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   rejected script as compact JSON (the `StoryDraft` fields only) and asks the writer to edit it rather than
   start over; when it did not parse, `story_retry.txt` with the checks only. Only the previous attempt's
   checks are sent.
+- A rejected story attempt logs `warning` "story attempt N failed checks (W words, S scenes, about T s):
+  <checks>" (or "(an answer of C characters that is not a script)") and is saved in the run workspace as
+  `story/attempt-<N>-<language>.json` (`story/attempts.py::attempt_record`): `attempt`, `language`,
+  `failed_checks`, and `script` (the `StoryDraft` fields) or, when the answer did not parse, `answer` (the raw
+  text). They hold only model output and check messages, never settings or secrets, are not artifacts, and
+  go with the workspace under storage cleanup (intermediate files and run deletion). Accepted attempts and
+  template samples write no file.
 - Slip repair (`story.repair_slips`, default true, "Repair small slips", shown only in the full form): when a
   written script in the writing language fails any check, `story/repairing.py::repaired_script(story,
   settings)` runs the structure's `repairs` (each a pure `(story, settings) -> (story, notes)`), then every gate

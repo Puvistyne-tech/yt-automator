@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
 from autotube.domain.capabilities import TextRequest
 from autotube.pipelines.narrated_video.stages.story import StoryStage
 from autotube.pipelines.narrated_video.story.answer_schema import draft_schema
+from autotube.pipelines.narrated_video.story.attempts import attempt_record
 from autotube.pipelines.narrated_video.story.authoring import StoryAuthor
 from tests.fixtures.kids_data import REFRAIN_EN, StageRig, is_translation, meta_of, quick_settings
-from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, LogBook, as_json
+from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, LogBook, as_json, scripted_writer
 from tests.fixtures.script_builders import scripted_draft
 from tests.fixtures.shaped_scripts import narration
 
@@ -68,6 +70,42 @@ def test_the_mac_failure_pattern_now_ends_in_a_written_story(tmp_path: Path) -> 
     english = (tmp_path / "story" / "story-en.json").read_text(encoding="utf-8")
     assert f"{MORAL} {REFRAIN_EN}" in english
     assert {item.language for item in meta_of(rig, "story")} == {"en", "ta"}
+
+
+def test_a_rejected_attempt_is_logged_with_its_measures_and_kept_in_the_workspace(
+    tmp_path: Path,
+) -> None:
+    writer = replay_writer([draft(34, ""), draft(24, MORAL)])
+    rig = StageRig(tmp_path, settings=mac_settings(), providers=FakeProviders(writer=writer))
+    rig.run(StoryStage())
+    assert any(
+        "story attempt 1 failed checks (170 words, 5 scenes, about 85 s)" in line
+        for line in rig.logs
+    )
+    record = json.loads((tmp_path / "story" / "attempt-1-en.json").read_text(encoding="utf-8"))
+    assert set(record) == {"attempt", "language", "failed_checks", "script"}
+    assert "too long: 170 words, use at most 160" in record["failed_checks"][0]
+    assert record["script"]["moral"] == "" and len(record["script"]["scenes"]) == SCENES
+    assert not (tmp_path / "story" / "attempt-2-en.json").exists()
+
+
+def test_an_unreadable_answer_is_kept_as_text() -> None:
+    kept: list[dict[str, Any]] = []
+    settings = mac_settings(max_attempts=1)
+    writer = scripted_writer(["no json here"])
+    author = StoryAuthor(
+        writer, settings, LogBook(), keep=lambda attempt: kept.append(attempt_record(attempt))
+    )
+    assert author.written("sharing", "en") is None
+    assert kept == [
+        {
+            "attempt": 1,
+            "language": "en",
+            "failed_checks": ["answer with one JSON object"],
+            "answer": "no json here",
+        }
+    ]
+    assert "an answer of 12 characters that is not a script" in author.failures[-1]
 
 
 def test_without_repair_the_same_answers_fall_back(tmp_path: Path) -> None:

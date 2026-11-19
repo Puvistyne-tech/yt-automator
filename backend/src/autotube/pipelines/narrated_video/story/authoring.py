@@ -8,7 +8,12 @@ from autotube.domain.capabilities import Capability, TextGenerator, TextRequest
 from autotube.domain.pipeline import ProviderResolver, StageLog
 from autotube.domain.run_enums import LogLevel
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.story.attempts import Attempt
+from autotube.pipelines.narrated_video.story.attempts import (
+    Attempt,
+    AttemptKeeper,
+    attempt_measures,
+    ignore_attempt,
+)
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
 from autotube.pipelines.narrated_video.story.model import Story, StoryDraft, StoryText, with_text
 from autotube.pipelines.narrated_video.story.parsing import StoryFormatError, parse_model
@@ -32,6 +37,7 @@ class StoryAuthor:
     settings: KidsStorySettings
     log: StageLog
     seed: str = ""
+    keep: AttemptKeeper = ignore_attempt
     failures: list[str] = field(default_factory=list)
 
     def failed(self, message: str) -> None:
@@ -71,7 +77,10 @@ class StoryAuthor:
         return replace(attempt, story=fixed, problems=(), repairs=notes)
 
     def rejected(self, attempt: Attempt) -> None:
-        self.failed(f"story attempt {attempt.number} failed checks: {'; '.join(attempt.problems)}")
+        measures = attempt_measures(attempt, self.settings)
+        checks = "; ".join(attempt.problems)
+        self.failed(f"story attempt {attempt.number} failed checks ({measures}): {checks}")
+        self.keep(attempt)
 
     def written(self, theme: str, language: str) -> Story | None:
         last: Attempt | None = None
@@ -105,9 +114,10 @@ def authored_scripts(
     seed: str,
     theme: str,
     order: Sequence[str],
+    keep: AttemptKeeper = ignore_attempt,
 ) -> Written:
     llm = providers.resolve(Capability.LLM)
-    author = StoryAuthor(llm, settings, log, seed)
+    author = StoryAuthor(llm, settings, log, seed, keep)
     stories = all_languages(author, theme, order)
     if stories is None:
         raise ScriptRejectedError(author.failures[-1])

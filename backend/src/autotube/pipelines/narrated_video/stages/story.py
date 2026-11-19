@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import partial
 
 from autotube.domain.pipeline import NewArtifact, StageContext, StageOutcome
 from autotube.domain.pipeline_descriptors import StageDescriptor
@@ -12,6 +13,11 @@ from autotube.pipelines.narrated_video.settings.story import StorySource
 from autotube.pipelines.narrated_video.settings.story_choices import says_refrain
 from autotube.pipelines.narrated_video.stages.media_types import JSON
 from autotube.pipelines.narrated_video.stages.run_settings import kids_settings
+from autotube.pipelines.narrated_video.story.attempts import (
+    Attempt,
+    attempt_filename,
+    attempt_record,
+)
 from autotube.pipelines.narrated_video.story.authoring import (
     ScriptRejectedError,
     WriterUnavailableError,
@@ -102,8 +108,9 @@ class StoryStage:
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
     ) -> Written | str:
         try:
+            keep = partial(self.kept_attempt, context)
             return authored_scripts(
-                context.providers, settings, context.log, context.run_id, theme, order
+                context.providers, settings, context.log, context.run_id, theme, order, keep
             )
         except ScriptRejectedError as error:
             return f"the last {error}"
@@ -130,6 +137,9 @@ class StoryStage:
             for language in order
         }
         return stories, BUNDLED_PROVIDER
+
+    def kept_attempt(self, context: StageContext, attempt: Attempt) -> None:
+        write_json(folder(context, "story") / attempt_filename(attempt), attempt_record(attempt))
 
     def saved(self, context: StageContext, story: Story) -> NewArtifact:
         path = folder(context, "story") / f"story-{story.language}.json"

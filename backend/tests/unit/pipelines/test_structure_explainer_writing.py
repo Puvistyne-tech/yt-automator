@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -77,10 +78,12 @@ def test_a_rejected_general_explainer_names_the_last_failed_checks(tmp_path: Pat
     rig = stage_rig(tmp_path, GENERAL, FakeProviders(writer=scripted_writer([as_json(draft)] * 3)))
     with pytest.raises(ScriptUnavailableError, match="never falls back") as raised:
         rig.run(StoryStage())
-    assert (
-        "; the last story attempt 3 failed checks: open the first scene with the question"
-        in str(raised.value)
-    )
+    message = str(raised.value)
+    assert "; the last story attempt 3 failed checks (" in message
+    assert "8 scenes, about " in message and "): open the first scene with the question" in message
+    record = json.loads((tmp_path / "story" / "attempt-3-en.json").read_text(encoding="utf-8"))
+    assert record["failed_checks"][0].startswith("open the first scene")
+    assert record["script"]["scenes"][0]["narration"] == HOOKLESS
 
 
 @pytest.mark.parametrize("audience", [KIDS, GENERAL])
