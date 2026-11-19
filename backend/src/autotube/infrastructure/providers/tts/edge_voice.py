@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from autotube.domain.capabilities import (
     Capability,
@@ -30,12 +31,26 @@ class EdgeTtsOptions(FfmpegBinaryOptions):
         title="Voices by language",
         description="Edge neural voice for each language code, unless the request names a voice.",
     )
+    voice_pattern: str = Field(
+        default=r"^[a-z]{2,}-[A-Z]{2,}-.+Neural$",
+        title="Voice name pattern",
+        description="Regular expression every Edge voice name matches; other voices are refused.",
+    )
     sample_rate: int = Field(
         default=24000, ge=8000, le=96000, title="Sample rate", description="WAV rate in Hz."
     )
     timeout_seconds: float = Field(
         default=120.0, gt=0, title="Timeout", description="Seconds allowed for the conversion."
     )
+
+    @field_validator("voice_pattern")
+    @classmethod
+    def compiles(cls, value: str) -> str:
+        try:
+            re.compile(value)
+        except re.error as error:
+            raise ValueError(f"not a regular expression: {error}") from error
+        return value
 
 
 def edge_rate(speed: float) -> str:
@@ -77,6 +92,8 @@ class EdgeTtsSpeech:
         )
 
     def voice_for(self, request: SpeechRequest) -> str:
+        if request.voice and not re.fullmatch(self.options.voice_pattern, request.voice):
+            raise UpstreamFailure(f"edge_tts has no voice {request.voice!r}", "voice_unknown")
         voice = request.voice or lookup_language(self.options.voices, request.language)
         if not voice:
             raise UpstreamFailure(f"edge_tts has no voice configured for {request.language!r}")
