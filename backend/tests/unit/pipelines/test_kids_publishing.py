@@ -102,7 +102,7 @@ def test_upload_metadata_uses_templates_per_variant() -> None:
         ("ta", {}, "இரவுக் கதைகள்"),
         ("en", {"en": "", "ta": ""}, ""),
         ("en", {"en": "Bedtime picks", "ta": ""}, "Bedtime picks"),
-        ("ta", {"en": "", "ta": "{series} - {nope}"}, "இரவுக் கதைகள் - {nope}"),
+        ("ta", {"en": "", "ta": "{series} - {nope}"}, "இரவுக் கதைகள் - "),
     ],
 )
 def test_playlist_title_fills_in_the_series_name(

@@ -14,7 +14,7 @@ from autotube.pipelines.narrated_video.publishing.limits import (
 from autotube.pipelines.narrated_video.publishing.templates import template_values
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.model import Story
-from autotube.pipelines.narrated_video.text.templates import render_template
+from autotube.pipelines.narrated_video.text.templates import filled_template
 
 
 class UploadMetadata(BaseModel):
@@ -35,8 +35,8 @@ def upload_metadata(story: Story, settings: KidsStorySettings, variant: str) -> 
     metadata = settings.metadata
     values = template_values(story, settings)
     title_template = metadata.short_title_template if variant == SHORT else metadata.title_template
-    title = render_template(title_template.for_language(language), values)
-    description = render_template(metadata.description_template.for_language(language), values)
+    title = filled_template(title_template.for_language(language), values)
+    description = filled_template(metadata.description_template.for_language(language), values)
     return UploadMetadata(
         title=truncated(cleaned(title), TITLE_MAX),
         description=truncated_bytes(cleaned(description), DESCRIPTION_MAX_BYTES),
@@ -45,5 +45,5 @@ def upload_metadata(story: Story, settings: KidsStorySettings, variant: str) -> 
         category_id=metadata.category.value,
         default_language=language,
         made_for_kids=settings.safety.for_kids,
-        playlist_title=render_template(metadata.playlist_title.for_language(language), values),
+        playlist_title=filled_template(metadata.playlist_title.for_language(language), values),
     )

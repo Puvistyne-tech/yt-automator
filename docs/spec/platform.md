@@ -185,7 +185,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   defaults: the series name defaults to "Story Time", the brand mark text is empty (no mark is drawn), and
   `{series}` is filled in with the automation's series name in the intro line, outro line, titles,
   descriptions and playlist title; the intro and outro lines take the same placeholders as the description,
-  and unknown placeholders stay as written. The series name must not be blank in any language. When no bundled story
+  and any placeholder the structure does not supply (including an unknown one) is left empty there, in titles,
+  descriptions, playlist titles and the card and thumbnail text (`text/templates.py::filled_template`). The series name must not be blank in any language. When no bundled story
   fits the automation's cast ids and languages, the story stage fails naming both what the automation has
   and what the bundled stories need.
 - Kids story writing, voice and sound controls. Every default renders the translation, motion and judge
@@ -751,8 +752,11 @@ StructureSpec   id, title, system_prompt, user_prompt (prompt file names; the sy
 #### Problems
 
 `engine.problems(template)` returns, keyed by field path: definition validation errors (`definition.<field>`);
-an unknown style (`definition.visual_style`, reported alone); unknown placeholders in the metadata templates
-(`definition.title_template` and so on; the placeholders are those of `publishing/templates.py`); `ui:basic`
+an unknown style (`definition.visual_style`, reported alone); placeholders the structure does not supply in the
+metadata templates (`definition.title_template`, `definition.short_title_template`,
+`definition.description_template`, and the overlay's `definition.settings.metadata.<field>` for those and
+`playlist_title`; the message names the field, the unknown placeholders and the usable ones, the common
+placeholders plus the structure's; see Structures); `ui:basic`
 and `ui:hidden` rule failures against the derived ui schema (`definition.basic`, `definition.hidden`); overlay
 validation errors (`definition.settings.<path>`); term screen hits (see Audience); and `engine` for a
 foreign template. An invalid definition returns only its own errors.

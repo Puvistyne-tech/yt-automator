@@ -10,5 +10,9 @@ def render_template(template: str, values: Mapping[str, str]) -> str:
     return PLACEHOLDER.sub(lambda match: values.get(match.group(1), match.group(0)), template)
 
 
+def filled_template(template: str, values: Mapping[str, str]) -> str:
+    return PLACEHOLDER.sub(lambda match: values.get(match.group(1), ""), template)
+
+
 def unknown_placeholders(template: str, known: frozenset[str]) -> list[str]:
     return sorted(set(PLACEHOLDER.findall(template)) - known)
