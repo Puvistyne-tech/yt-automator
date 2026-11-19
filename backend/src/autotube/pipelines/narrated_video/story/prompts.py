@@ -18,6 +18,8 @@ from autotube.pipelines.narrated_video.story.prompt_parts import (
 )
 from autotube.pipelines.narrated_video.structures.registry import spec_of
 
+NO_RECURRING_CHARACTERS = "none, there are no recurring characters"
+
 
 def reading_level_text(settings: KidsStorySettings) -> str:
     levels = resource_json("prompts", "reading_levels.json")
@@ -26,8 +28,9 @@ def reading_level_text(settings: KidsStorySettings) -> str:
 
 
 def story_system(settings: KidsStorySettings, language: str) -> str:
+    spec = spec_of(settings)
     return render_prompt(
-        audience_prompt(spec_of(settings).system_prompt, settings),
+        audience_prompt(spec.system_prompt, settings),
         series=settings.series.name.for_language(language),
         tagline=settings.series.tagline.for_language(language),
         age_min=settings.story.age_min,
@@ -36,6 +39,7 @@ def story_system(settings: KidsStorySettings, language: str) -> str:
         rules=bullet_lines(settings.series.editorial_rules),
         avoid_topics=avoided_topics(settings.safety.avoid_topics),
         reading_level=reading_level_text(settings),
+        **spec.prompt_values(settings, language, ""),
     )
 
 
@@ -112,7 +116,7 @@ def translation_user(
         scene_count=len(text.narrations),
         question_count=len(text.questions),
         ending_rules=spec_of(settings).translation_rules(settings, target),
-        names=names,
+        names=names or NO_RECURRING_CHARACTERS,
         story=json.dumps(text.model_dump(mode="json"), ensure_ascii=False, indent=2),
     )
 

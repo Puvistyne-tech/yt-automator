@@ -1,0 +1,36 @@
+{
+  "series": {
+    "refrain": {
+      "en": "",
+      "ta": ""
+    }
+  },
+  "cast": [],
+  "story": {
+    "themes": [
+      "how a rainbow forms",
+      "why leaves change colour",
+      "how bees make honey",
+      "why the moon changes shape",
+      "how a seed becomes a plant",
+      "where rain comes from"
+    ],
+    "fixed_theme": "how a rainbow forms",
+    "morals": [],
+    "question_style": "\"Do you remember?\" style questions about what the video explained"
+  },
+  "metadata": {
+    "description_template": {
+      "en": "{title}\n\nA short explainer from {series} about {theme}. {tagline}.\n\nThe takeaway: {takeaway}\n\nTest yourself:\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் ஒரு சிறு விளக்கம்: {theme}. {tagline}.\n\nநினைவில் கொள்ள: {takeaway}\n\n{questions}\n\n{hashtags}"
+    },
+    "tags": {
+      "en": ["explainers", "how things work", "learn something new", "animated explainers"],
+      "ta": ["தமிழ் விளக்கங்கள்", "எப்படி வேலை செய்கிறது", "Tamil explainers"]
+    },
+    "hashtags": {
+      "en": ["#Explainers", "#HowThingsWork", "#LearnSomethingNew"],
+      "ta": ["#தமிழ்விளக்கம்", "#Explainers", "#HowThingsWork"]
+    }
+  }
+}

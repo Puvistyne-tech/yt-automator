@@ -211,7 +211,7 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   - `story.question_style`, `short.hook_style` and `story.translation_style` replace the fixed wording of the
     questions, the hook line and the translation register.
   - `story.enabled_checks`: the story checks that run (`scene_count`, `words_per_scene`, `duration`,
-    `ending`, `reading_level`, `cast`; default all), published as an array of `oneOf` items with
+    `ending`, `reading_level`, `cast`, `structure`; default all), published as an array of `oneOf` items with
     `uniqueItems` and shown as checkboxes. Banned words and brand names are child-safety checks: they always
     run and cannot be listed. Translations run the ending check only when it is enabled.
   - `sound_effects.max_per_scene` (default 2) is stated in the prompt ("zero to two…", or "always an empty
@@ -616,7 +616,7 @@ class PipelineEngine(Protocol):
 
 | Field | Type | Maps to |
 | --- | --- | --- |
-| `structure` | `story` (default; more structures are added as enum members) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
+| `structure` | `story` (default) \| `explainer` (see Structures) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
 | `brief` | text, at most 2000 | `story.extra_instructions` as "Every video is about: <brief>" |
 | `length` | `short` \| `standard` (default) \| `long` | short: 60 s ±15, 4–6 scenes; long: 300 s ±45, 14–18 scenes; standard changes nothing |
 | `tone` | text | `story.tone` |
@@ -728,6 +728,25 @@ StructureSpec   id, title, system_prompt, user_prompt (prompt file names; the sy
   gates; ending translation gate; `moral_and_refrain` and `character_consistency` score items; placeholders
   `{moral} {characters} {refrain}`; bundled fallback. Its cast needs at least one member (validated on the
   settings, "a story needs at least one cast member"); other structures may have an empty cast.
+- `explainer`: a narrated explanation of one topic with no recurring characters. Prompts `script_system.txt`
+  (kids: the same age range, "a parent is happy to play for a small child" and reading-level lines as the story
+  prompt) or `script_system_general.txt`, and `script_user.txt` with the `explainer.txt` fragment: the first
+  scene asks the question the video answers, the middle scenes explain it, the last scene recaps and says the
+  takeaway word for word; `moral` holds the takeaway; `characters` is empty and `speaker` is the narrator.
+  Gate (check `structure`, in `story.enabled_checks`): the first narration contains a question mark ("open the
+  first scene with the question this video answers") and the last scene contains the takeaway ("say the
+  takeaway, word for word, in the last scene"); translations run the same gate, and their prompt names no
+  characters ("none, there are no recurring characters"). The ending and cast gates do not run, and the
+  `moral_and_refrain` and `character_consistency` score items are not scored; the `structure` item ("Explainer
+  hook and takeaway", weight `quality.weights.structure`, default 1.5) scores the explainer gate the way the
+  ending item does. Placeholder `{takeaway}`. No bundled fallback: `story.source` is pinned to
+  `llm_with_fallback`, and when the writer fails the story stage fails ("…explainer scripts have no bundled
+  fallback" for kids, the general message for general). Defaults (`structures/explainer_defaults.json`): an
+  empty cast and refrain, explainer topics as themes, no morals, a "Do you remember?" question style, and an
+  explainer description (with `{takeaway}`), tags and hashtags, all free of child-directed terms. Hidden paths:
+  `cast`, `story.morals`, `story.ending_style`, `story.ending_scenes`, `story.lead_mode`,
+  `story.cast_per_episode`, `series.refrain`, `visuals.character_sheets`, `quality.weights.moral_and_refrain`,
+  `quality.weights.character_consistency`, and `story.source`.
 
 #### Problems
 

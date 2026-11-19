@@ -29,6 +29,7 @@ class ScoreWeights(SettingsSection):
     reading_level: float = weight(1.0, "Reading level")
     moral_and_refrain: float = weight(1.5, "Moral and refrain")
     character_consistency: float = weight(1.0, "Character consistency")
+    structure: float = weight(1.5, "Structure")
     metadata_limits: float = weight(1.0, "Metadata limits")
     loudness: float = weight(0.5, "Loudness")
     completeness: float = weight(2.0, "Every output present")

@@ -7,6 +7,7 @@ from autotube.pipelines.narrated_video.settings.choices import checkbox_choices,
 
 class Structure(StrEnum):
     STORY = "story"
+    EXPLAINER = "explainer"
 
 
 class EndingStyle(StrEnum):
@@ -27,6 +28,7 @@ class StoryCheck(StrEnum):
     ENDING = "ending"
     READING_LEVEL = "reading_level"
     CAST = "cast"
+    STRUCTURE = "structure"
 
 
 def needs_cast(structure: Structure) -> bool:
@@ -41,7 +43,13 @@ def says_refrain(style: EndingStyle) -> bool:
     return style is not EndingStyle.OPEN
 
 
-STRUCTURE_CHOICES = enum_choices(Structure, {"story": "Story with a recurring cast"})
+STRUCTURE_CHOICES = enum_choices(
+    Structure,
+    {
+        "story": "Story with a recurring cast",
+        "explainer": "Explainer of one topic, no recurring characters",
+    },
+)
 ENDING_STYLE_CHOICES = enum_choices(
     EndingStyle,
     {
@@ -66,5 +74,6 @@ STORY_CHECK_CHOICES = checkbox_choices(
         "ending": "Ending (moral and refrain)",
         "reading_level": "Reading level",
         "cast": "Only the episode's characters",
+        "structure": "The structure's own shape, such as an explainer's hook and takeaway",
     },
 )
