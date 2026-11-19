@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 from autotube.domain.model_base import JsonObject
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.model import Story, draft_dump
 from autotube.pipelines.narrated_video.story.reading import estimated_seconds, total_words
+
+ATTEMPT_FILES = "attempt-*.json"
 
 
 @dataclass(frozen=True)
@@ -52,3 +55,8 @@ def attempt_record(attempt: Attempt) -> JsonObject:
 
 def attempt_filename(attempt: Attempt) -> str:
     return f"attempt-{attempt.number}-{attempt.language}.json"
+
+
+def clear_attempts(story_folder: Path) -> None:
+    for path in story_folder.glob(ATTEMPT_FILES):
+        path.unlink(missing_ok=True)

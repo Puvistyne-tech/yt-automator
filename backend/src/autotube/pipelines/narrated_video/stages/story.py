@@ -17,6 +17,7 @@ from autotube.pipelines.narrated_video.story.attempts import (
     Attempt,
     attempt_filename,
     attempt_record,
+    clear_attempts,
 )
 from autotube.pipelines.narrated_video.story.authoring import (
     ScriptRejectedError,
@@ -77,6 +78,7 @@ class StoryStage:
         order = ordered_languages(primary, context.languages)
         theme = choose_theme(settings.story, context.run_id)
         context.log(f"story theme: {theme}")
+        clear_attempts(folder(context, "story"))
         stories, provider = self.authored(context, settings, order, theme)
         artifacts = [self.saved(context, shaped(story, settings)) for story in stories.values()]
         first = stories[primary]

@@ -80,6 +80,19 @@ def test_a_rejected_attempt_is_logged_with_its_measures_and_kept_in_the_workspac
     assert not (tmp_path / "story" / "attempt-2-en.json").exists()
 
 
+def test_a_new_story_stage_clears_the_attempts_of_an_earlier_run(tmp_path: Path) -> None:
+    stale = tmp_path / "story" / "attempt-3-ta.json"
+    stale.parent.mkdir(parents=True)
+    stale.write_text("{}", encoding="utf-8")
+    kept = tmp_path / "story" / "notes.json"
+    kept.write_text("{}", encoding="utf-8")
+    writer = replay_writer([draft(24, MORAL)])
+    StageRig(tmp_path, settings=mac_settings(), providers=FakeProviders(writer=writer)).run(
+        StoryStage()
+    )
+    assert not stale.exists() and kept.exists()
+
+
 def test_an_unreadable_answer_is_kept_as_text() -> None:
     kept: list[dict[str, Any]] = []
     settings = mac_settings(max_attempts=1)

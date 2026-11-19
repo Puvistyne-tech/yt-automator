@@ -908,7 +908,8 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   `failed_checks`, and `script` (the `StoryDraft` fields) or, when the answer did not parse, `answer` (the raw
   text). They hold only model output and check messages, never settings or secrets, are not artifacts, and
   go with the workspace under storage cleanup (intermediate files and run deletion). Accepted attempts and
-  template samples write no file.
+  template samples write no file. The story stage deletes every `story/attempt-*.json` when it starts
+  (`story/attempts.py::clear_attempts`), so a retried run shows only its own attempts.
 - Slip repair (`story.repair_slips`, default true, "Repair small slips", shown only in the full form): when a
   written script in the writing language fails any check, `story/repairing.py::repaired_script(story,
   settings)` runs the structure's `repairs` (each a pure `(story, settings) -> (story, notes)`), then every gate
