@@ -10,8 +10,10 @@ import {
 } from "@/features/pipeline-templates/model/form";
 import type { NewTemplateStart } from "@/features/pipeline-templates/model/prefill";
 import { SampleScriptPanel } from "@/features/pipeline-templates/SampleScriptCard";
+import { DeleteTemplateDialog } from "@/features/pipeline-templates/TemplateDialogs";
 import { TemplateFields } from "@/features/pipeline-templates/TemplateFields";
 import { useDefinitionViewMode } from "@/features/pipeline-templates/useDefinitionView";
+import { useEditorDelete } from "@/features/pipeline-templates/useEditorDelete";
 import {
   type TemplateEditorState,
   useTemplateEditor,
@@ -44,7 +46,14 @@ function NewTemplateActions({ editor }: { editor: TemplateEditorState }) {
   );
 }
 
-function SavedTemplateActions({ editor }: { editor: TemplateEditorState }) {
+function SavedTemplateActions({
+  editor,
+  template,
+}: {
+  editor: TemplateEditorState;
+  template: TemplateSummary;
+}) {
+  const deleteFlow = useEditorDelete(editor);
   return (
     <SaveBar
       dirty={editor.dirty}
@@ -53,7 +62,11 @@ function SavedTemplateActions({ editor }: { editor: TemplateEditorState }) {
       saveDisabled={false}
       onSave={() => editor.submit(editor.draft.status)}
     >
+      <Button variant="danger" icon="trash" onClick={() => deleteFlow.ask(template)}>
+        Delete
+      </Button>
       <ButtonLink to="/pipelines">Back to pipelines</ButtonLink>
+      <DeleteTemplateDialog flow={deleteFlow} />
     </SaveBar>
   );
 }
@@ -86,7 +99,7 @@ function Editor({ engine, template, initial, startIn }: EditorProps) {
       {template === undefined ? (
         <NewTemplateActions editor={editor} />
       ) : (
-        <SavedTemplateActions editor={editor} />
+        <SavedTemplateActions editor={editor} template={template} />
       )}
     </div>
   );

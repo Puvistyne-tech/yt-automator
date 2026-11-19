@@ -23,25 +23,33 @@ interface EditorInput {
   onErrorsShown: (errors: FieldErrors) => void;
 }
 
+function useDraftSave(template: TemplateSummary | undefined, dirty: boolean) {
+  const save = useSaveTemplate(template?.id);
+  const notifier = useMutationNotifier();
+  const onCreated = useNavigateAfterCreate(dirty, pipelinePath);
+  const saved = (summary: TemplateSummary) => {
+    notifier.succeed(`Saved “${summary.name}”.`);
+    if (template === undefined) {
+      onCreated(summary.id);
+    }
+  };
+  return { save, notifier, saved };
+}
+
 export function useTemplateEditor(input: EditorInput) {
   const { engineId, template, definitionSchema } = input;
   const settled = (next: TemplateDraft) => settledDraft(next, definitionSchema);
   const [start] = useState(() => settled(input.initial));
   const { draft, setDraft, dirty, markSaved } = useDraftState(start, JSON.stringify);
   const problems = useTemplateErrors(input.onErrorsShown);
-  const save = useSaveTemplate(template?.id);
-  const notifier = useMutationNotifier();
-  const onCreated = useNavigateAfterCreate(dirty, pipelinePath);
+  const { save, notifier, saved } = useDraftSave(template, dirty);
   const update = (next: TemplateDraft) => {
     setDraft(next);
     problems.clear();
   };
-  const onSaved = (saved: TemplateSummary) => {
-    notifier.succeed(`Saved “${saved.name}”.`);
-    markSaved(settled(draftFromTemplate(saved)));
-    if (template === undefined) {
-      onCreated(saved.id);
-    }
+  const onSaved = (summary: TemplateSummary) => {
+    markSaved(settled(draftFromTemplate(summary)));
+    saved(summary);
   };
   const submit = (status: TemplateStatus) => {
     if (!problems.validate(draftProblems(draft))) {
@@ -53,7 +61,8 @@ export function useTemplateEditor(input: EditorInput) {
       onError: problems.report,
     });
   };
-  return { draft, update, dirty, problems, saving: save.isPending, submit };
+  const discard = () => markSaved();
+  return { draft, update, dirty, discard, problems, saving: save.isPending, submit };
 }
 
 export type TemplateEditorState = ReturnType<typeof useTemplateEditor>;

@@ -27,7 +27,7 @@ function useAskedTarget() {
   return { confirm, problems, ask };
 }
 
-export function useDeleteTemplateFlow(): TemplateFlow<void> {
+export function useDeleteTemplateFlow(onDeleted?: () => void): TemplateFlow<void> {
   const asked = useAskedTarget();
   const mutation = useDeleteTemplate();
   const notifier = useMutationNotifier();
@@ -36,6 +36,7 @@ export function useDeleteTemplateFlow(): TemplateFlow<void> {
       onSuccess: () => {
         notifier.succeed(`Deleted “${target.name}”.`);
         asked.confirm.cancel();
+        onDeleted?.();
       },
       onError: asked.problems.report,
     });
