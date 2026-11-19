@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from autotube.domain.json_text import text_leaves
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.art.cards import card_lines
 from autotube.pipelines.narrated_video.artifacts import EPISODE, SHORT
@@ -15,7 +16,6 @@ from autotube.pipelines.narrated_video.stages.voice import lines_to_speak
 from autotube.pipelines.narrated_video.structures.registry import metadata_placeholders
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.settings_model import template_defaults
-from autotube.pipelines.narrated_video.template.text_leaves import text_leaves
 from autotube.pipelines.narrated_video.text.templates import render_template, unknown_placeholders
 from tests.fixtures.explainer_data import explainer_settings, explainer_story
 from tests.fixtures.template_records import template

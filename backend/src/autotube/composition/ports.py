@@ -32,6 +32,7 @@ from autotube.domain.ports import (
     SecretStore,
     SystemInspector,
     TemplateRepository,
+    TrendSource,
     YouTubeGateway,
 )
 from autotube.domain.quota import QuotaPolicy
@@ -61,6 +62,7 @@ class Ports:
     engines: EngineCatalog
     catalog: ProviderCatalog
     youtube: YouTubeGateway
+    trends: TrendSource
     inspector: SystemInspector
     quota: QuotaPolicy = field(default_factory=QuotaPolicy)
     doctor_policy: DoctorPolicy = field(default_factory=DoctorPolicy)

@@ -19,6 +19,9 @@ DESCRIPTORS = (
     ),
     ProviderDescriptor(provider_id="fake-image", capability=Capability.IMAGE, name="Fake Image"),
 )
+PLACEHOLDER_LLM = ProviderDescriptor(
+    provider_id="placeholder-llm", capability=Capability.LLM, name="Stand-in", placeholder=True
+)
 SECRETS = (
     SecretDefinition(name="cloud_api_key", title="Cloud API key", description="For Cloud LLM"),
 )
@@ -90,6 +93,9 @@ class WriterCatalog(FakeProviderCatalog):
     def __init__(self, writer: TextGenerator | None) -> None:
         super().__init__()
         self.writer = writer
+
+    def descriptors(self) -> list[ProviderDescriptor]:
+        return [*DESCRIPTORS, PLACEHOLDER_LLM]
 
     def resolver(self, configs: Sequence[ProviderConfig]) -> FakeResolver:
         self.resolved_with.append(list(configs))

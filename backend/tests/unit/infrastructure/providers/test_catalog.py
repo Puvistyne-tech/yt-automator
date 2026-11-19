@@ -64,3 +64,8 @@ def test_build_provider_catalog_wires_real_context(tmp_path: Path) -> None:
         "offline_speech",
         "synth_music",
     }
+
+
+def test_only_the_offline_text_writer_is_a_placeholder() -> None:
+    flagged = {spec.provider_id for spec in ALL_SPECS if spec.placeholder}
+    assert flagged == {"offline_text"}

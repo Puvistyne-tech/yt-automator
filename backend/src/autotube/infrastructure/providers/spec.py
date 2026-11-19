@@ -31,6 +31,7 @@ class ProviderSpec[O: ProviderOptions, A: Adapter]:
     options: type[O]
     factory: Callable[[O, ProviderContext], A]
     offline: bool
+    placeholder: bool = False
     required_secrets: tuple[str, ...] = ()
 
     def build(self, raw: Mapping[str, JsonValue], context: ProviderContext) -> A:
@@ -48,6 +49,7 @@ class ProviderSpec[O: ProviderOptions, A: Adapter]:
             options_schema=self.options.model_json_schema(),
             required_secrets=self.required_secrets,
             offline=self.offline,
+            placeholder=self.placeholder,
             available=reason is None,
             unavailable_reason=reason or "",
         )

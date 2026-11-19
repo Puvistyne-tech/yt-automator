@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from autotube.domain.trends import TrendingVideo, TrendQuery
 from autotube.domain.youtube import (
     ChannelAuth,
     ChannelProfile,
@@ -24,6 +25,15 @@ class FakeYouTube:
     playlists: list[Playlist] = field(
         default_factory=lambda: [Playlist(id="PL-1", title="Stories")]
     )
+    popular: list[TrendingVideo] = field(
+        default_factory=lambda: [
+            TrendingVideo(title="Folding paper boats", channel_title="Paper Corner"),
+            TrendingVideo(
+                title="Counting with ducks", channel_title="Pond Friends", made_for_kids=True
+            ),
+        ]
+    )
+    queries: list[TrendQuery] = field(default_factory=list)
     failing_videos: set[str] = field(default_factory=set)
     failing_operations: set[str] = field(default_factory=set)
     failure_code: str = "upstream_failure"
@@ -77,6 +87,12 @@ class FakeYouTube:
         self.record(auth, "list_playlists", "")
         self.check("list_playlists")
         return list(self.playlists)
+
+    def popular_videos(self, auth: ChannelAuth, query: TrendQuery) -> list[TrendingVideo]:
+        self.record(auth, "popular_videos", query.region)
+        self.check("popular_videos")
+        self.queries.append(query)
+        return list(self.popular)
 
     def operations(self, name: str) -> list[str]:
         return [detail for operation, detail in self.calls if operation == name]
