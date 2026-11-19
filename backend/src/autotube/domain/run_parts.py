@@ -64,10 +64,17 @@ class RunLog(DomainModel):
 
 
 DEFAULT_MAX_RUN_LOGS = 2000
+DEFAULT_FALLBACK_REASON_CHARS = 200
 
 
 class RunLogPolicy(DomainModel):
     max_entries: int = Field(default=DEFAULT_MAX_RUN_LOGS, ge=1)
+    fallback_reason_chars: int = Field(
+        default=DEFAULT_FALLBACK_REASON_CHARS,
+        ge=20,
+        title="Fallback reason length",
+        description="Characters of a failed provider's error shown in a fallback warning.",
+    )
 
     def appended(self, logs: tuple[RunLog, ...], entry: RunLog) -> tuple[RunLog, ...]:
         return (*logs, entry)[-self.max_entries :]

@@ -2,16 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import httpx
 import pytest
 from pydantic import ValidationError
 
 from autotube.domain.capabilities import Capability, TextRequest
 from autotube.domain.model_base import JsonObject
 from autotube.domain.providers import ProviderChoice, ProviderConfig
+from autotube.infrastructure.providers.catalog import LocalProviderCatalog
 from autotube.infrastructure.providers.llm.offline_text import OfflineTextOptions
 from autotube.infrastructure.providers.option_validation import invalid_options_reason
 from autotube.shared.errors import RuleConflict
-from tests.unit.infrastructure.providers.fakes import chain_config, local_catalog
+from tests.unit.infrastructure.providers.fakes import chain_config, local_catalog, make_context
 
 ZERO_WORDS: JsonObject = {"topic_words": 0}
 ZERO_WORDS_REASON = (
@@ -110,3 +112,32 @@ def test_invalid_options_reason_joins_every_field_error() -> None:
         "invalid options (topic_words: Input should be greater than or equal to 1; "
         "nope: Extra inputs are not permitted)"
     )
+
+
+def echoes_the_key(request: httpx.Request) -> httpx.Response:
+    return httpx.Response(401, text=f"bad key {request.headers['Authorization']}\ntrace")
+
+
+def test_resolver_records_fallbacks_without_secret_values(tmp_path: Path) -> None:
+    context = make_context(
+        tmp_path,
+        handler=echoes_the_key,
+        secrets={"groq_api_key": "sk-live", "huggingface_token": "hf-x"},
+    )
+    chain = chain_config(
+        Capability.LLM,
+        ProviderChoice(provider_id="groq", options={"max_retries": 0}),
+        ProviderChoice(provider_id="offline_text"),
+    )
+    resolver = LocalProviderCatalog(context).resolver([chain])
+    text = resolver.resolve(Capability.LLM)
+    assert resolver.fallbacks() == ()
+    text.generate(TextRequest(prompt="owl"))
+    [fallback] = resolver.fallbacks()
+    assert (fallback.capability, fallback.failed, fallback.used) == (
+        Capability.LLM,
+        "groq",
+        "offline_text",
+    )
+    assert "sk-live" not in fallback.reason
+    assert fallback.reason.startswith("Groq returned HTTP 401: bad key Bearer [secret]")

@@ -15,9 +15,11 @@ from autotube.domain.capabilities import (
     SpeechSynthesizer,
     TextGenerator,
 )
+from autotube.domain.provider_fallbacks import ProviderFallback
 from autotube.domain.providers import ProviderChoice, ProviderConfig
 from autotube.infrastructure.providers.context import ProviderContext
 from autotube.infrastructure.providers.fallback import fallback_proxy
+from autotube.infrastructure.providers.fallback_log import FallbackLog
 from autotube.infrastructure.providers.option_validation import invalid_options_reason
 from autotube.infrastructure.providers.registry import AnySpec, default_order
 from autotube.shared.errors import RuleConflict
@@ -29,11 +31,16 @@ class ChainResolver:
         specs: Mapping[str, AnySpec],
         configs: Sequence[ProviderConfig],
         context: ProviderContext,
+        secret_names: Sequence[str] = (),
     ) -> None:
         self.specs = dict(specs)
         self.configs = {config.capability: config for config in configs}
         self.context = context
         self.skipped: dict[Capability, list[str]] = {}
+        self.fallback_log = FallbackLog(context.secrets, secret_names)
+
+    def fallbacks(self) -> tuple[ProviderFallback, ...]:
+        return tuple(self.fallback_log.entries)
 
     def choices(self, capability: Capability) -> tuple[ProviderChoice, ...]:
         config = self.configs.get(capability)
@@ -84,4 +91,4 @@ class ChainResolver:
             detail = "; ".join(reasons) or "no provider is configured"
             message = f"No {capability.value} provider is available: {detail}"
             raise RuleConflict("provider_unavailable", message)
-        return fallback_proxy(capability, ready)
+        return fallback_proxy(capability, ready, self.fallback_log.record)

@@ -37,7 +37,8 @@ class LocalProviderCatalog:
         return config_option_errors(self.specs, configs)
 
     def resolver(self, configs: Sequence[ProviderConfig]) -> ChainResolver:
-        return ChainResolver(self.specs, configs, self.context)
+        names = [definition.name for definition in self.secret_definitions]
+        return ChainResolver(self.specs, configs, self.context, names)
 
 
 def build_provider_catalog(secrets: SecretStore, data_dir: Path) -> ProviderCatalog:

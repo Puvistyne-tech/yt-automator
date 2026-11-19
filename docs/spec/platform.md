@@ -361,6 +361,13 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
 - Every `context.log(message, level)` call is stored on the run as a RunLog and published as a `log` event.
   A run keeps only its newest `max_run_log_entries` entries (app setting, default 2000, read at every
   log call); older entries are dropped. Every entry is still published as an event.
+- Provider fallbacks are logged: after each stage, finished or failed, the stage runner reads the fallbacks the
+  resolver recorded during it and logs one `warning` tagged with the stage per (capability, failed provider,
+  used provider): "image provider mflux failed (<reason>); used offline_image instead for 12 calls" (the count
+  only when above one). The reason is the first non-blank line of the failure, cut to
+  `RunLogPolicy.fallback_reason_chars` (default 200, >= 20) with a trailing "…", or "no reason given".
+  No warning is logged when the first provider serves every call or when every provider fails (the stage
+  error already lists each failure).
 - Deleting a `queued`, `running` or `publishing` run is refused; cancel it first.
 - After the last stage the run is scored, then becomes `awaiting_review`, or `approved` directly when the policy is `auto_when_score_at_least` and the score reaches `min_score`.
 - When `reject_below` is set and the score is below it, the run becomes `rejected` instead, whatever the mode. Its
@@ -595,6 +602,9 @@ StageContext    run_id, settings (validated model instance), languages, workspac
 StageOutcome    artifacts: [NewArtifact], provider: str, message: str
 NewArtifact     kind, path (inside workspace), language, variant, media_type, meta
 ProviderResolver.resolve(capability) -> a provider for the capability (see Provider resolution)
+ProviderResolver.fallbacks() -> (ProviderFallback, ...) every fallback recorded so far, oldest first
+ProviderFallback  capability, failed (provider id), used (provider id), reason (secret values masked)
+                  (`domain/provider_fallbacks.py`)
 ```
 
 `pipelines/registry.py` is the index of installed plugins: `installed_pipelines() -> tuple[Pipeline, ...]` and
@@ -838,7 +848,12 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   structure's extra gates, then the safety gates (banned words, brand names, child-directed terms), then the
   reading level. Translations run the structure's translation gates, then the safety gates.
 - Score items: subtitle timing, episode and Short duration, speaking rate and reading level, then the
-  structure's score rules, then metadata limits, loudness and completeness.
+  structure's score rules, then metadata limits, loudness, completeness and real pictures.
+- Real pictures (`real_pictures`, weight `quality.weights.real_pictures`, default 2.0): the art stage records the
+  image provider that drew each episode scene picture in its `visual` meta (`provider`); when that provider
+  served after an image fallback, the meta also gets `stand_in_for` (the failed provider ids, sorted). The item
+  scores the share of the latest episode scene pictures without `stand_in_for`; the detail names the failed
+  providers. It is absent when there is no episode scene picture.
 - Metadata placeholders: `{title} {series} {tagline} {theme} {questions} {hashtags} {hook}` for every structure,
   plus the structure's own. The descriptions of `metadata.title_template`, `short_title_template` and
   `description_template` name every structure's own placeholders (tested).
@@ -1082,6 +1097,9 @@ templates)`, the
   every entry fails, the call raises an upstream failure listing each provider's message.
 - The proxy's `provider_id` is the first remaining entry before any call, and afterwards the provider
   that served the most recent successful call; a stage reads it after the call to report who served it.
+- A call served by a later entry records one ProviderFallback per entry that failed before it on the
+  resolver that built the proxy (`fallbacks()`). Before recording, every set value of a provider secret
+  (`groq_api_key`, `gemini_api_key`, `huggingface_token`) in the reason is replaced by `[secret]`.
 
 Capability interfaces live in `domain/capabilities.py`. There are six capabilities; pipelines depend on these only.
 

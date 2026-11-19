@@ -17,6 +17,7 @@ from autotube.domain.capabilities import (
     TimedClip,
     VideoComposition,
 )
+from autotube.domain.provider_fallbacks import ProviderFallback
 from autotube.infrastructure.providers.fallback import FallbackChain, fallback_proxy
 from autotube.infrastructure.providers.tts.espeak import EspeakOptions, EspeakSpeech
 from autotube.infrastructure.providers.tts.kokoro_voice import KokoroOptions, KokoroSpeech
@@ -126,3 +127,29 @@ def test_invalid_provider_output_becomes_an_upstream_failure(tmp_path: Path) -> 
     chain = FallbackChain(Capability.TTS, [Scripted("first")])
     with pytest.raises(UpstreamFailure, match="first returned unusable output: Input should be"):
         chain.call(zero_length)
+
+
+def test_a_served_call_records_each_provider_it_fell_back_from() -> None:
+    recorded: list[ProviderFallback] = []
+    chain = FallbackChain(
+        Capability.IMAGE,
+        [Scripted("a", UpstreamFailure("gated")), Scripted("b", OSError("y")), Scripted("c")],
+        recorded.append,
+    )
+    chain.call(lambda provider: provider.respond())
+    assert [(f.failed, f.used, f.reason) for f in recorded] == [
+        ("a", "c", "gated"),
+        ("b", "c", "b could not use its files: y"),
+    ]
+    assert {f.capability for f in recorded} == {Capability.IMAGE}
+
+
+def test_nothing_is_recorded_when_the_first_provider_serves_or_all_fail() -> None:
+    recorded: list[ProviderFallback] = []
+    FallbackChain(Capability.LLM, [Scripted("a"), Scripted("b")], recorded.append).call(
+        lambda provider: provider.respond()
+    )
+    failing = FallbackChain(Capability.LLM, [Scripted("a", UpstreamFailure("x"))], recorded.append)
+    with pytest.raises(UpstreamFailure):
+        failing.call(lambda provider: provider.respond())
+    assert recorded == []

@@ -33,6 +33,7 @@ class ScoreWeights(SettingsSection):
     metadata_limits: float = weight(1.0, "Metadata limits")
     loudness: float = weight(0.5, "Loudness")
     completeness: float = weight(2.0, "Every output present")
+    real_pictures: float = weight(2.0, "Pictures from the chosen image model")
 
 
 class QualitySettings(SettingsSection):

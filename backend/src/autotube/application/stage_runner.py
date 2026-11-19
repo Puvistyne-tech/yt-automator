@@ -8,7 +8,8 @@ from autotube.application.run_progress import RunProgress
 from autotube.application.run_recorder import RunRecorder
 from autotube.domain.pipeline import Stage, StageContext, StageOutcome
 from autotube.domain.ports import ArtifactStore, Clock, IdGenerator
-from autotube.domain.run_enums import RunStatus, StageStatus
+from autotube.domain.provider_fallbacks import fallback_warnings
+from autotube.domain.run_enums import LogLevel, RunStatus, StageStatus
 from autotube.domain.run_parts import Artifact, StageRun
 from autotube.domain.run_state import accepts_stage_results
 from autotube.domain.runs import Run
@@ -56,7 +57,7 @@ class StageRunner:
         if recorded is None:
             return self.progress.synced(run)
         try:
-            outcome = stage.run(self.stage_context(recorded, stage_id, context_for))
+            outcome = self.observed(stage, self.stage_context(recorded, stage_id, context_for))
             saved = self.saved_artifacts(run.id, stage_id, outcome)
         except Exception as error:
             return self.failed(recorded, started, error)
@@ -65,6 +66,19 @@ class StageRunner:
     def stage_context(self, run: Run, stage_id: str, context_for: ContextFactory) -> StageContext:
         log = partial(self.recorder.log, run.id, stage_id=stage_id)
         return replace(context_for(run), log=log)
+
+    def observed(self, stage: Stage, context: StageContext) -> StageOutcome:
+        seen = len(context.providers.fallbacks())
+        try:
+            return stage.run(context)
+        finally:
+            self.warn_fallbacks(context, seen)
+
+    def warn_fallbacks(self, context: StageContext, seen: int) -> None:
+        fresh = context.providers.fallbacks()[seen:]
+        limit = self.recorder.log_policy().fallback_reason_chars
+        for warning in fallback_warnings(fresh, limit):
+            context.log(warning, LogLevel.WARNING)
 
     def saved_artifacts(
         self, run_id: str, stage_id: str, outcome: StageOutcome

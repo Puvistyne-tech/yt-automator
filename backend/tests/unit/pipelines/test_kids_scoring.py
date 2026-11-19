@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from autotube.domain.capabilities import Capability
+from autotube.domain.provider_fallbacks import ProviderFallback
 from autotube.domain.quality import ScoreItem
 from autotube.domain.srt import SrtEntry
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
@@ -22,6 +24,7 @@ from autotube.pipelines.narrated_video.scoring.output_items import (
     completeness,
     loudness,
     metadata_limits,
+    real_pictures,
 )
 from autotube.pipelines.narrated_video.scoring.timing_items import (
     episode_duration,
@@ -92,6 +95,7 @@ def test_a_clean_run_scores_well_on_every_item(inputs: ScoreInputs) -> None:
         "metadata_limits",
         "loudness",
         "completeness",
+        "real_pictures",
     }
     for item_id in (
         "subtitle_timing",
@@ -104,6 +108,7 @@ def test_a_clean_run_scores_well_on_every_item(inputs: ScoreInputs) -> None:
         "loudness",
         "completeness",
         "reading_level",
+        "real_pictures",
     ):
         assert items[item_id].score == 100, items[item_id].detail
     assert items["subtitle_timing"].weight == 2.0
@@ -174,3 +179,13 @@ def test_missing_word_timings_lower_subtitle_coverage(tmp_path: Path) -> None:
 def test_scoring_without_artifacts_reports_only_completeness(tmp_path: Path) -> None:
     items = KidsStoryPipeline().score(StageRig(tmp_path).context())
     assert [item.id for item in items] == ["completeness"] and items[0].score == 0
+
+
+def test_stand_in_pictures_lose_the_real_pictures_item(tmp_path: Path) -> None:
+    gated = ProviderFallback(
+        capability=Capability.IMAGE, failed="mflux", used="fake-image", reason="403"
+    )
+    providers = FakeProviders(fallen_back=[gated])
+    item = required(real_pictures(gathered(finished(tmp_path, providers, ("en",)).context())))
+    assert item.score == 0
+    assert item.detail.endswith("episode pictures are stand-ins drawn after mflux failed")

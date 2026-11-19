@@ -8,6 +8,7 @@ from autotube.pipelines.narrated_video.scoring.output_items import (
     completeness,
     loudness,
     metadata_limits,
+    real_pictures,
 )
 from autotube.pipelines.narrated_video.scoring.timing_items import (
     episode_duration,
@@ -24,7 +25,7 @@ LEADING_RULES: tuple[ScoreRule, ...] = (
     speaking_rate,
     reading_level,
 )
-TRAILING_RULES: tuple[ScoreRule, ...] = (metadata_limits, loudness, completeness)
+TRAILING_RULES: tuple[ScoreRule, ...] = (metadata_limits, loudness, completeness, real_pictures)
 
 
 def score_rules(inputs: ScoreInputs) -> tuple[ScoreRule, ...]:
