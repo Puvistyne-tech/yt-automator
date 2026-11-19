@@ -1,0 +1,146 @@
+{
+  "theme": "world capitals",
+  "cast": [],
+  "setting": "a green chalkboard covered in a simple world map",
+  "mood": "playful and upbeat",
+  "thumbnail": "a chalk world map with a big question mark in the middle",
+  "short_scenes": [0, 1, 2],
+  "text": {
+    "en": {
+      "title": "A Quick Quiz on World Capitals",
+      "hook_line": "How many capital cities can you name?",
+      "questions": ["Which answer did you get right first?", "Which capital would you like to visit?"]
+    },
+    "ta": {
+      "title": "உலகத் தலைநகரங்கள்: ஒரு விரைவு வினாடி வினா",
+      "hook_line": "எத்தனை தலைநகரங்களை உங்களால் சொல்ல முடியும்?",
+      "questions": ["முதலில் எந்த விடையைச் சரியாகச் சொன்னீர்கள்?", "எந்தத் தலைநகருக்குச் செல்ல விரும்புகிறீர்கள்?"]
+    }
+  },
+  "scenes": [
+    {
+      "visual": "a chalkboard with a world map drawn in white chalk",
+      "action": "A chalk line traces the outline of the continents.",
+      "en": {
+        "narration": "Welcome to a quick quiz about world capitals. There are four questions, each with three choices. Make your guess before every answer, and keep count of how many you get right."
+      },
+      "ta": {
+        "narration": "உலகத் தலைநகரங்கள் பற்றிய விரைவு வினாடி வினாவுக்கு வருக. நான்கு கேள்விகள், ஒவ்வொன்றுக்கும் மூன்று விடைகள் உள்ளன."
+      }
+    },
+    {
+      "visual": "a chalk drawing of an island nation with three city names beside it",
+      "action": "Three chalk circles appear next to the island.",
+      "en": {
+        "question": "What is the capital of Japan?",
+        "choices": ["Tokyo", "Kyoto", "Osaka"],
+        "narration": "Question one. This island nation sits in the Pacific Ocean and is famous for its fast trains. What is the capital of Japan? Is it Tokyo, Kyoto or Osaka?"
+      },
+      "ta": {
+        "question": "ஜப்பானின் தலைநகரம் எது?",
+        "choices": ["டோக்கியோ", "கியோட்டோ", "ஒசாகா"],
+        "narration": "முதல் கேள்வி. ஜப்பானின் தலைநகரம் எது? டோக்கியோ, கியோட்டோ, ஒசாகா?"
+      }
+    },
+    {
+      "visual": "a chalk star drawn over a large city by a bay",
+      "action": "A chalk star is drawn around the city.",
+      "en": {
+        "answer": "Tokyo",
+        "narration": "The answer is Tokyo. Kyoto was the capital for more than a thousand years, but Tokyo has held the title since the middle of the nineteenth century."
+      },
+      "ta": {
+        "answer": "டோக்கியோ",
+        "narration": "விடை டோக்கியோ. கியோட்டோ ஆயிரம் ஆண்டுகளுக்கு மேல் தலைநகரமாக இருந்தது."
+      }
+    },
+    {
+      "visual": "a chalk outline of a large southern continent with three city names",
+      "action": "Three chalk dots glow on the coast and inland.",
+      "en": {
+        "question": "What is the capital of Australia?",
+        "choices": ["Sydney", "Canberra", "Melbourne"],
+        "narration": "Question two. Many people guess the biggest city here, but the answer may surprise you. What is the capital of Australia? Is it Sydney, Canberra or Melbourne?"
+      },
+      "ta": {
+        "question": "ஆஸ்திரேலியாவின் தலைநகரம் எது?",
+        "choices": ["சிட்னி", "கான்பெரா", "மெல்போர்ன்"],
+        "narration": "இரண்டாவது கேள்வி. ஆஸ்திரேலியாவின் தலைநகரம் எது? சிட்னி, கான்பெரா, மெல்போர்ன்?"
+      }
+    },
+    {
+      "visual": "a chalk star drawn over a planned city between two larger cities",
+      "action": "A chalk star is drawn over the inland city.",
+      "en": {
+        "answer": "Canberra",
+        "narration": "The answer is Canberra. It was planned and built as the capital, partly so that neither Sydney nor Melbourne would win the long contest between them."
+      },
+      "ta": {
+        "answer": "கான்பெரா",
+        "narration": "விடை கான்பெரா. சிட்னிக்கும் மெல்போர்னுக்கும் இடையே தலைநகராகத் திட்டமிட்டுக் கட்டப்பட்ட நகரம் அது."
+      }
+    },
+    {
+      "visual": "a chalk outline of a wide northern country with three city names",
+      "action": "Chalk snowflakes drift across the map.",
+      "en": {
+        "question": "What is the capital of Canada?",
+        "choices": ["Toronto", "Ottawa", "Vancouver"],
+        "narration": "Question three. This huge country has long, cold winters and more lakes than anywhere else. What is the capital of Canada? Is it Toronto, Ottawa or Vancouver?"
+      },
+      "ta": {
+        "question": "கனடாவின் தலைநகரம் எது?",
+        "choices": ["டொராண்டோ", "ஒட்டாவா", "வான்கூவர்"],
+        "narration": "மூன்றாவது கேள்வி. கனடாவின் தலைநகரம் எது? டொராண்டோ, ஒட்டாவா, வான்கூவர்?"
+      }
+    },
+    {
+      "visual": "a chalk star drawn over a city beside a winding river",
+      "action": "A chalk star is drawn beside the river.",
+      "en": {
+        "answer": "Ottawa",
+        "narration": "The answer is Ottawa. It sits on a river between two provinces, and in winter part of its canal freezes into one of the longest skating rinks in the world."
+      },
+      "ta": {
+        "answer": "ஒட்டாவா",
+        "narration": "விடை ஒட்டாவா. குளிர்காலத்தில் அங்குள்ள கால்வாய் உறைந்து நீண்ட பனிச்சறுக்குப் பாதையாக மாறுகிறது."
+      }
+    },
+    {
+      "visual": "a chalk outline of a desert country with a river and three city names",
+      "action": "A chalk river flows across the desert.",
+      "en": {
+        "question": "What is the capital of Egypt?",
+        "choices": ["Cairo", "Alexandria", "Luxor"],
+        "narration": "Question four, the last one. This country is home to the pyramids and the river Nile. What is the capital of Egypt? Is it Cairo, Alexandria or Luxor?"
+      },
+      "ta": {
+        "question": "எகிப்தின் தலைநகரம் எது?",
+        "choices": ["கெய்ரோ", "அலெக்சாண்ட்ரியா", "லக்சர்"],
+        "narration": "நான்காவது கேள்வி. எகிப்தின் தலைநகரம் எது? கெய்ரோ, அலெக்சாண்ட்ரியா, லக்சர்?"
+      }
+    },
+    {
+      "visual": "a chalk star drawn over a large city on the banks of the Nile",
+      "action": "A chalk star is drawn beside the Nile.",
+      "en": {
+        "answer": "Cairo",
+        "narration": "The answer is Cairo. It stands on the banks of the Nile, and it is one of the largest cities in Africa, with the pyramids of Giza close by."
+      },
+      "ta": {
+        "answer": "கெய்ரோ",
+        "narration": "விடை கெய்ரோ. நைல் நதிக்கரையில் உள்ள அந்த நகரம் ஆப்பிரிக்காவின் பெரிய நகரங்களில் ஒன்று."
+      }
+    },
+    {
+      "visual": "the whole chalk world map with four stars marking the capitals",
+      "action": "The four chalk stars sparkle one by one.",
+      "en": {
+        "narration": "That is the end of our quiz on world capitals. Count your right answers and see how you did. Try another quiz soon, and see if you can beat your score."
+      },
+      "ta": {
+        "narration": "உலகத் தலைநகரங்கள் வினாடி வினா முடிந்தது. உங்கள் சரியான விடைகளை எண்ணிப் பாருங்கள்."
+      }
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "theme": "the longest rivers",
+  "cast": [],
+  "setting": "a wide river winding through open country",
+  "mood": "bold and energetic",
+  "thumbnail": "a huge river curving through green land seen from high above",
+  "short_scenes": [0, 10, 11],
+  "text": {
+    "en": {
+      "title": "The Ten Longest Rivers on Earth",
+      "hook_line": "Which river runs the farthest of them all?",
+      "questions": ["Which river came in at number one?", "Which river surprised you most?"]
+    },
+    "ta": {
+      "title": "உலகின் மிக நீளமான பத்து ஆறுகள்",
+      "hook_line": "எல்லா ஆறுகளிலும் மிக நீளமானது எது?",
+      "questions": ["முதலிடம் பிடித்த ஆறு எது?", "எந்த ஆறு உங்களை அதிகம் வியக்க வைத்தது?"]
+    }
+  },
+  "scenes": [
+    {
+      "visual": "a globe slowly turning with bright blue rivers drawn across every continent",
+      "action": "The globe turns slowly to show the rivers.",
+      "en": {
+        "narration": "Rivers carry water across whole continents, feeding farms, forests and cities on the way. Today we count down the ten longest rivers on Earth, from number ten all the way to number one."
+      },
+      "ta": {
+        "narration": "ஆறுகள் கண்டங்களைக் கடந்து நீரைக் கொண்டு செல்கின்றன. உலகின் மிக நீளமான பத்து ஆறுகளைப் பத்திலிருந்து ஒன்று வரை எண்ணுவோம்."
+      }
+    },
+    {
+      "visual": "a broad river between forested hills in north-east Asia",
+      "action": "The river bends gently between the hills.",
+      "en": {
+        "number": 10,
+        "heading": "The Amur",
+        "narration": "Number ten: the Amur. It flows for about four thousand four hundred kilometres through north-east Asia and forms a long natural border before it finally reaches the Pacific Ocean."
+      },
+      "ta": {
+        "heading": "அமுர் ஆறு",
+        "narration": "பத்தாவது: அமுர் ஆறு. வடகிழக்கு ஆசியாவில் சுமார் 4,400 கிலோமீட்டர் ஓடி பசிபிக் பெருங்கடலில் சேர்கிறது."
+      }
+    },
+    {
+      "visual": "a dark, powerful river flowing through thick rainforest",
+      "action": "Mist drifts over the fast brown water.",
+      "en": {
+        "number": 9,
+        "heading": "The Congo",
+        "narration": "Number nine: the Congo. At about four thousand seven hundred kilometres, it is also the deepest river known, with parts more than two hundred metres deep in the heart of Africa."
+      },
+      "ta": {
+        "heading": "காங்கோ ஆறு",
+        "narration": "ஒன்பதாவது: காங்கோ ஆறு. சுமார் 4,700 கிலோமீட்டர் நீளம். உலகின் மிக ஆழமான ஆறும் இதுதான்."
+      }
+    },
+    {
+      "visual": "a wide river spreading through flat green wetlands in South America",
+      "action": "Birds lift off from the wet grass by the river.",
+      "en": {
+        "number": 8,
+        "heading": "The Paraná",
+        "narration": "Number eight: the Paraná. Together with the wide estuary at its mouth, it stretches for about four thousand eight hundred kilometres through the wetlands and plains of South America."
+      },
+      "ta": {
+        "heading": "பரானா ஆறு",
+        "narration": "எட்டாவது: பரானா ஆறு. தென் அமெரிக்காவின் சமவெளிகள் வழியாகச் சுமார் 4,800 கிலோமீட்டர் ஓடுகிறது."
+      }
+    },
+    {
+      "visual": "a cold river crossing a vast plain under a pale northern sky",
+      "action": "Ice floats slowly down the grey river.",
+      "en": {
+        "number": 7,
+        "heading": "The Ob and Irtysh",
+        "narration": "Number seven: the Ob and the Irtysh. Joined together, these two rivers run for about five thousand four hundred kilometres across Asia and empty into the cold Arctic Ocean far to the north."
+      },
+      "ta": {
+        "heading": "ஓப்-இர்டிஷ் ஆறு",
+        "narration": "ஏழாவது: ஓப்-இர்டிஷ் ஆறு. சுமார் 5,400 கிலோமீட்டர் ஓடி ஆர்க்டிக் பெருங்கடலில் கலக்கிறது."
+      }
+    },
+    {
+      "visual": "a river the colour of golden sand winding past terraced hills",
+      "action": "The golden water swirls around a bend.",
+      "en": {
+        "number": 6,
+        "heading": "The Yellow River",
+        "narration": "Number six: the Yellow River. It runs for about five thousand four hundred and sixty kilometres, and it gets its name from the fine yellow silt that colours its water."
+      },
+      "ta": {
+        "heading": "மஞ்சள் ஆறு",
+        "narration": "ஆறாவது: மஞ்சள் ஆறு. சுமார் 5,460 கிலோமீட்டர் நீளம். அதன் நீரின் மஞ்சள் வண்டலால் அந்தப் பெயர் வந்தது."
+      }
+    },
+    {
+      "visual": "a long river flowing north through forest and open tundra",
+      "action": "The river glides past dark pine trees.",
+      "en": {
+        "number": 5,
+        "heading": "The Yenisei",
+        "narration": "Number five: the Yenisei. It flows north for about five thousand five hundred kilometres through forest and tundra, and carries more water to the Arctic than almost any other river."
+      },
+      "ta": {
+        "heading": "யெனிசெய் ஆறு",
+        "narration": "ஐந்தாவது: யெனிசெய் ஆறு. சுமார் 5,500 கிலோமீட்டர் வடக்கு நோக்கி ஓடுகிறது."
+      }
+    },
+    {
+      "visual": "a huge brown river meeting a second river in the middle of a continent",
+      "action": "Two rivers meet and mix their waters.",
+      "en": {
+        "number": 4,
+        "heading": "The Mississippi and Missouri",
+        "narration": "Number four: the Mississippi and the Missouri. Counted as one system, they run for about six thousand two hundred and seventy kilometres across North America to the Gulf of Mexico."
+      },
+      "ta": {
+        "heading": "மிசிசிப்பி-மிசௌரி ஆறு",
+        "narration": "நான்காவது: மிசிசிப்பி-மிசௌரி ஆறு. வட அமெரிக்காவில் சுமார் 6,270 கிலோமீட்டர் ஓடுகிறது."
+      }
+    },
+    {
+      "visual": "a mighty river passing between steep green gorges",
+      "action": "Clouds roll over the walls of the gorge.",
+      "en": {
+        "number": 3,
+        "heading": "The Yangtze",
+        "narration": "Number three: the Yangtze. At about six thousand three hundred kilometres, it is the longest river in Asia, and it flows through deep gorges before reaching the East China Sea."
+      },
+      "ta": {
+        "heading": "யாங்சி ஆறு",
+        "narration": "மூன்றாவது: யாங்சி ஆறு. சுமார் 6,300 கிலோமீட்டர் நீளம். ஆசியாவின் மிக நீளமான ஆறு இதுதான்."
+      }
+    },
+    {
+      "visual": "an enormous river snaking through endless green rainforest",
+      "action": "The river shimmers as the sun comes out.",
+      "en": {
+        "number": 2,
+        "heading": "The Amazon",
+        "narration": "Number two: the Amazon. It runs for about six thousand four hundred kilometres, and it carries more water than any other river on Earth, more than the next several rivers combined."
+      },
+      "ta": {
+        "heading": "அமேசான் ஆறு",
+        "narration": "இரண்டாவது: அமேசான் ஆறு. சுமார் 6,400 கிலோமீட்டர் நீளம். உலகிலேயே அதிக நீரைச் சுமக்கும் ஆறு இது."
+      }
+    },
+    {
+      "visual": "a long green river valley running through golden desert",
+      "action": "A sailing boat drifts down the river.",
+      "en": {
+        "number": 1,
+        "heading": "The Nile",
+        "narration": "Number one: the Nile. At about six thousand six hundred and fifty kilometres, it is usually named the longest river in the world, carrying life through the desert of north-east Africa."
+      },
+      "ta": {
+        "heading": "நைல் ஆறு",
+        "narration": "முதலாவது: நைல் ஆறு. சுமார் 6,650 கிலோமீட்டர் நீளம். உலகின் மிக நீளமான ஆறாகப் பொதுவாகக் கருதப்படுகிறது."
+      }
+    },
+    {
+      "visual": "a world map with ten glowing rivers marked in bright blue",
+      "action": "The ten rivers light up one by one.",
+      "en": {
+        "narration": "That was our countdown of the ten longest rivers on Earth. From the Amur to the mighty Nile, each one shapes the land and the lives of everyone who lives along its banks."
+      },
+      "ta": {
+        "narration": "உலகின் மிக நீளமான பத்து ஆறுகளின் தரவரிசை இதுதான். ஒவ்வொரு ஆறும் தன் கரையில் வாழும் மக்களின் வாழ்க்கையை வடிவமைக்கிறது."
+      }
+    }
+  ]
+}

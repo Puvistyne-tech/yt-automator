@@ -1,0 +1,116 @@
+{
+  "theme": "a voice on the old radio",
+  "cast": ["mira"],
+  "setting": "a small flat on Harbour Street on a stormy night",
+  "mood": "quiet and tense",
+  "thumbnail": "an old wooden radio glowing pale green on a shelf in a dark room",
+  "short_scenes": [2, 6, 8],
+  "text": {
+    "en": {
+      "title": "The Radio on the Shelf",
+      "moral": "Some warnings are worth listening to.",
+      "hook_line": "An old radio that only speaks at midnight.",
+      "questions": ["Who do you think was knocking?", "Would you have opened the door?"]
+    },
+    "ta": {
+      "title": "அலமாரியில் இருந்த வானொலி",
+      "moral": "சில எச்சரிக்கைகளைக் கேட்பது நல்லது.",
+      "hook_line": "நள்ளிரவில் மட்டும் பேசும் ஒரு பழைய வானொலி.",
+      "questions": ["கதவைத் தட்டியது யார் என்று நினைக்கிறீர்கள்?", "நீங்கள் கதவைத் திறந்திருப்பீர்களா?"]
+    }
+  },
+  "scenes": [
+    {
+      "visual": "Mira at a market stall holding a heavy old radio",
+      "action": "Mira turns the old radio over in her hands.",
+      "setting": "a market street on a grey afternoon",
+      "en": {
+        "narration": "Mira found the old radio at a market stall on a grey afternoon. It was heavy, brown and silent, with a cracked dial. The seller only shrugged when she asked if it still worked."
+      },
+      "ta": {
+        "narration": "ஒரு மந்தமான மாலையில் சந்தைக் கடை ஒன்றில் மீரா ஒரு பழைய வானொலியைக் கண்டாள். அது கனமாகவும் அமைதியாகவும் இருந்தது. அது வேலை செய்யுமா என்று கேட்டதற்கு விற்பவர் தோளைக் குலுக்கினார்."
+      }
+    },
+    {
+      "visual": "Mira placing the radio on a shelf while rain streaks the window",
+      "action": "Mira turns the knob on the radio.",
+      "en": {
+        "narration": "That night, Mira set it on the shelf in her small flat and turned the knob. Nothing happened. She shrugged, switched off the lamp and went to bed, listening to the rain on the window."
+      },
+      "ta": {
+        "narration": "அன்று இரவு அதைத் தன் சிறிய வீட்டின் அலமாரியில் வைத்து மீரா திருகியைத் திருப்பினாள். எதுவும் நடக்கவில்லை. மழைச் சத்தத்தைக் கேட்டபடி அவள் தூங்கப் போனாள்."
+      }
+    },
+    {
+      "visual": "Mira sitting up in bed, staring at a radio dial glowing pale green",
+      "action": "The radio dial flickers to a pale green glow.",
+      "en": {
+        "narration": "At exactly midnight, a soft hiss filled the room. Mira sat up. The dial on the radio was glowing a pale green, though she was sure she had left it switched off."
+      },
+      "ta": {
+        "narration": "சரியாக நள்ளிரவில் அறையில் மெல்லிய இரைச்சல் கேட்டது. மீரா எழுந்து உட்கார்ந்தாள். அணைத்து வைத்த வானொலியின் முகப்பு வெளிர் பச்சையாக ஒளிர்ந்தது."
+      }
+    },
+    {
+      "visual": "Mira leaning close to the glowing radio in the dark room",
+      "action": "Mira leans slowly toward the radio.",
+      "en": {
+        "narration": "Through the hiss came a calm voice reading the weather. A storm was coming in from the sea, it said, and everyone on Harbour Street should stay indoors. Mira lived on Harbour Street."
+      },
+      "ta": {
+        "narration": "இரைச்சலின் நடுவே ஒரு அமைதியான குரல் வானிலை அறிக்கை வாசித்தது. துறைமுகத் தெருவில் உள்ளவர்கள் வீட்டுக்குள் இருங்கள் என்றது. மீரா வாழ்ந்தது துறைமுகத் தெருவில்தான்."
+      }
+    },
+    {
+      "visual": "Mira at a kitchen table reading a yellowed newspaper beside the radio",
+      "action": "Mira unfolds the old newspaper.",
+      "setting": "a small kitchen in grey morning light",
+      "en": {
+        "narration": "The next morning she looked up the station name printed on the dial. It had closed forty years ago, the same year a great storm flooded Harbour Street, according to an old newspaper."
+      },
+      "ta": {
+        "narration": "மறுநாள் காலை முகப்பில் இருந்த நிலையத்தின் பெயரைத் தேடினாள். அது நாற்பது ஆண்டுகளுக்கு முன்பே மூடப்பட்டிருந்தது. அதே ஆண்டு பெரும் புயல் துறைமுகத் தெருவை மூழ்கடித்திருந்தது."
+      }
+    },
+    {
+      "visual": "Mira pulling the plug of the radio from the wall at dusk",
+      "action": "Mira turns the radio to face the wall.",
+      "en": {
+        "narration": "Mira told herself it was a recording, a strange fault in old wires. Still, that evening she unplugged the radio and turned it to face the wall before she went to sleep."
+      },
+      "ta": {
+        "narration": "அது பழைய கம்பிகளின் கோளாறு என்று மீரா தனக்குத்தானே சொல்லிக்கொண்டாள். ஆனாலும் அன்று மாலை வானொலியின் இணைப்பைத் துண்டித்து, அதைச் சுவர் பக்கம் திருப்பி வைத்தாள்."
+      }
+    },
+    {
+      "visual": "a green glow spilling from behind the radio onto the dark wall",
+      "action": "The green glow grows brighter on the wall.",
+      "en": {
+        "narration": "At midnight, the green light glowed again. The same calm voice spoke, but this time it did not read the weather. It said her name, slowly, as if it knew exactly where she was."
+      },
+      "ta": {
+        "narration": "நள்ளிரவில் பச்சை ஒளி மீண்டும் ஒளிர்ந்தது. அதே அமைதியான குரல் பேசியது. இந்த முறை வானிலை அல்ல. அது அவள் பெயரை மெதுவாகச் சொன்னது."
+      }
+    },
+    {
+      "visual": "Mira by a rain-lashed window, the radio glowing behind her",
+      "action": "Rain beats harder against the window.",
+      "en": {
+        "narration": "Mira, the voice said, the water is rising. Do not open the door. Outside, the wind began to howl, and rain struck the window like handfuls of gravel thrown from the dark."
+      },
+      "ta": {
+        "narration": "மீரா, தண்ணீர் உயர்கிறது, கதவைத் திறக்காதே என்றது அந்தக் குரல். வெளியே காற்று ஊளையிட்டது. சன்னலில் மழை சரளைக் கற்களைப் போல மோதியது."
+      }
+    },
+    {
+      "visual": "Mira in a dim hallway, her hand close to the handle of the front door",
+      "action": "Mira's hand stops just short of the door handle.",
+      "en": {
+        "narration": "Then came three slow knocks at the front door. The radio fell silent. Mira stood in the hallway, her hand an inch from the handle, and listened to someone on the other side breathing."
+      },
+      "ta": {
+        "narration": "பிறகு முன்கதவில் மூன்று மெதுவான தட்டல்கள் கேட்டன. வானொலி அமைதியானது. கைப்பிடிக்கு அருகில் கையுடன் நின்ற மீரா, மறுபக்கம் யாரோ மூச்சு விடுவதைக் கேட்டாள்."
+      }
+    }
+  ]
+}

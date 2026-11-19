@@ -651,6 +651,11 @@ class PipelineEngine(Protocol):
   banned words keep violent words but allow suspense words, and its picture exclusions add gore, blood, wounds,
   weapons, corpses, children and babies.
 - A built-in is served as a pipeline type only while its engine reports no `problems` for it.
+- Every built-in has one offline sample script per language, used only by tests through a fake writer:
+  `kids_story` uses the bundled stories, and each packaged built-in has `backend/tests/fixtures/builtin_scripts/<id>.json`.
+  The samples are not part of the package, so no run can read them; the general and non-story built-ins keep their
+  `story.source` pin and have no bundled fallback. A parametrised integration test runs every built-in through the
+  fake providers in English and Tamil and checks the score, the audience flags and the upload details.
 
 #### Narrated definition (`pipelines/narrated_video/template/definition.py`)
 

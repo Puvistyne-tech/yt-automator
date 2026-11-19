@@ -1,0 +1,134 @@
+{
+  "theme": "penguins",
+  "cast": [],
+  "setting": "a bright icy shore by a blue sea",
+  "mood": "cheerful and gentle",
+  "thumbnail": "a happy penguin waving a flipper on a sunny icy shore",
+  "short_scenes": [0, 1, 6],
+  "text": {
+    "en": {
+      "title": "Seven Fun Facts About Penguins",
+      "hook_line": "Did you know penguins cannot fly?",
+      "questions": ["Can a penguin fly?", "Who keeps the penguin egg warm?"]
+    },
+    "ta": {
+      "title": "பென்குயின்கள் பற்றிய ஏழு சுவையான உண்மைகள்",
+      "hook_line": "பென்குயின்களால் பறக்க முடியாது தெரியுமா?",
+      "questions": ["பென்குயினால் பறக்க முடியுமா?", "பென்குயின் முட்டையைச் சூடாக வைப்பது யார்?"]
+    }
+  },
+  "scenes": [
+    {
+      "visual": "a group of smiling penguins standing on the ice by the sea",
+      "action": "A penguin waddles to the front of the group.",
+      "en": {
+        "narration": "Hello! Today we will learn about penguins. Penguins are birds that love the sea. Here are seven fun facts about them. Let us start!"
+      },
+      "ta": {
+        "narration": "வணக்கம்! இன்று பென்குயின்களைப் பற்றிக் கற்போம். பென்குயின்கள் கடலை விரும்பும் பறவைகள். ஏழு சுவையான உண்மைகளைப் பார்ப்போம்!"
+      }
+    },
+    {
+      "visual": "a penguin swimming fast under clear blue water",
+      "action": "The penguin zooms through the water.",
+      "en": {
+        "number": 1,
+        "heading": "Penguins cannot fly",
+        "narration": "Number one: penguins are birds, but they cannot fly. Their wings work like flippers. They use them to swim fast under the water."
+      },
+      "ta": {
+        "heading": "பென்குயின்கள் பறக்காது",
+        "narration": "முதலாவது: பென்குயின்கள் பறவைகள், ஆனால் பறக்காது. அவற்றின் இறக்கைகள் துடுப்பு போல உதவுகின்றன. நீருக்கடியில் வேகமாக நீந்துகின்றன."
+      }
+    },
+    {
+      "visual": "small penguins on a warm sandy beach with rocks and sunshine",
+      "action": "A penguin hops from one rock to another.",
+      "setting": "a sunny sandy beach",
+      "en": {
+        "number": 2,
+        "heading": "Some like it warm",
+        "narration": "Number two: not all penguins live in the snow. Some penguins live on warm, sunny beaches. They swim in cool water close by."
+      },
+      "ta": {
+        "heading": "சிலவற்றுக்கு வெயில் பிடிக்கும்",
+        "narration": "இரண்டாவது: எல்லா பென்குயின்களும் பனியில் வாழ்வதில்லை. சில வெயில் நிறைந்த கடற்கரைகளில் வாழ்கின்றன."
+      }
+    },
+    {
+      "visual": "a penguin seen from below, its white front against the bright water",
+      "action": "The penguin glides above the camera.",
+      "en": {
+        "number": 3,
+        "heading": "Black and white coats",
+        "narration": "Number three: penguins are black on the back and white on the front. From above, they look like dark water. From below, they look like the bright sky."
+      },
+      "ta": {
+        "heading": "கருப்பு வெள்ளை உடை",
+        "narration": "மூன்றாவது: பென்குயின்களின் முதுகு கருப்பு, வயிறு வெள்ளை. மேலிருந்து பார்த்தால் நீர் போலத் தெரியும். கீழிருந்து பார்த்தால் வானம் போலத் தெரியும்."
+      }
+    },
+    {
+      "visual": "a penguin dad holding an egg on his feet under a fold of soft feathers",
+      "action": "The penguin dad shuffles gently on the ice.",
+      "en": {
+        "number": 4,
+        "heading": "Dads keep the egg warm",
+        "narration": "Number four: emperor penguin dads keep the egg warm. They hold it on their feet, under a soft fold of skin, for about two months."
+      },
+      "ta": {
+        "heading": "முட்டையைக் காக்கும் அப்பா",
+        "narration": "நான்காவது: பேரரசப் பென்குயின் அப்பாக்கள் முட்டையைக் கால்களின் மேல் வைத்துச் சூடாகக் காக்கின்றன. சுமார் இரண்டு மாதங்கள் இப்படிச் செய்கின்றன."
+      }
+    },
+    {
+      "visual": "a big cosy huddle of penguins in falling snow",
+      "action": "The huddle slowly turns as penguins swap places.",
+      "en": {
+        "number": 5,
+        "heading": "A big warm huddle",
+        "narration": "Number five: when it is very cold, penguins stand close together in a big group. They take turns in the middle, where it is warmest."
+      },
+      "ta": {
+        "heading": "கூட்டமாக நின்று சூடு",
+        "narration": "ஐந்தாவது: கடும் குளிரில் பென்குயின்கள் நெருக்கமாகக் கூட்டமாக நிற்கின்றன. நடுவில் சூடாக இருக்கும். அங்கே மாறி மாறி நிற்கின்றன."
+      }
+    },
+    {
+      "visual": "a penguin sliding happily on its belly across smooth ice",
+      "action": "The penguin slides across the ice on its belly.",
+      "en": {
+        "number": 6,
+        "heading": "Sliding on their bellies",
+        "narration": "Number six: penguins can slide on their bellies across the ice. They push with their feet and zoom along. It is a quick way to get around."
+      },
+      "ta": {
+        "heading": "வயிற்றால் சறுக்கும்",
+        "narration": "ஆறாவது: பென்குயின்கள் பனியில் வயிற்றால் சறுக்கிச் செல்லும். கால்களால் தள்ளி வேகமாகப் போகும்."
+      }
+    },
+    {
+      "visual": "a fluffy grey chick calling out to its parents in a crowd of penguins",
+      "action": "The chick lifts its beak and calls out.",
+      "en": {
+        "number": 7,
+        "heading": "Every voice is different",
+        "narration": "Number seven: every penguin has its own voice. In a big, noisy group, a chick can find its mum and dad just by their call."
+      },
+      "ta": {
+        "heading": "ஒவ்வொரு குரலும் தனி",
+        "narration": "ஏழாவது: ஒவ்வொரு பென்குயினுக்கும் தனிக் குரல் உண்டு. பெரிய கூட்டத்திலும் குஞ்சு தன் அம்மா அப்பாவைக் குரலால் கண்டுபிடிக்கும்."
+      }
+    },
+    {
+      "visual": "a penguin waving a flipper on the ice as the sun sets over the sea",
+      "action": "The penguin waves one flipper.",
+      "en": {
+        "narration": "Those were seven fun facts about penguins. Next time you see a penguin, wave hello and think of how well it swims. Thank you for learning with us today!"
+      },
+      "ta": {
+        "narration": "பென்குயின்கள் பற்றிய ஏழு சுவையான உண்மைகள் இவை. அடுத்த முறை பென்குயினைப் பார்த்தால் கை அசைத்து வணக்கம் சொல்லுங்கள்!"
+      }
+    }
+  ]
+}
