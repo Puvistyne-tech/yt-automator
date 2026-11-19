@@ -12,6 +12,7 @@ from autotube.domain.template_suggestions import SUGGESTION_COUNT_MAX
 from autotube.domain.trends import TrendingVideo
 from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides
+from tests.fixtures.builtin_catalog import BUILTIN_IDS
 from tests.fixtures.fake_providers import WriterCatalog
 from tests.fixtures.fake_youtube import FakeYouTube
 from tests.fixtures.suggestion_data import idea_dict, ideas_writer, placeholder_writer
@@ -35,7 +36,7 @@ def served(
 
 
 def assert_nothing_stored(client: TestClient) -> None:
-    assert [t["id"] for t in ok(client.get("/api/templates"))] == ["kids_story"]
+    assert [t["id"] for t in ok(client.get("/api/templates"))] == BUILTIN_IDS
 
 
 def test_without_a_channel_suggestions_come_from_the_sample(
