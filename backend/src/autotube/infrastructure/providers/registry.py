@@ -6,7 +6,7 @@ from autotube.domain.capabilities import Capability
 from autotube.infrastructure.providers.image import mflux, offline_image
 from autotube.infrastructure.providers.llm import gemini, groq, offline_text, ollama
 from autotube.infrastructure.providers.media import ffmpeg_media
-from autotube.infrastructure.providers.motion import depthflow, ffmpeg_pan_zoom
+from autotube.infrastructure.providers.motion import depthflow, ffmpeg_pan_zoom, ltx_mlx
 from autotube.infrastructure.providers.music import ace_step, library_music, synth_music
 from autotube.infrastructure.providers.spec import ProviderSpec
 from autotube.infrastructure.providers.tts import (
@@ -26,6 +26,7 @@ ALL_SPECS: tuple[AnySpec, ...] = (
     offline_text.SPEC,
     mflux.SPEC,
     offline_image.SPEC,
+    ltx_mlx.SPEC,
     depthflow.SPEC,
     ffmpeg_pan_zoom.SPEC,
     mlx_audio_voice.SPEC,

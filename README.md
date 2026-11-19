@@ -31,6 +31,8 @@ what is already installed. Pick only what you need:
 | `--speech` | edge-tts, Kokoro, espeak-ng and Whisper alignment (Python extras `tts`, `align`, `mac`) |
 | `--music` | ACE-Step in its own venv at `<data dir>/tools/ace-step` and the folder `<data dir>/assets/music` |
 | `--fonts` | Noto Sans, Noto Sans Tamil and libraqm for Tamil text shaping |
+| `--video` | LTX-2.5 image-to-video: `ltx-2-mlx` cloned to `<data dir>/tools/ltx-2-mlx`, installed in the venv `<data dir>/venvs/mlx`, linked as `~/.local/bin/ltx-2-mlx`, and the q4 distilled weights (about 20 GB) in `<data dir>/models` |
+| `--voices` | mlx-audio (Qwen3-TTS, Chatterbox, Maya, Svara) and mlx-whisper in the venv `<data dir>/venvs/mlx`, and their weights (about 15 GB) in `<data dir>/models` and the cache `<data dir>/hf` |
 | `--models` | every model group above |
 | `--service` | a launchd agent that starts the app at login; `--uninstall-service` removes it |
 | `--all` | the base, every model group and the service |
@@ -40,6 +42,15 @@ except gated models such as FLUX.1-dev: accept the licence on huggingface.co, cr
 and add it as the `huggingface_token` secret in the UI. The script records the Python extras it
 installed in `<data dir>/setup/extras`; `just setup` alone removes them, so run `scripts/setup.sh`
 again afterwards.
+
+`--video` and `--voices` download their weights during setup instead. If a repo is refused, run
+`HF_HOME=<data dir>/hf <data dir>/venvs/mlx/bin/hf auth login` and accept the terms on the model page.
+To reuse weights you already downloaded, point `AUTOTUBE_MODELS_FROM` at a folder holding
+`local/<owner>__<repo>` folders and an `hf/` cache; the script links them instead of downloading:
+
+```sh
+AUTOTUBE_MODELS_FROM=/path/to/models scripts/setup.sh --no-base --video --voices
+```
 
 The script adds `~/.local/bin` (where `just`, `mflux-generate` and `depthflow` live) to your shell
 profile with `uv tool update-shell`. Open a new terminal afterwards so the commands are on PATH.
