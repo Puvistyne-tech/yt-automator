@@ -40,6 +40,7 @@ describe("Pipeline editor: settings views", () => {
 
     await user.type(screen.getByRole("searchbox", { name: "Search settings" }), "zebra");
     expect(screen.getByText("No settings match")).toBeInTheDocument();
+    expect(screen.getByText("Try another word.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Clear search" }));
     expect(screen.getByLabelText(/^Music mood/)).toBeInTheDocument();
 
@@ -63,6 +64,24 @@ describe("Pipeline editor: settings views", () => {
       /Pick a calmer mood/,
     );
     expect(pressed("All settings")).toBeInTheDocument();
+
+    await user.type(screen.getByRole("searchbox", { name: "Search settings" }), "zebra");
+    expect(screen.getByLabelText(/^Music mood/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Tone/)).not.toBeInTheDocument();
+    expect(screen.queryByText("No settings match")).not.toBeInTheDocument();
+  });
+
+  it("keeps only the settings a search matches", async () => {
+    startInAllSettings();
+    const { user } = renderApp("/pipelines/space-facts");
+    await screen.findByLabelText(/^Name/);
+
+    await user.type(screen.getByRole("searchbox", { name: "Search settings" }), "music");
+
+    expect(screen.getByLabelText(/^Music mood/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Tone/)).not.toBeInTheDocument();
+    expect(sectionTitle("Publishing")).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Name/)).toBeInTheDocument();
   });
 
   it("offers both views on a built-in pipeline", async () => {

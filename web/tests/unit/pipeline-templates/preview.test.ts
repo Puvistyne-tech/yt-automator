@@ -50,11 +50,16 @@ describe("chosenLanguage", () => {
 
 describe("numberedScenes", () => {
   it("numbers scenes from one in their order", () => {
-    const scenes = [
-      { narration: "a", heading: "", action: "" },
-      { narration: "a", heading: "", action: "" },
-    ];
-    expect(numberedScenes(scenes).map((entry) => entry.number)).toEqual([1, 2]);
+    const scenes = ["first", "second", "third"].map((narration) => ({
+      narration,
+      heading: "",
+      action: "",
+    }));
+    expect(numberedScenes(scenes).map((entry) => [entry.number, entry.scene.narration])).toEqual([
+      [1, "first"],
+      [2, "second"],
+      [3, "third"],
+    ]);
   });
 });
 

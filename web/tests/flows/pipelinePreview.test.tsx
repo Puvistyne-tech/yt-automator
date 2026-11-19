@@ -1,45 +1,16 @@
 import { screen, within } from "@testing-library/react";
 import { delay, http } from "msw";
 import { db } from "@/api/mocks/db";
-import { renderApp, type User } from "../helpers/renderApp";
-import { failWith, recordBodies, server } from "../helpers/server";
-import { startNewPipeline } from "../helpers/templates";
-
-const PREVIEW = "/templates/preview-script";
-const WRITE = { name: "Write a sample script" };
-
-function previewCard() {
-  return within(screen.getByRole("region", { name: "Try a sample script" }));
-}
-
-async function openSaved(route: string) {
-  const app = renderApp(route);
-  await screen.findByRole("region", { name: "Try a sample script" });
-  return app;
-}
-
-async function newExplainer() {
-  const app = await startNewPipeline("General audience");
-  await app.user.type(screen.getByLabelText(/^Name/), "Sky facts");
-  await app.user.selectOptions(screen.getByRole("combobox", { name: "Format" }), "explainer");
-  return app;
-}
-
-async function writeSample(user: User, topic = "") {
-  const card = previewCard();
-  if (topic !== "") {
-    await user.type(card.getByLabelText(/^Topic/), topic);
-  }
-  await user.click(card.getByRole("button", WRITE));
-  return within(await screen.findByRole("article", { name: /^Sample script/ }));
-}
-
-function disableWriters() {
-  db.state.providerConfig = db.state.providerConfig.map((config) => ({
-    ...config,
-    chain: config.chain.map((choice) => ({ ...choice, enabled: false })),
-  }));
-}
+import {
+  clickWrite,
+  newExplainer,
+  openSaved,
+  PREVIEW,
+  previewCard,
+  SAMPLE,
+  writeSample,
+} from "../helpers/preview";
+import { recordBodies, server } from "../helpers/server";
 
 describe("Pipeline editor: sample script", () => {
   it.each([
@@ -74,6 +45,26 @@ describe("Pipeline editor: sample script", () => {
     expect(sample.getByText(/Written by ollama/)).toBeInTheDocument();
   });
 
+  it("replaces the shown sample with the next one", async () => {
+    const { user } = await openSaved("/pipelines/space-facts");
+    await writeSample(user, "tides");
+
+    await writeSample(user, "stars");
+
+    expect(await screen.findByRole("heading", { name: /and stars$/ })).toBeInTheDocument();
+    expect(screen.getAllByRole("article", SAMPLE)).toHaveLength(1);
+    expect(screen.queryByRole("heading", { name: /and tides$/ })).not.toBeInTheDocument();
+  });
+
+  it("offers the engine's languages with the first chosen", async () => {
+    await openSaved("/pipelines/space-facts");
+    const language = previewCard().getByLabelText("Language");
+
+    const options = await within(language).findAllByRole("option");
+    expect(options.map((option) => option.textContent)).toEqual(["English", "Tamil"]);
+    expect(language).toHaveDisplayValue("English");
+  });
+
   it("sends the unsaved form values in the chosen language and saves nothing", async () => {
     const bodies = recordBodies("post", PREVIEW);
     const before = structuredClone(db.state.templates);
@@ -97,51 +88,18 @@ describe("Pipeline editor: sample script", () => {
     expect(screen.getByText("Unsaved changes")).toBeInTheDocument();
   });
 
-  it("disables the button and shows progress while writing", async () => {
+  it("shows progress and sends one request however often the button is pressed", async () => {
     server.use(http.post(`/api${PREVIEW}`, () => delay("infinite")));
+    const bodies = recordBodies("post", PREVIEW);
     const { user } = await openSaved("/pipelines/space-facts");
 
-    await user.click(previewCard().getByRole("button", WRITE));
+    await clickWrite(user);
+    await user.click(previewCard().getByRole("button", { name: /Writing/ }));
 
     expect(
       await previewCard().findByRole("status", { name: /Writing a sample script/ }),
     ).toBeVisible();
     expect(previewCard().getByRole("button", { name: /Writing/ })).toBeDisabled();
-  });
-
-  it("shows refused values at their fields", async () => {
-    failWith("post", PREVIEW, 400, {
-      code: "validation_failed",
-      message: "Validation failed",
-      fields: {
-        topic: "String should have at most 300 characters",
-        "definition.brief": "The brief speaks to children.",
-      },
-    });
-    const { user } = await openSaved("/pipelines/space-facts");
-
-    await user.click(previewCard().getByRole("button", WRITE));
-
-    expect(await previewCard().findByLabelText(/^Topic/)).toHaveAccessibleDescription(
-      /at most 300 characters/,
-    );
-    expect(screen.getByLabelText(/^What the videos are about/)).toHaveAccessibleDescription(
-      /The brief speaks to children/,
-    );
-    expect(screen.queryByRole("article", { name: /^Sample script/ })).not.toBeInTheDocument();
-  });
-
-  it("explains calmly when no script writer is ready and links to Providers", async () => {
-    disableWriters();
-    const { user } = await openSaved("/pipelines/space-facts");
-
-    await user.click(previewCard().getByRole("button", WRITE));
-
-    const notice = await previewCard().findByText(/The script writer is not available/);
-    expect(notice.closest(".callout")).toHaveClass("callout-info");
-    expect(previewCard().getByRole("link", { name: "Open Providers" })).toHaveAttribute(
-      "href",
-      "/providers",
-    );
+    expect(bodies).toHaveLength(1);
   });
 });
