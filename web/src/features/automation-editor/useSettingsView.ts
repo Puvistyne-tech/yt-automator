@@ -15,7 +15,15 @@ import {
 } from "@/features/automation-editor/model/settingsView";
 import { useStoredChoice } from "@/shared/hooks/useStoredChoice";
 import { changedPaths } from "@/shared/schema-form/defaults";
-import { settingsFilter, visiblePathSet } from "@/shared/schema-form/fieldFilter";
+import {
+  concealedBy,
+  readHiddenPaths,
+  revealedFields,
+  revealedPaths,
+  settingsFilter,
+  visiblePathSet,
+  withoutConcealed,
+} from "@/shared/schema-form/fieldFilter";
 import { schemaFields } from "@/shared/schema-form/schemaFields";
 
 export function useSettingsViewMode() {
@@ -38,6 +46,14 @@ function useChangedPaths(pipeline: PipelineDescriptor | undefined, settings: obj
   }, [pipeline, settings]);
 }
 
+function usePipelineFields(pipeline: PipelineDescriptor | undefined) {
+  return useMemo(() => {
+    const all = schemaFields(pipeline?.settings_schema ?? {});
+    const concealed = concealedBy(all, readHiddenPaths(pipeline?.ui_schema));
+    return { all, concealed, fields: revealedFields(all, concealed) };
+  }, [pipeline]);
+}
+
 function useSettingsSearch() {
   const [query, setQuery] = useState("");
   const [changedOnly, setChangedOnly] = useState(false);
@@ -55,13 +71,14 @@ export function useSettingsFilter(
   errors: FieldErrors,
 ) {
   const search = useSettingsSearch();
-  const fields = useMemo(() => schemaFields(pipeline?.settings_schema ?? {}), [pipeline]);
+  const { all, concealed, fields } = usePipelineFields(pipeline);
   const basic = useMemo(() => basicVisibility(pipeline?.ui_schema), [pipeline]);
-  const changed = useChangedPaths(pipeline, draft.settings);
+  const changed = revealedPaths(useChangedPaths(pipeline, draft.settings), concealed);
   const errorPaths = settingsErrorPaths(errors);
   const searched = settingsFilter(fields, { ...search, changed });
-  const rule = withErrorPaths(view === "simple" ? basic : searched, errorPaths);
-  const visible = rule === undefined ? undefined : visiblePathSet(fields, rule);
+  const shown = withoutConcealed(view === "simple" ? basic : searched, concealed);
+  const rule = withErrorPaths(shown, errorPaths);
+  const visible = rule === undefined ? undefined : visiblePathSet(all, rule);
   const nothingFound = view === "all" && visible?.size === 0 && errorPaths.length === 0;
   const hiddenRules = applicableAdvancedFields(draft).length;
   const summary = simpleViewSummary(fields, basic, changed, hiddenRules);

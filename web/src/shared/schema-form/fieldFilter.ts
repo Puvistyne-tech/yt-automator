@@ -10,17 +10,73 @@ export interface FilterChoice {
 }
 
 export const BASIC_KEY = "ui:basic";
+export const HIDDEN_KEY = "ui:hidden";
 
-export function readBasicPaths(uiSchema: unknown): string[] | null {
-  const raw = isJsonObject(uiSchema) ? uiSchema[BASIC_KEY] : undefined;
+function listedPaths(uiSchema: unknown, key: string): string[] | null {
+  const raw = isJsonObject(uiSchema) ? uiSchema[key] : undefined;
   if (!Array.isArray(raw)) {
     return null;
   }
   return raw.filter((entry): entry is string => typeof entry === "string");
 }
 
+export function readBasicPaths(uiSchema: unknown): string[] | null {
+  return listedPaths(uiSchema, BASIC_KEY);
+}
+
+export function readHiddenPaths(uiSchema: unknown): string[] {
+  return listedPaths(uiSchema, HIDDEN_KEY) ?? [];
+}
+
 function within(path: string, ancestor: string): boolean {
   return path === ancestor || path.startsWith(`${ancestor}.`);
+}
+
+function leavesUnder(fields: readonly SchemaField[], parent: string): SchemaField[] {
+  return fields.filter((field) => field.leaf && field.path.startsWith(`${parent}.`));
+}
+
+export function concealedBy(
+  fields: readonly SchemaField[],
+  paths: readonly string[],
+): FieldVisibility | undefined {
+  if (paths.length === 0) {
+    return undefined;
+  }
+  const listed = (path: string) => paths.some((hidden) => within(path, hidden));
+  const emptied = new Set(
+    fields
+      .filter(
+        (field) =>
+          !field.leaf && leavesUnder(fields, field.path).every((leaf) => listed(leaf.path)),
+      )
+      .map((field) => field.path),
+  );
+  return (path) => listed(path) || emptied.has(path);
+}
+
+export function withoutConcealed(
+  rule: FieldVisibility | undefined,
+  concealed: FieldVisibility | undefined,
+): FieldVisibility | undefined {
+  if (concealed === undefined) {
+    return rule;
+  }
+  return (path) => !concealed(path) && (rule === undefined || rule(path));
+}
+
+export function revealedPaths(
+  paths: readonly string[],
+  concealed: FieldVisibility | undefined,
+): readonly string[] {
+  return concealed === undefined ? paths : paths.filter((path) => !concealed(path));
+}
+
+export function revealedFields(
+  fields: readonly SchemaField[],
+  concealed: FieldVisibility | undefined,
+): readonly SchemaField[] {
+  return concealed === undefined ? fields : fields.filter((field) => !concealed(field.path));
 }
 
 export function shownBy(paths: readonly string[]): FieldVisibility {

@@ -11,7 +11,13 @@ import {
   simpleViewSummary,
   withErrorPaths,
 } from "@/features/automation-editor/model/settingsView";
-import { shownBy } from "@/shared/schema-form/fieldFilter";
+import {
+  concealedBy,
+  revealedFields,
+  revealedPaths,
+  shownBy,
+  withoutConcealed,
+} from "@/shared/schema-form/fieldFilter";
 import { schemaFields } from "@/shared/schema-form/schemaFields";
 
 const settingsSchema = {
@@ -96,6 +102,15 @@ describe("withErrorPaths", () => {
     expect(visible?.("music.enabled")).toBe(false);
   });
 
+  it("shows a hidden field that has an error, with its parent", () => {
+    const concealed = concealedBy(schemaFields(settingsSchema), ["music"]);
+    const visible = withErrorPaths(withoutConcealed(undefined, concealed), ["music.volume"]);
+    expect(visible?.("music.volume")).toBe(true);
+    expect(visible?.("music")).toBe(true);
+    expect(visible?.("music.enabled")).toBe(false);
+    expect(withoutConcealed(undefined, concealed)?.("music.volume")).toBe(false);
+  });
+
   it("leaves an unfiltered form unfiltered", () => {
     expect(withErrorPaths(undefined, ["music.volume"])).toBeUndefined();
   });
@@ -130,6 +145,18 @@ describe("simpleViewSummary", () => {
   it("counts hidden settings, applicable finer rules and hidden changes", () => {
     const summary = simpleViewSummary(fields, shownBy(["name"]), ["music.volume", "name"], 3);
     expect(summary).toEqual({ hidden: 5, changed: 1 });
+  });
+
+  it("leaves hidden settings and their changes out of the counts", () => {
+    const concealed = concealedBy(fields, ["music.volume"]);
+    const changed = revealedPaths(["music.volume", "music.enabled"], concealed);
+    const summary = simpleViewSummary(
+      revealedFields(fields, concealed),
+      shownBy(["name"]),
+      changed,
+      3,
+    );
+    expect(summary).toEqual({ hidden: 4, changed: 1 });
   });
 
   it("counts only the finer rules without ui:basic", () => {
