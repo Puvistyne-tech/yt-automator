@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from autotube.domain.capabilities import Capability, TextGenerator, TextRequest
+from autotube.domain.provider_fallbacks import ProviderFallback
 from autotube.domain.providers import ProviderConfig, ProviderDescriptor
 from autotube.domain.secrets import SecretDefinition
 from autotube.domain.validation import field_path
@@ -39,9 +40,18 @@ class EchoTextGenerator:
 
 
 class FakeResolver:
-    def __init__(self, configs: Sequence[ProviderConfig], text: EchoTextGenerator) -> None:
+    def __init__(
+        self,
+        configs: Sequence[ProviderConfig],
+        text: EchoTextGenerator,
+        fallen_back: list[ProviderFallback] | None = None,
+    ) -> None:
         self.configs = list(configs)
         self.text = text
+        self.fallen_back = [] if fallen_back is None else fallen_back
+
+    def fallbacks(self) -> tuple[ProviderFallback, ...]:
+        return tuple(self.fallen_back)
 
     def resolve(self, capability: Capability) -> Any:
         if capability is Capability.LLM:
@@ -53,6 +63,7 @@ class FakeProviderCatalog:
     def __init__(self) -> None:
         self.text = EchoTextGenerator()
         self.resolved_with: list[list[ProviderConfig]] = []
+        self.fallen_back: list[ProviderFallback] = []
 
     def descriptors(self) -> list[ProviderDescriptor]:
         return list(DESCRIPTORS)
@@ -70,7 +81,7 @@ class FakeProviderCatalog:
 
     def resolver(self, configs: Sequence[ProviderConfig]) -> FakeResolver:
         self.resolved_with.append(list(configs))
-        return FakeResolver(configs, self.text)
+        return FakeResolver(configs, self.text, self.fallen_back)
 
 
 class WriterResolver(FakeResolver):

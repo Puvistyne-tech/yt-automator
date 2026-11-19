@@ -7,7 +7,11 @@ from pydantic import Field
 
 from autotube.domain.diagnostics import DEFAULT_MIN_FREE_GB
 from autotube.domain.model_base import DomainModel
-from autotube.domain.run_parts import DEFAULT_MAX_RUN_LOGS
+from autotube.domain.run_parts import (
+    DEFAULT_FALLBACK_REASON_CHARS,
+    DEFAULT_MAX_RUN_LOGS,
+    MIN_FALLBACK_REASON_CHARS,
+)
 from autotube.domain.validation import timezone_errors
 
 
@@ -64,6 +68,12 @@ class AppSettingsInput(DomainModel):
         ge=1,
         title="Log entries kept per run",
         description="Older entries are dropped once a run has this many",
+    )
+    fallback_reason_chars: int = Field(
+        default=DEFAULT_FALLBACK_REASON_CHARS,
+        ge=MIN_FALLBACK_REASON_CHARS,
+        title="Fallback reason length",
+        description="Characters of a failed provider's error shown when a run falls back",
     )
     log_level: ServerLogLevel = Field(
         default=ServerLogLevel.INFO,

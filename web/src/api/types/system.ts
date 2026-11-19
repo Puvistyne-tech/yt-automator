@@ -71,6 +71,7 @@ export interface AppSettingsInput {
   cleanup_interval_hours: number;
   caption_track_name: string;
   max_run_log_entries: number;
+  fallback_reason_chars: number;
   log_level: ServerLogLevel;
   doctor_min_free_gb: number;
 }

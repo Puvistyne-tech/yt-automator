@@ -22,6 +22,8 @@ from autotube.domain.capabilities import (
     TextRequest,
     VideoComposition,
 )
+from autotube.domain.provider_fallbacks import ProviderFallback
+from autotube.infrastructure.providers.fallback_log import FallbackRecorder, ignore_fallback
 from autotube.infrastructure.providers.upstream_errors import as_upstream
 from autotube.shared.errors import UpstreamFailure
 
@@ -32,27 +34,45 @@ class Identified(Protocol):
 
 
 class FallbackChain[P: Identified]:
-    def __init__(self, capability: Capability, providers: Sequence[P]) -> None:
+    def __init__(
+        self,
+        capability: Capability,
+        providers: Sequence[P],
+        record: FallbackRecorder = ignore_fallback,
+    ) -> None:
         self.capability = capability
         self.providers = list(providers)
+        self.record = record
         self.served_by = self.providers[0].provider_id
         self.failures: list[str] = []
 
     def call[T](self, operation: Callable[[P], T]) -> T:
-        failures: list[str] = []
+        failed: list[tuple[str, str]] = []
         for provider in self.providers:
             try:
                 result = as_upstream(provider.provider_id, partial(operation, provider))
             except UpstreamFailure as error:
-                failures.append(f"{provider.provider_id}: {error.message}")
+                failed.append((provider.provider_id, error.message))
                 continue
-            self.served_by = provider.provider_id
-            self.failures = failures
+            self.served(provider.provider_id, failed)
             return result
-        self.failures = failures
+        self.failures = described(failed)
         raise UpstreamFailure(
-            f"every {self.capability.value} provider failed: {'; '.join(failures)}"
+            f"every {self.capability.value} provider failed: {'; '.join(self.failures)}"
         )
+
+    def served(self, provider_id: str, failed: list[tuple[str, str]]) -> None:
+        self.served_by = provider_id
+        self.failures = described(failed)
+        for failed_id, reason in failed:
+            fallback = ProviderFallback(
+                capability=self.capability, failed=failed_id, used=provider_id, reason=reason
+            )
+            self.record(fallback)
+
+
+def described(failed: list[tuple[str, str]]) -> list[str]:
+    return [f"{provider_id}: {reason}" for provider_id, reason in failed]
 
 
 class ChainProxy[P: Identified]:
@@ -113,6 +133,10 @@ PROXIES: dict[Capability, type[ChainProxy[Any]]] = {
 }
 
 
-def fallback_proxy(capability: Capability, providers: Sequence[Any]) -> CapabilityProvider:
-    proxy = PROXIES[capability](FallbackChain(capability, providers))
+def fallback_proxy(
+    capability: Capability,
+    providers: Sequence[Any],
+    record: FallbackRecorder = ignore_fallback,
+) -> CapabilityProvider:
+    proxy = PROXIES[capability](FallbackChain(capability, providers, record))
     return cast(CapabilityProvider, proxy)

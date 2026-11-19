@@ -6,6 +6,7 @@ export const SETTING_MINIMUMS: Partial<Record<AppSettingName, number>> = {
   keep_intermediate_days: 0,
   cleanup_interval_hours: 0,
   max_run_log_entries: 1,
+  fallback_reason_chars: 20,
 };
 
 export function settingsInput(settings: AppSettingsInput | AppSettings): AppSettingsInput {
@@ -18,6 +19,7 @@ export function settingsInput(settings: AppSettingsInput | AppSettings): AppSett
     cleanup_interval_hours: settings.cleanup_interval_hours,
     caption_track_name: settings.caption_track_name,
     max_run_log_entries: settings.max_run_log_entries,
+    fallback_reason_chars: settings.fallback_reason_chars,
     log_level: settings.log_level,
     doctor_min_free_gb: settings.doctor_min_free_gb,
   };

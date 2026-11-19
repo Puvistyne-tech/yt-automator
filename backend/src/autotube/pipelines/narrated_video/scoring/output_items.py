@@ -4,7 +4,9 @@ from autotube.domain.artifact_selection import text_list
 from autotube.domain.quality import ScoreItem
 from autotube.domain.run_parts import Artifact
 from autotube.domain.upload_details import DESCRIPTION_MAX_BYTES, utf8_length
+from autotube.pipelines.narrated_video.art.stand_ins import STAND_IN_FOR
 from autotube.pipelines.narrated_video.artifacts import (
+    EPISODE,
     Role,
     active_variants,
     latest,
@@ -106,4 +108,34 @@ def completeness(inputs: ScoreInputs) -> ScoreItem:
         score=FULL * (len(wanted) - len(missing)) / len(wanted) if wanted else FULL,
         weight=inputs.settings.quality.weights.completeness,
         detail="missing: " + ", ".join(missing) if missing else "all outputs present",
+    )
+
+
+def episode_pictures(inputs: ScoreInputs) -> list[Artifact]:
+    visuals = with_role(inputs.artifacts, Role.VISUAL, variant=EPISODE)
+    latest_by_key = {item.meta.get("visual_key"): item for item in visuals if "scene" in item.meta}
+    return list(latest_by_key.values())
+
+
+def stand_in_detail(stand_ins: list[Artifact], total: int) -> str:
+    if not stand_ins:
+        return f"all {total} episode pictures came from the chosen image model"
+    failed = sorted({name for item in stand_ins for name in text_list(item.meta.get(STAND_IN_FOR))})
+    return (
+        f"{len(stand_ins)} of {total} episode pictures are stand-ins drawn after "
+        f"{', '.join(failed)} failed"
+    )
+
+
+def real_pictures(inputs: ScoreInputs) -> ScoreItem | None:
+    pictures = episode_pictures(inputs)
+    if not pictures:
+        return None
+    stand_ins = [item for item in pictures if text_list(item.meta.get(STAND_IN_FOR))]
+    return ScoreItem(
+        id="real_pictures",
+        title="Pictures from the chosen image model",
+        score=FULL * (len(pictures) - len(stand_ins)) / len(pictures),
+        weight=inputs.settings.quality.weights.real_pictures,
+        detail=stand_in_detail(stand_ins, len(pictures)),
     )

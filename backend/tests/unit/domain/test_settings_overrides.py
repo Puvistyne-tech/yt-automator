@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from autotube.domain.diagnostics import DoctorPolicy
+from autotube.domain.run_parts import RunLogPolicy
 from autotube.domain.settings import (
     AppSettings,
     AppSettingsInput,
@@ -75,7 +76,9 @@ def test_input_drops_the_read_only_fields() -> None:
 
 
 def test_run_logs_and_doctor_follow_the_settings() -> None:
-    settings = AppSettingsInput(max_run_log_entries=9, doctor_min_free_gb=2.5)
-    assert run_log_policy(settings).max_entries == 9
+    settings = AppSettingsInput(
+        max_run_log_entries=9, fallback_reason_chars=40, doctor_min_free_gb=2.5
+    )
+    assert run_log_policy(settings) == RunLogPolicy(max_entries=9, fallback_reason_chars=40)
     base = DoctorPolicy(min_python=(3, 13))
     assert doctor_policy(base, settings) == DoctorPolicy(min_python=(3, 13), min_free_gb=2.5)

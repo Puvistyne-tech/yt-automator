@@ -19,6 +19,7 @@ from autotube.domain.capabilities import (
 )
 from autotube.domain.model_base import DomainModel, JsonObject
 from autotube.domain.pipeline_descriptors import PipelineDescriptor, StageDescriptor
+from autotube.domain.provider_fallbacks import ProviderFallback
 from autotube.domain.quality import ScoreItem
 from autotube.domain.run_enums import ArtifactKind, LogLevel
 from autotube.domain.run_parts import Artifact
@@ -39,6 +40,8 @@ class ProviderResolver(Protocol):
     def resolve(self, capability: Literal[Capability.MEDIA]) -> MediaToolkit: ...
     @overload
     def resolve(self, capability: Capability) -> CapabilityProvider: ...
+
+    def fallbacks(self) -> tuple[ProviderFallback, ...]: ...
 
 
 class NewArtifact(DomainModel):

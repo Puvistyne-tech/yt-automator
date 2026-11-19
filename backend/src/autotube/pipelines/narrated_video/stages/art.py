@@ -9,6 +9,7 @@ from autotube.domain.run_enums import ArtifactKind, LogLevel
 from autotube.pipelines.narrated_video.art.cards import badged_copy
 from autotube.pipelines.narrated_video.art.prompts import character_prompt, scene_prompt
 from autotube.pipelines.narrated_video.art.scene_art import Drawing, ScenePainter
+from autotube.pipelines.narrated_video.art.stand_ins import DRAWN_BY, with_stand_ins
 from autotube.pipelines.narrated_video.artifacts import (
     EPISODE,
     Role,
@@ -51,8 +52,9 @@ class ArtStage:
             chosen[index], scene_made = self.scene_art(painter, story, index, sheets)
             made.extend(scene_made)
         made.extend(ExtraArt(context, painter, story, chosen).made())
+        marked = with_stand_ins(made, context.providers.fallbacks())
         return StageOutcome(
-            artifacts=(style, *made), provider=images.provider_id, message=f"{len(made)} pictures"
+            artifacts=(style, *marked), provider=images.provider_id, message=f"{len(made)} pictures"
         )
 
     def judge(self, context: StageContext, settings: KidsStorySettings) -> TextGenerator | None:
@@ -100,6 +102,7 @@ class ArtStage:
         scene = story.scenes[index]
         references = tuple(sheets[name] for name in scene.characters if name in sheets)
         paths = painter.candidates(scene, index, settings.video_size(EPISODE), references)
+        drawn_by = painter.images.provider_id
         chosen = painter.pick(scene, paths)
         made = [
             artifact(ArtifactKind.IMAGE, path, PNG, Role.CANDIDATE, scene=index, candidate=number)
@@ -120,6 +123,7 @@ class ArtStage:
                 candidate=chosen,
                 prompt=scene_prompt(settings, scene),
                 characters=list(scene.characters),
+                **{DRAWN_BY: drawn_by},
             )
         )
         return paths[chosen], made

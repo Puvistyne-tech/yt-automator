@@ -22,6 +22,7 @@ export const SETTINGS: AppSettings = {
   cleanup_interval_hours: 24,
   caption_track_name: "English",
   max_run_log_entries: 2000,
+  fallback_reason_chars: 200,
   log_level: "info",
   doctor_min_free_gb: 10,
   data_dir: "~/Library/Application Support/AutoTube",

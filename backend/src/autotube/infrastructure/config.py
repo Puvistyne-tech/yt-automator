@@ -8,7 +8,11 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from autotube.domain.diagnostics import DEFAULT_MIN_FREE_GB, DoctorPolicy
-from autotube.domain.run_parts import DEFAULT_MAX_RUN_LOGS
+from autotube.domain.run_parts import (
+    DEFAULT_FALLBACK_REASON_CHARS,
+    DEFAULT_MAX_RUN_LOGS,
+    MIN_FALLBACK_REASON_CHARS,
+)
 from autotube.domain.settings import AppSettingsInput, ServerLogLevel
 from autotube.infrastructure.runtime.python_requirement import required_python
 
@@ -90,6 +94,11 @@ class RuntimeConfig(BaseModel):
     )
     max_run_log_entries: int = Field(
         default=DEFAULT_MAX_RUN_LOGS, ge=1, description="Newest log entries kept on each run"
+    )
+    fallback_reason_chars: int = Field(
+        default=DEFAULT_FALLBACK_REASON_CHARS,
+        ge=MIN_FALLBACK_REASON_CHARS,
+        description="Characters of a failed provider's error shown in a fallback warning",
     )
     log_level: ServerLogLevel = Field(default=ServerLogLevel.INFO, description="Server log level")
     doctor_min_free_gb: float = Field(

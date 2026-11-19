@@ -6,6 +6,7 @@ from autotube.infrastructure.config import ENV_PREFIX, RuntimeConfig
 ENV_SETTINGS: dict[str, str] = {
     "youtube_caption_track_name": "caption_track_name",
     "max_run_log_entries": "max_run_log_entries",
+    "fallback_reason_chars": "fallback_reason_chars",
     "log_level": "log_level",
     "doctor_min_free_gb": "doctor_min_free_gb",
     "cleanup_interval_hours": "cleanup_interval_hours",

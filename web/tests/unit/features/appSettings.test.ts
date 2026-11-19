@@ -16,6 +16,7 @@ describe("app settings input", () => {
       cleanup_interval_hours: 24,
       caption_track_name: "English",
       max_run_log_entries: 2000,
+      fallback_reason_chars: 200,
       log_level: "info",
       doctor_min_free_gb: 10,
     });
@@ -43,6 +44,8 @@ describe("validateSettings", () => {
     ],
     [{ cleanup_interval_hours: 0 }, {}],
     [{ max_run_log_entries: 0 }, { max_run_log_entries: "Use a whole number, at least 1." }],
+    [{ fallback_reason_chars: 19 }, { fallback_reason_chars: "Use a whole number, at least 20." }],
+    [{ fallback_reason_chars: 20 }, {}],
     [{ doctor_min_free_gb: -0.5 }, { doctor_min_free_gb: "Use a number, 0 or more." }],
     [{ doctor_min_free_gb: Number.NaN }, { doctor_min_free_gb: "Use a number, 0 or more." }],
     [{ doctor_min_free_gb: 2.5 }, {}],

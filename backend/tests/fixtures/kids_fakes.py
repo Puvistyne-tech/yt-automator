@@ -20,6 +20,7 @@ from autotube.domain.capabilities import (
     VideoComposition,
     WordTiming,
 )
+from autotube.domain.provider_fallbacks import ProviderFallback
 from autotube.domain.run_enums import LogLevel
 
 WORD_SECONDS = {"en": 0.5, "ta": 0.75}
@@ -148,6 +149,10 @@ class FakeProviders:
     speech: FakeSpeech = field(default_factory=FakeSpeech)
     music: FakeMusic | None = field(default_factory=FakeMusic)
     media: FakeMedia = field(default_factory=FakeMedia)
+    fallen_back: list[ProviderFallback] = field(default_factory=list)
+
+    def fallbacks(self) -> tuple[ProviderFallback, ...]:
+        return tuple(self.fallen_back)
 
     def resolve(self, capability: Capability) -> Any:
         found = {

@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from autotube.domain.quality import ScoreItem
 from autotube.domain.srt import SrtEntry
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
 from autotube.pipelines.narrated_video.scoring.content_items import (
@@ -29,26 +28,11 @@ from autotube.pipelines.narrated_video.scoring.timing_items import (
     speaking_rate,
     subtitle_timing,
 )
-from tests.fixtures.kids_data import StageRig, quick_settings, run_chain
+from tests.fixtures.kids_data import StageRig, quick_settings
 from tests.fixtures.kids_fakes import FakeMedia, FakeProviders, FakeSpeech
+from tests.fixtures.kids_scoring import finished, required
 
 RULES = SubtitleRules(min_coverage=0.95, overlap_penalty=0.5, out_of_bounds_penalty=0.5)
-
-
-def finished(
-    root: Path, providers: FakeProviders | None = None, languages: tuple[str, ...] = ("en", "ta")
-) -> StageRig:
-    return run_chain(StageRig(root, providers=providers or FakeProviders(), languages=languages))
-
-
-@pytest.fixture(scope="module")
-def inputs(tmp_path_factory: pytest.TempPathFactory) -> ScoreInputs:
-    return gathered(finished(tmp_path_factory.mktemp("score")).context())
-
-
-def required(item: ScoreItem | None) -> ScoreItem:
-    assert item is not None
-    return item
 
 
 def test_range_score_and_subtitle_track_measures() -> None:
@@ -92,6 +76,7 @@ def test_a_clean_run_scores_well_on_every_item(inputs: ScoreInputs) -> None:
         "metadata_limits",
         "loudness",
         "completeness",
+        "real_pictures",
     }
     for item_id in (
         "subtitle_timing",
@@ -104,6 +89,7 @@ def test_a_clean_run_scores_well_on_every_item(inputs: ScoreInputs) -> None:
         "loudness",
         "completeness",
         "reading_level",
+        "real_pictures",
     ):
         assert items[item_id].score == 100, items[item_id].detail
     assert items["subtitle_timing"].weight == 2.0

@@ -6,6 +6,7 @@ import pytest
 
 from autotube.domain.capabilities import Capability, TextRequest
 from autotube.domain.pipeline_templates import TemplateAudience
+from autotube.domain.provider_fallbacks import ProviderFallback
 from autotube.domain.sample_scripts import SampleScene, SampleScript, SampleUnavailableError
 from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
 from autotube.pipelines.narrated_video.settings.base import LocalizedText
@@ -137,6 +138,9 @@ def test_a_missing_or_failing_writer_never_falls_back_to_a_bundled_story(
 
 
 class RefusingProviders:
+    def fallbacks(self) -> tuple[ProviderFallback, ...]:
+        return ()
+
     def resolve(self, capability: Capability) -> Any:
         raise RuleConflict("provider_unavailable", f"no {capability.value} provider is ready")
 
