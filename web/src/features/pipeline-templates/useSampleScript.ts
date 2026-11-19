@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { usePipelines } from "@/api/catalog";
-import { previewUnavailableOf } from "@/api/templateErrors";
+import { PREVIEW_UNAVAILABLE, unavailableMessageOf } from "@/api/templateErrors";
 import { usePreviewTemplateScript, useTemplates } from "@/api/templates";
 import type { TemplateDraft } from "@/features/pipeline-templates/model/form";
 import {
@@ -32,7 +32,7 @@ export function useSampleScript({ engineId, draft, problems }: SampleInput) {
   const [topic, setTopic] = useState("");
   const [unavailable, setUnavailable] = useState<string | null>(null);
   const onError = (error: unknown) => {
-    const message = previewUnavailableOf(error);
+    const message = unavailableMessageOf(error, PREVIEW_UNAVAILABLE);
     setUnavailable(message);
     if (message === null) {
       problems.report(error);

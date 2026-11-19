@@ -13,6 +13,7 @@ function descriptor(seed: DescriptorSeed): ProviderDescriptor {
     offline: true,
     available: true,
     unavailable_reason: "",
+    placeholder: false,
     ...seed,
   };
 }
@@ -62,6 +63,7 @@ export const providerDescriptors: ProviderDescriptor[] = [
     capability: "llm",
     name: "Offline fake",
     description: "Deterministic text for tests and dry runs.",
+    placeholder: true,
   }),
   descriptor({
     provider_id: "mflux",
