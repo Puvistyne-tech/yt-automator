@@ -32,7 +32,7 @@ describe("Pipeline editor: delete", () => {
 
     await confirmDialog(app.user, TITLE, "Delete pipeline");
 
-    await findToast("Deleted “History in five minutes”.");
+    await findToast("Deleted “Ancient empires”.");
     await waitFor(() => expect(pathOf(app.router)).toBe("/pipelines"));
     expect(screen.queryByRole("dialog", { name: "Discard unsaved changes?" })).toBeNull();
     expect(ids()).toEqual(["space-facts"]);
