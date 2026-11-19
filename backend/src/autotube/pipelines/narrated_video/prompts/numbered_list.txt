@@ -1,0 +1,8 @@
+Shape of the $piece:
+- The first scene is a short intro hook: it names the topic and promises $count items. It has "number": null and "heading": "".
+- Then come exactly $count item scenes, one item per scene, numbered $order. Each item scene has "number" (the item's number, as a numeral) and "heading" (a short name for the item, in $language), and its narration starts by saying the item's number.
+- The last scene is a short closing line that wraps up the $piece. It has "number": null and "heading": "".
+- Every heading is different. Use only true facts.
+- "question" and "answer" are always empty and "choices" is always an empty list.
+- "moral" is an empty string.
+- There are no recurring characters: "characters" is always an empty list and "speaker" is always "narrator".

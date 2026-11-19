@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
+from autotube.pipelines.narrated_video.settings.metadata import MetadataSettings
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.structures.registry import (
@@ -27,7 +28,7 @@ def test_the_story_spec_keeps_todays_prompts_and_bundled_fallback() -> None:
     assert spec.id is Structure.STORY
     assert spec.uses_bundled is True
     assert spec.wording == {"format": "animated story", "pieces": "stories", "piece": "story"}
-    assert structure_defaults(Structure.STORY) == {}
+    assert structure_defaults(Structure.STORY) == ()
     assert {"moral", "refrain", "characters"} <= set(metadata_placeholders(Structure.STORY))
 
 
@@ -57,3 +58,23 @@ def test_the_structure_cannot_change_after_creation(
     current, proposed = template(definition=before), template(definition=after)
     found = NarratedVideoEngine().revision_problems(current, proposed)
     assert ("definition.structure" in found) is refused
+
+
+METADATA_FIELDS = ["title_template", "short_title_template", "description_template"]
+
+
+@pytest.mark.parametrize("field", METADATA_FIELDS)
+def test_every_metadata_field_names_every_structures_own_placeholders(field: str) -> None:
+    description = MetadataSettings.model_fields[field].description or ""
+    named = {name for spec in SPECS.values() for name in spec.placeholders}
+    assert [name for name in sorted(named) if f"{{{name}}}" not in description] == []
+
+
+def test_every_structure_has_a_short_title() -> None:
+    assert [spec.title for spec in SPECS.values()] == [
+        "Story with a recurring cast",
+        "Explainer",
+        "List",
+        "Countdown",
+        "Quiz",
+    ]

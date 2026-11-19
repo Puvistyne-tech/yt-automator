@@ -29,6 +29,10 @@ DESCRIPTION_TA = (
     "சேர்ந்து பாருங்கள், சேர்ந்து பேசுங்கள், புன்னகையைப் பகிருங்கள்.\n\n"
     "{hashtags}"
 )
+FORMAT_PLACEHOLDERS = (
+    "{moral}, {characters} and {refrain} for stories, {takeaway} for explainers, {count} and "
+    "{items} for lists and countdowns, {question_count} for quizzes"
+)
 TAGS_EN = [
     "kids stories",
     "stories for kids",
@@ -56,14 +60,14 @@ class MetadataSettings(SettingsSection):
         "{title} | {series}",
         "Episode title",
         "Episode title per language; {title}, {series} and {theme} are filled in, plus the "
-        "format's own: {moral} for stories, {takeaway} for explainers.",
+        f"format's own: {FORMAT_PLACEHOLDERS}.",
     )
     short_title_template: LocalizedText = localized_text(
         "{title} #Shorts",
         "{title} #Shorts",
         "Short title",
         "Short title per language; {title}, {series}, {theme} and {hook} are filled in, plus the "
-        "format's own: {moral} for stories, {takeaway} for explainers.",
+        f"format's own: {FORMAT_PLACEHOLDERS}.",
     )
     description_template: LocalizedText = localized_text(
         DESCRIPTION_EN,
@@ -71,7 +75,8 @@ class MetadataSettings(SettingsSection):
         "Description",
         "Placeholders: {title} {series} {tagline} {theme} {questions} {hashtags} {hook}. Which "
         "others work depends on the format: stories add {moral} {characters} {refrain}, "
-        "explainers add {takeaway}. Any other placeholder is left empty.",
+        "explainers add {takeaway}, lists and countdowns add {count} {items}, quizzes add "
+        "{question_count}. Any other placeholder is left empty.",
     )
     tags: LocalizedList = localized_list(
         TAGS_EN,

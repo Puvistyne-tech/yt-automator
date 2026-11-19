@@ -60,6 +60,18 @@
           {
             "const": "explainer",
             "title": "Explainer"
+          },
+          {
+            "const": "list",
+            "title": "List"
+          },
+          {
+            "const": "countdown",
+            "title": "Countdown"
+          },
+          {
+            "const": "quiz",
+            "title": "Quiz"
           }
         ],
         "title": "Format",

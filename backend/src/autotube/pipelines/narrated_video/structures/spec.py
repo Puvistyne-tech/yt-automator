@@ -13,6 +13,14 @@ PromptValues = Callable[[KidsStorySettings, str, str], dict[str, str]]
 TranslationRules = Callable[[KidsStorySettings, str], str]
 PlaceholderValues = Callable[[Story, KidsStorySettings], dict[str, str]]
 SeededGates = Callable[[str], tuple[CheckedGate, ...]]
+FixedScenes = Callable[[KidsStorySettings], int]
+
+
+def unseeded(gates: tuple[CheckedGate, ...]) -> SeededGates:
+    def chosen(seed: str) -> tuple[CheckedGate, ...]:  # noqa: ARG001
+        return gates
+
+    return chosen
 
 
 @dataclass(frozen=True)
@@ -30,4 +38,6 @@ class StructureSpec:
     uses_bundled: bool = False
     basic_paths: tuple[str, ...] = ()
     hidden_paths: tuple[str, ...] = ()
-    defaults_file: str = ""
+    shown_paths: tuple[str, ...] = ()
+    defaults_files: tuple[str, ...] = ()
+    fixed_scenes: FixedScenes | None = None

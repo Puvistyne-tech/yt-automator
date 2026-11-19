@@ -8,6 +8,9 @@ from autotube.pipelines.narrated_video.settings.choices import checkbox_choices,
 class Structure(StrEnum):
     STORY = "story"
     EXPLAINER = "explainer"
+    LIST = "list"
+    COUNTDOWN = "countdown"
+    QUIZ = "quiz"
 
 
 class EndingStyle(StrEnum):
@@ -48,6 +51,9 @@ STRUCTURE_CHOICES = enum_choices(
     {
         "story": "Story",
         "explainer": "Explainer",
+        "list": "List",
+        "countdown": "Countdown",
+        "quiz": "Quiz",
     },
 )
 ENDING_STYLE_CHOICES = enum_choices(
@@ -74,6 +80,6 @@ STORY_CHECK_CHOICES = checkbox_choices(
         "ending": "Ending (moral and refrain)",
         "reading_level": "Reading level",
         "cast": "Only the episode's characters",
-        "structure": "The structure's own shape, such as an explainer's hook and takeaway",
+        "structure": "The structure's own shape, such as an explainer's hook or a list's numbering",
     },
 )

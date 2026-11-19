@@ -1,0 +1,45 @@
+{
+  "story": {
+    "themes": [
+      "the fastest animals",
+      "the tallest trees",
+      "the biggest planets",
+      "the longest rivers",
+      "the largest ocean animals",
+      "the highest mountains"
+    ],
+    "fixed_theme": "the fastest animals",
+    "question_style": "\"Do you remember?\" style questions about the countdown"
+  },
+  "metadata": {
+    "description_template": {
+      "en": "{title}\n\nA countdown of {count} from {series}: {theme}. {tagline}.\n\nThe countdown: {items}\n\nTest yourself:\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் {count} இடங்களின் தரவரிசை: {theme}. {tagline}.\n\nவரிசை: {items}\n\n{questions}\n\n{hashtags}"
+    },
+    "tags": {
+      "en": [
+        "top 10",
+        "countdown",
+        "rankings",
+        "learn something new"
+      ],
+      "ta": [
+        "தமிழ் தரவரிசை",
+        "முதல் பத்து",
+        "Tamil countdown"
+      ]
+    },
+    "hashtags": {
+      "en": [
+        "#Countdown",
+        "#Top10",
+        "#LearnSomethingNew"
+      ],
+      "ta": [
+        "#தமிழ்தரவரிசை",
+        "#Countdown",
+        "#Top10"
+      ]
+    }
+  }
+}

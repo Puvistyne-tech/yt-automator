@@ -17,6 +17,14 @@ def narration_of(story: StoryDraft) -> str:
     return " ".join(scene.narration for scene in story.scenes)
 
 
+def label_sentences(story: StoryDraft) -> list[str]:
+    return [f"{text.strip()}." for scene in story.scenes for text in scene.texts if text.strip()]
+
+
+def reading_text(story: StoryDraft) -> str:
+    return " ".join([narration_of(story), *label_sentences(story)])
+
+
 def total_words(story: StoryDraft) -> int:
     return sum(word_count(scene.narration) for scene in story.scenes)
 

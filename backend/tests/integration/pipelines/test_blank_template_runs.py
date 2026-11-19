@@ -18,6 +18,7 @@ from tests.fixtures.kids_data import smart_writer
 from tests.fixtures.kids_fakes import FakeWriter
 from tests.fixtures.pipeline_runs import PAIRS, executed_run, pairs, planned_uploads
 from tests.fixtures.quick_sections import QUICK_SECTIONS
+from tests.fixtures.structure_writers import SCRIPTED_WRITERS
 from tests.fixtures.template_records import template
 from tests.fixtures.template_settings import GENERAL, KIDS, general_writer
 
@@ -69,6 +70,15 @@ def test_a_blank_explainer_runs_offline_for_each_audience(
     assert_published_offline(run, harness, audience)
     english = [item for item in upload_details(run) if item.default_language == "en"]
     assert any(TAKEAWAY_EN in item.description for item in english)
+
+
+@pytest.mark.parametrize("structure", list(SCRIPTED_WRITERS))
+@pytest.mark.parametrize("audience", [KIDS, GENERAL])
+def test_a_blank_scripted_structure_runs_offline_for_each_audience(
+    harness: Harness, audience: TemplateAudience, structure: str
+) -> None:
+    run = blank_run(harness, audience, structure, SCRIPTED_WRITERS[structure]())
+    assert_published_offline(run, harness, audience)
 
 
 @pytest.mark.parametrize(("audience", "writer"), [(KIDS, smart_writer), (GENERAL, general_writer)])
