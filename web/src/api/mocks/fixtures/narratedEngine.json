@@ -51,7 +51,7 @@
     "properties": {
       "structure": {
         "default": "story",
-        "description": "The shape of every script. Fixed once the template is created.",
+        "description": "How every script is built; it cannot change after the template is created.",
         "oneOf": [
           {
             "const": "story",
@@ -74,19 +74,19 @@
             "title": "Quiz"
           }
         ],
-        "title": "Structure",
+        "title": "Format",
         "type": "string"
       },
       "brief": {
         "default": "",
-        "description": "What the videos are about, in a few sentences. Empty adds nothing.",
+        "description": "Describe the subject in a few sentences.",
         "maxLength": 2000,
-        "title": "Brief",
+        "title": "What the videos are about",
         "type": "string"
       },
       "length": {
         "default": "standard",
-        "description": "How long each episode runs. Standard keeps the engine's length.",
+        "description": "How long each episode runs.",
         "oneOf": [
           {
             "const": "short",
@@ -98,21 +98,21 @@
           },
           {
             "const": "long",
-            "title": "Long"
+            "title": "Long, about five minutes"
           }
         ],
-        "title": "Length",
+        "title": "Video length",
         "type": "string"
       },
       "tone": {
         "default": "",
-        "description": "How the scripts feel. Empty keeps the engine's tone.",
+        "description": "How the scripts should feel; leave empty for the default.",
         "maxLength": 300,
         "title": "Tone",
         "type": "string"
       },
       "topics": {
-        "description": "Themes the writer rotates through. Empty keeps the engine's themes.",
+        "description": "Subjects the videos take turns covering; leave empty for the default.",
         "items": {
           "type": "string"
         },
@@ -121,11 +121,11 @@
       },
       "visual_style": {
         "default": "",
-        "description": "A style from the style library. Empty keeps the engine's style.",
+        "description": "How the pictures look.",
         "oneOf": [
           {
             "const": "",
-            "title": "Keep the engine's style"
+            "title": "Keep the default style"
           },
           {
             "const": "animated_3d",
@@ -385,39 +385,39 @@
       },
       "music_mood": {
         "default": "",
-        "description": "Describes the music to the music model. Empty keeps the engine's mood.",
+        "description": "Describe the background music; leave empty for the default.",
         "maxLength": 300,
         "title": "Music mood",
         "type": "string"
       },
       "title_template": {
         "$ref": "#/$defs/LocalizedText",
-        "description": "Episode title per language. An empty language keeps the engine's.",
+        "description": "The title in each language; leave a language empty for the default.",
         "title": "Episode title"
       },
       "short_title_template": {
         "$ref": "#/$defs/LocalizedText",
-        "description": "Short title per language. An empty language keeps the engine's.",
-        "title": "Short title"
+        "description": "The Short's title in each language; leave a language empty for the default.",
+        "title": "Short video title"
       },
       "description_template": {
         "$ref": "#/$defs/LocalizedText",
-        "description": "Description per language. An empty language keeps the engine's.",
-        "title": "Description"
+        "description": "The description in each language; leave a language empty for the default.",
+        "title": "Video description"
       },
       "tags": {
         "$ref": "#/$defs/LocalizedList",
-        "description": "Search tags per language. An empty language keeps the engine's.",
-        "title": "Tags"
+        "description": "Tags in each language; leave a language empty for the default.",
+        "title": "Search tags"
       },
       "hashtags": {
         "$ref": "#/$defs/LocalizedList",
-        "description": "Hashtags per language. An empty language keeps the engine's.",
+        "description": "Hashtags in each language; leave a language empty for the default.",
         "title": "Hashtags"
       },
       "category": {
         "default": "1",
-        "description": "The YouTube category of every upload.",
+        "description": "The category every video is listed under.",
         "oneOf": [
           {
             "const": "1",
@@ -432,11 +432,11 @@
             "title": "Education"
           }
         ],
-        "title": "Category",
+        "title": "YouTube category",
         "type": "string"
       },
       "basic": {
-        "description": "Dotted settings paths shown in the Simple view. Empty keeps the engine's list.",
+        "description": "Settings shown in the Simple view of an automation; leave empty for the default.",
         "items": {
           "type": "string"
         },
@@ -444,7 +444,7 @@
         "type": "array"
       },
       "hidden": {
-        "description": "Dotted settings paths never shown in the automation editor.",
+        "description": "Settings never shown when editing an automation.",
         "items": {
           "type": "string"
         },
@@ -455,15 +455,86 @@
         "additionalProperties": {
           "$ref": "#/$defs/JsonValue"
         },
-        "description": "Settings merged over the engine defaults after every field above.",
-        "title": "Advanced settings",
+        "description": "Exact settings applied on top of everything above.",
+        "title": "Expert settings",
         "type": "object"
       }
     },
     "title": "Narrated video template",
     "type": "object"
   },
-  "definition_ui_schema": {},
+  "definition_ui_schema": {
+    "ui:sections": [
+      {
+        "title": "What it makes",
+        "fields": ["structure", "brief", "length", "tone", "topics"]
+      },
+      {
+        "title": "Look and sound",
+        "fields": ["visual_style", "music_mood"]
+      },
+      {
+        "title": "Publishing",
+        "fields": [
+          "title_template",
+          "short_title_template",
+          "description_template",
+          "tags",
+          "hashtags",
+          "category"
+        ]
+      },
+      {
+        "title": "Advanced",
+        "fields": ["basic", "hidden", "settings"]
+      }
+    ],
+    "ui:basic": ["structure", "brief", "length", "tone", "topics", "visual_style"],
+    "structure": {
+      "ui:widget": "select"
+    },
+    "brief": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 4
+      }
+    },
+    "length": {
+      "ui:widget": "radio"
+    },
+    "tone": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    },
+    "visual_style": {
+      "ui:widget": "cards"
+    },
+    "music_mood": {
+      "ui:widget": "textarea",
+      "ui:options": {
+        "rows": 2
+      }
+    },
+    "category": {
+      "ui:widget": "select"
+    },
+    "description_template": {
+      "en": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 10
+        }
+      },
+      "ta": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 10
+        }
+      }
+    }
+  },
   "blank": {
     "kids": {},
     "general": {}

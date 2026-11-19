@@ -78,6 +78,7 @@
   "ui:hidden": [
     "safety.audience",
     "story.structure",
+    "story.preview_attempts",
     "story.item_count",
     "story.quiz_questions",
     "story.answer_choices"
@@ -288,7 +289,8 @@
       "translation_style",
       "translation_temperature",
       "max_tokens",
-      "max_attempts"
+      "max_attempts",
+      "preview_attempts"
     ],
     "source": {
       "ui:widget": "select"

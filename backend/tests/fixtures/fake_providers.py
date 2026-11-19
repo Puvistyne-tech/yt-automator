@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from autotube.domain.capabilities import Capability, TextRequest
+from autotube.domain.capabilities import Capability, TextGenerator, TextRequest
 from autotube.domain.providers import ProviderConfig, ProviderDescriptor
 from autotube.domain.secrets import SecretDefinition
 from autotube.domain.validation import field_path
@@ -68,3 +68,29 @@ class FakeProviderCatalog:
     def resolver(self, configs: Sequence[ProviderConfig]) -> FakeResolver:
         self.resolved_with.append(list(configs))
         return FakeResolver(configs, self.text)
+
+
+class WriterResolver(FakeResolver):
+    def __init__(
+        self,
+        configs: Sequence[ProviderConfig],
+        text: EchoTextGenerator,
+        writer: TextGenerator | None,
+    ) -> None:
+        super().__init__(configs, text)
+        self.writer = writer
+
+    def resolve(self, capability: Capability) -> Any:
+        if capability is Capability.LLM and self.writer is not None:
+            return self.writer
+        raise LookupError(f"no provider for {capability.value}")
+
+
+class WriterCatalog(FakeProviderCatalog):
+    def __init__(self, writer: TextGenerator | None) -> None:
+        super().__init__()
+        self.writer = writer
+
+    def resolver(self, configs: Sequence[ProviderConfig]) -> FakeResolver:
+        self.resolved_with.append(list(configs))
+        return WriterResolver(configs, self.text, self.writer)

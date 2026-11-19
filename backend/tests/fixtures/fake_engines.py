@@ -6,14 +6,16 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from autotube.domain.capabilities import Capability
 from autotube.domain.model_base import JsonObject
-from autotube.domain.pipeline import Pipeline
+from autotube.domain.pipeline import Pipeline, ProviderResolver
 from autotube.domain.pipeline_engine import PipelineEngine
 from autotube.domain.pipeline_templates import (
     PipelineTemplate,
     TemplateAudience,
     builtin_template,
 )
+from autotube.domain.sample_scripts import SampleScene, SampleScript, SampleUnavailableError
 from autotube.domain.validation import validated_settings
 from tests.fixtures.fake_pipeline import FakePipeline
 
@@ -21,6 +23,7 @@ ENGINE_ID = "sample"
 BUILTIN_TYPE = "sample_builtin"
 REFUSED_BRIEF = "refused"
 FIXED_KEY = "fixed"
+UNAVAILABLE_TOPIC = "unavailable"
 
 
 class SampleDefinition(BaseModel):
@@ -45,6 +48,7 @@ class FakeEngine:
     definition_ui_schema: JsonObject = field(
         default_factory=lambda: {"brief": {"ui:widget": "textarea"}}
     )
+    samples: list[tuple[PipelineTemplate, str, str]] = field(default_factory=list)
 
     def blank(self, audience: TemplateAudience) -> JsonObject:
         return {"brief": f"for a {audience.value} audience"}
@@ -62,6 +66,21 @@ class FakeEngine:
 
     def pipeline(self, template: PipelineTemplate) -> Pipeline:
         return FakePipeline(type_id=template.type_id)
+
+    def sample_script(
+        self, template: PipelineTemplate, language: str, topic: str, providers: ProviderResolver
+    ) -> SampleScript:
+        if topic == UNAVAILABLE_TOPIC:
+            raise SampleUnavailableError("the writer is resting")
+        self.samples.append((template, language, topic))
+        return SampleScript(
+            language=language,
+            title=f"{template.name}: {topic or template.definition.get('brief', '')}",
+            scenes=(SampleScene(narration=f"once in {language}"),),
+            upload_title=template.name,
+            upload_description=template.description,
+            provider=providers.resolve(Capability.LLM).provider_id,
+        )
 
     def builtin_templates(self) -> list[PipelineTemplate]:
         general = TemplateAudience.GENERAL

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from autotube.application.lookups import require
 from autotube.domain.automations import Automation
-from autotube.domain.pipeline_engine import builtin_templates_of
+from autotube.domain.pipeline_engine import PipelineEngine, builtin_templates_of
 from autotube.domain.pipeline_templates import PipelineTemplate
 from autotube.domain.ports import (
     AutomationRepository,
@@ -16,6 +16,7 @@ from autotube.domain.ports import (
 from autotube.domain.runs import Run, RunQuery
 from autotube.domain.template_rules import found_template, missing_engine_errors, taken_type_ids
 from autotube.domain.template_views import TemplateSummary, template_summary
+from autotube.shared.errors import ValidationFailed, raise_if_invalid
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,17 @@ class TemplateLookup:
         if engine is None:
             return missing_engine_errors(template.engine)
         return engine.problems(template)
+
+    def engine_for(self, template: PipelineTemplate) -> PipelineEngine:
+        engine = self.engines.get(template.engine)
+        if engine is None:
+            raise ValidationFailed(missing_engine_errors(template.engine))
+        return engine
+
+    def valid_engine(self, template: PipelineTemplate) -> PipelineEngine:
+        engine = self.engine_for(template)
+        raise_if_invalid(engine.problems(template))
+        return engine
 
     def revision_problems(
         self, current: PipelineTemplate, proposed: PipelineTemplate

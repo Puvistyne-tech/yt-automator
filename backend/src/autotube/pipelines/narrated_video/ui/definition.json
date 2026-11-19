@@ -1,0 +1,78 @@
+{
+  "ui:sections": [
+    {
+      "title": "What it makes",
+      "fields": [
+        "structure",
+        "brief",
+        "length",
+        "tone",
+        "topics"
+      ]
+    },
+    {
+      "title": "Look and sound",
+      "fields": [
+        "visual_style",
+        "music_mood"
+      ]
+    },
+    {
+      "title": "Publishing",
+      "fields": [
+        "title_template",
+        "short_title_template",
+        "description_template",
+        "tags",
+        "hashtags",
+        "category"
+      ]
+    },
+    {
+      "title": "Advanced",
+      "fields": [
+        "basic",
+        "hidden",
+        "settings"
+      ]
+    }
+  ],
+  "ui:basic": [
+    "structure",
+    "brief",
+    "length",
+    "tone",
+    "topics",
+    "visual_style"
+  ],
+  "structure": {
+    "ui:widget": "select"
+  },
+  "brief": {
+    "ui:widget": "textarea",
+    "ui:options": {
+      "rows": 4
+    }
+  },
+  "length": {
+    "ui:widget": "radio"
+  },
+  "tone": {
+    "ui:widget": "textarea",
+    "ui:options": {
+      "rows": 2
+    }
+  },
+  "visual_style": {
+    "ui:widget": "cards"
+  },
+  "music_mood": {
+    "ui:widget": "textarea",
+    "ui:options": {
+      "rows": 2
+    }
+  },
+  "category": {
+    "ui:widget": "select"
+  }
+}

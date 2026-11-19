@@ -153,6 +153,7 @@ def test_the_kids_story_pipeline_hides_the_pins_and_other_structures_counts() ->
     assert hidden == [
         "safety.audience",
         "story.structure",
+        "story.preview_attempts",
         "story.item_count",
         "story.quiz_questions",
         "story.answer_choices",

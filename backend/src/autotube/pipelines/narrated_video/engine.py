@@ -3,13 +3,14 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from autotube.domain.model_base import JsonObject
-from autotube.domain.pipeline import Pipeline
+from autotube.domain.pipeline import Pipeline, ProviderResolver
 from autotube.domain.pipeline_descriptors import PipelineDescriptor
 from autotube.domain.pipeline_templates import (
     PipelineTemplate,
     TemplateAudience,
     builtin_template,
 )
+from autotube.domain.sample_scripts import SampleScript
 from autotube.pipelines.narrated_video.plugin import (
     DESCRIPTION,
     NAME,
@@ -22,7 +23,9 @@ from autotube.pipelines.narrated_video.template.definition import NarratedDefini
 from autotube.pipelines.narrated_video.template.descriptor import template_descriptor
 from autotube.pipelines.narrated_video.template.problems import template_problems
 from autotube.pipelines.narrated_video.template.revisions import structure_change_problems
+from autotube.pipelines.narrated_video.template.sample import template_sample
 from autotube.pipelines.narrated_video.template.settings_model import settings_model_for
+from autotube.pipelines.narrated_video.template.ui import definition_ui_schema
 
 ENGINE_ID = "narrated_video"
 ENGINE_NAME = "Narrated video"
@@ -62,7 +65,7 @@ class NarratedVideoEngine:
 
     @property
     def definition_ui_schema(self) -> JsonObject:
-        return {}
+        return definition_ui_schema()
 
     def blank(self, audience: TemplateAudience) -> JsonObject:  # noqa: ARG002
         return NarratedDefinition().model_dump(mode="json", exclude_defaults=True)
@@ -82,6 +85,11 @@ class NarratedVideoEngine:
         if template.is_builtin and template.type_id == TYPE_ID:
             return self.kids_story
         return TemplatePipeline(template)
+
+    def sample_script(
+        self, template: PipelineTemplate, language: str, topic: str, providers: ProviderResolver
+    ) -> SampleScript:
+        return template_sample(template, language, topic, providers)
 
     def builtin_templates(self) -> list[PipelineTemplate]:
         kids = TemplateAudience.KIDS

@@ -32,6 +32,7 @@ ENGINE = KidsStorySettings().model_dump(mode="json")
 ENGINE_HIDDEN = [
     "safety.audience",
     "story.structure",
+    "story.preview_attempts",
     "story.item_count",
     "story.quiz_questions",
     "story.answer_choices",

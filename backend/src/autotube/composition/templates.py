@@ -7,6 +7,7 @@ from autotube.application.duplicate_template import DuplicateTemplate
 from autotube.application.get_template import GetTemplate
 from autotube.application.list_template_engines import ListTemplateEngines
 from autotube.application.list_templates import ListTemplates
+from autotube.application.preview_template_script import PreviewTemplateScript
 from autotube.application.template_lookup import TemplateLookup
 from autotube.application.update_template import UpdateTemplate
 from autotube.composition.ports import Ports
@@ -22,4 +23,5 @@ def template_use_cases(p: Ports) -> TemplateUseCases:
         update=UpdateTemplate(lookup, p.clock),
         delete=DeleteTemplate(lookup),
         duplicate=DuplicateTemplate(lookup, p.ids, p.clock),
+        preview=PreviewTemplateScript(lookup, p.catalog, p.provider_configs, p.clock),
     )

@@ -9,6 +9,7 @@ from autotube.application.duplicate_template import DuplicateTemplate
 from autotube.application.get_template import GetTemplate
 from autotube.application.list_template_engines import ListTemplateEngines
 from autotube.application.list_templates import ListTemplates
+from autotube.application.preview_template_script import PreviewTemplateScript
 from autotube.application.template_lookup import TemplateLookup
 from autotube.application.update_template import UpdateTemplate
 from autotube.domain.automations import Automation
@@ -66,6 +67,10 @@ class TemplateRig:
 
     def duplicate(self) -> DuplicateTemplate:
         return DuplicateTemplate(self.lookup, self.harness.ids, self.harness.clock)
+
+    def preview(self) -> PreviewTemplateScript:
+        h = self.harness
+        return PreviewTemplateScript(self.lookup, h.catalog, h.provider_configs, h.clock)
 
     def created(self, **changes: Any) -> TemplateSummary:
         return self.create().execute(template_input(**changes))
