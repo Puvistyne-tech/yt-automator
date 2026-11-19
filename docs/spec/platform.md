@@ -610,12 +610,20 @@ class PipelineEngine(Protocol):
     def pipeline(self, template) -> Pipeline
     def builtin_templates(self) -> list[PipelineTemplate]
     def sample_script(self, template, language, topic, providers: ProviderResolver) -> SampleScript
+    def suggested_definitions(self, brief: SuggestionBrief, providers) -> SuggestionDrafts
 ```
 
 - `problems` maps a field path (`definition.<path>`, or `engine` for a template of another engine) to a message.
 - `sample_script` writes one script for a template that need not be stored, in one language, about `topic` (empty
   lets the template choose), through the same providers a run gets. It raises
   `domain/sample_scripts.py::SampleUnavailableError` with a plain message when no script can be shown.
+- `suggested_definitions` (`domain/template_suggestions.py`) asks the engine's text model for up to
+  `brief.count` template ideas for `brief.audience`, drawn from `brief.trends` (TrendingVideo: title,
+  channel_title, category_id, tags, view_count, duration_seconds, made_for_kids or null when unknown). Each
+  SuggestedIdea has name, description, reason, `based_on` (the trend titles it drew on) and a definition that
+  validates against the engine's definition model. Ideas the engine refuses are left out and counted in
+  `SuggestionDrafts.dropped`. It raises `SuggestionsUnavailableError` with a plain message when the text model
+  is missing or fails, or its answer has no list of ideas.
 - `revision_problems` reports the definition fields the engine fixes at creation that an update would change,
   keyed the same way. Updating a template returns 400 with these, its `problems` and the rule errors below.
 - `type_id` is fixed at creation: `t_<id>` for a user template, the engine's own id for a built-in. A rename never
@@ -865,6 +873,19 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
   The script is shaped like a run's, and the upload title and description are the episode's `upload_metadata`,
   screened for a general audience like the package stage (a hit is `preview_unavailable` with that message).
   Each scene carries its narration and, where the scene has them, its heading and action.
+- The narrated engine's suggestions (`template/suggestions.py`, `template/suggestion_prompt.py`) send one request
+  with the system prompt `suggest_system.txt` (kids) or `suggest_system_general.txt` (general) and
+  `suggest_user.txt`. The JSON schema asks for `{ideas: [{name (1 to 80 characters), description, reason,
+  based_on: [trend numbers], definition}]}` with at most `count` ideas; the definition schema is the
+  definition model's own minus `settings`, `basic` and `hidden`, so every format the model offers is offered
+  without being named. The trend data is numbered and fenced in `<trend_data>` markers; each line has the title,
+  category, tags, views and minutes, with `<` and `>` removed, whitespace collapsed and lengths cut
+  (`SuggestionWriting`: `max_tokens` 6000, `temperature` 0.9, `title_characters` 120, `tags_per_video` 6).
+  Channel titles are never sent. The system prompt marks the data as untrusted, to be read only as data, and
+  forbids reusing channel names, video titles, brands, products, characters or real people. Ideas past `count`
+  are ignored. An idea is dropped when it does not match the shape, its definition fails the definition model,
+  it sets an expert field, none of its trend numbers exist, or, for a general audience, its name, description or
+  reason holds a child-directed term. Kept ideas carry the definition without its default values.
 
 `infrastructure/pipelines/template_registry.py` holds `TemplatePipelineRegistry(static, engines: EngineCatalog,
 templates)`, the

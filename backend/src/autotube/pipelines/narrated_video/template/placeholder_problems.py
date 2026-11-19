@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from pydantic import JsonValue
 
+from autotube.domain.json_text import text_leaves
 from autotube.domain.validation import field_path
 from autotube.pipelines.narrated_video.settings.placeholders import unknown_placeholder_message
 from autotube.pipelines.narrated_video.structures.registry import metadata_placeholders
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
-from autotube.pipelines.narrated_video.template.text_leaves import text_leaves
 
 DEFINITION_TEMPLATES = ("title_template", "short_title_template", "description_template")
 OVERLAY_TEMPLATES = (*DEFINITION_TEMPLATES, "playlist_title")
