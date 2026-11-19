@@ -1,5 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { db } from "@/api/mocks/db";
+import type { SuggestionOutcome } from "@/api/mocks/fixtures/suggestions";
 import { renderApp, type User } from "./renderApp";
 
 const PLACEHOLDER_WRITER = "fake-llm";
@@ -8,6 +9,10 @@ export const FIND = { name: "Find ideas" };
 
 export function disconnectChannels() {
   db.state.channels = db.state.channels.map((channel) => ({ ...channel, status: "expired" }));
+}
+
+export function outcome(next: SuggestionOutcome) {
+  db.state.suggestionOutcome = next;
 }
 
 export function onlyPlaceholderWriter() {

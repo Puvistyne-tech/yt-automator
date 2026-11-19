@@ -1,5 +1,7 @@
 import type { JsonObject, TemplateAudience } from "@/api/types";
 
+export type SuggestionOutcome = "ideas" | "no_trends" | "nothing_usable";
+
 export interface CannedIdea {
   name: string;
   description: string;

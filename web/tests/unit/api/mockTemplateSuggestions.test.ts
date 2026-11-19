@@ -1,6 +1,11 @@
 import { api } from "@/api/client";
 import { db } from "@/api/mocks/db";
-import { NO_TEXT_MODEL, TEXT_MODEL_UNAVAILABLE } from "@/api/mocks/templateSuggestions";
+import {
+  NO_TEXT_MODEL,
+  NO_TRENDS,
+  NOTHING_USABLE,
+  TEXT_MODEL_UNAVAILABLE,
+} from "@/api/mocks/templateSuggestions";
 import type {
   SuggestionRequest,
   TemplateAudience,
@@ -8,7 +13,7 @@ import type {
   TemplateSummary,
 } from "@/api/types";
 import { disableWriters } from "../../helpers/providers";
-import { disconnectChannels, onlyPlaceholderWriter } from "../../helpers/suggestions";
+import { disconnectChannels, onlyPlaceholderWriter, outcome } from "../../helpers/suggestions";
 import { rejectionOf } from "../../helpers/templates";
 
 const PATH = "/templates/suggestions";
@@ -85,6 +90,16 @@ describe("mock template suggestions", () => {
   it.each<[string, () => void, string]>([
     ["no text model is enabled", disableWriters, TEXT_MODEL_UNAVAILABLE],
     ["only a placeholder text model is enabled", onlyPlaceholderWriter, NO_TEXT_MODEL],
+    ["no trend fits", () => outcome("no_trends"), NO_TRENDS],
+    ["no idea passes the checks", () => outcome("nothing_usable"), NOTHING_USABLE],
+    [
+      "no trend fits, even without a text model",
+      () => {
+        outcome("no_trends");
+        disableWriters();
+      },
+      NO_TRENDS,
+    ],
   ])("is unavailable when %s", async (_name, arrange, message) => {
     arrange();
     const refused = await rejectionOf(() => suggest());

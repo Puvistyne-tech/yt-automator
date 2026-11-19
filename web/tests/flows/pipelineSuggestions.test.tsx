@@ -1,6 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { delay, HttpResponse, http } from "msw";
-import { NO_TEXT_MODEL, TEXT_MODEL_UNAVAILABLE } from "@/api/mocks/templateSuggestions";
+import {
+  NO_TEXT_MODEL,
+  NO_TRENDS,
+  NOTHING_USABLE,
+  TEXT_MODEL_UNAVAILABLE,
+} from "@/api/mocks/templateSuggestions";
 import { disableWriters } from "../helpers/providers";
 import { failWith, recordBodies, server } from "../helpers/server";
 import {
@@ -10,6 +15,7 @@ import {
   findIdeas,
   onlyPlaceholderWriter,
   openSuggestions,
+  outcome,
   PANEL,
   panel,
 } from "../helpers/suggestions";
@@ -106,6 +112,8 @@ describe("Pipelines: suggest ideas", () => {
   it.each<[string, () => void, string]>([
     ["only a placeholder text model is ready", onlyPlaceholderWriter, NO_TEXT_MODEL],
     ["no text model is ready", disableWriters, TEXT_MODEL_UNAVAILABLE],
+    ["no trend fits the audience", () => outcome("no_trends"), NO_TRENDS],
+    ["no idea passes the checks", () => outcome("nothing_usable"), NOTHING_USABLE],
   ])("explains calmly when %s", async (_name, arrange, message) => {
     arrange();
     const { user } = await openSuggestions();

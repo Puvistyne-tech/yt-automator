@@ -18,6 +18,9 @@ import type {
 } from "@/api/types";
 
 export const NO_TEXT_MODEL = "Connect a text model under Providers to get suggestions.";
+export const NO_TRENDS = "No trending videos fit this audience. Try another region or category.";
+export const NOTHING_USABLE =
+  "None of the suggested ideas passed the checks. Try again, or pick another region or category.";
 export const TEXT_MODEL_UNAVAILABLE =
   "The text model is not available right now. Check the text model under Providers and try again.";
 
@@ -71,12 +74,18 @@ export function suggestionsReply(state: MockState, body: SuggestionBody): Respon
   if (!state.engines.some((engine) => engine.engine_id === request.engine)) {
     return validationFailed(missingEngineErrors(request.engine));
   }
+  if (state.suggestionOutcome === "no_trends") {
+    return ruleConflict(SUGGESTIONS_UNAVAILABLE, NO_TRENDS);
+  }
   const provider = readyWriter(state);
   if (provider === null) {
     return ruleConflict(SUGGESTIONS_UNAVAILABLE, TEXT_MODEL_UNAVAILABLE);
   }
   if (isPlaceholder(state, provider)) {
     return ruleConflict(SUGGESTIONS_UNAVAILABLE, NO_TEXT_MODEL);
+  }
+  if (state.suggestionOutcome === "nothing_usable") {
+    return ruleConflict(SUGGESTIONS_UNAVAILABLE, NOTHING_USABLE);
   }
   return HttpResponse.json(suggestions(state, request, provider));
 }
