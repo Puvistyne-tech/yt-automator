@@ -93,6 +93,14 @@ class StoryWritingSettings(StructureShapeSettings):
         description="Checks a written story must pass, or it is rewritten. Banned words and "
         "brand names are always checked.",
     )
+    repair_slips: bool = Field(
+        default=True,
+        title="Repair small slips",
+        description="When a written script fails only checks the app can fix without inventing "
+        "anything, the app fixes it and checks it again: it adds the moral, takeaway or refrain "
+        "the script or the series already holds to the ending, numbers list items in order, and "
+        "ends a quiz question with a question mark. It never writes a missing moral.",
+    )
     preview_attempts: int = Field(
         default=1,
         ge=1,

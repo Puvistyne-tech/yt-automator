@@ -9,6 +9,7 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.story.gates import CheckedGate
 from autotube.pipelines.narrated_video.story.model import Story
+from autotube.pipelines.narrated_video.story.repair_text import Repaired
 
 PromptValues = Callable[[KidsStorySettings, str, str], dict[str, str]]
 TranslationRules = Callable[[KidsStorySettings, str], str]
@@ -18,6 +19,7 @@ FixedScenes = Callable[[KidsStorySettings], int]
 MoralRule = Callable[[KidsStorySettings], bool]
 Schema = dict[str, Any]
 SceneShapes = Callable[[KidsStorySettings], list[Schema]]
+Repair = Callable[[Story, KidsStorySettings], Repaired]
 
 
 def no_moral(settings: KidsStorySettings) -> bool:  # noqa: ARG001
@@ -55,3 +57,4 @@ class StructureSpec:
     fixed_scenes: FixedScenes | None = None
     moral_required: MoralRule = no_moral
     scene_shapes: SceneShapes | None = None
+    repairs: tuple[Repair, ...] = ()

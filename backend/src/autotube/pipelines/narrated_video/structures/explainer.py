@@ -10,6 +10,7 @@ from autotube.pipelines.narrated_video.structures.explainer_checks import (
     takeaway_field_problems,
     wants_takeaway,
 )
+from autotube.pipelines.narrated_video.structures.shape_repairs import repaired_takeaway
 from autotube.pipelines.narrated_video.structures.shape_spec import Shape, shape_spec
 
 WORDING = {
@@ -68,5 +69,6 @@ EXPLAINER_SPEC = shape_spec(
         leading_gates=((None, takeaway_field_problems),),
         shown_paths=EXPLAINER_PATHS,
         moral_required=wants_takeaway,
+        repairs=(repaired_takeaway,),
     )
 )

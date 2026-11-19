@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import partial
 
 from autotube.domain.capabilities import Capability, TextGenerator, TextRequest
@@ -13,6 +13,7 @@ from autotube.pipelines.narrated_video.story.checks import story_problems, trans
 from autotube.pipelines.narrated_video.story.model import Story, StoryDraft, StoryText, with_text
 from autotube.pipelines.narrated_video.story.parsing import StoryFormatError, parse_model
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
+from autotube.pipelines.narrated_video.story.repairing import repaired_script
 
 Written = tuple[dict[str, Story], str]
 
@@ -57,7 +58,17 @@ class StoryAuthor:
             return Attempt(number, language, raw, None, (str(error),))
         story = Story(language=language, theme=theme, **draft.model_dump())
         problems = story_problems(story, self.settings, self.seed)
-        return Attempt(number, language, raw, story, tuple(problems))
+        attempt = Attempt(number, language, raw, story, tuple(problems))
+        return self.mended(attempt) if problems and self.settings.story.repair_slips else attempt
+
+    def mended(self, attempt: Attempt) -> Attempt:
+        if attempt.story is None:
+            return attempt
+        fixed, notes = repaired_script(attempt.story, self.settings)
+        if not notes or story_problems(fixed, self.settings, self.seed):
+            return attempt
+        self.log(f"story attempt {attempt.number} passed after repair: {'; '.join(notes)}")
+        return replace(attempt, story=fixed, problems=(), repairs=notes)
 
     def rejected(self, attempt: Attempt) -> None:
         self.failed(f"story attempt {attempt.number} failed checks: {'; '.join(attempt.problems)}")

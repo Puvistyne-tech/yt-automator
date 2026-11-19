@@ -12,6 +12,7 @@ from autotube.pipelines.narrated_video.structures.quiz_checks import (
     quiz_scenes,
 )
 from autotube.pipelines.narrated_video.structures.scene_shapes import quiz_shapes
+from autotube.pipelines.narrated_video.structures.shape_repairs import repaired_question_marks
 from autotube.pipelines.narrated_video.structures.shape_spec import Shape, shape_spec
 
 WORDING = {"format": "quiz", "pieces": "quiz scripts", "piece": "quiz script"}
@@ -66,5 +67,6 @@ QUIZ_SPEC = shape_spec(
         shown_paths=QUIZ_COUNT_PATHS,
         fixed_scenes=quiz_scenes,
         scene_shapes=quiz_shapes,
+        repairs=(repaired_question_marks,),
     )
 )

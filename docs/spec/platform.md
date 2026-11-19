@@ -892,6 +892,20 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   rejected script as compact JSON (the `StoryDraft` fields only) and asks the writer to edit it rather than
   start over; when it did not parse, `story_retry.txt` with the checks only. Only the previous attempt's
   checks are sent.
+- Slip repair (`story.repair_slips`, default true, "Repair small slips", shown only in the full form): when a
+  written script in the writing language fails any check, `story/repairing.py::repaired_script(story,
+  settings)` runs the structure's `repairs` (each a pure `(story, settings) -> (story, notes)`), then every gate
+  runs again. The repaired script is accepted only if it passes them all, and the stage logs "story attempt N
+  passed after repair: <notes>"; otherwise the attempt fails with its original checks and script. Repairs
+  never write content that is not already in the script or the settings: story (`story/ending_repair.py`): the
+  moral (from `moral`, only when the ending style says it and `moral` is not blank) and then the language's
+  series refrain (when the style has one) are appended to the last scene's narration when the last
+  `story.ending_scenes` scenes do not say them; explainer: the takeaway in `moral` is appended to the last
+  scene when the ending style wants a takeaway; list and countdown: with exactly `item_count` scenes between the
+  intro and the closing, their `number` is set to the gate's order (intro and closing to null) unless a scene's
+  narration names other digits; quiz: a question without a final question mark gets "?". Each appended line is
+  closed as a sentence first. Translations are not repaired: the translation prompt already carries the
+  repaired narration, and its rules ask for the target language's moral and refrain.
 - Answer schemas (`story/answer_schema.py`): the story request sends `draft_schema(settings)` and the
   translation request `text_schema(settings, script)` as `TextRequest.json_schema`, so a local model with a
   grammar (Ollama `format`) cannot leave out what a gate demands. Both start from the Pydantic schema

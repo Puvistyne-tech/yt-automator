@@ -12,6 +12,7 @@ class Attempt:
     answer: str
     story: Story | None
     problems: tuple[str, ...]
+    repairs: tuple[str, ...] = ()
 
     @property
     def accepted(self) -> bool:
