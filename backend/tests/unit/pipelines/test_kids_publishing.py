@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from autotube.domain.upload_details import DESCRIPTION_MAX_BYTES, utf8_length
-from autotube.pipelines.kids_story.publishing.limits import (
+from autotube.pipelines.narrated_video.publishing.limits import (
     TAGS_MAX,
     TITLE_MAX,
     cleaned,
@@ -12,10 +12,10 @@ from autotube.pipelines.kids_story.publishing.limits import (
     truncated,
     truncated_bytes,
 )
-from autotube.pipelines.kids_story.publishing.metadata import upload_metadata
-from autotube.pipelines.kids_story.publishing.templates import template_values
-from autotube.pipelines.kids_story.text.graphemes import grapheme_clusters
-from autotube.pipelines.kids_story.text.templates import render_template
+from autotube.pipelines.narrated_video.publishing.metadata import upload_metadata
+from autotube.pipelines.narrated_video.publishing.templates import template_values
+from autotube.pipelines.narrated_video.text.graphemes import grapheme_clusters
+from autotube.pipelines.narrated_video.text.templates import render_template
 from tests.fixtures.kids_data import quick_settings, story
 
 TAMIL_WORD = "கொண்டாட்டம்"

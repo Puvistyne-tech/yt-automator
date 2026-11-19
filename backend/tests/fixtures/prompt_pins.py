@@ -4,9 +4,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from autotube.pipelines.kids_story.art.prompts import judge_request, motion_prompt
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.story.prompts import story_request, translation_request
+from autotube.pipelines.narrated_video.art.prompts import judge_request, motion_prompt
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
 from tests.fixtures.kids_data import story
 
 PINNED_FOLDER = Path(__file__).parent / "prompts"

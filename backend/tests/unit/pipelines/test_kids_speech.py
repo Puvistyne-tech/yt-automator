@@ -4,15 +4,15 @@ from typing import Any
 
 import pytest
 
-from autotube.pipelines.kids_story.settings.base import LocalizedText
-from autotube.pipelines.kids_story.stages.voice import filled_line, lines_to_speak, voice_for
-from autotube.pipelines.kids_story.story.normalise import (
+from autotube.pipelines.narrated_video.settings.base import LocalizedText
+from autotube.pipelines.narrated_video.stages.voice import filled_line, lines_to_speak, voice_for
+from autotube.pipelines.narrated_video.story.normalise import (
     SpeechRules,
     expand_abbreviations,
     speakable,
     speech_rules,
 )
-from autotube.pipelines.kids_story.story.numbers import number_to_words
+from autotube.pipelines.narrated_video.story.numbers import number_to_words
 from tests.fixtures.kids_data import quick_settings, story
 
 SCENES = [f"scene-{index}" for index in range(9)]

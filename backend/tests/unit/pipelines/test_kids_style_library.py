@@ -7,10 +7,10 @@ import pytest
 from pydantic import ValidationError
 
 from autotube.domain.ui_schema import CHOICE_GROUP_KEY, CHOICE_SWATCHES_KEY
-from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
-from autotube.pipelines.kids_story.resources import resource_json
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.styles.library import (
+from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
+from autotube.pipelines.narrated_video.resources import resource_json
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.styles.library import (
     FAMILY_TITLES,
     StyleFamily,
     parsed_library,

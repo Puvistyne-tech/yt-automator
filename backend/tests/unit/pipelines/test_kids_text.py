@@ -2,20 +2,20 @@ from __future__ import annotations
 
 import pytest
 
-from autotube.pipelines.kids_story.languages import ordered_languages, primary_language
-from autotube.pipelines.kids_story.settings.story import StorySettings, ThemeMode
-from autotube.pipelines.kids_story.story.normalise import speakable, speech_rules
-from autotube.pipelines.kids_story.story.numbers import number_to_words
-from autotube.pipelines.kids_story.story.reading import reading_metrics
-from autotube.pipelines.kids_story.story.themes import choose_theme
-from autotube.pipelines.kids_story.story.words import (
+from autotube.pipelines.narrated_video.languages import ordered_languages, primary_language
+from autotube.pipelines.narrated_video.settings.story import StorySettings, ThemeMode
+from autotube.pipelines.narrated_video.story.normalise import speakable, speech_rules
+from autotube.pipelines.narrated_video.story.numbers import number_to_words
+from autotube.pipelines.narrated_video.story.reading import reading_metrics
+from autotube.pipelines.narrated_video.story.themes import choose_theme
+from autotube.pipelines.narrated_video.story.words import (
     comparable,
     contains_phrase,
     sentences_of,
     word_count,
     words_of,
 )
-from autotube.pipelines.kids_story.text.graphemes import (
+from autotube.pipelines.narrated_video.text.graphemes import (
     grapheme_clusters,
     grapheme_length,
 )

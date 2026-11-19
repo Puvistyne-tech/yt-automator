@@ -5,13 +5,13 @@ from pathlib import Path
 from typing import Any
 
 from autotube.domain.image_style import Texture
-from autotube.pipelines.kids_story.art.cards import lettering_for
-from autotube.pipelines.kids_story.art.prompts import judge_request, motion_prompt
-from autotube.pipelines.kids_story.resources import resource_text
-from autotube.pipelines.kids_story.settings.base import Placement
-from autotube.pipelines.kids_story.stages.motion import held_rate
-from autotube.pipelines.kids_story.story.model import StoryScene
-from autotube.pipelines.kids_story.styles.library import style_named
+from autotube.pipelines.narrated_video.art.cards import lettering_for
+from autotube.pipelines.narrated_video.art.prompts import judge_request, motion_prompt
+from autotube.pipelines.narrated_video.resources import resource_text
+from autotube.pipelines.narrated_video.settings.base import Placement
+from autotube.pipelines.narrated_video.stages.motion import held_rate
+from autotube.pipelines.narrated_video.story.model import StoryScene
+from autotube.pipelines.narrated_video.styles.library import style_named
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, run_chain, smart_writer
 from tests.fixtures.kids_fakes import FakeProviders
 

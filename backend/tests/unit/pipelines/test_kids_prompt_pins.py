@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from tests.fixtures.prompt_pins import pinned_prompt, rendered_prompts, stored_settings
 
 PROMPT_NAMES = sorted(rendered_prompts(KidsStorySettings()))

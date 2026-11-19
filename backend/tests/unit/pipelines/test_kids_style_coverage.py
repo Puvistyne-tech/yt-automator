@@ -6,9 +6,9 @@ from typing import Any
 import pytest
 
 from autotube.domain.ui_schema import CHOICE_SWATCHES_KEY
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.styles.library import style_ids
-from autotube.pipelines.kids_story.styles.resolve import resolve_style
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.styles.library import style_ids
+from autotube.pipelines.narrated_video.styles.resolve import resolve_style
 
 HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
 CUSTOM_LOOK: dict[str, Any] = {

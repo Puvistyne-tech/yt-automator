@@ -7,17 +7,17 @@ from autotube.domain.capabilities import VideoComposition, WordTiming
 from autotube.infrastructure.providers.media.ass_subtitles import with_ass_subtitles
 from autotube.infrastructure.providers.media.ffmpeg_options import FfmpegOptions
 from autotube.infrastructure.providers.media.media_commands import compose_command
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.story.model import Story
-from autotube.pipelines.kids_story.subtitles.cues import Cue
-from autotube.pipelines.kids_story.subtitles.karaoke import karaoke_words
-from autotube.pipelines.kids_story.subtitles.layout import subtitle_layout
-from autotube.pipelines.kids_story.subtitles.srt import render_srt
-from autotube.pipelines.kids_story.subtitles.timeline_cues import cue_rules, timeline_cues
-from autotube.pipelines.kids_story.timeline.composition import Sources, composition
-from autotube.pipelines.kids_story.timeline.plan import Segment
-from autotube.pipelines.kids_story.timeline.variants import planned
-from autotube.pipelines.kids_story.timeline.voices import VoiceLine
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.story.model import Story
+from autotube.pipelines.narrated_video.subtitles.cues import Cue
+from autotube.pipelines.narrated_video.subtitles.karaoke import karaoke_words
+from autotube.pipelines.narrated_video.subtitles.layout import subtitle_layout
+from autotube.pipelines.narrated_video.subtitles.srt import render_srt
+from autotube.pipelines.narrated_video.subtitles.timeline_cues import cue_rules, timeline_cues
+from autotube.pipelines.narrated_video.timeline.composition import Sources, composition
+from autotube.pipelines.narrated_video.timeline.plan import Segment
+from autotube.pipelines.narrated_video.timeline.variants import planned
+from autotube.pipelines.narrated_video.timeline.voices import VoiceLine
 from tests.fixtures.kids_data import NO_FONTS, story
 
 WORKSPACE = Path("/w")

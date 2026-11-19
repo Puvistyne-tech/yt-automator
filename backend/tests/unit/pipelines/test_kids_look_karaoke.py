@@ -8,9 +8,13 @@ from autotube.domain.capabilities import WordTiming
 from autotube.domain.srt import SrtEntry
 from autotube.domain.video_look import SubtitleStyle
 from autotube.infrastructure.providers.media.ass_document import ass_document
-from autotube.pipelines.kids_story.subtitles.cues import Cue, CueRules
-from autotube.pipelines.kids_story.subtitles.karaoke import karaoke_words, split_word, with_words
-from autotube.pipelines.kids_story.subtitles.timing import segment_cues
+from autotube.pipelines.narrated_video.subtitles.cues import Cue, CueRules
+from autotube.pipelines.narrated_video.subtitles.karaoke import (
+    karaoke_words,
+    split_word,
+    with_words,
+)
+from autotube.pipelines.narrated_video.subtitles.timing import segment_cues
 from tests.fixtures.kids_data import StageRig, quick_settings, run_chain
 from tests.fixtures.kids_fakes import FakeProviders, FakeSpeech
 

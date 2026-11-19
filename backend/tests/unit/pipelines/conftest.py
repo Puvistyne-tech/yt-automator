@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from autotube.pipelines.kids_story.art import lettering
+from autotube.pipelines.narrated_video.art import lettering
 from tests.fixtures.fonts import embedded_font
 
 
