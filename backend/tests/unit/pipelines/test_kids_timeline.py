@@ -155,7 +155,7 @@ def test_composition_carries_settings_and_offsets(tmp_path: Path) -> None:
 def test_subtitle_style_per_variant_and_language() -> None:
     settings = quick_settings()
     short = subtitle_style(settings, "ta", "short")
-    assert short.burn_in and short.font_family == "Noto Sans Tamil" and short.font_size == 64
+    assert short.burn_in and short.font_family == "Noto Sans Tamil" and short.font_size == 70
     episode = subtitle_style(settings, "en", "episode")
     assert not episode.burn_in and episode.font_family == "Noto Sans"
     assert (episode.margin_bottom, episode.margin_sides, episode.font_file) == (58, 51, None)

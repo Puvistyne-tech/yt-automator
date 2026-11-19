@@ -22,7 +22,7 @@ LATIN_SUBTITLE_FONTS = [
     "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
 ]
-RETIRED_KEYS = ("margin_bottom", "short_margin_bottom")
+RETIRED_KEYS = ("margin_bottom", "short_margin_bottom", "font_size", "short_font_size")
 TAMIL_SUBTITLE_FONTS = [
     "/System/Library/Fonts/Supplemental/Tamil Sangam MN.ttc",
     "/usr/share/fonts/truetype/noto/NotoSansTamil-Bold.ttf",
@@ -118,19 +118,27 @@ class SubtitleSettings(SubtitleLookSettings):
         "Width of one letter as a share of the font size, used to wrap lines when no font file "
         "is found. Higher is safer.",
     )
-    font_size: int = Field(
-        default=54,
-        ge=8,
-        le=200,
+    font_size_share: float = Field(
+        default=0.05,
+        ge=0.01,
+        le=0.2,
         title="Font size",
-        description="Size of burned-in subtitle letters in the episode, in pixels.",
+        description="Size of burned-in subtitle letters in the episode, as a share of its height.",
     )
-    short_font_size: int = Field(
-        default=64,
-        ge=8,
-        le=200,
+    short_font_size_share: float = Field(
+        default=0.05,
+        ge=0.01,
+        le=0.2,
         title="Font size in Shorts",
-        description="Size of burned-in subtitle letters in the Short, in pixels.",
+        description="Size of burned-in subtitle letters in the Short, as a share of its height. "
+        "The default is 96 pixels in a 1080x1920 Short, readable on a phone.",
+    )
+    font_scale: LocalizedNumber = localized_number(
+        1.0,
+        1.1,
+        "Script size factor",
+        "Multiplies the subtitle font size for each language, so scripts with intricate letters "
+        "such as Tamil are drawn larger. Lines wrap to the larger letters.",
     )
     primary_color: HexColor = color("#FFFFFF", "Text colour", "Colour of the letters.")
     outline_color: HexColor = color("#000000", "Outline colour", "Colour around the letters.")
