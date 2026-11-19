@@ -8,6 +8,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build  # type: ignore[import-untyped]
 from googleapiclient.http import MediaFileUpload  # type: ignore[import-untyped]
 
+from autotube.domain.trends import TrendingVideo, TrendQuery
 from autotube.domain.youtube import (
     ChannelAuth,
     ChannelProfile,
@@ -30,6 +31,7 @@ from autotube.infrastructure.youtube.request_bodies import (
     video_body,
 )
 from autotube.infrastructure.youtube.settings import YouTubeSettings
+from autotube.infrastructure.youtube.trend_responses import trending_parameters, trending_videos
 from autotube.shared.errors import UpstreamFailure
 
 ServiceFactory = Callable[[Credentials], Any]
@@ -121,6 +123,11 @@ class GoogleYouTubeGateway:
             self.service(auth).playlistItems().insert(
                 part="snippet", body=playlist_item_body(video_id, playlist_id)
             ).execute()
+
+    def popular_videos(self, auth: ChannelAuth, query: TrendQuery) -> list[TrendingVideo]:
+        with google_errors():
+            response = self.service(auth).videos().list(**trending_parameters(query)).execute()
+        return trending_videos(response)
 
     def list_playlists(self, auth: ChannelAuth) -> list[Playlist]:
         playlists: list[Playlist] = []

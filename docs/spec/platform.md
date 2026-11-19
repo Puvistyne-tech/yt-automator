@@ -409,6 +409,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   the delay. With neither, or when the effective privacy is not `public`, `publish_at` is null and the video gets
   its privacy at once. Every upload records the `publish_at` it was planned with.
 - Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track, 50 per playlist insertion).
+- Fetching trending videos for suggestions costs 1 unit (`QuotaPolicy.trending_units`, `videos.list`), charged to
+  the credential of the first connected channel before the call, only when its remaining daily quota covers it.
 - The quota day resets at midnight Pacific time (`America/Los_Angeles`), as YouTube's does.
 - Duplicating an automation creates a disabled copy named with the suffix " (copy)" and new target ids.
 - Export and import (`domain/automation_export.py`). An export is an `AutomationDocument`: it never holds ids of
@@ -549,7 +551,12 @@ bad row never breaks `GET /pipelines`), `ProviderConfigRepository` (list, save_a
 `EngineCatalog` (list, get(engine_id) -> PipelineEngine or None; the installed template engines),
 `ProviderCatalog` (descriptors, secrets, option_errors(configs) -> {path: message},
 resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
-exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
+exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists,
+popular_videos(auth, TrendQuery) -> [TrendingVideo]: `videos.list` with `chart=mostPopular`, `regionCode`, the
+optional `videoCategoryId` and `maxResults`; items without a title are skipped),
+`TrendSource` (trending(TrendQuery) -> [TrendingVideo]; `infrastructure/youtube/sample_trends.py::SampleTrendSource`
+serves the bundled neutral `sample_trends.json`, preferring the query's category and falling back to every sample,
+cut to the limit),
 `ArtifactStore` (workspace for a run, save, open, discard one artifact, delete run),
 `RunFileStore` (run_ids on disk, usage(run_id, final_ids) -> FileUsage, remove_intermediate(run_id, final_ids)
 -> bytes freed, delete_run(run_id) -> bytes freed or a failure when the folder is still there,

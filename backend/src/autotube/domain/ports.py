@@ -24,7 +24,7 @@ from autotube.domain.port_runtime import (
     SecretStore,
     SystemInspector,
 )
-from autotube.domain.port_youtube import YouTubeGateway
+from autotube.domain.port_youtube import TrendSource, YouTubeGateway
 
 __all__ = [
     "AppSettingsRepository",
@@ -49,5 +49,6 @@ __all__ = [
     "SecretStore",
     "SystemInspector",
     "TemplateRepository",
+    "TrendSource",
     "YouTubeGateway",
 ]

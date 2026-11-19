@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Protocol
 
+from autotube.domain.trends import TrendingVideo, TrendQuery
 from autotube.domain.youtube import (
     ChannelAuth,
     ChannelProfile,
@@ -31,3 +32,9 @@ class YouTubeGateway(Protocol):
     def add_to_playlist(self, auth: ChannelAuth, video_id: str, playlist_id: str) -> None: ...
 
     def list_playlists(self, auth: ChannelAuth) -> list[Playlist]: ...
+
+    def popular_videos(self, auth: ChannelAuth, query: TrendQuery) -> list[TrendingVideo]: ...
+
+
+class TrendSource(Protocol):
+    def trending(self, query: TrendQuery) -> list[TrendingVideo]: ...
