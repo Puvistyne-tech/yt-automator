@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import builtins
 from collections.abc import Sequence
 
 from autotube.domain.pipeline import Pipeline
@@ -18,14 +17,3 @@ def indexed(pipelines: Sequence[Pipeline]) -> dict[str, Pipeline]:
             raise DuplicatePipelineError(f"two installed pipelines share the type id {type_id!r}")
         index[type_id] = pipeline
     return index
-
-
-class StaticPipelineRegistry:
-    def __init__(self, pipelines: Sequence[Pipeline]) -> None:
-        self.pipelines = indexed(pipelines)
-
-    def list(self) -> builtins.list[Pipeline]:
-        return builtins.list(self.pipelines.values())
-
-    def get(self, type_id: str) -> Pipeline | None:
-        return self.pipelines.get(type_id)

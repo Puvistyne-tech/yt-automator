@@ -8,6 +8,7 @@ from typing import Protocol
 from autotube.domain.automations import Automation
 from autotube.domain.channels import Channel
 from autotube.domain.credentials import Credential
+from autotube.domain.pipeline_templates import PipelineTemplate
 from autotube.domain.ports import RunChange, RunCheck
 from autotube.domain.providers import ProviderConfig
 from autotube.domain.runs import Run, RunQuery
@@ -54,6 +55,17 @@ class InMemoryChannels(InMemoryStore[Channel]):
         return next(
             (c for c in self.items.values() if c.youtube_channel_id == youtube_channel_id), None
         )
+
+
+class InMemoryTemplates(InMemoryStore[PipelineTemplate]):
+    def find_by_type_id(self, type_id: str) -> PipelineTemplate | None:
+        return next((t for t in self.items.values() if t.type_id == type_id), None)
+
+    def add(self, template: PipelineTemplate) -> None:
+        self.save(template)
+
+    def update(self, template: PipelineTemplate) -> None:
+        self.save(template)
 
 
 def run_matches(run: Run, query: RunQuery) -> bool:

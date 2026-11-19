@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from sqlmodel import select
-
 from autotube.domain.automations import Automation
 from autotube.domain.channels import Channel
 from autotube.domain.credentials import Credential
@@ -49,10 +47,7 @@ class SqlChannelRepository(RowRepository[Channel, ChannelRow]):
         super().__init__(db, ChannelRow, Channel, channel_row, "connected_at")
 
     def find_by_youtube_id(self, youtube_channel_id: str) -> Channel | None:
-        statement = select(ChannelRow).where(ChannelRow.youtube_channel_id == youtube_channel_id)
-        with self.db.session() as session:
-            row = session.exec(statement).first()
-            return self.decode(row) if row is not None else None
+        return self.find_first(ChannelRow.youtube_channel_id == youtube_channel_id)
 
 
 class SqlAutomationRepository(RowRepository[Automation, AutomationRow]):

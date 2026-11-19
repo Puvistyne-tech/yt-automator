@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -9,6 +10,7 @@ from sqlalchemy import text
 from autotube.domain.run_enums import RunStatus
 from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides, Runtime, create_app, youtube_gateway
+from tests.fixtures.template_records import template
 from tests.unit.api.client import Api
 from tests.unit.infrastructure.records import run
 
@@ -83,4 +85,15 @@ def test_the_busy_timeout_comes_from_the_runtime_config(
     runtime: Runtime = app.state.runtime
     with runtime.database.engine.connect() as connection:
         assert connection.execute(text("PRAGMA busy_timeout")).scalar() == 250
+    runtime.database.dispose()
+
+
+def test_the_composed_registry_serves_stored_ready_templates(
+    config: RuntimeConfig, overrides: Overrides
+) -> None:
+    app = create_app(config, replace(overrides, pipelines=None))
+    runtime: Runtime = app.state.runtime
+    runtime.ports.templates.add(template())
+    listed = [pipeline.descriptor.type_id for pipeline in runtime.ports.pipelines.list()]
+    assert listed == ["kids_story", "t_tpl-1"]
     runtime.database.dispose()

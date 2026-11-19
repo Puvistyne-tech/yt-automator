@@ -39,7 +39,7 @@ def test_migrations_are_idempotent_and_enable_wal(database: Database) -> None:
         busy_timeout = connection.execute(text("PRAGMA busy_timeout")).scalar()
         assert busy_timeout == RuntimeConfig().database_busy_timeout_ms
         version = connection.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert version == "0001"
+        assert version == "0002"
 
 
 @pytest.mark.parametrize(

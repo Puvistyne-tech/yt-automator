@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any
 
 from pydantic import BaseModel
+from sqlalchemy import ColumnElement
 from sqlmodel import SQLModel, col, select
 
 from autotube.infrastructure.db.codec import from_payload
@@ -26,6 +27,11 @@ class RowStore[M: BaseModel, R: SQLModel]:
     def get(self, row_id: str) -> M | None:
         with self.db.session() as session:
             row = session.get(self.row_type, row_id)
+            return self.decode(row) if row is not None else None
+
+    def find_first(self, condition: ColumnElement[bool] | bool) -> M | None:
+        with self.db.session() as session:
+            row = session.exec(select(self.row_type).where(condition)).first()
             return self.decode(row) if row is not None else None
 
     def save(self, model: M) -> None:
