@@ -309,7 +309,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     media provider's outline option; 0 to 20 pixels otherwise; it is the box padding when the box is on);
     `box_background` with `box_color` and `box_opacity` (0 to 1) draws a filled box instead of an outline.
   - `episode`: `intro_card_text` and `outro_card_text` (per language, one line per row; placeholders `{title}`
-    `{series}` `{tagline}` `{moral}` `{hook}` `{refrain}`; defaults `{series}\n{title}` and `{refrain}\n{series}`)
+    `{series}` `{tagline}` `{moral}` `{hook}` `{refrain}`, where `{moral}` and `{refrain}` are filled only for stories
+    and left empty in the other formats, as the field description says; defaults `{series}\n{title}` and `{refrain}\n{series}`)
     and `card_text_position` (any placement, default centre); `transition` (cut, crossfade, fade_through_black,
     default cut) and `transition_seconds` (above 0, at most 3, default 0.5) for the episode and the Short;
     `video_quality`.

@@ -9,6 +9,7 @@ from autotube.domain.machine_local import portable_settings
 from autotube.domain.video_look import SubtitlePosition, Transition, VideoQuality
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.settings.video_look import EpisodeLookSettings
 from tests.fixtures.look_rig import STORED_SETTINGS
 
 
@@ -105,3 +106,10 @@ def test_an_export_leaves_logo_and_font_paths_on_this_machine() -> None:
     assert exported["visuals"]["logo_opacity"] == 0.4
     for section in ("subtitles", "thumbnail"):
         assert exported[section]["font_files"] == defaults[section]["font_files"] != fonts
+
+
+@pytest.mark.parametrize("field", ["intro_card_text", "outro_card_text"])
+def test_card_text_says_its_placeholders_depend_on_the_format(field: str) -> None:
+    description = EpisodeLookSettings.model_fields[field].description or ""
+    assert "depend on the format" in description
+    assert "{moral} and {refrain}" in description

@@ -24,7 +24,9 @@ from autotube.pipelines.narrated_video.settings.placeholders import (
 FOLLOW_EPISODE_FPS = 0
 LOWEST_FPS = 12
 CARD_NOTE = (
-    "One line per row; {title} {series} {tagline} {moral} {hook} and {refrain} are filled in."
+    "One line per row; {title} {series} {tagline} and {hook} are always filled in. "
+    "{moral} and {refrain} depend on the format: stories fill them in, and the other formats "
+    "leave them empty."
 )
 
 

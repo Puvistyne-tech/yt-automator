@@ -26,6 +26,7 @@ from autotube.pipelines.narrated_video.template.term_screen import (
     style_texts,
 )
 from tests.fixtures.builtin_catalog import BUILTIN_IDS, PACKAGED_FORMATS
+from tests.fixtures.template_records import template
 
 LANGUAGES = ("en", "ta")
 MINIMUM_TOPICS = 12
@@ -119,3 +120,14 @@ def test_a_packaged_builtin_may_not_take_a_user_type_id() -> None:
     assert PackagedTemplate.model_validate({**entry, "id": "facts"}).template(ENGINE_ID).id == (
         "facts"
     )
+
+
+CHILD_WORDED_STYLES = [style for style in style_ids() if child_terms_in_any(style_texts(style))]
+
+
+@pytest.mark.parametrize("style", CHILD_WORDED_STYLES)
+def test_a_child_worded_style_is_refused_on_a_general_template(style: str) -> None:
+    general = template(definition={"visual_style": style})
+    assert "definition.visual_style" in ENGINE.problems(general)
+    kids = template(audience=TemplateAudience.KIDS, definition={"visual_style": style})
+    assert ENGINE.problems(kids) == {}
