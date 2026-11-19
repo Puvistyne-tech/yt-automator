@@ -84,9 +84,9 @@ def test_the_music_stage_uses_the_short_mood_only_for_short_beds(tmp_path: Path)
 
 def test_the_motion_prompt_setting_fills_scene_and_card_placeholders() -> None:
     settings = quick_settings(visuals={"motion_prompt": "Cost $5 {Visual} {} {visual}, {mood}"})
-    assert motion_prompt(settings, SCENE) == "Cost $5 {Visual} {} a fox, sleepy"
-    assert motion_prompt(settings, None, "drift") == (
-        "Cost $5 {Visual} {} a title card, warm Camera: drift."
+    assert motion_prompt(settings, SCENE).endswith(". Cost $5 {Visual} {} a fox, sleepy")
+    assert motion_prompt(settings, None, "drift").endswith(
+        ". Cost $5 {Visual} {} a title card, warm Camera: drift."
     )
 
 

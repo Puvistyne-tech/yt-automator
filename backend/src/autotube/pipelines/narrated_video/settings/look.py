@@ -27,6 +27,13 @@ from autotube.pipelines.narrated_video.styles.modifiers import (
 )
 
 DEFAULT_STYLE = "watercolour_storybook"
+DEFAULT_MOTION_PROMPT = (
+    "Gentle animation that keeps the exact look of the picture, smooth natural movement"
+)
+DEFAULT_MOTION_NEGATIVE = (
+    "text, captions, watermark, blurry, distorted, morphing, extra limbs, flicker, "
+    "change of art style"
+)
 DEFAULT_COLOURS = ["#A9D3EE", "#CFE8C0", "#A8D5BA", "#7FB89A", "#F3A69A"]
 
 
@@ -68,6 +75,20 @@ class CustomStyle(SettingsSection):
         title="Texture",
         description="Surface treatment of the offline preview; write it into the art direction "
         "for image models.",
+    )
+    motion_prompt: str = Field(
+        default=DEFAULT_MOTION_PROMPT,
+        max_length=400,
+        title="Animation look",
+        description="Opens every motion prompt to tell the video model what the animation looks "
+        "like, for example 'stop-motion paper collage animation'. Leave empty to skip it.",
+    )
+    motion_negative_prompt: str = Field(
+        default=DEFAULT_MOTION_NEGATIVE,
+        max_length=400,
+        title="Keep out of the animation",
+        description="Looks the video model should avoid, used by video models that accept a "
+        "negative prompt.",
     )
 
 

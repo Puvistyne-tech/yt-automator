@@ -9,7 +9,7 @@
     "palette": ["#8ED1F5", "#A6E08F", "#6CC46A", "#3F9B55", "#FFB84D"],
     "outline": "none",
     "texture": "smooth",
-    "motion": {"intensity": 0.55, "hero_intensity": 0.75, "card_camera": "push_in", "held_frame_rate": null, "feel": "smooth gliding camera with gentle parallax depth"},
+    "motion": {"intensity": 0.55, "hero_intensity": 0.75, "card_camera": "push_in", "held_frame_rate": null, "feel": "smooth gliding camera with gentle parallax depth", "prompt": "3D animated family film, soft rounded stylised characters, smooth clean surfaces, warm soft lighting, smooth expressive character animation", "negative_prompt": "flat 2D drawing, sketch, live-action footage, photorealistic skin, realistic fur, gritty textures, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#22324A"}
   },
   {
@@ -22,7 +22,7 @@
     "palette": ["#5BC0EB", "#FDE74C", "#9BC53D", "#3E8E41", "#E55934"],
     "outline": "thin",
     "texture": "smooth",
-    "motion": {"intensity": 0.45, "hero_intensity": 0.65, "card_camera": "push_in", "held_frame_rate": null, "feel": "clean steady pans with simple cuts"},
+    "motion": {"intensity": 0.45, "hero_intensity": 0.65, "card_camera": "push_in", "held_frame_rate": null, "feel": "clean steady pans with simple cuts", "prompt": "Hand-drawn 2D cartoon animation, flat bright colours, clean even outlines, simple bold shapes, smooth expressive character animation", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, gradients, painterly texture, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#1B1B3A"}
   },
   {
@@ -35,7 +35,7 @@
     "palette": ["#A9CBE8", "#B9C98A", "#7FA35B", "#4F7A3A", "#D9654B"],
     "outline": "thin",
     "texture": "grain",
-    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "layered multiplane pans with depth between foreground and background"},
+    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "layered multiplane pans with depth between foreground and background", "prompt": "Traditional hand-inked cel animation, inked characters over softly painted backgrounds, fluid classic character animation", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, vector art, flat colour backgrounds, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFF6E0", "outline": "#4A2E1A"}
   },
   {
@@ -48,7 +48,7 @@
     "palette": ["#6FB7FF", "#BFE6A8", "#7CC48A", "#3F8F6B", "#F9A8C0"],
     "outline": "thin",
     "texture": "smooth",
-    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow drifting pans across wide skies"},
+    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow drifting pans across wide skies", "prompt": "Gentle Japanese-style 2D animation, clean line art, glossy eyes, soft cel shading, bright airy skies, graceful character motion", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, western cartoon, gritty, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#24315E"}
   },
   {
@@ -61,7 +61,7 @@
     "palette": ["#B5E3FF", "#FFF0A8", "#C8F2C2", "#9ADBA0", "#FF8FB1"],
     "outline": "thin",
     "texture": "smooth",
-    "motion": {"intensity": 0.55, "hero_intensity": 0.75, "card_camera": "push_in", "held_frame_rate": null, "feel": "bouncy playful zooms"},
+    "motion": {"intensity": 0.55, "hero_intensity": 0.75, "card_camera": "push_in", "held_frame_rate": null, "feel": "bouncy playful zooms", "prompt": "Cute chibi 2D animation, tiny characters with big heads and small bodies, bouncy playful character motion", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, realistic proportions, gritty, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#5A2D4A"}
   },
   {
@@ -74,7 +74,7 @@
     "palette": ["#F4E9D8", "#E9C46A", "#B5A27A", "#3D3B3C", "#E76F51"],
     "outline": "bold",
     "texture": "grain",
-    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": 12, "feel": "bouncy jittery old-cartoon movement at a low frame rate"},
+    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": 12, "feel": "bouncy jittery old-cartoon movement at a low frame rate", "prompt": "Vintage rubber-hose 2D cartoon animation, bendy bouncy limbs, pie-cut eyes, warm faded colours, rhythmic squash and stretch", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, modern vector, anime, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#F4E9D8", "outline": "#3D3B3C"}
   },
   {
@@ -87,7 +87,7 @@
     "palette": ["#9FD8F0", "#F6C85F", "#7FD1B9", "#3E8F7D", "#EF6F6C"],
     "outline": "none",
     "texture": "smooth",
-    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow orbiting camera around a tiny geometric world"},
+    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow orbiting camera around a tiny geometric world", "prompt": "Low-poly 3D animation, faceted geometric shapes with flat-shaded triangles, tidy toy world, simple smooth movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, smooth subdivided surfaces, hand-drawn, sketch, painterly texture, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#2E3A59"}
   },
   {
@@ -100,7 +100,7 @@
     "palette": ["#A9D3EE", "#CFE8C0", "#A8D5BA", "#7FB89A", "#F3A69A"],
     "outline": "none",
     "texture": "paper",
-    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom"},
+    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom", "prompt": "Gentle 2D watercolour storybook animation, soft washes and warm pastels on paper, slow calm movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, dark, harsh outlines, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#3A2A1A"}
   },
   {
@@ -113,7 +113,7 @@
     "palette": ["#F4F1DE", "#F2CC8F", "#81B29A", "#3D405B", "#E07A5F"],
     "outline": "none",
     "texture": "paper",
-    "motion": {"intensity": 0.45, "hero_intensity": 0.65, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom"},
+    "motion": {"intensity": 0.45, "hero_intensity": 0.65, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom", "prompt": "Animated gouache picture book, thick matte paint, flat bold colour areas, soft calm movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, harsh outlines, glossy, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#F4F1DE", "outline": "#3D405B"}
   },
   {
@@ -126,7 +126,7 @@
     "palette": ["#F2E8CF", "#C9A66B", "#7A9E7E", "#5B4636", "#D98E73"],
     "outline": "thin",
     "texture": "paper",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom", "prompt": "Animated vintage storybook illustration, muted faded colours, fine linework, gentle old-fashioned movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, neon colours, glossy, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#F2E8CF", "outline": "#5B4636"}
   },
   {
@@ -139,7 +139,7 @@
     "palette": ["#FFD5C2", "#F28F3B", "#588B8B", "#2D3047", "#C8553D"],
     "outline": "none",
     "texture": "grain",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow contemplative pan across a painting"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow contemplative pan across a painting", "prompt": "Animated oil painting, rich glowing colours, soft visible brushstrokes that stay in place, slow painterly movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, flat vector, harsh outlines, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFF3E0", "outline": "#2D3047"}
   },
   {
@@ -152,7 +152,7 @@
     "palette": ["#9AD0EC", "#E8A5D0", "#B8E0A0", "#6FAF8F", "#FFC4A3"],
     "outline": "none",
     "texture": "smooth",
-    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom"},
+    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom", "prompt": "Animated soft digital painting, smooth painted light, gentle colour blends, calm fluid movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, harsh outlines, gritty texture, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#3B2F4A"}
   },
   {
@@ -165,7 +165,7 @@
     "palette": ["#FDF2E0", "#F1C40F", "#27AE60", "#1F3A93", "#C0392B"],
     "outline": "bold",
     "texture": "paper",
-    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow side-to-side pans along a painted panel"},
+    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow side-to-side pans along a painted panel", "prompt": "Animated folk art painting, flat figures decorated with dots, stripes and borders, simple side-on movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, gradients, perspective depth, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FDF2E0", "outline": "#7B1E12"}
   },
   {
@@ -178,7 +178,7 @@
     "palette": ["#F1FAEE", "#A8DADC", "#457B9D", "#1D3557", "#E63946"],
     "outline": "bold",
     "texture": "paper",
-    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow pans like unrolling a printed scroll"},
+    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow pans like unrolling a printed scroll", "prompt": "Animated woodblock print, bold carved lines, flat layered colours, steady printed texture, measured movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, gradients, glossy, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#F1FAEE", "outline": "#1D3557"}
   },
   {
@@ -191,7 +191,7 @@
     "palette": ["#FFFFFF", "#8AC926", "#FFB703", "#219EBC", "#E63946"],
     "outline": "bold",
     "texture": "paper",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "push_in", "held_frame_rate": 12, "feel": "wobbly hand-drawn boil at a low frame rate"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "push_in", "held_frame_rate": 12, "feel": "wobbly hand-drawn boil at a low frame rate", "prompt": "Hand-drawn crayon animation, waxy scribbly strokes on paper, wobbly line boil, playful childlike movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, smooth gradients, polished, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#1D3557"}
   },
   {
@@ -204,7 +204,7 @@
     "palette": ["#FBF8F1", "#A6D1F4", "#B9E4A6", "#F4D9A6", "#F4A6A6"],
     "outline": "thin",
     "texture": "paper",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom", "prompt": "Animated coloured pencil drawing, soft layered pencil strokes, gentle colours, visible paper grain, calm movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, flat vector, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#4A3B2F"}
   },
   {
@@ -217,7 +217,7 @@
     "palette": ["#F7F3EA", "#D6D2C8", "#9A9A9A", "#4A4A4A", "#C98B6B"],
     "outline": "thin",
     "texture": "paper",
-    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": 12, "feel": "slow pan across a sketchbook page"},
+    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": 12, "feel": "slow pan across a sketchbook page", "prompt": "Animated graphite pencil sketch, grey lines and soft shading on a sketchbook page, light hand-drawn movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, saturated colours, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#F7F3EA", "outline": "#2B2B2B"}
   },
   {
@@ -230,7 +230,7 @@
     "palette": ["#FFFFFF", "#F2F2F2", "#E4E4E4", "#D0D0D0", "#F2C14E"],
     "outline": "bold",
     "texture": "smooth",
-    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom"},
+    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom", "prompt": "Animated black ink line art, crisp clean outlines with little colour, simple fluid line movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, shading, gradients, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#111111"}
   },
   {
@@ -243,7 +243,7 @@
     "palette": ["#FAF7F0", "#CAD2C5", "#84A98C", "#2F3E46", "#E9C46A"],
     "outline": "thin",
     "texture": "paper",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom", "prompt": "Animated ink and wash painting, loose ink lines with soft watery colour washes, light airy movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, heavy saturated colours, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FAF7F0", "outline": "#2F3E46"}
   },
   {
@@ -256,7 +256,7 @@
     "palette": ["#FFFFFF", "#FFCA3A", "#8AC926", "#1982C4", "#FF595E"],
     "outline": "bold",
     "texture": "paper",
-    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": 12, "feel": "lively doodle wiggle at a low frame rate"},
+    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": 12, "feel": "lively doodle wiggle at a low frame rate", "prompt": "Hand-drawn felt-tip marker doodle animation, streaky bright colour, cheerful wobbly line boil", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, painterly, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#6A4C93"}
   },
   {
@@ -269,7 +269,7 @@
     "palette": ["#2F4F3F", "#46685A", "#06D6A0", "#FFD166", "#EF476F"],
     "outline": "thin",
     "texture": "grain",
-    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom"},
+    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom", "prompt": "Animated chalk drawing on a dark classroom board, dusty chalk lines, simple hand-drawn movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, white background, clean digital lines, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#F7F7F2", "outline": "#1E3328"}
   },
   {
@@ -282,7 +282,7 @@
     "palette": ["#F7F7F7", "#70C1B3", "#FFE066", "#247BA0", "#F25F5C"],
     "outline": "none",
     "texture": "paper",
-    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": 12, "feel": "layered paper parallax with gentle stop-motion steps"},
+    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": 12, "feel": "layered paper parallax with gentle stop-motion steps", "prompt": "Stop-motion paper cut-out animation, layered torn coloured paper with soft shadows, stepped handmade movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, flat digital drawing, glossy 3D render, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#24315E"}
   },
   {
@@ -295,7 +295,7 @@
     "palette": ["#BFE0E8", "#E9C46A", "#8AB17D", "#2A9D8F", "#E76F51"],
     "outline": "none",
     "texture": "clay",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "still", "held_frame_rate": 12, "feel": "stop-motion movement on held frames"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "still", "held_frame_rate": 12, "feel": "stop-motion movement on held frames", "prompt": "Stop-motion claymation, soft modelling-clay characters with thumbprints, tactile handmade movement on held frames", "negative_prompt": "flat 2D drawing, vector, sketch, live-action footage, realistic fur, glossy CGI, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFF5E6", "outline": "#5C3A21"}
   },
   {
@@ -308,7 +308,7 @@
     "palette": ["#A8DADC", "#FFCDB2", "#E5989B", "#B5838D", "#6D6875"],
     "outline": "none",
     "texture": "grain",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "push_in", "held_frame_rate": 15, "feel": "soft stop-motion steps"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "push_in", "held_frame_rate": 15, "feel": "soft stop-motion steps", "prompt": "Stop-motion felt puppet animation, cosy stitched fabric characters, soft handmade toy movement", "negative_prompt": "flat 2D drawing, live-action footage, realistic fur, hard plastic, metal, glossy CGI, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFF7F0", "outline": "#6D6875"}
   },
   {
@@ -321,7 +321,7 @@
     "palette": ["#E9893A", "#C8673A", "#5A2E22", "#111111", "#F7D08A"],
     "outline": "none",
     "texture": "paper",
-    "motion": {"intensity": 0.3, "hero_intensity": 0.45, "card_camera": "pan_right", "held_frame_rate": 12, "feel": "puppets gliding sideways across a lit screen"},
+    "motion": {"intensity": 0.3, "hero_intensity": 0.45, "card_camera": "pan_right", "held_frame_rate": 12, "feel": "puppets gliding sideways across a lit screen", "prompt": "Shadow puppet theatre animation, dark cut-out silhouettes gliding before a glowing coloured backdrop", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, detailed faces, visible features, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#F7D08A", "outline": "#111111"}
   },
   {
@@ -334,7 +334,7 @@
     "palette": ["#FCE8E0", "#A8E6CF", "#F8B195", "#6C5B7B", "#F67280"],
     "outline": "none",
     "texture": "paper",
-    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow dolly through a paper diorama"},
+    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow dolly through a paper diorama", "prompt": "Stop-motion origami papercraft animation, crisp folded and creased paper shapes in a tabletop diorama", "negative_prompt": "flat 2D drawing, live-action footage, realistic fur, smooth plastic, glossy CGI, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#355C7D"}
   },
   {
@@ -347,7 +347,7 @@
     "palette": ["#CFE3E8", "#F2CC8F", "#81B29A", "#5B6C5D", "#E07A5F"],
     "outline": "none",
     "texture": "grain",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "push_in", "held_frame_rate": 15, "feel": "soft stop-motion steps"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "push_in", "held_frame_rate": 15, "feel": "soft stop-motion steps", "prompt": "Stop-motion knitted wool animation, chunky yarn characters and scenery, soft fuzzy handmade movement", "negative_prompt": "flat 2D drawing, live-action footage, realistic fur, smooth plastic, glossy CGI, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#F4F1DE", "outline": "#3D405B"}
   },
   {
@@ -360,7 +360,7 @@
     "palette": ["#FAEDCD", "#D4A373", "#8FB573", "#457B9D", "#E63946"],
     "outline": "none",
     "texture": "grain",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow dolly across a tabletop"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.55, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow dolly across a tabletop", "prompt": "Stop-motion wooden toy animation, painted wooden figures with rounded edges and wood grain, simple tabletop movement", "negative_prompt": "flat 2D drawing, live-action footage, realistic fur, sharp edges, glossy plastic, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FAEDCD", "outline": "#5E3B1E"}
   },
   {
@@ -373,7 +373,7 @@
     "palette": ["#4FC3F7", "#FFD60A", "#2EC4B6", "#1D4ED8", "#E63946"],
     "outline": "bold",
     "texture": "grain",
-    "motion": {"intensity": 0.55, "hero_intensity": 0.75, "card_camera": "push_in", "held_frame_rate": null, "feel": "punchy zooms like turning comic panels"},
+    "motion": {"intensity": 0.55, "hero_intensity": 0.75, "card_camera": "push_in", "held_frame_rate": null, "feel": "punchy zooms like turning comic panels", "prompt": "Animated comic book art, bold ink outlines, bright flat colours, halftone dots, punchy expressive motion", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, watercolour, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFD60A", "outline": "#111111"}
   },
   {
@@ -386,7 +386,7 @@
     "palette": ["#5FCDE4", "#99E550", "#37946E", "#2B2D42", "#EF233C"],
     "outline": "none",
     "texture": "pixel",
-    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "pan_right", "held_frame_rate": 10, "feel": "side-scrolling movement on chunky frames"},
+    "motion": {"intensity": 0.35, "hero_intensity": 0.5, "card_camera": "pan_right", "held_frame_rate": 10, "feel": "side-scrolling movement on chunky frames", "prompt": "Retro pixel art animation, chunky square pixels, small colour palette, crisp sprite movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, smooth gradients, anti-aliased, painterly, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#2B2D42"}
   },
   {
@@ -399,7 +399,7 @@
     "palette": ["#A8DADC", "#E9C46A", "#2A9D8F", "#264653", "#E76F51"],
     "outline": "none",
     "texture": "smooth",
-    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom"},
+    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle slow pan and zoom", "prompt": "Flat vector motion graphics animation, clean geometric shapes, smooth flat colours, tidy fluid movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, texture, sketchy lines, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#264653"}
   },
   {
@@ -412,7 +412,7 @@
     "palette": ["#E8D5FF", "#FFF5BA", "#CDEAC0", "#C5DEFF", "#FFD1DC"],
     "outline": "thin",
     "texture": "smooth",
-    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle floaty zooms"},
+    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "gentle floaty zooms", "prompt": "Cute pastel kawaii 2D animation, soft round characters, tiny smiles, sparkles, floaty gentle movement", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, dark colours, gritty, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#B5678E"}
   },
   {
@@ -425,7 +425,7 @@
     "palette": ["#1B4965", "#F4D35E", "#43AA8B", "#9B5DE5", "#E63946"],
     "outline": "bold",
     "texture": "grain",
-    "motion": {"intensity": 0.3, "hero_intensity": 0.45, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow push towards a glowing window"},
+    "motion": {"intensity": 0.3, "hero_intensity": 0.45, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow push towards a glowing window", "prompt": "Animated stained glass, glowing coloured glass pieces joined by dark lead lines, light shimmering through", "negative_prompt": "photorealistic, live-action footage, realistic fur, 3D render, CGI, soft gradients, broken lead lines, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#F4D35E", "outline": "#1B1B1B"}
   },
   {
@@ -438,7 +438,7 @@
     "palette": ["#9CC9E8", "#A3B18A", "#588157", "#3A5A40", "#E9C46A"],
     "outline": "none",
     "texture": "grain",
-    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow handheld-free documentary pan and zoom"},
+    "motion": {"intensity": 0.4, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow handheld-free documentary pan and zoom", "prompt": "Realistic live-action footage, soft natural light, gentle friendly scene, natural lifelike movement", "negative_prompt": "cartoon, anime, illustration, drawing, painting, 3D render, plastic look, uncanny faces, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#1E1E1E"}
   },
   {
@@ -451,7 +451,7 @@
     "palette": ["#F3D9B1", "#8D99AE", "#5E8C61", "#2B2D42", "#F2A541"],
     "outline": "none",
     "texture": "grain",
-    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow cinematic dolly with soft parallax"},
+    "motion": {"intensity": 0.5, "hero_intensity": 0.7, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow cinematic dolly with soft parallax", "prompt": "Cinematic live-action film footage, warm lighting, wide dreamy shot, smooth natural movement", "negative_prompt": "cartoon, anime, illustration, drawing, painting, 3D render, plastic look, uncanny faces, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFF4E0", "outline": "#1A1A1A"}
   },
   {
@@ -464,7 +464,7 @@
     "palette": ["#8ECAE6", "#E9EDC9", "#A3C585", "#219EBC", "#FB8500"],
     "outline": "none",
     "texture": "grain",
-    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow glide over a tiny world"},
+    "motion": {"intensity": 0.45, "hero_intensity": 0.6, "card_camera": "push_in", "held_frame_rate": null, "feel": "slow glide over a tiny world", "prompt": "Real tilt-shift footage of a tiny handmade model world, shallow focus, slow miniature movement", "negative_prompt": "cartoon, anime, drawing, painting, flat illustration, people, full-size scenery, text, captions, watermark, blurry, distorted, morphing, extra limbs"},
     "lettering": {"text": "#FFFFFF", "outline": "#023047"}
   }
 ]

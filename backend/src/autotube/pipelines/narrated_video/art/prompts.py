@@ -64,11 +64,21 @@ def thumbnail_prompt(settings: KidsStorySettings, story: Story) -> str:
     )
 
 
-def motion_prompt(settings: KidsStorySettings, scene: StoryScene | None, feel: str = "") -> str:
+def scene_motion(settings: KidsStorySettings, scene: StoryScene | None) -> str:
     visual, mood = ("a title card", "warm") if scene is None else (scene.visual, scene.mood)
     values = {"visual": visual, "mood": mood}
-    prompt = render_template(settings.visuals.motion_prompt, values).strip()
-    return f"{prompt} Camera: {feel}." if feel else prompt
+    return render_template(settings.visuals.motion_prompt, values).strip()
+
+
+def style_declaration(settings: KidsStorySettings) -> str:
+    declared = resolve_style(settings).motion_prompt.strip().rstrip(".")
+    return f"{declared}." if declared else ""
+
+
+def motion_prompt(settings: KidsStorySettings, scene: StoryScene | None, feel: str = "") -> str:
+    camera = f"Camera: {feel}." if feel else ""
+    parts = (style_declaration(settings), scene_motion(settings, scene), camera)
+    return " ".join(part for part in parts if part)
 
 
 def picture_judge_request(

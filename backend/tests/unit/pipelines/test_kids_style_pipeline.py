@@ -11,7 +11,7 @@ from autotube.pipelines.narrated_video.resources import resource_text
 from autotube.pipelines.narrated_video.settings.base import Placement
 from autotube.pipelines.narrated_video.stages.motion import held_rate
 from autotube.pipelines.narrated_video.story.model import StoryScene
-from autotube.pipelines.narrated_video.styles.library import style_named
+from autotube.pipelines.narrated_video.styles.library import VisualStyle, style_named
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, run_chain, smart_writer
 from tests.fixtures.kids_fakes import FakeProviders
 
@@ -22,10 +22,14 @@ def styled_run(root: Path, until: str, **look: Any) -> StageRig:
     return run_chain(rig, until)
 
 
-def style_prompt(style_id: str) -> str:
+def style_entry(style_id: str) -> VisualStyle:
     entry = style_named(style_id)
     assert entry is not None
-    return entry.prompt
+    return entry
+
+
+def style_prompt(style_id: str) -> str:
+    return style_entry(style_id).prompt
 
 
 def test_every_picture_prompt_carries_the_resolved_style(tmp_path: Path) -> None:
@@ -87,6 +91,9 @@ def test_motion_follows_the_style_held_frames_and_card_camera(tmp_path: Path) ->
     assert by_key["scene-1@episode"].prompt.endswith(
         "Camera: puppets gliding sideways across a lit screen."
     )
+    motion = style_entry("shadow_puppet").motion
+    assert by_key["scene-1@episode"].prompt.startswith(motion.prompt)
+    assert {request.negative_prompt for request in requests} == {motion.negative_prompt}
     assert {clip.meta["held_frame_rate"] for clip in clips} == {12}
 
 
@@ -100,6 +107,19 @@ def test_the_motion_prompt_adds_the_camera_feel_only_when_given() -> None:
     settings = quick_settings()
     assert motion_prompt(settings, None).endswith("no sudden changes.")
     assert motion_prompt(settings, None, "slow drift").endswith("Camera: slow drift.")
+
+
+def test_the_motion_prompt_declares_the_style_then_the_scene_then_the_camera() -> None:
+    scene = StoryScene(narration="Hi.", visual="a fox")
+    visuals = {"motion_prompt": "{visual} moves."}
+    styled = quick_settings(look={"visual_style": "anime"}, visuals=visuals)
+    expected = f"{style_entry('anime').motion.prompt}. a fox moves. Camera: drift."
+    assert motion_prompt(styled, scene, "drift") == expected
+    custom = {"prompt": "collage", "motion_prompt": " "}
+    unstyled = quick_settings(
+        look={"visual_style": "custom", "custom_style": custom}, visuals=visuals
+    )
+    assert motion_prompt(unstyled, scene) == "a fox moves."
 
 
 def test_cards_and_thumbnails_letter_in_the_style_colours() -> None:
