@@ -12,6 +12,7 @@ from autotube.infrastructure.providers.tts.kokoro_engine import (
     KokoroEngine,
     KokoroLibrary,
 )
+from autotube.infrastructure.providers.tts.kokoro_voice_ids import kokoro_voice_ids
 from autotube.infrastructure.providers.tts.speech_text import require_text
 from autotube.infrastructure.providers.tts.voice_language import lookup_language
 from autotube.infrastructure.providers.tts.whisper_aligner import (
@@ -31,6 +32,11 @@ class KokoroOptions(ProviderOptions):
         default="af_heart",
         title="Voice",
         description="Kokoro voice id used when the request names none.",
+    )
+    voices: list[str] = Field(
+        default_factory=kokoro_voice_ids,
+        title="Known voices",
+        description="Voice ids Kokoro speaks; a request naming any other voice is refused.",
     )
     languages: dict[str, str] = Field(
         default_factory=lambda: dict(KOKORO_LANGUAGES),
@@ -62,6 +68,11 @@ class KokoroSpeech:
     def available(self) -> str | None:
         return self.context.host.missing_module("kokoro", "tts")
 
+    def known_voice(self, request: SpeechRequest) -> str:
+        if request.voice and request.voice not in self.options.voices:
+            raise UpstreamFailure(f"kokoro has no voice {request.voice!r}", "voice_unknown")
+        return request.voice or self.options.voice
+
     def synthesize(self, request: SpeechRequest, output: Path) -> Speech:
         require_text(self.provider_id, request)
         lang_code = lookup_language(self.options.languages, request.language)
@@ -69,7 +80,7 @@ class KokoroSpeech:
             raise UpstreamFailure(
                 f"kokoro does not speak {request.language!r}", "language_unsupported"
             )
-        voice = request.voice or self.options.voice
+        voice = self.known_voice(request)
         audio = self.engine.speak(request.text, voice, request.speed, lang_code)
         if len(audio.samples) == 0:
             raise UpstreamFailure("kokoro produced no audio")

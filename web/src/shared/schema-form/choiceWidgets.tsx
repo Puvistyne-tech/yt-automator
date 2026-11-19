@@ -1,5 +1,5 @@
 import { ariaDescribedByIds, type EnumOptionsType, type WidgetProps } from "@rjsf/utils";
-import { offersNotSet } from "@/shared/schema-form/choices";
+import { offersNotSet, unlistedValue } from "@/shared/schema-form/choices";
 import { common, isLocked } from "@/shared/schema-form/widgetProps";
 
 function optionFor(options: EnumOptionsType[], raw: string) {
@@ -68,6 +68,7 @@ export function SelectWidget(props: WidgetProps) {
     return <CheckboxesWidget {...props} />;
   }
   const options = props.options.enumOptions ?? [];
+  const unlisted = unlistedValue(props.value, options);
   return (
     <select
       className="input select"
@@ -83,6 +84,7 @@ export function SelectWidget(props: WidgetProps) {
           {option.label}
         </option>
       ))}
+      {unlisted !== null && <option value={unlisted}>{unlisted}</option>}
     </select>
   );
 }

@@ -120,4 +120,37 @@ describe("contract widgets", () => {
 
     expect(screen.getByRole("slider", { name: "Range field" })).toHaveAttribute("step", expected);
   });
+
+  it("keeps showing a stored value that is not among the choices", () => {
+    const voiceSchema = {
+      type: "object",
+      properties: {
+        voice: {
+          type: "string",
+          title: "Voice",
+          default: "",
+          oneOf: [
+            { const: "", title: "Default for the provider" },
+            { const: "kayal", title: "Kayal" },
+          ],
+        },
+      },
+    };
+    render(
+      <SchemaForm
+        schema={voiceSchema}
+        value={{ voice: "my_voice" }}
+        idPrefix="voice"
+        onChange={vi.fn()}
+      />,
+    );
+
+    const select = screen.getByRole("combobox", { name: "Voice" });
+    expect(select).toHaveDisplayValue("my_voice");
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "Default for the provider",
+      "Kayal",
+      "my_voice",
+    ]);
+  });
 });

@@ -120,6 +120,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   (with `type: "string"`) instead of a bare `enum`; the form shows each `title` and stores the `const`. The kids
   story pipeline titles every choice field this way through `titled_choices`, or `card_choices` when the entries
   also carry card keys (see `cards` below).
+- A choice hint may also sit on a free string field, so the backend keeps any stored value. The form's
+  select then shows a stored string that no option offers as an extra option labelled with the value itself
+  (`unlistedValue` in `web/src/shared/schema-form/choices.ts`), so it is never shown as a different choice.
 - `ui_schema` is a react-jsonschema-form uiSchema restricted to these keys, and `domain/ui_schema.py`
   (`ui_schema_problems`) checks a pipeline's `ui_schema` against its `settings_schema`:
   - `ui:sections` (root only, optional): a list of `{title: string, fields: [string]}`. Each field is a
@@ -196,7 +199,13 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   - `sound_effects.max_per_scene` (default 2) is stated in the prompt ("zero to two…", or "always an empty
     list" for 0) and shaping drops any cue beyond it.
   - `voice.speed` is a per-language speed (0.5 to 1.5, default 0.95); a stored single number is applied to
-    every language. `music.short_mood_prompt` (default empty) replaces `music.mood_prompt` for Short beds.
+    every language. `voice.narrator_voice` (`settings/narrator_voices.py`) is a per-language voice id
+    (default empty: the provider's own default) published as a titled choice per language: empty first, then
+    for English the `mlx_audio` presets `warm_storyteller`, `qwen3_narrator`, `news_reader` and the Kokoro voices
+    `af_heart`, `af_bella`, `af_nicole`, `am_michael`, `am_fenrir`, `bf_emma`, `bm_george`; for Tamil the
+    presets `kayal`, `vaidehi`, `svara_male`. Any other stored string stays valid. Every `mlx_audio` default
+    preset is offered for each language it speaks, and every other English choice is in Kokoro's `voices`
+    (both enforced by a test). `music.short_mood_prompt` (default empty) replaces `music.mood_prompt` for Short beds.
   - `visuals.motion_prompt` (with `{visual}` and `{mood}`; a card uses "a title card" and "warm") and
     `visuals.judge_criteria` replace the fixed motion and picture-judge wording. A motion prompt naming any
     other lowercase `{placeholder}` fails validation; `$`, `{}` and `{Visual}` pass through as written, as
@@ -600,6 +609,12 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   Whisper alignment. It is unavailable when `python` or `models_root` does not exist, so hosts without
   them fall through to the next TTS provider. `python` (default `~/.autotube/venvs/mlx/bin/python`),
   `models_root` (default `~/.autotube/models`) and `hf_home` (default `~/.autotube/hf`) expand `~` when used.
+- A TTS provider refuses a requested voice it cannot speak with an upstream failure `voice_unknown`, so the
+  fallback chain passes the request on: `edge_tts` refuses a voice not matching `voice_pattern` (default
+  `^[a-z]{2,}-[A-Z]{2,}-.+Neural$`; an invalid regular expression fails option validation), and `kokoro`
+  refuses a voice not in `voices` (default the Kokoro v1.0 voice ids). With the default order a Kokoro voice
+  therefore falls through `mlx_audio` and `edge_tts` to `kokoro`, and an `mlx_audio` preset is spoken by
+  `mlx_audio`. An empty voice uses each provider's own default.
 - `SubtitleStyle` (`domain/video_look.py`): burn_in, font_family, font_file (nullable), font_size, primary,
   outline and highlight colours, margin_bottom, margin_sides, wrap_lines (default false), karaoke (default
   false), position (bottom|middle|top, ASS alignment 2, 5, 8; margin_bottom is the vertical margin from that

@@ -4,10 +4,9 @@ from pydantic import Field, field_validator
 
 from autotube.pipelines.narrated_video.settings.base import (
     LocalizedNumber,
-    LocalizedText,
     SettingsSection,
-    localized_text,
 )
+from autotube.pipelines.narrated_video.settings.narrator_voices import LocalizedVoice
 
 DEFAULT_SPEED = 0.95
 
@@ -31,8 +30,10 @@ def speed_for_every_language(value: object) -> object:
 
 
 class VoiceSettings(SettingsSection):
-    narrator_voice: LocalizedText = localized_text(
-        "", "", "Narrator voice", "Voice id per language. Empty uses the provider's default."
+    narrator_voice: LocalizedVoice = Field(
+        default_factory=LocalizedVoice,
+        title="Narrator voice",
+        description="Voice that tells the story in each language.",
     )
     speed: LocalizedSpeed = Field(
         default_factory=LocalizedSpeed,
