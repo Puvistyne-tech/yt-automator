@@ -10,6 +10,7 @@ from autotube.pipelines.narrated_video.structures.registry import structure_spec
 from autotube.pipelines.narrated_video.template.settings_model import kids_settings_model
 from tests.fixtures.explainer_data import (
     NARRATIONS_TA,
+    TAKEAWAY_ENDING,
     explainer_pipeline,
     explainer_settings,
     explainer_story,
@@ -59,7 +60,7 @@ def test_the_explainer_needs_a_hook_and_the_takeaway_and_skips_cast_and_ending()
 
 
 def test_a_tamil_translation_needs_the_hook_and_the_takeaway() -> None:
-    settings = explainer_settings(GENERAL)
+    settings = explainer_settings(GENERAL, story=TAKEAWAY_ENDING)
     narrations = list(NARRATIONS_TA)
     hookless = [narrations[1], *narrations[1:-1], narrations[1]]
     assert translation_problems(tamil_explainer(hookless), settings) == [
@@ -74,8 +75,9 @@ def test_a_tamil_translation_needs_the_hook_and_the_takeaway() -> None:
 def test_the_explainer_hides_cast_and_story_only_settings(audience: TemplateAudience) -> None:
     descriptor = explainer_pipeline(audience).descriptor
     hidden = descriptor.ui_schema["ui:hidden"]
-    assert isinstance(hidden, list) and {
-        *structure_spec(Structure.EXPLAINER).hidden_paths,
-        "story.source",
-    } <= set(hidden)
+    spec = structure_spec(Structure.EXPLAINER)
+    assert isinstance(hidden, list) and {*spec.hidden_paths, "story.source"} - set(
+        spec.shown_paths
+    ) <= set(hidden)
+    assert "story.ending_style" not in hidden
     assert descriptor.default_settings["cast"] == []

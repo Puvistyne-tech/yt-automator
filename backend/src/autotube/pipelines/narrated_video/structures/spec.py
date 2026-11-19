@@ -14,6 +14,15 @@ TranslationRules = Callable[[KidsStorySettings, str], str]
 PlaceholderValues = Callable[[Story, KidsStorySettings], dict[str, str]]
 SeededGates = Callable[[str], tuple[CheckedGate, ...]]
 FixedScenes = Callable[[KidsStorySettings], int]
+MoralRule = Callable[[KidsStorySettings], bool]
+
+
+def no_moral(settings: KidsStorySettings) -> bool:  # noqa: ARG001
+    return False
+
+
+def always_moral(settings: KidsStorySettings) -> bool:  # noqa: ARG001
+    return True
 
 
 def unseeded(gates: tuple[CheckedGate, ...]) -> SeededGates:
@@ -41,3 +50,4 @@ class StructureSpec:
     shown_paths: tuple[str, ...] = ()
     defaults_files: tuple[str, ...] = ()
     fixed_scenes: FixedScenes | None = None
+    moral_required: MoralRule = no_moral

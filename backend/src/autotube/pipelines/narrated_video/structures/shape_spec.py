@@ -10,9 +10,12 @@ from autotube.pipelines.narrated_video.structures.paths import CAST_PATHS
 from autotube.pipelines.narrated_video.structures.shape_score import structure_item
 from autotube.pipelines.narrated_video.structures.spec import (
     FixedScenes,
+    MoralRule,
     PlaceholderValues,
     PromptValues,
     StructureSpec,
+    TranslationRules,
+    no_moral,
     unseeded,
 )
 
@@ -25,13 +28,18 @@ class Shape:
     problems: Gate
     score_title: str
     prompt_values: PromptValues
-    translation_rules: tuple[str, ...]
+    translation_rules: tuple[str, ...] | TranslationRules
     placeholders: tuple[str, ...]
     placeholder_values: PlaceholderValues
     leading_gates: tuple[CheckedGate, ...] = ()
     hidden_paths: tuple[str, ...] = ()
     shown_paths: tuple[str, ...] = ()
     fixed_scenes: FixedScenes | None = None
+    moral_required: MoralRule = no_moral
+
+
+def shape_rules(rules: tuple[str, ...] | TranslationRules) -> TranslationRules:
+    return fixed_rules(rules) if isinstance(rules, tuple) else rules
 
 
 def shape_spec(shape: Shape) -> StructureSpec:
@@ -41,7 +49,7 @@ def shape_spec(shape: Shape) -> StructureSpec:
         title=shape.title,
         wording=shape.wording,
         prompt_values=shape.prompt_values,
-        translation_rules=fixed_rules(shape.translation_rules),
+        translation_rules=shape_rules(shape.translation_rules),
         extra_gates=unseeded(gates),
         translation_gates=gates,
         score_rules=(structure_item(shape.score_title, shape.problems),),
@@ -51,4 +59,5 @@ def shape_spec(shape: Shape) -> StructureSpec:
         shown_paths=shape.shown_paths,
         defaults_files=(CASTLESS_DEFAULTS, f"{shape.structure.value}_defaults.json"),
         fixed_scenes=shape.fixed_scenes,
+        moral_required=shape.moral_required,
     )

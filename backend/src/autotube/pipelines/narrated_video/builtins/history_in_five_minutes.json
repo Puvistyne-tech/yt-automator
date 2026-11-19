@@ -58,6 +58,9 @@
     },
     "category": "27",
     "settings": {
+      "story": {
+        "ending_style": "moral_and_refrain"
+      },
       "series": {
         "name": {
           "en": "History in Five",

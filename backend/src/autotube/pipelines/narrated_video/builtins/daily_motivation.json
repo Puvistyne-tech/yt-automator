@@ -58,6 +58,9 @@
     },
     "category": "24",
     "settings": {
+      "story": {
+        "ending_style": "moral_and_refrain"
+      },
       "series": {
         "name": {
           "en": "Daily Lift",

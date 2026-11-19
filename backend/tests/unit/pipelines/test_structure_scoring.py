@@ -12,6 +12,7 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.template.settings_model import kids_settings_model
 from tests.fixtures.explainer_data import (
+    TAKEAWAY_ENDING,
     explainer_settings,
     explainer_story,
     without_hook,
@@ -42,7 +43,7 @@ def scored(
 def test_the_explainer_item_loses_points_per_problem(
     sample: Callable[[], Story], expected: float
 ) -> None:
-    items = scored(explainer_settings(GENERAL), {"en": sample()})
+    items = scored(explainer_settings(GENERAL, story=TAKEAWAY_ENDING), {"en": sample()})
     assert items["structure"] == (expected, 1.5)
     assert not {"moral_and_refrain", "character_consistency"} & items.keys()
 

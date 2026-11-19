@@ -9,6 +9,7 @@ from autotube.pipelines.narrated_video.stages.story import ScriptUnavailableErro
 from autotube.pipelines.narrated_video.story.child_terms import child_terms_in
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
 from tests.fixtures.explainer_data import (
+    TAKEAWAY_ENDING,
     explainer_settings,
     explainer_story,
     explainer_writer,
@@ -41,7 +42,8 @@ def test_a_general_explainer_prompt_never_addresses_children() -> None:
 
 @pytest.mark.parametrize("audience", [KIDS, GENERAL])
 def test_an_explainer_translation_keeps_the_hook_and_takeaway(audience: TemplateAudience) -> None:
-    prompt = translation_request(explainer_settings(audience), explainer_story(), "en", "ta").prompt
+    settings = explainer_settings(audience, story=TAKEAWAY_ENDING)
+    prompt = translation_request(settings, explainer_story(), "en", "ta").prompt
     assert "no recurring characters" in prompt
     assert "takeaway" in prompt and "question mark" in prompt
     assert "refrain" not in prompt

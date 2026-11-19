@@ -869,8 +869,12 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   plus the structure's own. The descriptions of `metadata.title_template`, `short_title_template` and
   `description_template` name every structure's own placeholders (tested).
 - Script model (`story/model.py`): `moral` is optional (default empty) on the draft, the stored script and the
-  translation text; `story` and `explainer` still require it through an always-on gate ('write the moral in
-  "moral"'), on written and translated scripts. Every scene also carries optional `number` (an integer from
+  translation text; `story` always requires it through an always-on gate ('write the moral in "moral"'), and
+  `explainer` requires it as the takeaway ('write the takeaway in "moral"') unless `story.ending_style` is
+  `open`, on written and translated scripts. `StructureSpec.moral_required(settings)` says which (story: always;
+  explainer: when the ending style says the moral; list, countdown, quiz: never). Every built-in whose
+  description uses `{takeaway}` or `{moral}` requires it (tested over all eight built-ins);
+  `history_in_five_minutes` and `daily_motivation` set `story.ending_style` to `moral_and_refrain` for that. Every scene also carries optional `number` (an integer from
   1, default null: the item's number in a list) and the scene labels `heading`, `question`, `choices` (list)
   and `answer` (default empty), so stored scripts validate. The banned-word, brand-name and child-directed
   term gates read every label with the narration, and the kids reading level gate reads each non-empty
@@ -898,6 +902,9 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   or speaker line and an empty example character list. The fragment says the first
   scene asks the question the video answers, the middle scenes explain it, the last scene recaps and says the
   takeaway word for word; `moral` holds the takeaway; `characters` is empty and `speaker` is the narrator.
+  With `story.ending_style` `open` the recap sums up in its own words and `moral` is an empty string: the
+  takeaway field gate, the takeaway gate and the translation's takeaway rule do not apply. The explainer shows
+  `story.ending_style` (its only shown story path among the cast paths).
   Gate (check `structure`, in `story.enabled_checks`): the first narration contains a question mark ("open the
   first scene with the question this video answers") and the last scene contains the takeaway ("say the
   takeaway, word for word, in the last scene"); translations run the same gate, and their prompt names no

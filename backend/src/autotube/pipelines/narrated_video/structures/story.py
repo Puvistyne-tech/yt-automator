@@ -28,7 +28,7 @@ from autotube.pipelines.narrated_video.story.prompt_parts import (
     following_bullets,
     translation_ending_rules,
 )
-from autotube.pipelines.narrated_video.structures.spec import StructureSpec
+from autotube.pipelines.narrated_video.structures.spec import StructureSpec, always_moral
 
 ENDING_GATE: CheckedGate = (StoryCheck.ENDING, ending_problems)
 
@@ -82,4 +82,5 @@ STORY_SPEC = StructureSpec(
     placeholders=STORY_PLACEHOLDERS,
     placeholder_values=story_values,
     uses_bundled=True,
+    moral_required=always_moral,
 )
