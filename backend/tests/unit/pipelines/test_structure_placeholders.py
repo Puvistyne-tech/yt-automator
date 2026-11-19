@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.art.cards import card_lines
 from autotube.pipelines.narrated_video.artifacts import EPISODE, SHORT
 from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
-from autotube.pipelines.narrated_video.publishing.metadata import upload_metadata
+from autotube.pipelines.narrated_video.publishing.metadata import UploadMetadata, upload_metadata
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.stages.voice import lines_to_speak
 from autotube.pipelines.narrated_video.structures.registry import metadata_placeholders
@@ -18,7 +19,7 @@ from autotube.pipelines.narrated_video.template.text_leaves import text_leaves
 from autotube.pipelines.narrated_video.text.templates import filled_template, unknown_placeholders
 from tests.fixtures.explainer_data import explainer_settings, explainer_story
 from tests.fixtures.template_records import template
-from tests.fixtures.template_settings import GENERAL, KIDS
+from tests.fixtures.template_settings import GENERAL, KIDS, model_for
 
 EXPLAINER_ID = Structure.EXPLAINER.value
 METADATA_FIELDS = ("title_template", "short_title_template", "description_template")
@@ -95,3 +96,22 @@ def test_explainer_cards_and_spoken_lines_drop_story_placeholders() -> None:
     assert lines == [settings.series.name.en]
     spoken = [line.text for line in lines_to_speak(explainer_story(), settings)]
     assert "That was How a Rainbow Is Made." in [text.strip() for text in spoken]
+
+
+@pytest.mark.parametrize("variant", [EPISODE, SHORT])
+@pytest.mark.parametrize(
+    ("structure", "emptied"), [(Structure.EXPLAINER, "{moral}"), (Structure.STORY, "{nope}")]
+)
+def test_a_title_that_renders_empty_falls_back_to_the_script_title(
+    variant: str, structure: Structure, emptied: str
+) -> None:
+    templates = {"title_template": {"en": emptied}, "short_title_template": {"en": f" {emptied} "}}
+    model = model_for(GENERAL, structure=structure.value)
+    settings = model.model_validate({"metadata": templates})
+    assert upload_metadata(explainer_story(), settings, variant).title == "How a Rainbow Is Made"
+
+
+def test_upload_metadata_refuses_an_empty_title() -> None:
+    fields = upload_metadata(explainer_story(), explainer_settings(GENERAL), EPISODE).model_dump()
+    with pytest.raises(ValidationError):
+        UploadMetadata.model_validate({**fields, "title": ""})
