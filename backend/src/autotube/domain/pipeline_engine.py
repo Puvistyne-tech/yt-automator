@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Protocol
 
 from pydantic import BaseModel
@@ -29,3 +30,7 @@ class PipelineEngine(Protocol):
     def pipeline(self, template: PipelineTemplate) -> Pipeline: ...
 
     def builtin_templates(self) -> list[PipelineTemplate]: ...
+
+
+def builtin_templates_of(engines: Iterable[PipelineEngine]) -> list[PipelineTemplate]:
+    return [template for engine in engines for template in engine.builtin_templates()]

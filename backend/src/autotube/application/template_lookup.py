@@ -3,15 +3,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from autotube.application.lookups import require
-from autotube.domain.deletion_rules import automations_using
+from autotube.domain.automations import Automation
+from autotube.domain.pipeline_engine import builtin_templates_of
 from autotube.domain.pipeline_templates import PipelineTemplate
 from autotube.domain.ports import (
     AutomationRepository,
     EngineCatalog,
     PipelineRegistry,
+    RunRepository,
     TemplateRepository,
 )
-from autotube.domain.template_rules import missing_engine_errors
+from autotube.domain.runs import Run, RunQuery
+from autotube.domain.template_rules import found_template, missing_engine_errors, taken_type_ids
 from autotube.domain.template_views import TemplateSummary, template_summary
 
 
@@ -20,19 +23,17 @@ class TemplateLookup:
     engines: EngineCatalog
     templates: TemplateRepository
     automations: AutomationRepository
+    runs: RunRepository
     pipelines: PipelineRegistry
 
     def builtins(self) -> list[PipelineTemplate]:
-        return [
-            template for engine in self.engines.list() for template in engine.builtin_templates()
-        ]
+        return builtin_templates_of(self.engines.list())
 
     def everything(self) -> list[PipelineTemplate]:
         return [*self.builtins(), *self.templates.list()]
 
     def find(self, template_id: str) -> PipelineTemplate | None:
-        builtin = next((t for t in self.builtins() if t.id == template_id), None)
-        return builtin or self.templates.get(template_id)
+        return found_template(template_id, self.builtins(), self.templates.get(template_id))
 
     def require(self, template_id: str) -> PipelineTemplate:
         return require(self.find(template_id), "template", template_id)
@@ -44,15 +45,18 @@ class TemplateLookup:
         return engine.problems(template)
 
     def taken_type_ids(self) -> set[str]:
-        served = {pipeline.descriptor.type_id for pipeline in self.pipelines.list()}
-        return served | {template.type_id for template in self.builtins()}
+        served = (pipeline.descriptor.type_id for pipeline in self.pipelines.list())
+        return taken_type_ids(served, self.builtins())
 
-    def users(self, template: PipelineTemplate) -> list[str]:
-        return automations_using(template.type_id, self.automations.list())
+    def all_automations(self) -> list[Automation]:
+        return self.automations.list()
+
+    def all_runs(self) -> list[Run]:
+        return self.runs.list(RunQuery())
 
     def present(self, template: PipelineTemplate) -> TemplateSummary:
-        return template_summary(template, self.automations.list())
+        return template_summary(template, self.all_automations())
 
     def present_all(self, templates: list[PipelineTemplate]) -> list[TemplateSummary]:
-        automations = self.automations.list()
+        automations = self.all_automations()
         return [template_summary(template, automations) for template in templates]

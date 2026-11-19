@@ -13,7 +13,7 @@ from autotube.composition.ports import Ports
 
 
 def template_use_cases(p: Ports) -> TemplateUseCases:
-    lookup = TemplateLookup(p.engines, p.templates, p.automations, p.pipelines)
+    lookup = TemplateLookup(p.engines, p.templates, p.automations, p.runs, p.pipelines)
     return TemplateUseCases(
         list_engines=ListTemplateEngines(p.engines),
         list_templates=ListTemplates(lookup),

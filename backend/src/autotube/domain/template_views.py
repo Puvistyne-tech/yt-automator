@@ -5,11 +5,11 @@ from collections.abc import Iterable
 from pydantic import Field
 
 from autotube.domain.automations import Automation
-from autotube.domain.deletion_rules import automations_using
 from autotube.domain.model_base import DomainModel, JsonObject
 from autotube.domain.pipeline_descriptors import settings_schema_of
 from autotube.domain.pipeline_engine import PipelineEngine
 from autotube.domain.pipeline_templates import PipelineTemplate, TemplateAudience
+from autotube.domain.template_usage import automations_using
 
 
 class TemplateSummary(PipelineTemplate):

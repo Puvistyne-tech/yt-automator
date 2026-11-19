@@ -14,7 +14,7 @@ from autotube.domain.pipeline_templates import (
 )
 from autotube.domain.template_rules import name_errors, origin_errors
 
-EDITABLE_FIELDS = frozenset({"description", "audience", "status", "definition"})
+PROPOSED_FIELDS = ("engine", "description", "audience", "status", "definition")
 
 
 class TemplateInput(DomainModel):
@@ -56,7 +56,7 @@ def new_template(data: TemplateInput, template_id: str, now: datetime) -> Pipeli
 
 
 def changed(current: PipelineTemplate, data: TemplateInput) -> PipelineTemplate:
-    edits = {field: getattr(data, field) for field in EDITABLE_FIELDS}
+    edits = {field: getattr(data, field) for field in PROPOSED_FIELDS}
     return current.model_copy(update=edits | {"name": data.name.strip()})
 
 

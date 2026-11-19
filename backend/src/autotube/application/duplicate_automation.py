@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from autotube.application.automation_presenter import AutomationPresenter
 from autotube.application.lookups import require_automation
 from autotube.domain.automations import Automation, Target
+from autotube.domain.copy_names import COPY_NAME_SUFFIX
 from autotube.domain.ports import AutomationRepository, Clock, IdGenerator
 
 
@@ -14,7 +15,7 @@ class DuplicateAutomation:
     presenter: AutomationPresenter
     ids: IdGenerator
     clock: Clock
-    name_suffix: str = " (copy)"
+    name_suffix: str = COPY_NAME_SUFFIX
 
     def execute(self, automation_id: str) -> Automation:
         source = require_automation(self.automations, automation_id)

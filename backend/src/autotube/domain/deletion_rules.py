@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 
 from autotube.domain.automations import Automation
 from autotube.domain.channels import Channel
-from autotube.domain.pipeline_templates import PipelineTemplate
 from autotube.domain.run_state import ACTIVE_STATUSES
 from autotube.domain.runs import Run
+from autotube.domain.template_usage import ensure_unused
 from autotube.shared.errors import RuleConflict
+
+TEMPLATE_DELETE_REMEDY = "move the automations to another pipeline and finish their runs first"
 
 
 def ensure_channel_deletable(channel_id: str, automations: Iterable[Automation]) -> None:
@@ -34,19 +36,7 @@ def ensure_run_deletable(run: Run) -> None:
         )
 
 
-def automations_using(type_id: str, automations: Iterable[Automation]) -> list[str]:
-    return sorted(a.name for a in automations if a.pipeline_type == type_id)
-
-
-def template_in_use(names: Sequence[str], remedy: str) -> RuleConflict:
-    return RuleConflict(
-        "template_in_use", f"template is used by automations: {', '.join(names)}; {remedy}"
-    )
-
-
 def ensure_template_deletable(
-    template: PipelineTemplate, automations: Iterable[Automation]
+    type_id: str, automations: Iterable[Automation], runs: Iterable[Run]
 ) -> None:
-    using = automations_using(template.type_id, automations)
-    if using:
-        raise template_in_use(using, "delete them or move them to another pipeline first")
+    ensure_unused(type_id, automations, runs, TEMPLATE_DELETE_REMEDY)

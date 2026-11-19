@@ -17,7 +17,7 @@ from autotube.application.run_doctor import RunDoctor
 from autotube.composition.overrides import Overrides as Overrides
 from autotube.composition.ports import Ports
 from autotube.composition.use_cases import build_use_cases
-from autotube.domain.ports import AppSettingsRepository, SecretStore
+from autotube.domain.ports import AppSettingsRepository, EngineCatalog, SecretStore
 from autotube.infrastructure.config import RuntimeConfig, load_config
 from autotube.infrastructure.db.database import Database
 from autotube.infrastructure.db.entity_repositories import (
@@ -99,6 +99,12 @@ def app_settings(config: RuntimeConfig, database: Database) -> SqlAppSettingsRep
     return SqlAppSettingsRepository(database, str(config.data_dir), settings_overrides(config))
 
 
+def pipeline_registry(
+    engines: EngineCatalog, templates: SqlTemplateRepository
+) -> TemplatePipelineRegistry:
+    return TemplatePipelineRegistry(installed_pipelines(), engines, templates)
+
+
 def build_ports(
     config: RuntimeConfig, database: Database, queue: WorkerPoolQueue, overrides: Overrides
 ) -> Ports:
@@ -106,7 +112,6 @@ def build_ports(
     settings = app_settings(config, database)
     templates = SqlTemplateRepository(database)
     engines = overrides.engines or InstalledEngineCatalog(installed_engines())
-    static = installed_pipelines()
     return Ports(
         credentials=SqlCredentialRepository(database),
         channels=SqlChannelRepository(database),
@@ -124,8 +129,7 @@ def build_ports(
         files=FileRunStorage(config.data_dir),
         queue=queue,
         events=overrides.events or InProcessRunEvents(config.event_queue_size),
-        pipelines=overrides.pipelines
-        or TemplatePipelineRegistry(static, engines.list(), templates),
+        pipelines=overrides.pipelines or pipeline_registry(engines, templates),
         engines=engines,
         catalog=overrides.catalog or build_provider_catalog(secrets, config.data_dir),
         youtube=overrides.youtube or youtube_gateway(config, settings),

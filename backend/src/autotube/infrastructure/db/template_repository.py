@@ -47,6 +47,11 @@ class SqlTemplateRepository(RowRepository[PipelineTemplate, PipelineTemplateRow]
         with self.db.session() as session:
             return self.readable(session.get(PipelineTemplateRow, row_id))
 
+    def type_id_of(self, template_id: str) -> str | None:
+        with self.db.session() as session:
+            row = session.get(PipelineTemplateRow, template_id)
+            return row.type_id if row is not None else None
+
     def list(self) -> list[PipelineTemplate]:
         return [template for row in self.rows() if (template := self.readable(row)) is not None]
 

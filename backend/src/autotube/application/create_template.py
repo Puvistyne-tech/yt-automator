@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from autotube.application.template_lookup import TemplateLookup
 from autotube.domain.ports import Clock, IdGenerator
 from autotube.domain.template_inputs import TemplateInput, input_errors, new_template
-from autotube.domain.template_rules import ensure_creatable
+from autotube.domain.template_rules import ensure_type_id_free
 from autotube.domain.template_views import TemplateSummary
 from autotube.shared.errors import raise_if_invalid
 
@@ -20,6 +20,6 @@ class CreateTemplate:
         raise_if_invalid(input_errors(data))
         template = new_template(data, self.ids.new(), self.clock.now())
         raise_if_invalid(self.lookup.problems(template))
-        ensure_creatable(template, self.lookup.taken_type_ids())
+        ensure_type_id_free(template.type_id, self.lookup.taken_type_ids())
         self.lookup.templates.add(template)
         return self.lookup.present(template)
