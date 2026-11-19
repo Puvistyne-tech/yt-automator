@@ -621,6 +621,8 @@ class PipelineEngine(Protocol):
   same way. The `kids_story` pipeline uses the same pinned model with audience kids, so stored `kids_story`
   settings validate unchanged.
 - The descriptor's `default_settings` come from this model.
+- Derived models are cached per (definition, audience), and the engine schema used by `problems` is built
+  once, so checking a template or listing pipelines does not rebuild models or schemas.
 
 #### Derived descriptor
 

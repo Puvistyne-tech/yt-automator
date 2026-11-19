@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import cache
+
 from autotube.domain.json_schema import Schema
 from autotube.domain.model_base import JsonObject
 from autotube.domain.pipeline_templates import PipelineTemplate, TemplateAudience
@@ -57,10 +59,15 @@ def placeholder_problems(definition: NarratedDefinition) -> dict[str, str]:
     }
 
 
+@cache
+def engine_settings_schema() -> Schema:
+    return KidsStorySettings.model_json_schema()
+
+
 def ui_problems(
     definition: NarratedDefinition, audience: TemplateAudience, engine_ui: JsonObject
 ) -> dict[str, str]:
-    schema: Schema = KidsStorySettings.model_json_schema()
+    schema = engine_settings_schema()
     ui = derived_ui_schema(engine_ui, definition, audience)
     found = {
         "definition.basic": basic_problems(ui, schema),

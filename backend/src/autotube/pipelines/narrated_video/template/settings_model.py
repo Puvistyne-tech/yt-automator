@@ -46,6 +46,7 @@ def template_defaults(definition: NarratedDefinition, audience: TemplateAudience
     )
 
 
+@cache
 def pinned_settings_model(audience: TemplateAudience) -> type[AudiencePinnedSettings]:
     model = create_model(SETTINGS_MODEL_NAME, __base__=AudiencePinnedSettings)
     model.pinned_audience = audience
@@ -68,14 +69,21 @@ def settings_model_with(
     return create_model(SETTINGS_MODEL_NAME, __base__=pinned, **fields)
 
 
-def settings_model_for(
-    definition: NarratedDefinition, audience: TemplateAudience
+@cache
+def settings_model_from_json(
+    definition_json: str, audience: TemplateAudience
 ) -> type[KidsStorySettings]:
+    definition = NarratedDefinition.model_validate_json(definition_json)
     pinned = pinned_settings_model(audience)
     defaults = pinned.model_validate(template_defaults(definition, audience))
     return settings_model_with(pinned, defaults)
 
 
-@cache
+def settings_model_for(
+    definition: NarratedDefinition, audience: TemplateAudience
+) -> type[KidsStorySettings]:
+    return settings_model_from_json(definition.model_dump_json(), audience)
+
+
 def kids_settings_model() -> type[KidsStorySettings]:
     return pinned_settings_model(TemplateAudience.KIDS)

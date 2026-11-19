@@ -154,3 +154,11 @@ def test_pinning_leaves_input_it_cannot_read_to_validation() -> None:
 
 def test_metadata_placeholders_match_the_filled_values() -> None:
     assert set(template_values(story(), KidsStorySettings())) == set(METADATA_PLACEHOLDERS)
+
+
+def test_derived_models_are_built_once_per_definition_and_audience() -> None:
+    first = settings_model_for(NarratedDefinition(tone="dry"), GENERAL)
+    assert settings_model_for(NarratedDefinition(tone="dry"), GENERAL) is first
+    assert settings_model_for(NarratedDefinition(tone="dry"), KIDS) is not first
+    assert settings_model_for(NarratedDefinition(tone="wet"), GENERAL) is not first
+    assert kids_settings_model() is kids_settings_model()
