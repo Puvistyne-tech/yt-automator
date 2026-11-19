@@ -616,8 +616,24 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   prompt words decide as before. Night darkens the hinted palette. The same seed gives the same picture; hints
   without colours keep the scene-derived palette.
 - `MotionRequest.held_frame_rate` (nullable, at least 1): when below `fps` the clip changes picture only that
-  many times a second (a held, stop-motion feel) while keeping `fps`. The ffmpeg pan-and-zoom provider honours
-  it; DepthFlow ignores it.
+  many times a second (a held, stop-motion feel) while keeping `fps`. The ffmpeg pan-and-zoom and LTX providers
+  honour it; DepthFlow ignores it.
+- The default motion order is `ltx_mlx`, `depthflow`, `ffmpeg_pan_zoom`. `ltx_mlx` runs the `ltx-2-mlx generate`
+  command and is unavailable when its command or ffmpeg is not on PATH or its model folder does not exist. It
+  generates at the landscape size, or the portrait size when the request is taller than wide. The duration is
+  split evenly into the fewest segments no longer than `max_segment_seconds`; each segment has the smallest 8k+1
+  frame count covering its length at `frame_rate`. The first segment starts from the request image, each later
+  one from the previous segment's last frame (`ffmpeg -sseof -0.05`). One ffmpeg pass then joins the segments,
+  scales and crops to the request size, converts to `fps`, applies `held_frame_rate`, and trims to the duration.
+  Intermediates live in a temporary folder next to the output and are removed afterwards; a run that writes no
+  output is an upstream failure. Options (each with title and description): `binary`, `model_dir` (default
+  `~/.autotube/models/reverie-studio__ltx-2.5-mlx-q4-distilled`), `distilled` (passes `--distilled`, default
+  true), `text_encoder` (`--gemma`, omitted when empty), `negative_prompt`, `use_nag` (passes `--nag` and the
+  negative prompt), `seed`, `frame_rate`, `landscape_width`/`landscape_height` (704x384) and
+  `portrait_width`/`portrait_height` (384x704), multiples of 64, `max_segment_seconds` (3), `image_strength`,
+  `hf_home` (default `~/.autotube/hf`, sets `HF_HOME` when not empty), `hf_offline` (sets `HF_HUB_OFFLINE=1`),
+  `ffmpeg_binary`, `crf`, `preset` and `timeout_seconds` (per command, 1200). A leading `~` in `model_dir` and
+  `hf_home` is expanded to the home folder when used (availability check, `--model`, `HF_HOME`).
 - Ducking lowers the music only while narration plays; the music continues at its set volume after
   the last narration clip.
 - `extract_frame` fails with an upstream failure when no frame was written, for example past the end.

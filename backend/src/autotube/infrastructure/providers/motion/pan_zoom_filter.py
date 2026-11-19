@@ -5,7 +5,7 @@ from pathlib import Path
 
 from autotube.domain.capabilities import CameraMove, MotionRequest
 from autotube.infrastructure.providers.even_size import even
-from autotube.infrastructure.providers.ffmpeg_args import ffmpeg_command
+from autotube.infrastructure.providers.ffmpeg_args import ffmpeg_command, x264_args
 
 CENTER_X = "(iw-iw/zoom)/2"
 CENTER_Y = "(ih-ih/zoom)/2"
@@ -80,14 +80,7 @@ def pan_zoom_command(
         str(frame_count(request)),
         "-r",
         str(request.fps),
-        "-c:v",
-        "libx264",
-        "-preset",
-        tuning.preset,
-        "-crf",
-        str(tuning.crf),
-        "-pix_fmt",
-        "yuv420p",
+        *x264_args(tuning.preset, tuning.crf),
         "-movflags",
         "+faststart",
         str(output),
