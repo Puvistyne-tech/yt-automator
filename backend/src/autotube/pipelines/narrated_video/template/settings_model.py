@@ -12,7 +12,7 @@ from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.template.audience import audience_defaults, with_audience
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
-from autotube.pipelines.narrated_video.template.kids_floor import kids_floor
+from autotube.pipelines.narrated_video.template.kids_floor import audience_floor
 from autotube.pipelines.narrated_video.template.mapping import definition_settings
 from autotube.pipelines.narrated_video.template.merging import merged_all
 
@@ -25,7 +25,8 @@ class AudiencePinnedSettings(KidsStorySettings):
     @model_validator(mode="before")
     @classmethod
     def pin_audience(cls, data: object) -> object:
-        return with_audience(data, cls.pinned_audience, cls.section_default)
+        pinned = with_audience(data, cls.pinned_audience, cls.section_default)
+        return audience_floor(pinned, cls.pinned_audience)
 
     @classmethod
     def section_default(cls, section: str) -> object:
@@ -37,13 +38,12 @@ def engine_defaults() -> JsonObject:
 
 
 def template_defaults(definition: NarratedDefinition, audience: TemplateAudience) -> JsonObject:
-    merged = merged_all(
+    return merged_all(
         engine_defaults(),
         audience_defaults(audience),
         definition_settings(definition),
         definition.settings,
     )
-    return kids_floor(merged) if audience is TemplateAudience.KIDS else merged
 
 
 def pinned_settings_model(audience: TemplateAudience) -> type[AudiencePinnedSettings]:

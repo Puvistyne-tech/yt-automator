@@ -17,9 +17,16 @@ from autotube.pipelines.narrated_video.settings.series import (
     BRAND_NAMES,
     NO_HARM_RULE,
     PICTURE_EXCLUSIONS,
+    SafetySettings,
 )
-from autotube.pipelines.narrated_video.template.kids_floor import kids_floor, listed_terms
-from tests.fixtures.template_settings import pipeline_of
+from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck
+from autotube.pipelines.narrated_video.template.kids_floor import (
+    audience_floor,
+    kids_floor,
+    listed_terms,
+)
+from autotube.pipelines.narrated_video.template.settings_model import kids_settings_model
+from tests.fixtures.template_settings import model_for, pipeline_of
 
 KIDS, GENERAL = TemplateAudience.KIDS, TemplateAudience.GENERAL
 ENGINE = KidsStorySettings().model_dump(mode="json")
@@ -139,3 +146,33 @@ def test_a_partial_overlay_gets_the_floor_without_duplicates() -> None:
         *(w for w in BANNED_WORDS if w not in ("kill", "gun")),
     ]
     assert floored["brand_names"] == ["lego", "Acme", *(b for b in BRAND_NAMES if b != "Lego")]
+
+
+EMPTIED = {
+    "safety": {"banned_words": [], "brand_names": [], "picture_exclusions": ""},
+    "story": {"enabled_checks": []},
+}
+
+
+@pytest.mark.parametrize("model", [kids_settings_model(), model_for(KIDS, tone="cosy")])
+def test_kids_automations_cannot_empty_the_floors(model: type[KidsStorySettings]) -> None:
+    loaded = model.model_validate(EMPTIED)
+    assert loaded.safety.banned_words == BANNED_WORDS
+    assert loaded.safety.brand_names == BRAND_NAMES
+    assert listed_terms(loaded.safety.picture_exclusions) == listed_terms(PICTURE_EXCLUSIONS)
+    assert loaded.story.enabled_checks == [StoryCheck.READING_LEVEL]
+    as_models = model.model_validate({"safety": SafetySettings(banned_words=["Kill"])})
+    assert as_models.safety.banned_words[0] == "Kill"
+    assert "kill" not in as_models.safety.banned_words
+
+
+def test_general_automations_are_not_floored() -> None:
+    loaded = model_for(GENERAL).model_validate(EMPTIED)
+    assert loaded.safety.banned_words == [] and loaded.story.enabled_checks == []
+
+
+def test_the_audience_floor_leaves_other_input_alone() -> None:
+    assert audience_floor("raw", KIDS) == "raw"
+    assert audience_floor({"safety": {"banned_words": []}}, GENERAL) == {
+        "safety": {"banned_words": []}
+    }

@@ -611,7 +611,7 @@ class PipelineEngine(Protocol):
   `pydantic.create_model`. Its schema equals the engine's; only the top-level section defaults change.
 - Defaults are deep-merged in this order (objects merge, lists and scalars replace): engine defaults, the
   audience defaults (general only: `template/general_defaults.json`), the values mapped from the definition,
-  the `settings` overlay, then the kids floor (kids only).
+  then the `settings` overlay; the kids floor is applied when the result is validated (kids only).
 - The general defaults leave nothing child-directed: tagline, an empty refrain, intro and outro lines,
   editorial rules, the `ink_and_wash` style, a single adult cast member (`mira`), tone, writing style, an open
   ending, themes, morals, question style, judge criteria, the motion prompt default, music mood, sound-effect
@@ -633,11 +633,18 @@ class PipelineEngine(Protocol):
 
 #### Audience
 
-- Kids floor (`template/kids_floor.py`), applied to kids template defaults after the merge, so neither a
-  definition nor an overlay can weaken it: the engine's banned words, brand names and the "No violence, fear,
-  danger…" editorial rule are appended if missing (compared ignoring case, never duplicated), every engine
-  `picture_exclusions` term is appended if missing, and `story.age_min`/`age_max` stay capped at 12 by validation. The banned-word and brand gates are
-  always on, and kids templates always use the kids system prompt.
+- Kids floor (`template/kids_floor.py`), applied by the kids-pinned model's before-validator to everything it
+  validates: template defaults, automation settings, stored snapshots and the built-in `kids_story`. Neither a
+  definition, an overlay nor an automation edit can weaken it:
+  - the engine's banned words, brand names and the "No violence, fear, danger…" editorial rule are appended if
+    missing (compared ignoring case, never duplicated);
+  - every engine `picture_exclusions` term is appended if missing;
+  - `story.enabled_checks` always contains `reading_level`, the only switchable check that guards
+    age-appropriate language (scene count, words per scene, duration, ending and cast are form checks);
+  - `story.age_min`/`age_max` stay capped at 12 by validation.
+  The banned-word and brand gates are always on, and kids templates always use the kids system prompt.
+  Behaviour change: a stored kids automation whose settings removed a floored entry gets it back silently when
+  it is loaded; defaults that already meet the floor are unchanged.
 - General templates: every prompt with a `_general` variant (`story_system`, `translate_system`, `image_scene`,
   `image_thumbnail`, `judge`) is chosen by audience (`audience_prompts.py`); the story system prompt has no age
   range or reading level and says "The audience is general: the script must never address children…"; an open
