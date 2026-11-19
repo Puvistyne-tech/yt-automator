@@ -48,27 +48,28 @@ describe("mock template suggestions", () => {
 
   it.each<[string, Record<string, unknown>, Record<string, string>]>([
     ["an empty engine", { engine: "" }, { engine: "String should have at least 1 character" }],
-    ["a missing engine", { engine: undefined }, { engine: "Field required" }],
+    ["a number engine", { engine: 3 }, { engine: "Input should be a valid string" }],
+    ["a missing audience", { audience: undefined }, { audience: "Field required" }],
     [
       "an unknown audience",
       { audience: "teens" },
       { audience: "Input should be 'kids' or 'general'" },
     ],
-    ["a missing audience", { audience: undefined }, { audience: "Field required" }],
     [
       "a lower-case region",
       { region: "us" },
       { region: "String should match pattern '^[A-Z]{2}$'" },
     ],
     ["a missing region", { region: undefined }, { region: "Field required" }],
-    [
-      "a word category",
-      { category: "music" },
-      { category: "String should match pattern '^[0-9]{1,4}$'" },
-    ],
+    ["a number category", { category: 27 }, { category: "Input should be a valid string" }],
     ["no ideas", { count: 0 }, { count: "Input should be greater than or equal to 1" }],
     ["too many ideas", { count: 11 }, { count: "Input should be less than or equal to 10" }],
-    ["a fractional count", { count: 2.5 }, { count: "Input should be a valid integer" }],
+    [
+      "a fractional count",
+      { count: 2.5 },
+      { count: "Input should be a valid integer, got a number with a fractional part" },
+    ],
+    ["a text count", { count: "five" }, { count: "Input should be a valid integer" }],
     ["an engine not installed", { engine: "other" }, { engine: "engine 'other' is not installed" }],
     [
       "a bad region before the engine",
@@ -77,7 +78,8 @@ describe("mock template suggestions", () => {
     ],
   ])("refuses %s on its field", async (_name, changes, fields) => {
     const refused = await rejectionOf(() => suggest(changes));
-    expect(refused).toMatchObject({ status: 400, code: "validation_failed", fields });
+    expect(refused).toMatchObject({ status: 400, code: "validation_failed" });
+    expect((refused as { fields: unknown }).fields).toEqual(fields);
   });
 
   it.each<[string, () => void, string]>([

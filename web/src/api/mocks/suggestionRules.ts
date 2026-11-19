@@ -7,16 +7,21 @@ const REGION_PATTERN = /^[A-Z]{2}$/;
 const CATEGORY_PATTERN = /^[0-9]{1,4}$/;
 const AUDIENCES: readonly unknown[] = ["kids", "general"];
 const REQUIRED = "Field required";
+const NOT_TEXT = "Input should be a valid string";
 
 export type SuggestionBody = Record<string, unknown>;
 
 const patternMessage = (pattern: RegExp) => `String should match pattern '${pattern.source}'`;
 
-function engineError(value: unknown): string | null {
+function textError(value: unknown): string | null {
   if (value === undefined) {
     return REQUIRED;
   }
-  return typeof value === "string" && value !== "" ? null : EMPTY_VALUE_MESSAGE;
+  return typeof value === "string" ? null : NOT_TEXT;
+}
+
+function engineError(value: unknown): string | null {
+  return textError(value) ?? (value === "" ? EMPTY_VALUE_MESSAGE : null);
 }
 
 function audienceError(value: unknown): string | null {
@@ -27,18 +32,21 @@ function audienceError(value: unknown): string | null {
 }
 
 function patternError(value: unknown, pattern: RegExp, optional: boolean): string | null {
-  if (value === undefined || value === null) {
-    return optional ? null : REQUIRED;
+  if (optional && (value === undefined || value === null)) {
+    return null;
   }
-  return typeof value === "string" && pattern.test(value) ? null : patternMessage(pattern);
+  return textError(value) ?? (pattern.test(value as string) ? null : patternMessage(pattern));
 }
 
 function countError(value: unknown): string | null {
   if (value === undefined) {
     return null;
   }
-  if (typeof value !== "number" || !Number.isInteger(value)) {
+  if (typeof value !== "number") {
     return "Input should be a valid integer";
+  }
+  if (!Number.isInteger(value)) {
+    return "Input should be a valid integer, got a number with a fractional part";
   }
   if (value < 1) {
     return "Input should be greater than or equal to 1";
