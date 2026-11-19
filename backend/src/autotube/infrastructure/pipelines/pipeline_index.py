@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import builtins
 from collections.abc import Sequence
 
 from autotube.domain.pipeline import Pipeline
+from autotube.domain.pipeline_engine import PipelineEngine
 
 
 class DuplicatePipelineError(ValueError):
@@ -20,12 +20,12 @@ def indexed(pipelines: Sequence[Pipeline]) -> dict[str, Pipeline]:
     return index
 
 
-class StaticPipelineRegistry:
-    def __init__(self, pipelines: Sequence[Pipeline]) -> None:
-        self.pipelines = indexed(pipelines)
-
-    def list(self) -> builtins.list[Pipeline]:
-        return builtins.list(self.pipelines.values())
-
-    def get(self, type_id: str) -> Pipeline | None:
-        return self.pipelines.get(type_id)
+def indexed_engines(engines: Sequence[PipelineEngine]) -> dict[str, PipelineEngine]:
+    index: dict[str, PipelineEngine] = {}
+    for engine in engines:
+        if engine.engine_id in index:
+            raise DuplicatePipelineError(
+                f"two installed engines share the engine id {engine.engine_id!r}"
+            )
+        index[engine.engine_id] = engine
+    return index

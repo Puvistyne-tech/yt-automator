@@ -30,6 +30,7 @@ from autotube.domain.ports import (
     ScheduleCalculator,
     SecretStore,
     SystemInspector,
+    TemplateRepository,
     YouTubeGateway,
 )
 from autotube.domain.quota import QuotaPolicy
@@ -42,6 +43,7 @@ class Ports:
     credentials: CredentialRepository
     channels: ChannelRepository
     automations: AutomationRepository
+    templates: TemplateRepository
     runs: RunRepository
     provider_configs: ProviderConfigRepository
     app_settings: AppSettingsRepository

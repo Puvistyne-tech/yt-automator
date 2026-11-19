@@ -10,6 +10,7 @@ from autotube.domain.port_repositories import (
     RunChange,
     RunCheck,
     RunRepository,
+    TemplateRepository,
 )
 from autotube.domain.port_runtime import (
     ArtifactStore,
@@ -46,5 +47,6 @@ __all__ = [
     "ScheduleCalculator",
     "SecretStore",
     "SystemInspector",
+    "TemplateRepository",
     "YouTubeGateway",
 ]

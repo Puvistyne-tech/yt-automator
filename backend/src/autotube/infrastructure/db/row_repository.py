@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any
 
 from pydantic import BaseModel
+from sqlalchemy import ColumnElement
 from sqlmodel import SQLModel, col, select
 
 from autotube.infrastructure.db.codec import from_payload
@@ -26,6 +27,11 @@ class RowStore[M: BaseModel, R: SQLModel]:
     def get(self, row_id: str) -> M | None:
         with self.db.session() as session:
             row = session.get(self.row_type, row_id)
+            return self.decode(row) if row is not None else None
+
+    def find_first(self, condition: ColumnElement[bool] | bool) -> M | None:
+        with self.db.session() as session:
+            row = session.exec(select(self.row_type).where(condition)).first()
             return self.decode(row) if row is not None else None
 
     def save(self, model: M) -> None:
@@ -51,8 +57,10 @@ class RowRepository[M: BaseModel, R: SQLModel](RowStore[M, R]):
         super().__init__(db, row_type, model_type, to_row)
         self.order_column = order_column
 
-    def list(self) -> list[M]:
+    def rows(self) -> list[R]:
         order = col(getattr(self.row_type, self.order_column))
         with self.db.session() as session:
-            rows = session.exec(select(self.row_type).order_by(order)).all()
-            return [self.decode(row) for row in rows]
+            return list(session.exec(select(self.row_type).order_by(order)).all())
+
+    def list(self) -> list[M]:
+        return [self.decode(row) for row in self.rows()]

@@ -6,6 +6,7 @@ from typing import Protocol
 from autotube.domain.automations import Automation
 from autotube.domain.channels import Channel
 from autotube.domain.credentials import Credential
+from autotube.domain.pipeline_templates import PipelineTemplate
 from autotube.domain.providers import ProviderConfig
 from autotube.domain.runs import Run, RunQuery
 from autotube.domain.settings import AppSettings
@@ -44,6 +45,20 @@ class AutomationRepository(Protocol):
     def save(self, automation: Automation) -> None: ...
 
     def delete(self, automation_id: str) -> None: ...
+
+
+class TemplateRepository(Protocol):
+    def get(self, template_id: str) -> PipelineTemplate | None: ...
+
+    def find_by_type_id(self, type_id: str) -> PipelineTemplate | None: ...
+
+    def list(self) -> list[PipelineTemplate]: ...
+
+    def add(self, template: PipelineTemplate) -> None: ...
+
+    def update(self, template: PipelineTemplate) -> None: ...
+
+    def delete(self, template_id: str) -> None: ...
 
 
 class RunRepository(Protocol):

@@ -6,17 +6,16 @@ from pydantic import ValidationError
 from autotube.domain.pipeline import Pipeline
 from autotube.domain.pipeline_descriptors import PipelineDescriptor
 from autotube.domain.ui_schema import ui_schema_problems
-from autotube.infrastructure.pipelines.static_registry import (
+from autotube.infrastructure.pipelines.pipeline_index import (
     DuplicatePipelineError,
-    StaticPipelineRegistry,
+    indexed,
 )
 from autotube.pipelines.registry import installed_pipelines
 
 
-def test_registry_lists_and_finds_installed_pipelines() -> None:
-    registry = StaticPipelineRegistry(installed_pipelines())
-    assert [pipeline.descriptor.type_id for pipeline in registry.list()] == ["kids_story"]
-    assert registry.get("kids_story") is not None
+def test_installed_pipelines_are_indexed_by_type_id() -> None:
+    assert list(indexed(installed_pipelines())) == ["kids_story"]
+    assert indexed(()) == {}
 
 
 @pytest.mark.parametrize("pipeline", installed_pipelines(), ids=lambda p: p.descriptor.type_id)
@@ -33,11 +32,6 @@ def test_a_descriptor_with_a_broken_ui_schema_is_refused() -> None:
         PipelineDescriptor.model_validate(broken)
 
 
-def test_registry_returns_none_for_an_unknown_type() -> None:
-    assert StaticPipelineRegistry(()).get("missing") is None
-    assert StaticPipelineRegistry(()).list() == []
-
-
 def test_two_pipelines_with_one_type_id_are_refused() -> None:
     with pytest.raises(DuplicatePipelineError, match="'kids_story'"):
-        StaticPipelineRegistry([*installed_pipelines(), *installed_pipelines()])
+        indexed([*installed_pipelines(), *installed_pipelines()])

@@ -40,6 +40,16 @@ class AutomationRow(SQLModel, table=True):
     payload: dict[str, Any] = payload_column()
 
 
+class PipelineTemplateRow(SQLModel, table=True):
+    __tablename__ = "pipeline_templates"
+
+    id: str = Field(primary_key=True)
+    type_id: str = Field(unique=True)
+    status: str = Field(index=True)
+    created_at: str = Field(index=True)
+    payload: dict[str, Any] = payload_column()
+
+
 class RunRow(SQLModel, table=True):
     __tablename__ = "runs"
 
