@@ -1,5 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { delay, HttpResponse, http } from "msw";
+import { NO_TEXT_MODEL, TEXT_MODEL_UNAVAILABLE } from "@/api/mocks/templateSuggestions";
+import { disableWriters } from "../helpers/providers";
 import { failWith, recordBodies, server } from "../helpers/server";
 import {
   disconnectChannels,
@@ -101,13 +103,16 @@ describe("Pipelines: suggest ideas", () => {
     );
   });
 
-  it("explains calmly when no real text model is ready", async () => {
-    onlyPlaceholderWriter();
+  it.each<[string, () => void, string]>([
+    ["only a placeholder text model is ready", onlyPlaceholderWriter, NO_TEXT_MODEL],
+    ["no text model is ready", disableWriters, TEXT_MODEL_UNAVAILABLE],
+  ])("explains calmly when %s", async (_name, arrange, message) => {
+    arrange();
     const { user } = await openSuggestions();
 
     await user.click(panel().getByRole("button", FIND));
 
-    const notice = await panel().findByText(/^Connect a text model under Providers/);
+    const notice = await panel().findByText(message);
     expect(notice.closest("[role=status]")).not.toBeNull();
     expect(panel().getByRole("link", { name: "Open Providers" })).toHaveAttribute(
       "href",
