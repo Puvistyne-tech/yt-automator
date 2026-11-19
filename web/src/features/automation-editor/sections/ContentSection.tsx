@@ -1,14 +1,15 @@
 import type { PipelineDescriptor } from "@/api/types";
-import type { SettingsView } from "@/features/automation-editor/model/settingsView";
 import {
   EditorSection,
   type SectionProps,
 } from "@/features/automation-editor/sections/EditorSection";
-import { SettingsSearch } from "@/features/automation-editor/sections/SettingsSearch";
 import type { SettingsFilterState } from "@/features/automation-editor/useSettingsView";
 import { scopedErrors } from "@/shared/schema-form/errors";
 import { SchemaForm } from "@/shared/schema-form/SchemaForm";
-import { Button, EmptyState } from "@/shared/ui";
+import { NoSettingsMatch } from "@/shared/settings-view/NoSettingsMatch";
+import { SettingsSearch } from "@/shared/settings-view/SettingsSearch";
+import type { SettingsView } from "@/shared/settings-view/settingsView";
+import { EmptyState } from "@/shared/ui";
 
 interface ContentSectionProps extends SectionProps {
   pipeline: PipelineDescriptor | undefined;
@@ -16,25 +17,10 @@ interface ContentSectionProps extends SectionProps {
   filter: SettingsFilterState;
 }
 
-function NoMatches({ onClear }: { onClear: () => void }) {
-  return (
-    <EmptyState
-      icon="inbox"
-      title="No settings match"
-      description="Try another word, or turn off Changed only."
-      action={
-        <Button size="sm" onClick={onClear}>
-          Clear search
-        </Button>
-      }
-    />
-  );
-}
-
 function PipelineForm(props: ContentSectionProps & { pipeline: PipelineDescriptor }) {
   const { draft, onChange, errors, pipeline, filter } = props;
   if (filter.nothingFound) {
-    return <NoMatches onClear={filter.search.clear} />;
+    return <NoSettingsMatch onClear={filter.search.clear} />;
   }
   return (
     <SchemaForm

@@ -1,5 +1,5 @@
 import { screen, within } from "@testing-library/react";
-import { SETTINGS_VIEW_STORAGE_KEY } from "@/features/automation-editor/model/settingsView";
+import { SETTINGS_VIEW_STORAGE_KEY } from "@/shared/settings-view/settingsView";
 
 export function startInAllSettings() {
   window.localStorage.setItem(SETTINGS_VIEW_STORAGE_KEY, "all");

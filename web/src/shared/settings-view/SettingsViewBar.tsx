@@ -3,9 +3,9 @@ import {
   SETTINGS_VIEWS,
   type SettingsView,
   type SimpleViewSummary,
-} from "@/features/automation-editor/model/settingsView";
+} from "@/shared/settings-view/settingsView";
 import { Button } from "@/shared/ui";
-import "@/features/automation-editor/settings-view.css";
+import "@/shared/settings-view/settings-view.css";
 
 interface SettingsViewBarProps {
   view: SettingsView;

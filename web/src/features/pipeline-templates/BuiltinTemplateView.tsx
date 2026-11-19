@@ -2,6 +2,7 @@ import type { EngineSummary, TemplateSummary } from "@/api/types";
 import { draftFromTemplate } from "@/features/pipeline-templates/model/form";
 import { DuplicateTemplateDialog } from "@/features/pipeline-templates/TemplateDialogs";
 import { TemplateFields } from "@/features/pipeline-templates/TemplateFields";
+import { useDefinitionViewMode } from "@/features/pipeline-templates/useDefinitionView";
 import { useDuplicateTemplateFlow } from "@/features/pipeline-templates/useTemplateFlows";
 import { Button, Callout } from "@/shared/ui";
 import "@/features/pipeline-templates/pipeline-templates.css";
@@ -14,6 +15,7 @@ export function BuiltinTemplateView({
   template: TemplateSummary;
 }) {
   const duplicate = useDuplicateTemplateFlow();
+  const mode = useDefinitionViewMode(engine);
   return (
     <div className="template-form">
       <Callout tone="info">
@@ -30,6 +32,7 @@ export function BuiltinTemplateView({
         onChange={() => undefined}
         errors={{}}
         disabled
+        mode={mode}
       />
       <DuplicateTemplateDialog flow={duplicate} />
     </div>

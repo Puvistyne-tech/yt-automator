@@ -3,17 +3,9 @@ import { delay, HttpResponse, http } from "msw";
 import { db } from "@/api/mocks/db";
 import { findToast, pathOf, renderApp, type User } from "../helpers/renderApp";
 import { failWith, server } from "../helpers/server";
+import { startNewPipeline } from "../helpers/templates";
 
 const stored = (name: string) => db.state.templates.find((t) => t.name === name);
-
-async function startNew(audience: "For kids" | "General audience") {
-  const app = renderApp("/pipelines/new");
-  expect(await screen.findByText(/cannot be changed later/)).toBeInTheDocument();
-  await app.user.click(screen.getByRole("radio", { name: new RegExp(`^${audience}`) }));
-  await app.user.click(screen.getByRole("button", { name: "Continue" }));
-  await screen.findByLabelText(/^What the videos are about/);
-  return app;
-}
 
 async function fillBasics(user: User, name: string, brief: string) {
   await user.type(screen.getByLabelText(/^Name/), name);
@@ -22,7 +14,7 @@ async function fillBasics(user: User, name: string, brief: string) {
 
 describe("Pipeline editor: create", () => {
   it("creates a kids pipeline as a draft from the kids blank", async () => {
-    const { user, router } = await startNew("For kids");
+    const { user, router } = await startNewPipeline("For kids");
     expect(screen.getByRole("combobox", { name: "Format" })).toHaveDisplayValue("Story");
     expect(screen.getByText("For kids")).toBeInTheDocument();
 
@@ -40,7 +32,7 @@ describe("Pipeline editor: create", () => {
   });
 
   it("creates a general pipeline and makes it ready", async () => {
-    const { user } = await startNew("General audience");
+    const { user } = await startNewPipeline("General audience");
 
     await fillBasics(user, "Ocean wonders", "Facts about the sea.");
     await user.click(screen.getByRole("button", { name: "Save and make ready" }));
@@ -51,7 +43,7 @@ describe("Pipeline editor: create", () => {
   });
 
   it("asks for a name before saving and shows server errors at their fields", async () => {
-    const { user } = await startNew("General audience");
+    const { user } = await startNewPipeline("General audience");
     await user.click(screen.getByRole("button", { name: "Save as draft" }));
     expect(await screen.findByText("Give the pipeline a name.")).toBeInTheDocument();
 
@@ -72,7 +64,7 @@ describe("Pipeline editor: create", () => {
   it("refuses a name over 80 characters without sending it", async () => {
     const sent = vi.fn();
     server.events.on("request:start", sent);
-    const { user } = await startNew("General audience");
+    const { user } = await startNewPipeline("General audience");
     sent.mockClear();
 
     await user.type(screen.getByLabelText(/^Name/), "x".repeat(81));
@@ -88,7 +80,7 @@ describe("Pipeline editor: create", () => {
       code: "template_type_taken",
       message: "pipeline type 't_x' already exists",
     });
-    const { user } = await startNew("General audience");
+    const { user } = await startNewPipeline("General audience");
     await user.type(screen.getByLabelText(/^Name/), "Taken");
     await user.click(screen.getByRole("button", { name: "Save as draft" }));
 

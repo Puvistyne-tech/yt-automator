@@ -1,3 +1,4 @@
+import type { FieldErrors } from "@/api/errors";
 import { pipelinePath } from "@/api/paths";
 import { useSaveTemplate } from "@/api/templates";
 import type { TemplateStatus, TemplateSummary } from "@/api/types";
@@ -16,11 +17,12 @@ interface EditorInput {
   engineId: string;
   template: TemplateSummary | undefined;
   initial: TemplateDraft;
+  onErrorsShown: (errors: FieldErrors) => void;
 }
 
-export function useTemplateEditor({ engineId, template, initial }: EditorInput) {
+export function useTemplateEditor({ engineId, template, initial, onErrorsShown }: EditorInput) {
   const { draft, setDraft, dirty, markSaved } = useDraftState(initial, JSON.stringify);
-  const problems = useTemplateErrors();
+  const problems = useTemplateErrors(onErrorsShown);
   const save = useSaveTemplate(template?.id);
   const notifier = useMutationNotifier();
   const onCreated = useNavigateAfterCreate(dirty, pipelinePath);

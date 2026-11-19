@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { db } from "@/api/mocks/db";
-import { SETTINGS_VIEW_STORAGE_KEY } from "@/features/automation-editor/model/settingsView";
+import { SETTINGS_VIEW_STORAGE_KEY } from "@/shared/settings-view/settingsView";
 import { findSection, sectionByName, startInAllSettings } from "../helpers/editor";
 import { findToast, renderApp } from "../helpers/renderApp";
 import { failWith } from "../helpers/server";
