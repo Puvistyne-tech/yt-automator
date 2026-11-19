@@ -29,7 +29,10 @@ def metadata_placeholders(structure: Structure) -> tuple[str, ...]:
     return (*COMMON_PLACEHOLDERS, *structure_spec(structure).placeholders)
 
 
-def structure_defaults(structure: Structure) -> JsonObject:
-    name = structure_spec(structure).defaults_file
-    loaded = resource_json(FOLDER, name) if name else {}
+def defaults_file(name: str) -> JsonObject:
+    loaded = resource_json(FOLDER, name)
     return loaded if isinstance(loaded, dict) else {}
+
+
+def structure_defaults(structure: Structure) -> tuple[JsonObject, ...]:
+    return tuple(defaults_file(name) for name in structure_spec(structure).defaults_files)

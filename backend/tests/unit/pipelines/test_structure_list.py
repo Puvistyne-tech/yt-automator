@@ -8,7 +8,7 @@ from autotube.pipelines.narrated_video.settings.story import StorySource
 from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck, Structure
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
-from autotube.pipelines.narrated_video.structures.numbered import HIDDEN_PATHS
+from autotube.pipelines.narrated_video.structures.registry import structure_spec
 from tests.fixtures.list_data import (
     list_settings,
     list_story,
@@ -101,6 +101,9 @@ def test_a_list_supplies_its_count_and_items() -> None:
 def test_the_list_hides_cast_quiz_and_scene_count_settings(audience: TemplateAudience) -> None:
     descriptor = pipeline_of(audience, structure="list").descriptor
     hidden = descriptor.ui_schema["ui:hidden"]
-    assert isinstance(hidden, list) and {*HIDDEN_PATHS, "story.source"} <= set(hidden)
+    assert isinstance(hidden, list) and {
+        *structure_spec(Structure.LIST).hidden_paths,
+        "story.source",
+    } <= set(hidden)
     assert "story.item_count" not in hidden
     assert descriptor.default_settings["cast"] == []

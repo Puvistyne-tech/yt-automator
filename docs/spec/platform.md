@@ -730,10 +730,18 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
                 the common ones), placeholder_values(story, settings), uses_bundled (may fall back to the
                 bundled stories), basic_paths (the derived `ui:basic` when the definition has none; empty
                 keeps the engine's), hidden_paths (added to the derived `ui:hidden`), shown_paths (engine
-                hidden paths this structure shows again), defaults_file (JSON in `structures/`, merged after
-                the audience defaults), fixed_scenes(settings) -> the exact scene count, or none (the
-                configured `story.scene_count_min` to `story.scene_count_max`)
+                hidden paths this structure shows again), defaults_files (JSON files in `structures/`,
+                merged in order after the audience defaults), fixed_scenes(settings) -> the exact scene
+                count, or none (the configured `story.scene_count_min` to `story.scene_count_max`)
 ```
+
+- Explainer, list, countdown and quiz are built by `structures/shape_spec.py::shape_spec(Shape(...))`: their
+  structure gate (after any leading gates, the explainer's moral gate) is both the written and the translation
+  gate and the `structure` score item; translation rules are a fixed list (`castless.py::fixed_rules`); the
+  prompt values are `castless.py::castless_values(prompt file, fields)` (no ending, speaker or example
+  character); hidden paths start with the cast paths; defaults are `castless_defaults.json` (empty refrain,
+  cast and morals) then `<structure>_defaults.json`. The intro and closing framing check of list and quiz is
+  `framing.py::framing_problems`.
 
 - Length (`structures/length.py`): `scene_range(settings)` is the fixed count twice, or the configured range;
   the prompt says "Exactly N scenes." or "Between A and B scenes.", and the scene count gate says "use exactly N

@@ -10,7 +10,7 @@ from autotube.pipelines.narrated_video.publishing.templates import template_valu
 from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
-from autotube.pipelines.narrated_video.structures.quiz import HIDDEN_PATHS
+from autotube.pipelines.narrated_video.structures.registry import structure_spec
 from tests.fixtures.list_data import with_scene
 from tests.fixtures.quiz_data import quiz_settings, quiz_story, tamil_quiz
 from tests.fixtures.template_settings import GENERAL, KIDS, pipeline_of
@@ -105,5 +105,8 @@ def test_the_quiz_shows_its_counts_and_hides_cast_and_list_settings(
 ) -> None:
     descriptor = pipeline_of(audience, structure="quiz").descriptor
     hidden = descriptor.ui_schema["ui:hidden"]
-    assert isinstance(hidden, list) and {*HIDDEN_PATHS, "story.item_count"} <= set(hidden)
+    assert isinstance(hidden, list) and {
+        *structure_spec(Structure.QUIZ).hidden_paths,
+        "story.item_count",
+    } <= set(hidden)
     assert not {"story.quiz_questions", "story.answer_choices"} & set(hidden)

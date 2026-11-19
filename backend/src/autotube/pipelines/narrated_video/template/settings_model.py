@@ -54,7 +54,7 @@ def template_defaults(definition: NarratedDefinition, audience: TemplateAudience
     return merged_all(
         engine_defaults(),
         audience_defaults(audience),
-        structure_defaults(definition.structure),
+        *structure_defaults(definition.structure),
         definition_settings(definition),
         definition.settings,
     )

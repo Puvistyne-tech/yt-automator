@@ -1,11 +1,4 @@
 {
-  "series": {
-    "refrain": {
-      "en": "",
-      "ta": ""
-    }
-  },
-  "cast": [],
   "story": {
     "themes": [
       "facts about honeybees",
@@ -16,7 +9,6 @@
       "facts about volcanoes"
     ],
     "fixed_theme": "facts about honeybees",
-    "morals": [],
     "question_style": "\"Do you remember?\" style questions about the items in the video"
   },
   "metadata": {
@@ -25,12 +17,29 @@
       "ta": "{title}\n\n{series} வழங்கும் {count} உண்மைகள்: {theme}. {tagline}.\n\nஇந்த வீடியோவில்: {items}\n\n{questions}\n\n{hashtags}"
     },
     "tags": {
-      "en": ["top facts", "fun facts", "learn something new", "list videos"],
-      "ta": ["தமிழ் உண்மைகள்", "சுவையான உண்மைகள்", "Tamil facts"]
+      "en": [
+        "top facts",
+        "fun facts",
+        "learn something new",
+        "list videos"
+      ],
+      "ta": [
+        "தமிழ் உண்மைகள்",
+        "சுவையான உண்மைகள்",
+        "Tamil facts"
+      ]
     },
     "hashtags": {
-      "en": ["#FunFacts", "#TopFacts", "#LearnSomethingNew"],
-      "ta": ["#தமிழ்உண்மைகள்", "#FunFacts", "#LearnSomethingNew"]
+      "en": [
+        "#FunFacts",
+        "#TopFacts",
+        "#LearnSomethingNew"
+      ],
+      "ta": [
+        "#தமிழ்உண்மைகள்",
+        "#FunFacts",
+        "#LearnSomethingNew"
+      ]
     }
   }
 }

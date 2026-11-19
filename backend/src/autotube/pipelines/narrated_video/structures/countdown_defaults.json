@@ -1,11 +1,4 @@
 {
-  "series": {
-    "refrain": {
-      "en": "",
-      "ta": ""
-    }
-  },
-  "cast": [],
   "story": {
     "themes": [
       "the fastest animals",
@@ -16,7 +9,6 @@
       "the highest mountains"
     ],
     "fixed_theme": "the fastest animals",
-    "morals": [],
     "question_style": "\"Do you remember?\" style questions about the countdown"
   },
   "metadata": {
@@ -25,12 +17,29 @@
       "ta": "{title}\n\n{series} வழங்கும் {count} இடங்களின் தரவரிசை: {theme}. {tagline}.\n\nவரிசை: {items}\n\n{questions}\n\n{hashtags}"
     },
     "tags": {
-      "en": ["top 10", "countdown", "rankings", "learn something new"],
-      "ta": ["தமிழ் தரவரிசை", "முதல் பத்து", "Tamil countdown"]
+      "en": [
+        "top 10",
+        "countdown",
+        "rankings",
+        "learn something new"
+      ],
+      "ta": [
+        "தமிழ் தரவரிசை",
+        "முதல் பத்து",
+        "Tamil countdown"
+      ]
     },
     "hashtags": {
-      "en": ["#Countdown", "#Top10", "#LearnSomethingNew"],
-      "ta": ["#தமிழ்தரவரிசை", "#Countdown", "#Top10"]
+      "en": [
+        "#Countdown",
+        "#Top10",
+        "#LearnSomethingNew"
+      ],
+      "ta": [
+        "#தமிழ்தரவரிசை",
+        "#Countdown",
+        "#Top10"
+      ]
     }
   }
 }

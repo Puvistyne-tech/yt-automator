@@ -39,5 +39,5 @@ class StructureSpec:
     basic_paths: tuple[str, ...] = ()
     hidden_paths: tuple[str, ...] = ()
     shown_paths: tuple[str, ...] = ()
-    defaults_file: str = ""
+    defaults_files: tuple[str, ...] = ()
     fixed_scenes: FixedScenes | None = None

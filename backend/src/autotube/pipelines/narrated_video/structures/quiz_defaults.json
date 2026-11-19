@@ -1,11 +1,4 @@
 {
-  "series": {
-    "refrain": {
-      "en": "",
-      "ta": ""
-    }
-  },
-  "cast": [],
   "story": {
     "themes": [
       "the night sky",
@@ -16,7 +9,6 @@
       "famous inventions"
     ],
     "fixed_theme": "the night sky",
-    "morals": [],
     "question_style": "\"Can you remember?\" style questions about the quiz answers"
   },
   "metadata": {
@@ -25,12 +17,29 @@
       "ta": "{title}\n\n{series} வழங்கும் {question_count} கேள்விகள் கொண்ட வினாடி வினா: {theme}. {tagline}.\n\nஒவ்வொரு விடைக்கும் முன் நிறுத்தி யோசியுங்கள்!\n\n{questions}\n\n{hashtags}"
     },
     "tags": {
-      "en": ["quiz", "trivia", "test your knowledge", "learn something new"],
-      "ta": ["தமிழ் வினாடி வினா", "பொது அறிவு", "Tamil quiz"]
+      "en": [
+        "quiz",
+        "trivia",
+        "test your knowledge",
+        "learn something new"
+      ],
+      "ta": [
+        "தமிழ் வினாடி வினா",
+        "பொது அறிவு",
+        "Tamil quiz"
+      ]
     },
     "hashtags": {
-      "en": ["#Quiz", "#Trivia", "#LearnSomethingNew"],
-      "ta": ["#தமிழ்வினாடிவினா", "#Quiz", "#Trivia"]
+      "en": [
+        "#Quiz",
+        "#Trivia",
+        "#LearnSomethingNew"
+      ],
+      "ta": [
+        "#தமிழ்வினாடிவினா",
+        "#Quiz",
+        "#Trivia"
+      ]
     }
   }
 }

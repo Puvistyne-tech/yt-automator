@@ -4,30 +4,24 @@ from collections.abc import Mapping
 from functools import partial
 
 from autotube.pipelines.narrated_video.languages import language_name
-from autotube.pipelines.narrated_video.resources import render_prompt
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck, Structure
+from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.story.model import Story
-from autotube.pipelines.narrated_video.story.prompt_parts import following_bullets
-from autotube.pipelines.narrated_video.structures.castless import LABELS_RULE, NO_STORY_LINES
+from autotube.pipelines.narrated_video.structures.castless import LABELS_RULE, castless_values
 from autotube.pipelines.narrated_video.structures.list_checks import (
     list_problems,
     list_scenes,
     numbered,
     order_text,
 )
-from autotube.pipelines.narrated_video.structures.paths import (
-    COUNTED_HIDDEN_PATHS,
-    LIST_COUNT_PATHS,
-)
-from autotube.pipelines.narrated_video.structures.shape_score import structure_item
-from autotube.pipelines.narrated_video.structures.spec import StructureSpec, unseeded
+from autotube.pipelines.narrated_video.structures.paths import COUNTED_PATHS, LIST_COUNT_PATHS
+from autotube.pipelines.narrated_video.structures.shape_spec import Shape, shape_spec
+from autotube.pipelines.narrated_video.structures.spec import StructureSpec
 
 TRANSLATION_RULES = (
     LABELS_RULE,
     "Keep every item heading different, and keep each item's number in its narration.",
 )
-HIDDEN_PATHS = COUNTED_HIDDEN_PATHS
 
 
 def numbered_prompt_values(
@@ -38,18 +32,13 @@ def numbered_prompt_values(
     piece: str,
 ) -> dict[str, str]:
     count = settings.story.item_count
-    rules = render_prompt(
+    return castless_values(
         "numbered_list.txt",
         piece=piece,
         count=count,
         order=order_text(count, descending),
         language=language_name(language),
     )
-    return {**NO_STORY_LINES, "structure_rules": rules}
-
-
-def numbered_rules(settings: KidsStorySettings, language: str) -> str:  # noqa: ARG001
-    return following_bullets(TRANSLATION_RULES)
 
 
 def item_values(story: Story, settings: KidsStorySettings) -> dict[str, str]:  # noqa: ARG001
@@ -60,24 +49,22 @@ def item_values(story: Story, settings: KidsStorySettings) -> dict[str, str]:  #
 def numbered_spec(
     structure: Structure, title: str, wording: Mapping[str, str], descending: bool
 ) -> StructureSpec:
-    gates = ((StoryCheck.STRUCTURE, partial(list_problems, descending=descending)),)
-    return StructureSpec(
-        id=structure,
-        title=title,
-        wording=wording,
-        prompt_values=partial(
-            numbered_prompt_values, descending=descending, piece=wording["piece"]
-        ),
-        translation_rules=numbered_rules,
-        extra_gates=unseeded(gates),
-        translation_gates=gates,
-        score_rules=(structure_item(f"{title} numbering and headings", gates[0][1]),),
-        placeholders=("count", "items"),
-        placeholder_values=item_values,
-        hidden_paths=HIDDEN_PATHS,
-        shown_paths=LIST_COUNT_PATHS,
-        defaults_file=f"{structure.value}_defaults.json",
-        fixed_scenes=list_scenes,
+    values = partial(numbered_prompt_values, descending=descending, piece=wording["piece"])
+    return shape_spec(
+        Shape(
+            structure=structure,
+            title=title,
+            wording=wording,
+            problems=partial(list_problems, descending=descending),
+            score_title=f"{title} numbering and headings",
+            prompt_values=values,
+            translation_rules=TRANSLATION_RULES,
+            placeholders=("count", "items"),
+            placeholder_values=item_values,
+            hidden_paths=COUNTED_PATHS,
+            shown_paths=LIST_COUNT_PATHS,
+            fixed_scenes=list_scenes,
+        )
     )
 
 

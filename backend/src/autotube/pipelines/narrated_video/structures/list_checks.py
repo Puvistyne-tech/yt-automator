@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.model import Story, StoryScene
+from autotube.pipelines.narrated_video.story.words import folded
+from autotube.pipelines.narrated_video.structures.framing import FRAMING_SCENES, framing_problems
 
-FRAMING_SCENES = 2
+UNFRAMED = "open with an intro scene and end with a closing scene, both without a number"
 
 
 def numbered(story: Story) -> list[StoryScene]:
@@ -25,11 +27,8 @@ def order_text(count: int, descending: bool) -> str:
     return f"from 1 up to {count}, in that order"
 
 
-def framing_problems(story: Story) -> list[str]:
-    ends = (story.scenes[0], story.scenes[-1])
-    if len(story.scenes) > 1 and all(scene.number is None for scene in ends):
-        return []
-    return ["open with an intro scene and end with a closing scene, both without a number"]
+def unnumbered(scene: StoryScene) -> bool:
+    return scene.number is None
 
 
 def item_count_problems(story: Story, settings: KidsStorySettings) -> list[str]:
@@ -45,7 +44,7 @@ def order_problems(story: Story, descending: bool) -> list[str]:
 
 
 def heading_problems(story: Story) -> list[str]:
-    headings = [scene.heading.strip().casefold() for scene in numbered(story)]
+    headings = [folded(scene.heading) for scene in numbered(story)]
     written = [heading for heading in headings if heading]
     problems = [] if len(written) == len(headings) else ["give every item a short heading"]
     if len(set(written)) < len(written):
@@ -55,7 +54,7 @@ def heading_problems(story: Story) -> list[str]:
 
 def list_problems(story: Story, settings: KidsStorySettings, descending: bool = False) -> list[str]:
     return [
-        *framing_problems(story),
+        *framing_problems(story, unnumbered, UNFRAMED),
         *item_count_problems(story, settings),
         *order_problems(story, descending),
         *heading_problems(story),

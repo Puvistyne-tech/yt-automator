@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck
-from autotube.pipelines.narrated_video.story.gates import MORAL_GATE, CheckedGate
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.words import contains_phrase
-
-QUESTION_MARKS = ("?", "？")
+from autotube.pipelines.narrated_video.structures.framing import QUESTION_MARKS
 
 
 def hook_problems(story: Story, settings: KidsStorySettings) -> list[str]:  # noqa: ARG001
@@ -24,9 +21,3 @@ def takeaway_problems(story: Story, settings: KidsStorySettings) -> list[str]:  
 
 def explainer_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     return [*hook_problems(story, settings), *takeaway_problems(story, settings)]
-
-
-EXPLAINER_GATES: tuple[CheckedGate, ...] = (
-    MORAL_GATE,
-    (StoryCheck.STRUCTURE, explainer_problems),
-)

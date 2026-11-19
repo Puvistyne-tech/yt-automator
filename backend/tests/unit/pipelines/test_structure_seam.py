@@ -28,7 +28,7 @@ def test_the_story_spec_keeps_todays_prompts_and_bundled_fallback() -> None:
     assert spec.id is Structure.STORY
     assert spec.uses_bundled is True
     assert spec.wording == {"format": "animated story", "pieces": "stories", "piece": "story"}
-    assert structure_defaults(Structure.STORY) == {}
+    assert structure_defaults(Structure.STORY) == ()
     assert {"moral", "refrain", "characters"} <= set(metadata_placeholders(Structure.STORY))
 
 
