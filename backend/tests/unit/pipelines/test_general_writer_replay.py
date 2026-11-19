@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -9,7 +10,7 @@ import pytest
 from autotube.domain.capabilities import TextRequest
 from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.stages.story import StoryStage
+from autotube.pipelines.narrated_video.stages.story import ScriptUnavailableError, StoryStage
 from tests.fixtures.kids_data import StageRig, is_translation, meta_of
 from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, as_json
 from tests.fixtures.script_builders import scripted_draft
@@ -21,6 +22,10 @@ HISTORY = next(item for item in ENGINE.builtin_templates() if item.id == "histor
 TAKEAWAY = "The compass let sailors find their way without seeing land."
 HOOK = "How did a small needle change the way people travelled?"
 SCENES = 16
+MIDDLE = 8
+SEA = "Sailors watched the sea."
+DEAD = "The old maps were dead wrong."
+SHORT = (25, "")
 
 
 def history_settings() -> KidsStorySettings:
@@ -29,12 +34,25 @@ def history_settings() -> KidsStorySettings:
     return settings
 
 
-def history_draft(words: int) -> dict[str, Any]:
-    lines = [
-        narration(HOOK, words),
-        *(narration("Sailors watched the sea.", words) for _ in range(SCENES - 1)),
-    ]
-    return {**scripted_draft("The Compass", lines, [{}] * SCENES), "moral": TAKEAWAY}
+def history_draft(words: int, moral: str = TAKEAWAY, middle: str = SEA) -> dict[str, Any]:
+    lines = [narration(HOOK, words), *(narration(SEA, words) for _ in range(SCENES - 1))]
+    lines[MIDDLE] = narration(middle, words)
+    return {**scripted_draft("The Compass", lines, [{}] * SCENES), "moral": moral}
+
+
+def queued_writer(answers: list[dict[str, Any]]) -> FakeWriter:
+    queue = list(answers)
+
+    def respond(request: TextRequest) -> str:
+        return as_json(history_text() if is_translation(request) else queue.pop(0))
+
+    return FakeWriter(respond)
+
+
+def history_rig(tmp_path: Path, answers: list[dict[str, Any]]) -> tuple[StageRig, FakeWriter]:
+    writer = queued_writer(answers)
+    rig = StageRig(tmp_path, settings=history_settings(), providers=FakeProviders(writer=writer))
+    return rig, writer
 
 
 def history_text() -> dict[str, Any]:
@@ -63,12 +81,35 @@ def written_by(tmp_path: Path, settings: KidsStorySettings, writer: FakeWriter) 
     return rig
 
 
-def test_a_long_history_explainer_without_its_spoken_takeaway_is_repaired(tmp_path: Path) -> None:
-    settings = history_settings()
-    writer = writer_of(lambda: history_draft(38), history_text)
-    rig = written_by(tmp_path, settings, writer)
-    assert "between 510 and 690 words in total" in writer.requests[0].prompt
-    assert any("added the takeaway to the last scene" in line for line in rig.logs)
+def test_the_history_run_from_the_mac_ends_accepted(tmp_path: Path) -> None:
+    answers = [history_draft(*SHORT), history_draft(38, middle=DEAD), history_draft(38)]
+    rig, writer = history_rig(tmp_path, answers)
+    assert rig.run(StoryStage()).provider == "fake-llm"
+    first, second = [request for request in writer.requests if not is_translation(request)]
+    assert "between 510 and 690 words in total" in first.prompt
+    assert "too short: 400 words, need at least 510" in second.prompt
+    assert "Edit it instead of starting over" in second.prompt and f'"{SEA}' in second.prompt
+    rejected = "story attempt 1 failed checks (400 words, 16 scenes, about 200 s)"
+    assert any(rejected in line for line in rig.logs)
+    record = json.loads((tmp_path / "story" / "attempt-1-en.json").read_text(encoding="utf-8"))
+    assert 'write the takeaway in "moral"' in record["failed_checks"]
+    assert not (tmp_path / "story" / "attempt-2-en.json").exists()
+    assert "dead" not in " ".join(rig.logs)
+    assert any(
+        "story attempt 2 passed after repair: added the takeaway" in line for line in rig.logs
+    )
+    english = (tmp_path / "story" / "story-en.json").read_text(encoding="utf-8")
+    assert DEAD in english and english.count(TAKEAWAY) >= 2
+
+
+def test_three_short_history_scripts_fail_with_their_measured_checks(tmp_path: Path) -> None:
+    rig, _ = history_rig(tmp_path, [history_draft(*SHORT)] * 3)
+    with pytest.raises(ScriptUnavailableError, match="never falls back") as raised:
+        rig.run(StoryStage())
+    message = str(raised.value)
+    assert "; the last story attempt 3 failed checks (400 words, 16 scenes, about 200 s)" in message
+    assert "too short: 400 words, need at least 510" in message
+    assert 'write the takeaway in "moral"' in message
 
 
 def numbers_swapped(settings: KidsStorySettings) -> dict[str, Any]:
