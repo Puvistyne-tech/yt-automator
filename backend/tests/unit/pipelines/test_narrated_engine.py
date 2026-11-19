@@ -6,6 +6,7 @@ from autotube.domain.pipeline_templates import TemplateAudience, TemplateOrigin
 from autotube.domain.ui_schema import ui_schema_problems
 from autotube.pipelines.narrated_video.engine import ENGINE_ID, NarratedVideoEngine
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
+from autotube.pipelines.narrated_video.settings.base import LocalizedText
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.registry import installed_engines
 from tests.fixtures.template_records import template
@@ -39,6 +40,13 @@ def test_the_definition_form_is_a_valid_sectioned_ui_schema() -> None:
         "Advanced",
     ]
     assert ui["ui:basic"] == ["structure", "brief", "length", "tone", "topics", "visual_style"]
+
+
+def test_every_description_language_gets_a_text_area() -> None:
+    areas = engine().definition_ui_schema["description_template"]
+    assert isinstance(areas, dict)
+    assert list(areas) == list(LocalizedText.model_fields)
+    assert {area["ui:widget"] for area in areas.values() if isinstance(area, dict)} == {"textarea"}
 
 
 def test_the_only_builtin_is_the_kids_story_template() -> None:

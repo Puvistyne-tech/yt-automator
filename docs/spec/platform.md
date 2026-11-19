@@ -642,7 +642,8 @@ class PipelineEngine(Protocol):
 | `hidden` | dotted settings paths | added to the derived `ui:hidden` |
 | `settings` | sparse JSON object | merged over everything above |
 
-The engine's `definition_ui_schema` is `ui/definition.json`, written to the same `ui_schema` contract as the
+The engine's `definition_ui_schema` is `ui/definition.json` plus a 10-row text area for every language of
+`description_template` (generated from `LocalizedText`'s languages in `template/ui.py`), written to the same `ui_schema` contract as the
 automation form and valid against the definition schema: sections "What it makes" (`structure`, `brief`, `length`,
 `tone`, `topics`), "Look and sound" (`visual_style`, `music_mood`), "Publishing" (the three title and description
 templates, `tags`, `hashtags`, `category`) and "Advanced" (`basic`, `hidden`, `settings`); `ui:basic` is

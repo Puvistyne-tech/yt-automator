@@ -45,10 +45,14 @@ class TemplateLookup:
             return missing_engine_errors(template.engine)
         return engine.problems(template)
 
-    def valid_engine(self, template: PipelineTemplate) -> PipelineEngine:
+    def engine_for(self, template: PipelineTemplate) -> PipelineEngine:
         engine = self.engines.get(template.engine)
         if engine is None:
             raise ValidationFailed(missing_engine_errors(template.engine))
+        return engine
+
+    def valid_engine(self, template: PipelineTemplate) -> PipelineEngine:
+        engine = self.engine_for(template)
         raise_if_invalid(engine.problems(template))
         return engine
 
