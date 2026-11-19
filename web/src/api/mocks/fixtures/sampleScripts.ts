@@ -37,7 +37,7 @@ const explainerLines = (topic: string) => [
 ];
 
 const EXPLAINER: FormatShape = {
-  title: (topic) => `How ${topic} works`,
+  title: (topic) => `Understanding ${topic}`,
   headings: ["What it is", "Why it happens", "A closer look", "Why it matters"],
   lines: explainerLines,
   takeaway: (topic) => `Behind ${topic} are a few simple forces working together.`,

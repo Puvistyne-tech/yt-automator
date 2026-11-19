@@ -28,6 +28,16 @@ export function failWith(
   );
 }
 
+export function recordBodies(method: Method, path: string): unknown[] {
+  const bodies: unknown[] = [];
+  server.use(
+    http[method](`/api${path}`, async ({ request }) => {
+      bodies.push(await request.clone().json());
+    }),
+  );
+  return bodies;
+}
+
 export function captureBody(method: Method, path: string, reply: JsonBodyType): () => unknown {
   let body: unknown;
   server.use(

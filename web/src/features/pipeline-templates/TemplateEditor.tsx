@@ -7,6 +7,7 @@ import {
   newTemplateDraft,
   type TemplateDraft,
 } from "@/features/pipeline-templates/model/form";
+import { SampleScriptPanel } from "@/features/pipeline-templates/SampleScriptCard";
 import { TemplateFields } from "@/features/pipeline-templates/TemplateFields";
 import { useDefinitionViewMode } from "@/features/pipeline-templates/useDefinitionView";
 import {
@@ -72,6 +73,11 @@ function Editor({ engine, template, initial, startIn }: EditorProps) {
         errors={editor.problems.errors}
         revision={template?.revision}
         mode={mode}
+      />
+      <SampleScriptPanel
+        engineId={engine.engine_id}
+        draft={editor.draft}
+        problems={editor.problems}
       />
       <ConflictCallout conflict={editor.problems.conflict} />
       {template === undefined ? (
