@@ -673,13 +673,15 @@ class PipelineEngine(Protocol):
     missing (compared ignoring case, never duplicated);
   - every engine `picture_exclusions` term is appended if missing;
   - `story.enabled_checks` always contains `reading_level`, the only switchable check that guards
-    age-appropriate language (scene count, words per scene, duration, ending and cast are form checks);
+    age-appropriate language (scene count, words per scene, duration, ending, cast and structure are form
+    checks);
   - `story.age_min`/`age_max` stay capped at 12 by validation.
-  The banned-word and brand gates are always on, and kids templates always use the kids system prompt.
+  The banned-word and brand gates are always on, and kids templates always use the kids system prompt of their
+  structure (`story_system.txt` or `script_system.txt`, both with the age range and reading level).
   Behaviour change: a stored kids automation whose settings removed a floored entry gets it back silently when
   it is loaded; defaults that already meet the floor are unchanged.
-- General templates: every prompt with a `_general` variant (`story_system`, `translate_system`, `image_scene`,
-  `image_thumbnail`, `judge`) is chosen by audience (`audience_prompts.py`); the story system prompt has no age
+- General templates: every prompt with a `_general` variant (`story_system`, `script_system`,
+  `translate_system`, `image_scene`, `image_thumbnail`, `judge`) is chosen by audience (`audience_prompts.py`); the story system prompt has no age
   range or reading level and says "The audience is general: the script must never address children…"; an open
   ending lets "viewers" rather than "children" wonder what happens next. The kids prompts are unchanged and
   pinned, and the general prompts are pinned in `tests/fixtures/prompts/general/`; the reading-level gate does not
