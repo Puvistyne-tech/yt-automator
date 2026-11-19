@@ -660,14 +660,22 @@ class PipelineEngine(Protocol):
   | `scary_stories` | Scary stories | story | general | standard | `pencil_sketch` |
   | `top_ten_countdown` | Top 10 countdown | countdown | general | standard | `pixel_art` |
 
-  Every packaged built-in has no `problems`: a brief, tone, music mood, at least 12 topics, a library style,
-  title, Short title and description templates in English and Tamil that use only its format's placeholders,
-  tags, hashtags and a category, plus a `settings` overlay naming its series, tagline and intro and outro lines.
-  A general built-in's name, description, definition and style pass the child-directed term screen.
-  `top_ten_countdown` sets `story.item_count` to 10 and `quick_quiz` sets `story.answer_choices` to 3.
-  `scary_stories` is for teenagers and adults: its editorial rules forbid gore and any child character, its
-  banned words keep violent words but allow suspense words, and its picture exclusions add gore, blood, wounds,
-  weapons, corpses, children and babies.
+  Every packaged built-in has no `problems`: a brief, tone, music mood, at least 12 topics, a library style, a
+  description template in English and Tamil that uses only its format's placeholders, tags, hashtags and a
+  category, plus a `settings` overlay naming its series, tagline and intro and outro lines. A packaged definition
+  is a sparse overlay: it sets only values that differ from the engine, audience and format defaults, so the
+  episode and Short titles come from the defaults (`{title} | {series}`, `{title} #Shorts`) except
+  `top_ten_countdown`'s episode title. A general built-in's name, description, definition and style pass the
+  child-directed term screen. `top_ten_countdown` sets `story.item_count` to 10 and `quick_quiz` sets
+  `story.answer_choices` to 3. `scary_stories` is for teenagers and adults: its editorial rules forbid gore and
+  any child character, its banned words keep violent words but allow suspense words, and its picture exclusions
+  replace the defaults with a list that includes gore, blood, wounds, weapons, corpses, children and babies; it
+  leaves out the defaults' "scary", "gloomy" and "sharp teeth" on purpose, because a suspense picture may be
+  dark. Only `scary_stories` has a `safety` overlay; the other built-ins keep the default banned words, and a
+  kids template built from its definition gets the full kids floor back.
+- A packaged file that fails `PackagedTemplate` validation, or repeats another file's id
+  (`DuplicateBuiltinError`), stops startup, because the registry loads the built-ins when it is built; the tests
+  load every file, so CI catches either before release.
 - A built-in is served as a pipeline type only while its engine reports no `problems` for it.
 - Every built-in has one offline sample script per language, used only by tests through a fake writer:
   `kids_story` uses the bundled stories, and each packaged built-in has `backend/tests/fixtures/builtin_scripts/<id>.json`.
