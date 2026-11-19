@@ -24,3 +24,7 @@ class X264Options(FfmpegBinaryOptions):
 def ffmpeg_command(binary: str, *args: str, quiet_errors: bool = True) -> list[str]:
     prefix = QUIET_PREFIX if quiet_errors else REPORTING_PREFIX
     return [binary, *prefix, *args]
+
+
+def x264_args(preset: str, crf: int) -> list[str]:
+    return ["-c:v", "libx264", "-preset", preset, "-crf", str(crf), "-pix_fmt", "yuv420p"]
