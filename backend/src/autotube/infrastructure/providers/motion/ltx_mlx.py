@@ -5,12 +5,12 @@ from tempfile import TemporaryDirectory
 
 from autotube.domain.capabilities import Capability, MotionRequest
 from autotube.infrastructure.providers.context import ProviderContext
+from autotube.infrastructure.providers.home_path import home_expanded
 from autotube.infrastructure.providers.host import first_reason
 from autotube.infrastructure.providers.motion.ltx_options import LtxOptions
 from autotube.infrastructure.providers.motion.ltx_plan import (
     Segment,
     finish_command,
-    home_expanded,
     last_frame_command,
     ltx_command,
     ltx_env,

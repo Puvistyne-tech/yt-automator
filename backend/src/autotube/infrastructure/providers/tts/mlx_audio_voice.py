@@ -7,6 +7,7 @@ from pydantic import Field
 
 from autotube.domain.capabilities import Capability, Speech, SpeechRequest
 from autotube.infrastructure.providers.context import ProviderContext
+from autotube.infrastructure.providers.home_path import home_expanded
 from autotube.infrastructure.providers.host import first_reason
 from autotube.infrastructure.providers.output_path import ensure_parent
 from autotube.infrastructure.providers.spec import ProviderOptions, ProviderSpec
@@ -64,13 +65,9 @@ class MlxAudioOptions(ProviderOptions):
     )
 
 
-def expanded(path: str) -> str:
-    return str(Path(path).expanduser())
-
-
 def worker_job(preset: VoicePreset, request: SpeechRequest, models_root: str, output: Path) -> str:
     job = {
-        "model_dir": str(Path(expanded(models_root)) / preset.model),
+        "model_dir": str(Path(home_expanded(models_root)) / preset.model),
         "text": request.text,
         "kwargs": preset.kwargs,
         "sentence_split": preset.sentence_split,
@@ -96,8 +93,8 @@ class MlxAudioSpeech:
     def available(self) -> str | None:
         host = self.context.host
         return first_reason(
-            host.missing_path(expanded(self.options.python), "mlx-audio Python"),
-            host.missing_path(expanded(self.options.models_root), "mlx-audio models folder"),
+            host.missing_path(home_expanded(self.options.python), "mlx-audio Python"),
+            host.missing_path(home_expanded(self.options.models_root), "mlx-audio models folder"),
         )
 
     def synthesize(self, request: SpeechRequest, output: Path) -> Speech:
@@ -105,10 +102,10 @@ class MlxAudioSpeech:
         preset = choose_preset(self.options.presets, self.options.default_voice, request)
         ensure_parent(output)
         self.context.runner.run(
-            [expanded(self.options.python), "-I", str(WORKER_SCRIPT)],
+            [home_expanded(self.options.python), "-I", str(WORKER_SCRIPT)],
             self.options.timeout_seconds,
             stdin=worker_job(preset, request, self.options.models_root, output),
-            env={"HF_HOME": expanded(self.options.hf_home), "HF_HUB_OFFLINE": "1"},
+            env={"HF_HOME": home_expanded(self.options.hf_home), "HF_HUB_OFFLINE": "1"},
         )
         duration = wav_duration(output)
         return estimated_speech(output, duration, request, self.aligner, self.options.alignment)
