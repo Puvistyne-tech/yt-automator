@@ -88,3 +88,9 @@ LIST_SPEC = numbered_spec(
     {"format": "numbered list", "pieces": "list scripts", "piece": "list script"},
     descending=False,
 )
+COUNTDOWN_SPEC = numbered_spec(
+    Structure.COUNTDOWN,
+    "Countdown",
+    {"format": "countdown", "pieces": "countdown scripts", "piece": "countdown script"},
+    descending=True,
+)

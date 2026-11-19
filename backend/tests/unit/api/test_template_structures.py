@@ -9,7 +9,7 @@ from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides
 from tests.unit.api.client import Api, error_of, ok, wired
 
-STRUCTURES = ["story", "explainer", "list"]
+STRUCTURES = ["story", "explainer", "list", "countdown"]
 
 
 @pytest.fixture

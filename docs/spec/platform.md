@@ -623,7 +623,7 @@ class PipelineEngine(Protocol):
 
 | Field | Type | Maps to |
 | --- | --- | --- |
-| `structure` | `story` (default) \| `explainer` \| `list` (see Structures) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
+| `structure` | `story` (default) \| `explainer` \| `list` \| `countdown` (see Structures) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
 | `brief` | text, at most 2000 | `story.extra_instructions` as "Every video is about: <brief>" |
 | `length` | `short` \| `standard` (default) \| `long` | short: 60 s ±15, 4–6 scenes; long: 300 s ±45, 14–18 scenes; standard changes nothing |
 | `tone` | text | `story.tone` |
@@ -798,10 +798,17 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   and refrain, "facts about …" topics, no morals, a "Do you remember?" question style, a description with
   `{count}` and `{items}`, tags and hashtags free of child-directed terms. Hidden paths: the explainer's cast
   paths and the scene counts; shown path `story.item_count`.
+- `countdown`: the list with one change of direction (`structures/numbered.py::numbered_spec(..., descending)`
+  builds both). Wording "countdown" / "countdown scripts" / "countdown script"; the same fragment numbers the
+  items "from N down to 1, so the last item is number 1", and the gate wants that order ("number the items
+  from M down to 1, so the last item is number 1"). Score item "Countdown numbering and headings"; the same
+  placeholders (`{items}` in video order, so number one last), hidden and shown paths. No bundled fallback.
+  Defaults (`structures/countdown_defaults.json`): ranking topics ("the fastest animals", …), a countdown
+  description, tags and hashtags.
 
 - Safety across structures (tested): a kids template of any structure carries `kids_content`, uploads made for
   kids, keeps the kids floor and the kids system-prompt lines; a general template of any structure never does;
-  a general explainer or list runs the child-directed term gate and never uses the bundled stories; a blank template of
+  a general explainer, list or countdown runs the child-directed term gate and never uses the bundled stories; a blank template of
   every structure and audience has no problems and runs offline through the fake providers.
 
 #### Problems
