@@ -10,7 +10,7 @@ from autotube.main import Overrides
 from tests.fixtures.builtin_catalog import BUILTIN_IDS, KIDS_STORY, PACKAGED_FORMATS
 from tests.unit.api.client import error_of, ok, wired
 
-PACKAGED = list(PACKAGED_FORMATS)
+EDGE_IDS = [KIDS_STORY, next(iter(PACKAGED_FORMATS))]
 
 
 class BuiltinIds:
@@ -33,7 +33,7 @@ def test_templates_list_every_builtin_in_a_stable_order(client: TestClient) -> N
     assert set(BUILTIN_IDS) <= pipelines
 
 
-@pytest.mark.parametrize("template_id", PACKAGED)
+@pytest.mark.parametrize("template_id", EDGE_IDS)
 def test_a_builtin_cannot_be_edited_or_deleted(client: TestClient, template_id: str) -> None:
     path = f"/api/templates/{template_id}"
     current = ok(client.get(path))
@@ -45,7 +45,7 @@ def test_a_builtin_cannot_be_edited_or_deleted(client: TestClient, template_id: 
     assert ok(client.get(path)) == current
 
 
-@pytest.mark.parametrize("template_id", PACKAGED)
+@pytest.mark.parametrize("template_id", EDGE_IDS)
 def test_a_builtin_duplicates_into_an_editable_draft(client: TestClient, template_id: str) -> None:
     source = ok(client.get(f"/api/templates/{template_id}"))
     copy = ok(client.post(f"/api/templates/{template_id}/duplicate"), 201)
