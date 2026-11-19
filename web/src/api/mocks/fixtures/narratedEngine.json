@@ -505,6 +505,9 @@
         "rows": 2
       }
     },
+    "category": {
+      "ui:widget": "select"
+    },
     "description_template": {
       "en": {
         "ui:widget": "textarea",
@@ -518,9 +521,6 @@
           "rows": 10
         }
       }
-    },
-    "category": {
-      "ui:widget": "select"
     }
   },
   "blank": {
