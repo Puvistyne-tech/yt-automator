@@ -38,6 +38,8 @@ class StyleMotion(DomainModel):
     card_camera: CameraMove
     held_frame_rate: int | None = Field(default=None, ge=1, le=30)
     feel: str = Field(min_length=1)
+    prompt: str = Field(min_length=1)
+    negative_prompt: str = Field(min_length=1)
 
 
 class StyleLettering(DomainModel):

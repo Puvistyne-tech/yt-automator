@@ -169,7 +169,9 @@
         "negative_prompt",
         "palette",
         "outline",
-        "texture"
+        "texture",
+        "motion_prompt",
+        "motion_negative_prompt"
       ],
       "prompt": {
         "ui:widget": "textarea",
@@ -193,6 +195,18 @@
       },
       "texture": {
         "ui:widget": "radio"
+      },
+      "motion_prompt": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 2
+        }
+      },
+      "motion_negative_prompt": {
+        "ui:widget": "textarea",
+        "ui:options": {
+          "rows": 2
+        }
       }
     }
   },

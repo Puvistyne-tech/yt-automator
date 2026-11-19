@@ -206,29 +206,36 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   realistic), `description` (one sentence), `prompt`, `negative_prompt`, `palette` (4 to 6 `#RRGGBB`, ordered
   backdrop or sky first, then land from far to near, accent last), `outline` (none, thin, bold), `texture`
   (smooth, paper, grain, clay, pixel), `motion` (`intensity`, `hero_intensity`, `card_camera`, nullable
-  `held_frame_rate`, `feel`) and `lettering` (`text`, `outline` colours). Ids are unique; adding a style is adding
+  `held_frame_rate`, `feel`, `prompt`: a non-empty declaration of the animation look for video models, and
+  `negative_prompt`: non-empty looks the animation must not turn into; drawn, painted, crafted and graphic
+  styles avoid "live-action footage", realistic styles avoid "cartoon", and every style avoids text, captions,
+  watermark, blurry, distorted, morphing and extra limbs) and `lettering` (`text`, `outline` colours). Ids are unique; adding a style is adding
   one entry. No entry names a studio, brand, film, living artist or trademark.
   - Settings section `look` ("Visual style"): `visual_style` (a library id or `custom`, default
     `watercolour_storybook`, published as `oneOf` cards with `description`, `x-group` = family title and
     `x-swatches` = palette); `custom_style` (`prompt`, required non-blank when the style is `custom`,
-    `negative_prompt`, `palette`, `outline`, `texture`); `colour_mood` (style, bright, pastel, warm, cool, night,
+    `negative_prompt`, `palette`, `outline`, `texture`, `motion_prompt` and `motion_negative_prompt`, both up to
+    400 characters with a generic default); `colour_mood` (style, bright, pastel, warm, cool, night,
     monochrome, custom) with `mood_palette` for custom; `lighting` (style, soft_daylight, golden_hour, moonlight,
     studio, dramatic); `detail_level` (style, minimal, balanced, intricate); `background` (style, plain, simple,
     moderate, rich); `proportions` (style, realistic, cute); `extra_prompt`; `extra_negative_prompt`;
     `use_style_motion` and `use_style_lettering` (both default true). `safety.picture_exclusions` is the
     child-safety negative prompt sent with every picture whatever the style.
   - `styles/resolve.py::resolve_style(settings) -> ResolvedStyle` (style_id, title, prompt, negative_prompt,
-    palette, outline, texture, motion, lettering) is the one place the look is decided. Prompt: the style prompt
+    palette, outline, texture, motion, motion_prompt, motion_negative_prompt, lettering) is the one place the look is decided. Prompt: the style prompt
     (for custom: its prompt plus "main colours" naming its palette), then the wording of every non-default
     modifier, then `extra_prompt`. Negative: `picture_exclusions`, the style negative, `extra_negative_prompt`,
     joined with repeated terms dropped. Palette: the style palette shifted by the colour mood, or `mood_palette`.
     Motion and lettering come from the style when the matching switch is on and the style is not custom,
     otherwise from `visuals` (`motion_intensity`, `hero_motion_intensity`, `card_camera`) and `thumbnail`
-    (`text_color`, `outline_color`).
+    (`text_color`, `outline_color`). `motion_prompt` and `motion_negative_prompt` always come from the style's
+    `motion` (or the custom style's fields), whatever `use_style_motion` says.
   - Every picture (character sheets, scenes, vertical pictures, thumbnails) and the picture judge use the
     resolved prompt; every `ImageRequest` carries the resolved negative prompt and `style` hints. Motion
     requests use the resolved intensities, card camera, a `held_frame_rate` only when below the episode fps, and
-    end the motion prompt with "Camera: <feel>." when the feel is set. Cards, thumbnails and the brand mark
+    the resolved `motion_negative_prompt`. The motion prompt is the resolved `motion_prompt` as one sentence
+    (skipped when blank), then the rendered `visuals.motion_prompt` (the scene part), then "Camera: <feel>."
+    when the feel is set, joined by spaces. Cards, thumbnails and the brand mark
     letter in the resolved lettering colours. The art stage logs the resolved style once and saves it as
     `art/style.json` (artifact kind `text`, meta role `style`, `style_id`, `title`).
   - Stored settings that still hold `series.art_style` or `series.negative_prompt` are migrated before
@@ -567,6 +574,8 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
 - `MotionRequest.held_frame_rate` (nullable, at least 1): when below `fps` the clip changes picture only that
   many times a second (a held, stop-motion feel) while keeping `fps`. The ffmpeg pan-and-zoom provider honours
   it; DepthFlow ignores it.
+- `MotionRequest.negative_prompt` (default empty) names looks the clip must avoid. Providers without negative
+  prompting ignore it.
 - Ducking lowers the music only while narration plays; the music continues at its set volume after
   the last narration clip.
 - `extract_frame` fails with an upstream failure when no frame was written, for example past the end.

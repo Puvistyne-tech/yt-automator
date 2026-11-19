@@ -13,6 +13,7 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.styles.library import (
     FAMILY_TITLES,
     StyleFamily,
+    VisualStyle,
     parsed_library,
     style_ids,
     style_library,
@@ -78,10 +79,17 @@ REQUIRED_STYLES = {
     "realistic_photo",
     "cinematic_realistic",
 }
+MOTION_EXCLUSIONS = {"text", "captions", "watermark", "blurry", "distorted", "morphing"}
 
 
 def mentions(text: str, name: str) -> bool:
     return re.search(rf"\b{re.escape(name.casefold())}\b", text.casefold()) is not None
+
+
+def style_words(style: VisualStyle) -> str:
+    motion = style.motion
+    look = [style.title, style.description, style.prompt, style.negative_prompt]
+    return " ".join([*look, motion.prompt, motion.negative_prompt])
 
 
 def raw_entries() -> list[dict[str, Any]]:
@@ -103,13 +111,21 @@ def test_every_family_has_styles_and_a_title() -> None:
 
 @pytest.mark.parametrize("name", BANNED_NAMES)
 def test_no_style_names_a_studio_brand_or_artist(name: str) -> None:
-    texts = [f"{s.title} {s.description} {s.prompt} {s.negative_prompt}" for s in style_library()]
+    texts = [style_words(style) for style in style_library()]
     assert [text for text in texts if mentions(text, name)] == []
 
 
 def test_the_banned_name_check_matches_whole_words_only() -> None:
     assert mentions(f"like a {BANNED_NAMES[0].upper()} film", BANNED_NAMES[0])
     assert not mentions("a colourful legoland-free legend", "leg")
+
+
+def test_every_style_declares_its_motion_look_and_what_to_avoid() -> None:
+    for style in style_library():
+        avoided = {term.strip() for term in style.motion.negative_prompt.split(",")}
+        opposite = "cartoon" if style.family is StyleFamily.REALISTIC else "live-action footage"
+        assert style.motion.prompt and avoided >= {*MOTION_EXCLUSIONS, opposite}, style.id
+    assert len({style.motion.prompt for style in style_library()}) == len(style_library())
 
 
 def test_every_description_is_one_plain_sentence() -> None:

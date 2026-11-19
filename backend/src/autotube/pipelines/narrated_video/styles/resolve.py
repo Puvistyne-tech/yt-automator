@@ -22,6 +22,7 @@ from autotube.pipelines.narrated_video.styles.palette_mood import mood_palette
 from autotube.pipelines.narrated_video.styles.style_prompt import modifier_prompts
 
 CUSTOM_TITLE = "Custom style"
+MOTION_WORDING = {"prompt", "negative_prompt"}
 
 
 class ResolvedMotion(DomainModel):
@@ -41,6 +42,8 @@ class ResolvedStyle(DomainModel):
     outline: Outline
     texture: Texture
     motion: ResolvedMotion
+    motion_prompt: str = ""
+    motion_negative_prompt: str = ""
     lettering: StyleLettering
 
     night: bool = False
@@ -99,7 +102,7 @@ def settings_motion(settings: KidsStorySettings) -> ResolvedMotion:
 def resolved_motion(settings: KidsStorySettings, style: VisualStyle | None) -> ResolvedMotion:
     if style is None or not settings.look.use_style_motion:
         return settings_motion(settings)
-    return ResolvedMotion.model_validate(style.motion.model_dump())
+    return ResolvedMotion.model_validate(style.motion.model_dump(exclude=MOTION_WORDING))
 
 
 def resolved_lettering(settings: KidsStorySettings, style: VisualStyle | None) -> StyleLettering:
@@ -107,6 +110,10 @@ def resolved_lettering(settings: KidsStorySettings, style: VisualStyle | None) -
         thumbnail = settings.thumbnail
         return StyleLettering(text=thumbnail.text_color, outline=thumbnail.outline_color)
     return style.lettering
+
+
+def motion_negative(look: LookSettings, style: VisualStyle | None) -> str:
+    return style.motion.negative_prompt if style else look.custom_style.motion_negative_prompt
 
 
 def resolve_style(settings: KidsStorySettings) -> ResolvedStyle:
@@ -124,6 +131,8 @@ def resolve_style(settings: KidsStorySettings) -> ResolvedStyle:
         outline=base.outline,
         texture=base.texture,
         motion=resolved_motion(settings, style),
+        motion_prompt=style.motion.prompt if style else look.custom_style.motion_prompt,
+        motion_negative_prompt=motion_negative(look, style),
         lettering=resolved_lettering(settings, style),
         night=asks_for_night(look),
     )

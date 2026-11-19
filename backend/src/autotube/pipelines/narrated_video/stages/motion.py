@@ -27,7 +27,8 @@ def motion_request(
 ) -> MotionRequest:
     image = required(context.artifacts, Role.VISUAL, visual_key=need.visual_key)
     scene = story.scenes[need.scene] if need.scene is not None else None
-    motion = resolve_style(settings).motion
+    style = resolve_style(settings)
+    motion = style.motion
     width, height = settings.video_size(need.variant)
     fps = settings.video_fps(need.variant)
     return MotionRequest(
@@ -40,6 +41,7 @@ def motion_request(
         camera=scene.camera if scene else motion.card_camera,
         intensity=motion.hero_intensity if scene and scene.hero else motion.intensity,
         held_frame_rate=held_rate(motion.held_frame_rate, fps),
+        negative_prompt=style.motion_negative_prompt,
     )
 
 

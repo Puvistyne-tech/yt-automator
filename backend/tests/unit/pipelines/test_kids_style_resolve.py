@@ -38,6 +38,8 @@ CUSTOM: dict[str, Any] = {
         "palette": ["#FF0000", "#00FF00", "#0000FF"],
         "outline": "bold",
         "texture": "pixel",
+        "motion_prompt": "paper collage animation",
+        "motion_negative_prompt": "photo footage",
     },
 }
 
@@ -65,6 +67,10 @@ def test_a_library_style_supplies_prompt_hints_motion_and_lettering() -> None:
     assert style.motion.held_frame_rate == 12 and style.motion.card_camera is CameraMove.STILL
     assert style.lettering == entry.lettering
     assert style.hints().texture is Texture.CLAY
+    assert (style.motion_prompt, style.motion_negative_prompt) == (
+        entry.motion.prompt,
+        entry.motion.negative_prompt,
+    )
 
 
 def test_the_safety_list_and_extra_negatives_join_every_negative_prompt() -> None:
@@ -142,6 +148,10 @@ def test_a_custom_style_uses_its_own_fields_and_the_settings_motion() -> None:
     assert style.negative_prompt.endswith("photo")
     assert (style.outline, style.texture) == (Outline.BOLD, Texture.PIXEL)
     assert style.motion.intensity == 0.1 and style.motion.feel == ""
+    assert (style.motion_prompt, style.motion_negative_prompt) == (
+        "paper collage animation",
+        "photo footage",
+    )
     assert style.lettering.text == "#123456"
 
 

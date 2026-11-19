@@ -58,6 +58,7 @@ class MotionRequest(DomainModel):
     camera: CameraMove = CameraMove.PUSH_IN
     intensity: float = Field(default=0.5, ge=0.0, le=1.0)
     held_frame_rate: int | None = Field(default=None, ge=1)
+    negative_prompt: str = ""
 
 
 class SpeechRequest(DomainModel):
