@@ -768,7 +768,8 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   "moral"'), on written and translated scripts. Every scene also carries optional `number` (an integer from
   1, default null: the item's number in a list) and the scene labels `heading`, `question`, `choices` (list)
   and `answer` (default empty), so stored scripts validate. The banned-word, brand-name and child-directed
-  term gates read every label with the narration. The translation text has optional `scene_labels` (one
+  term gates read every label with the narration, and the kids reading level gate reads each non-empty
+  label as one more sentence after the narration (`story/reading.py::reading_text`). The translation text has optional `scene_labels` (one
   `{heading, question, choices, answer}` per scene): it is sent, and required back with one entry per scene
   ("translation must keep one scene_labels entry per scene"), only when the script has any label; otherwise it
   is left out of the translation prompt, which stays pinned, and ignored in the answer. Numbers are not

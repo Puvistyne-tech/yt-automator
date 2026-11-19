@@ -16,8 +16,8 @@ from autotube.pipelines.narrated_video.story.child_terms import (
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.reading import (
     estimated_seconds,
-    narration_of,
     reading_metrics,
+    reading_text,
 )
 from autotube.pipelines.narrated_video.story.words import contains_phrase, word_count
 
@@ -139,7 +139,7 @@ def reading_level_problems(story: Story, settings: KidsStorySettings) -> list[st
         return []
     rules = settings.story
     metrics = reading_metrics(
-        narration_of(story), rules.long_word_graphemes.for_language(story.language)
+        reading_text(story), rules.long_word_graphemes.for_language(story.language)
     )
     problems = []
     limit = rules.max_average_sentence_words.for_language(story.language)

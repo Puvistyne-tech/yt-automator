@@ -37,3 +37,12 @@ def test_quiz_scene_labels_are_screened(labels: dict[str, Any], found: str) -> N
 def test_kids_scripts_may_address_children_in_their_labels() -> None:
     labelled = with_scene(list_story(), 0, heading="Fun for kids")
     assert story_problems(labelled, list_settings(KIDS)) == []
+
+
+@pytest.mark.parametrize("label", ["heading", "question", "answer"])
+def test_kids_labels_count_towards_the_reading_level(label: str) -> None:
+    wordy = with_scene(list_story(), 0, **{label: " ".join(["wonderfully"] * 60)})
+    assert "use fewer long words" in story_problems(wordy, list_settings(KIDS))
+    assert story_problems(wordy, list_settings(GENERAL)) == []
+    long_sentence = with_scene(list_story(), 0, **{label: " ".join(["bee"] * 120)})
+    assert "use shorter sentences" in " ".join(story_problems(long_sentence, list_settings(KIDS)))
