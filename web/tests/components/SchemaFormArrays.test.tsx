@@ -38,9 +38,21 @@ describe("SchemaForm arrays", () => {
     expect(screen.queryByText(/^(Topics|Cast)-\d/)).not.toBeInTheDocument();
   });
 
-  it("offers item controls while editable", () => {
+  it.each([
+    ["Move up", 2],
+    ["Move down", 2],
+    ["Remove", 2],
+    ["Add item", 1],
+  ])("offers %s on topics while editable", (name, count) => {
     renderArrays(false);
-    expect(screen.getAllByRole("button", { name: ITEM_CONTROLS }).length).toBeGreaterThan(0);
+    const topics = within(screen.getByRole("group", { name: "Topics" }));
+    expect(topics.getAllByRole("button", { name })).toHaveLength(count);
+  });
+
+  it("names the add button after a titled item", () => {
+    renderArrays(false);
+    const cast = within(screen.getByRole("group", { name: "Cast" }));
+    expect(cast.getByRole("button", { name: "Add cast member" })).toBeEnabled();
   });
 
   it("shows no item controls when read-only", () => {
