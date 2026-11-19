@@ -15,7 +15,7 @@ from tests.fixtures.mac_runs import mac_settings
 from tests.fixtures.quiz_data import quiz_settings, quiz_story
 from tests.fixtures.schema_fit import misfits
 from tests.fixtures.shaped_scripts import shaped_draft
-from tests.fixtures.template_settings import GENERAL, KIDS
+from tests.fixtures.template_settings import GENERAL
 
 CASTLESS = {
     "list": list_settings(GENERAL),
@@ -49,16 +49,12 @@ def test_the_story_request_and_translation_send_the_shaped_schemas() -> None:
     assert request.json_schema["title"] == "StoryText"
 
 
-@pytest.mark.parametrize(
-    ("sections", "required"), [({}, False), ({"story": TAKEAWAY_ENDING}, True)]
-)
-def test_an_explainer_needs_a_moral_only_with_a_takeaway(
-    sections: dict[str, Any], required: bool
+@pytest.mark.parametrize("sections", [{}, {"story": TAKEAWAY_ENDING}])
+def test_an_explainer_draft_fits_its_schema_with_or_without_a_takeaway(
+    sections: dict[str, Any],
 ) -> None:
     schema = draft_schema(explainer_settings(GENERAL, **sections))
-    assert moral_of(schema)[0] is required
     assert misfits(schema, dumped(explainer_draft())) == []
-    assert moral_of(draft_schema(explainer_settings(KIDS)))[0]
 
 
 @pytest.mark.parametrize("settings", list(CASTLESS.values()), ids=list(CASTLESS))

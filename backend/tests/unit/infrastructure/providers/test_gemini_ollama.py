@@ -4,6 +4,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from pydantic import ValidationError
 
 from autotube.domain.capabilities import TextRequest
 from autotube.domain.model_base import JsonObject
@@ -119,3 +120,14 @@ def test_ollama_sends_a_bounded_context_by_default() -> None:
     assert OllamaOptions().context_tokens == 16384
     field = OllamaOptions.model_fields["context_tokens"]
     assert field.title == "Context size" and "num_ctx" in (field.description or "")
+
+
+@pytest.mark.parametrize("tokens", [511, 262145])
+def test_ollama_refuses_a_context_size_outside_its_bounds(tokens: int) -> None:
+    with pytest.raises(ValidationError):
+        OllamaOptions(context_tokens=tokens)
+
+
+@pytest.mark.parametrize("tokens", [512, 262144])
+def test_ollama_accepts_a_context_size_at_its_bounds(tokens: int) -> None:
+    assert OllamaOptions(context_tokens=tokens).context_tokens == tokens

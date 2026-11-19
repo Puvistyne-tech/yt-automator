@@ -100,6 +100,12 @@ def test_any_story_inside_a_builtin_budget_passes_the_duration_gate(
         assert duration_problems(sample, settings, duration=duration_target) == []
 
 
+@pytest.mark.parametrize(("words", "passes"), [(79, False), (80, True), (160, True), (161, False)])
+def test_the_duration_gate_holds_exactly_at_the_budget_edges(words: int, passes: bool) -> None:
+    problems = duration_problems(even_story("en", 1, words), mac_settings())
+    assert (problems == []) is passes
+
+
 def test_a_length_the_scenes_cannot_reach_is_refused() -> None:
     tight = {
         "story": {

@@ -43,15 +43,12 @@ def with_dead(audience: TemplateAudience) -> list[str]:
 @pytest.mark.parametrize("template_id", GENERAL_IDS)
 def test_a_general_builtin_carries_no_kids_safety_defaults(template_id: str) -> None:
     settings = settings_of(BUILTINS[template_id])
-    assert not set(BANNED_WORDS) <= set(settings.safety.banned_words)
+    banned = settings.safety.banned_words
+    assert not set(BANNED_WORDS) <= set(banned)
+    assert template_id == RELAXED or banned == []
     assert (settings.story.age_min, settings.story.age_max) != (3, 7)
     assert settings.story.reading_level is ReadingLevel.GENERAL
     assert StoryCheck.READING_LEVEL not in settings.story.enabled_checks
-
-
-@pytest.mark.parametrize("template_id", sorted(set(GENERAL_IDS) - {RELAXED}))
-def test_a_general_builtin_starts_with_an_empty_banned_word_list(template_id: str) -> None:
-    assert settings_of(BUILTINS[template_id]).safety.banned_words == []
 
 
 @pytest.mark.parametrize("template_id", [*KIDS_IDS, f"{RELAXED}@kids"])
