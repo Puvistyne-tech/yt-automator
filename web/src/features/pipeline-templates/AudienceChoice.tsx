@@ -11,6 +11,10 @@ const AUDIENCE_DESCRIPTIONS: Record<TemplateAudience, string> = {
     "Videos for teenagers and adults. They are not made for kids and must not address children.",
 };
 
+export function audienceDescription(audience: TemplateAudience): string {
+  return AUDIENCE_DESCRIPTIONS[audience];
+}
+
 const AUDIENCE_OPTIONS: RadioCardOption<TemplateAudience>[] = (
   Object.keys(AUDIENCE_DESCRIPTIONS) as TemplateAudience[]
 ).map((value) => ({

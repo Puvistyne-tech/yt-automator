@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSaveAutomation } from "@/api/automations";
 import { type FieldErrors, hasErrors } from "@/api/errors";
+import { automationPath } from "@/api/paths";
 import type { Automation, Channel, PipelineDescriptor } from "@/api/types";
 import { useMutationNotifier } from "@/api/useMutationNotifier";
 import {
@@ -10,7 +11,7 @@ import {
 } from "@/features/automation-editor/model/draft";
 import { firstErrorSection, sectionAnchor } from "@/features/automation-editor/model/sections";
 import { useEditorErrors } from "@/features/automation-editor/useEditorErrors";
-import { useNavigateAfterCreate } from "@/features/automation-editor/useNavigateAfterCreate";
+import { useNavigateAfterCreate } from "@/shared/hooks/useNavigateAfterCreate";
 
 interface EditorInput {
   automationId: string | undefined;
@@ -50,7 +51,7 @@ export function useAutomationEditor(input: EditorInput) {
   const { draft, setDraft, dirty, markSaved } = useDraftState(initial);
   const pipeline = pipelines.find((p) => p.type_id === draft.pipeline_type);
   const editorErrors = useEditorErrors(draft, pipeline, channels);
-  const onCreated = useNavigateAfterCreate(dirty);
+  const onCreated = useNavigateAfterCreate(dirty, automationPath);
   const save = useSaveAutomation(automationId);
   const notifier = useMutationNotifier();
   const update = (next: AutomationDraft) => {
