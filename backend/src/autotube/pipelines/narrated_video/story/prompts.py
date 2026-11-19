@@ -8,7 +8,8 @@ from autotube.pipelines.narrated_video.audience_prompts import audience_prompt
 from autotube.pipelines.narrated_video.languages import language_name
 from autotube.pipelines.narrated_video.resources import render_prompt, resource_json
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.story.model import StoryDraft, StoryText, text_of
+from autotube.pipelines.narrated_video.story.answer_schema import draft_schema, text_schema
+from autotube.pipelines.narrated_video.story.model import StoryDraft, text_of
 from autotube.pipelines.narrated_video.story.prompt_parts import (
     action_rule,
     avoided_topics,
@@ -100,7 +101,7 @@ def story_request(
         system=story_system(settings, language),
         max_tokens=settings.story.max_tokens,
         temperature=settings.story.temperature,
-        json_schema=StoryDraft.model_json_schema(),
+        json_schema=draft_schema(settings),
     )
 
 
@@ -140,5 +141,5 @@ def translation_request(
         system=system,
         max_tokens=settings.story.max_tokens,
         temperature=settings.story.translation_temperature,
-        json_schema=StoryText.model_json_schema(),
+        json_schema=text_schema(settings, story),
     )

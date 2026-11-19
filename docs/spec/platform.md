@@ -864,6 +864,20 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   or count"): it is a settings validation error of every template settings model and the template problem
   `definition.length` at save.
 
+- Answer schemas (`story/answer_schema.py`): the story request sends `draft_schema(settings)` and the
+  translation request `text_schema(settings, script)` as `TextRequest.json_schema`, so a local model with a
+  grammar (Ollama `format`) cannot leave out what a gate demands. Both start from the Pydantic schema
+  (`StoryDraft`, `StoryText`) and add: `moral` required with `minLength` 1 when
+  `StructureSpec.moral_required(settings)`; for the draft, `scenes` required with `minItems`/`maxItems` from
+  `scene_range(settings)`, or, when the structure declares `scene_shapes(settings)`, an exact `prefixItems`
+  list with one scene schema per scene (list and countdown: an unnumbered intro and closing with
+  `number` null and an empty `heading`, and item scenes with `number` fixed by `const` in the gate's order and a
+  non-empty `heading`; quiz: an intro and closing with empty `question` and `answer`, then per question an ask
+  scene with a non-empty `question`, an empty `answer` and exactly `story.answer_choices` non-empty `choices`,
+  and a reveal scene with an empty `question` and a non-empty `answer`); for the translation, exactly one
+  narration per scene and, when the script has labels, `scene_labels` required with one entry per scene. The
+  keywords used are limited to `type`, `const`, `minLength`, `maxLength`, `minItems`, `maxItems`, `prefixItems`,
+  `required` and `$ref`. Pydantic validation of the answer is unchanged.
 - Script checks (`story/checks.py`): the size gates (scene count, words per scene, duration), then the
   structure's extra gates, then the safety gates (banned words, brand names, child-directed terms), then the
   reading level. Translations run the structure's translation gates, then the safety gates.

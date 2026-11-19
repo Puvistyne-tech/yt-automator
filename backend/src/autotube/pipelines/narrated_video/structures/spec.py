@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from autotube.pipelines.narrated_video.scoring.inputs import ScoreRule
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
@@ -15,6 +16,8 @@ PlaceholderValues = Callable[[Story, KidsStorySettings], dict[str, str]]
 SeededGates = Callable[[str], tuple[CheckedGate, ...]]
 FixedScenes = Callable[[KidsStorySettings], int]
 MoralRule = Callable[[KidsStorySettings], bool]
+Schema = dict[str, Any]
+SceneShapes = Callable[[KidsStorySettings], list[Schema]]
 
 
 def no_moral(settings: KidsStorySettings) -> bool:  # noqa: ARG001
@@ -51,3 +54,4 @@ class StructureSpec:
     defaults_files: tuple[str, ...] = ()
     fixed_scenes: FixedScenes | None = None
     moral_required: MoralRule = no_moral
+    scene_shapes: SceneShapes | None = None

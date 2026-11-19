@@ -15,6 +15,7 @@ from autotube.pipelines.narrated_video.structures.list_checks import (
     order_text,
 )
 from autotube.pipelines.narrated_video.structures.paths import COUNTED_PATHS, LIST_COUNT_PATHS
+from autotube.pipelines.narrated_video.structures.scene_shapes import list_shapes
 from autotube.pipelines.narrated_video.structures.shape_spec import Shape, shape_spec
 from autotube.pipelines.narrated_video.structures.spec import StructureSpec
 
@@ -64,6 +65,7 @@ def numbered_spec(
             hidden_paths=COUNTED_PATHS,
             shown_paths=LIST_COUNT_PATHS,
             fixed_scenes=list_scenes,
+            scene_shapes=partial(list_shapes, descending=descending),
         )
     )
 

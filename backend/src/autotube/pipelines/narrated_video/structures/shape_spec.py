@@ -13,6 +13,7 @@ from autotube.pipelines.narrated_video.structures.spec import (
     MoralRule,
     PlaceholderValues,
     PromptValues,
+    SceneShapes,
     StructureSpec,
     TranslationRules,
     no_moral,
@@ -36,6 +37,7 @@ class Shape:
     shown_paths: tuple[str, ...] = ()
     fixed_scenes: FixedScenes | None = None
     moral_required: MoralRule = no_moral
+    scene_shapes: SceneShapes | None = None
 
 
 def shape_rules(rules: tuple[str, ...] | TranslationRules) -> TranslationRules:
@@ -60,4 +62,5 @@ def shape_spec(shape: Shape) -> StructureSpec:
         defaults_files=(CASTLESS_DEFAULTS, f"{shape.structure.value}_defaults.json"),
         fixed_scenes=shape.fixed_scenes,
         moral_required=shape.moral_required,
+        scene_shapes=shape.scene_shapes,
     )
