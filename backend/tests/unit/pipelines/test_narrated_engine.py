@@ -56,6 +56,9 @@ def test_a_stored_template_reuses_the_stages_under_its_own_type_and_name() -> No
     )
     assert descriptor.version == f"{own.version}+r3"
     assert descriptor.stages == own.stages and descriptor.variants == own.variants
+    kids = engine().pipeline(template(audience=TemplateAudience.KIDS, description="Facts"))
+    identity = {"type_id", "name", "description", "version"}
+    assert kids.descriptor.model_copy(update={key: getattr(own, key) for key in identity}) == own
     assert issubclass(pipeline.settings_model, KidsStorySettings)
     assert len(pipeline.stages()) == len(KidsStoryPipeline().stages())
     assert pipeline.descriptor is pipeline.descriptor

@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from autotube.domain.pipeline_descriptors import default_settings_of, settings_schema_of
+from autotube.domain.pipeline_descriptors import settings_schema_of
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.publishing.templates import (
     METADATA_PLACEHOLDERS,
@@ -22,14 +22,9 @@ from autotube.pipelines.narrated_video.template.settings_model import (
 from autotube.pipelines.narrated_video.template.text_leaves import text_leaves
 from tests.fixtures.kids_data import story
 from tests.fixtures.prompt_pins import stored_settings
+from tests.fixtures.template_settings import GENERAL, KIDS, defaults_for
 
-KIDS, GENERAL = TemplateAudience.KIDS, TemplateAudience.GENERAL
 ENGINE = KidsStorySettings().model_dump(mode="json")
-
-
-def defaults_for(audience: TemplateAudience = KIDS, **definition: Any) -> dict[str, Any]:
-    model = settings_model_for(NarratedDefinition.model_validate(definition), audience)
-    return default_settings_of(model)
 
 
 def changed_paths(before: Any, after: Any, prefix: str = "") -> set[str]:
@@ -83,15 +78,15 @@ def test_a_definition_changes_exactly_the_defaults_it_names() -> None:
 
 
 @pytest.mark.parametrize(
-    ("length", "seconds", "scenes"), [("short", 60, (4, 6)), ("long", 300, (14, 18))]
+    ("length", "timing", "scenes"),
+    [("short", (60, 15), (4, 6)), ("long", (300, 45), (14, 18)), ("standard", (150, 30), (8, 10))],
 )
-def test_length_presets_set_duration_and_scene_counts(
-    length: str, seconds: int, scenes: tuple[int, int]
+def test_length_presets_set_duration_tolerance_and_scene_counts(
+    length: str, timing: tuple[int, int], scenes: tuple[int, int]
 ) -> None:
     rules = defaults_for(length=length)["story"]
-    assert rules["target_duration_seconds"] == seconds
+    assert (rules["target_duration_seconds"], rules["duration_tolerance_seconds"]) == timing
     assert (rules["scene_count_min"], rules["scene_count_max"]) == scenes
-    assert defaults_for(length="standard") == ENGINE
 
 
 def test_the_brief_and_category_reach_the_settings() -> None:
@@ -108,6 +103,13 @@ def test_the_overlay_wins_over_the_mapped_definition_and_merges_deeply() -> None
     assert changed["story"]["tone"] == "lively"
     assert changed["story"]["scene_count_max"] == 12
     assert changed["story"]["scene_count_min"] == ENGINE["story"]["scene_count_min"]
+
+
+def test_the_overlay_wins_over_mapped_metadata_per_language() -> None:
+    changed = defaults_for(
+        tags={"en": ["a"], "ta": ["அ"]}, settings={"metadata": {"tags": {"en": ["b"]}}}
+    )
+    assert changed["metadata"]["tags"] == {"en": ["b"], "ta": ["அ"]}
 
 
 def test_deep_merge_replaces_lists_and_scalars_and_merges_objects() -> None:

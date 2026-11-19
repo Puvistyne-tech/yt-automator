@@ -7,7 +7,6 @@ import pytest
 from autotube.domain.pipeline_descriptors import (
     KIDS_CONTENT,
     PipelineDescriptor,
-    default_settings_of,
 )
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
@@ -26,7 +25,7 @@ from autotube.pipelines.narrated_video.template.kids_floor import (
     listed_terms,
 )
 from autotube.pipelines.narrated_video.template.settings_model import kids_settings_model
-from tests.fixtures.template_settings import model_for, pipeline_of
+from tests.fixtures.template_settings import defaults_for, model_for, pipeline_of
 
 KIDS, GENERAL = TemplateAudience.KIDS, TemplateAudience.GENERAL
 ENGINE = KidsStorySettings().model_dump(mode="json")
@@ -38,10 +37,6 @@ WEAKENED = {
 
 def descriptor_of(audience: TemplateAudience, **definition: Any) -> PipelineDescriptor:
     return pipeline_of(audience, **definition).descriptor
-
-
-def defaults_of(audience: TemplateAudience, **definition: Any) -> dict[str, Any]:
-    return default_settings_of(pipeline_of(audience, **definition).settings_model)
 
 
 def floors_of(defaults: dict[str, Any]) -> tuple[Any, ...]:
@@ -88,7 +83,7 @@ def test_the_definition_sets_basic_and_adds_hidden_paths() -> None:
 
 
 def test_a_kids_overlay_cannot_remove_any_floor() -> None:
-    defaults = defaults_of(KIDS, settings=WEAKENED)
+    defaults = defaults_for(KIDS, settings=WEAKENED)
     safety, rules = defaults["safety"], defaults["series"]["editorial_rules"]
     assert rules == ["Be fun.", NO_HARM_RULE]
     assert safety["banned_words"] == BANNED_WORDS
@@ -98,7 +93,7 @@ def test_a_kids_overlay_cannot_remove_any_floor() -> None:
 
 
 def test_a_general_overlay_is_not_floored() -> None:
-    defaults = defaults_of(GENERAL, settings=WEAKENED)
+    defaults = defaults_for(GENERAL, settings=WEAKENED)
     assert defaults["safety"]["banned_words"] == []
     assert defaults["safety"]["picture_exclusions"] == "blur"
 
@@ -121,7 +116,7 @@ def test_the_floor_leaves_unreadable_values_to_validation(values: dict[str, Any]
 
 
 def test_no_mapped_definition_field_touches_a_kids_floor() -> None:
-    mapped = defaults_of(
+    mapped = defaults_for(
         KIDS,
         brief="Animal friends.",
         length="long",
@@ -139,7 +134,7 @@ def test_no_mapped_definition_field_touches_a_kids_floor() -> None:
 
 def test_a_partial_overlay_gets_the_floor_without_duplicates() -> None:
     safety = {"banned_words": ["kill", "Gun"], "brand_names": ["lego", "Acme"]}
-    floored = defaults_of(KIDS, settings={"safety": safety})["safety"]
+    floored = defaults_for(KIDS, settings={"safety": safety})["safety"]
     assert floored["banned_words"] == [
         "kill",
         "Gun",
