@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from "@testing-library/react";
-import { HttpResponse, http } from "msw";
+import { delay, HttpResponse, http } from "msw";
 import { db } from "@/api/mocks/db";
 import { findSection } from "../helpers/editor";
 import {
@@ -64,6 +64,14 @@ describe("Pipelines list", () => {
     expect(pathOf(router)).toBe("/automations/new");
   });
 
+  it("shows a loading state while the list loads", async () => {
+    server.use(http.get("/api/templates", () => delay("infinite")));
+    renderApp("/pipelines");
+
+    expect(await screen.findByRole("status", { name: "Loading pipelines" })).toBeInTheDocument();
+    expect(screen.queryByText("No pipelines yet")).not.toBeInTheDocument();
+  });
+
   it("shows an empty state when there are no pipelines", async () => {
     server.use(http.get("/api/templates", () => HttpResponse.json([])));
     renderApp("/pipelines");
@@ -116,10 +124,30 @@ describe("Pipelines: duplicate", () => {
     expect(db.state.templates).toHaveLength(2);
   });
 
-  it("creates nothing when cancelled", async () => {
-    const { user } = await openDialog("Space facts", "Duplicate", /^Duplicate/);
+  it("keeps the dialog open with the conflict when the copy is refused", async () => {
+    failWith("post", "/templates/:id/duplicate", 409, {
+      code: "template_type_taken",
+      message: "pipeline type 't_x' already exists",
+    });
+    const { user, dialog } = await openDialog("Space facts", "Duplicate", /^Duplicate/);
 
-    await cancelDialog(user, /^Duplicate/);
+    await user.click(dialog.getByRole("button", { name: "Duplicate" }));
+
+    const alert = await dialog.findByRole("alert");
+    expect(alert).toHaveTextContent("That pipeline type already exists.");
+    expect(alert).toHaveTextContent("pipeline type 't_x' already exists");
+    expect(screen.getByRole("dialog", { name: /^Duplicate/ })).toBeInTheDocument();
+  });
+});
+
+describe("Pipelines: cancelled dialogs", () => {
+  it.each([
+    ["Duplicate", "Space facts", /^Duplicate/],
+    ["Delete", "History in five minutes", "Delete pipeline?"],
+  ])("changes nothing when %s is cancelled", async (action, item, title) => {
+    const { user } = await openDialog(item, action, title);
+
+    await cancelDialog(user, title);
 
     expect(db.state.templates).toHaveLength(2);
   });
@@ -157,13 +185,5 @@ describe("Pipelines: delete", () => {
 
     await findToast("Disk is full.");
     expect(dialog.queryByRole("alert")).not.toBeInTheDocument();
-  });
-
-  it("keeps the pipeline when deleting is cancelled", async () => {
-    const { user } = await openDialog("History in five minutes", "Delete", "Delete pipeline?");
-
-    await cancelDialog(user, "Delete pipeline?");
-
-    expect(db.state.templates).toHaveLength(2);
   });
 });
