@@ -1,0 +1,71 @@
+{
+  "id": "fun_facts_for_kids",
+  "name": "Fun facts for kids",
+  "description": "Cheerful numbered lists of simple, true facts about animals, nature and space for young children.",
+  "audience": "kids",
+  "definition": {
+    "structure": "list",
+    "brief": "Each video shares simple, true and cheerful facts about one thing young children love, such as an animal, the weather or the sky. Use short sentences, everyday words and one fun detail per fact. Nothing frightening.",
+    "length": "standard",
+    "tone": "cheerful, gentle, curious",
+    "topics": [
+      "penguins",
+      "elephants",
+      "the moon",
+      "rainbows",
+      "butterflies",
+      "dinosaurs",
+      "the ocean",
+      "frogs",
+      "snow",
+      "trees",
+      "the stars",
+      "owls",
+      "giraffes",
+      "clouds"
+    ],
+    "visual_style": "flat_cartoon_2d",
+    "music_mood": "bright, playful ukulele and xylophone music, light and happy",
+    "title_template": {
+      "en": "{title} | {series}",
+      "ta": "{title} | {series}"
+    },
+    "short_title_template": {
+      "en": "{title} #Shorts",
+      "ta": "{title} #Shorts"
+    },
+    "description_template": {
+      "en": "{title}\n\n{count} fun facts about {theme} from {series}. {tagline}.\n\nIn this video: {items}\n\nTalk about it together:\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் {count} சுவையான உண்மைகள். {tagline}.\n\nஇந்த வீடியோவில்: {items}\n\n{questions}\n\nசேர்ந்து பாருங்கள், சேர்ந்து கற்றுக்கொள்ளுங்கள்.\n\n{hashtags}"
+    },
+    "tags": {
+      "en": ["fun facts for kids", "kids learning", "animal facts for kids", "learning videos for kids"],
+      "ta": ["குழந்தைகளுக்கான உண்மைகள்", "தமிழ் கற்றல்", "Tamil kids learning"]
+    },
+    "hashtags": {
+      "en": ["#FunFactsForKids", "#KidsLearning", "#LearnWithFun"],
+      "ta": ["#குழந்தைகள்கற்றல்", "#FunFactsForKids", "#KidsLearning"]
+    },
+    "category": "27",
+    "settings": {
+      "series": {
+        "name": {
+          "en": "Little Explorers",
+          "ta": "சின்ன ஆய்வாளர்கள்"
+        },
+        "tagline": {
+          "en": "Happy facts for curious minds",
+          "ta": "ஆர்வமுள்ள மனங்களுக்கு மகிழ்ச்சியான உண்மைகள்"
+        },
+        "intro_line": {
+          "en": "Hello, little explorers! Welcome to {series}. Let's learn something fun!",
+          "ta": "வணக்கம், சின்ன நண்பர்களே! {series} உங்களை வரவேற்கிறது. சுவையான ஒன்றைக் கற்போம்!"
+        },
+        "outro_line": {
+          "en": "Thank you for learning with us. See you next time!",
+          "ta": "எங்களுடன் கற்றதற்கு நன்றி. மீண்டும் சந்திப்போம்!"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "id": "daily_motivation",
+  "name": "Daily motivation",
+  "description": "A short daily lift: one practical idea about habits, focus or resilience, ending with a line to remember.",
+  "audience": "general",
+  "definition": {
+    "structure": "explainer",
+    "brief": "Each video takes one practical idea about habits, focus, patience or resilience, explains it with an everyday example, and ends with one clear line to remember. Be warm and honest, never preachy. No medical, financial or relationship advice, and no quotes from real people.",
+    "length": "short",
+    "tone": "warm, steady, encouraging",
+    "topics": [
+      "starting small",
+      "keeping a promise to yourself",
+      "patience",
+      "learning from mistakes",
+      "rest and recovery",
+      "focus",
+      "gratitude",
+      "asking for help",
+      "consistency over intensity",
+      "doing the hard task first",
+      "progress over perfection",
+      "staying curious",
+      "being kind to yourself",
+      "finishing what you start"
+    ],
+    "visual_style": "cinematic_realistic",
+    "music_mood": "gentle, uplifting piano with soft strings that slowly builds, hopeful and calm",
+    "title_template": {
+      "en": "{title} | {series}",
+      "ta": "{title} | {series}"
+    },
+    "short_title_template": {
+      "en": "{title} #Shorts",
+      "ta": "{title} #Shorts"
+    },
+    "description_template": {
+      "en": "{title}\n\n{tagline}.\n\nToday's idea: {takeaway}\n\nThink about it:\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{tagline}.\n\nஇன்றைய சிந்தனை: {takeaway}\n\n{questions}\n\n{hashtags}"
+    },
+    "tags": {
+      "en": ["motivation", "daily motivation", "self improvement", "good habits", "mindset"],
+      "ta": ["தமிழ் ஊக்கம்", "தினசரி ஊக்கம்", "நல்ல பழக்கங்கள்"]
+    },
+    "hashtags": {
+      "en": ["#Motivation", "#DailyMotivation", "#Mindset"],
+      "ta": ["#ஊக்கம்", "#தினசரிஊக்கம்", "#Motivation"]
+    },
+    "category": "24",
+    "settings": {
+      "series": {
+        "name": {
+          "en": "Daily Lift",
+          "ta": "தினம் ஒரு ஊக்கம்"
+        },
+        "tagline": {
+          "en": "One small idea for a better day",
+          "ta": "நல்ல நாளுக்கு ஒரு சிறிய சிந்தனை"
+        },
+        "intro_line": {
+          "en": "Welcome to {series}. Here's today's idea.",
+          "ta": "{series} உங்களை வரவேற்கிறது. இன்றைய சிந்தனை இதோ."
+        },
+        "outro_line": {
+          "en": "Thanks for watching. Come back tomorrow for another idea.",
+          "ta": "பார்த்ததற்கு நன்றி. நாளை இன்னொரு சிந்தனையுடன் சந்திப்போம்."
+        }
+      }
+    }
+  }
+}

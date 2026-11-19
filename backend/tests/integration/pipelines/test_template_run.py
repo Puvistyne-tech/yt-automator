@@ -107,8 +107,7 @@ def test_child_directed_automation_edits_fail_the_general_run_before_upload(
 
 def test_the_kids_builtin_runs_offline_through_the_engine(harness: Harness) -> None:
     engine = NarratedVideoEngine()
-    [builtin] = engine.builtin_templates()
-    pipeline = engine.pipeline(builtin)
+    pipeline = engine.pipeline(engine.builtin_templates()[0])
     run = run_of(harness, pipeline, smart_writer())
     assert_complete(run)
     found = [details(item) for item in uploads(run)]

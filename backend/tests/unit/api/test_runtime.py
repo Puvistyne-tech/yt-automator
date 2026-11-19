@@ -10,6 +10,7 @@ from sqlalchemy import text
 from autotube.domain.run_enums import RunStatus
 from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides, Runtime, create_app, youtube_gateway
+from tests.fixtures.builtin_catalog import BUILTIN_IDS
 from tests.fixtures.template_records import template
 from tests.unit.api.client import Api
 from tests.unit.infrastructure.records import run
@@ -102,5 +103,5 @@ def test_the_composed_registry_serves_stored_ready_templates(
     with runtime.database.engine.begin() as connection:
         connection.execute(text(BROKEN_ROW))
     listed = [pipeline.descriptor.type_id for pipeline in runtime.ports.pipelines.list()]
-    assert listed == ["kids_story", "t_tpl-1"]
+    assert listed == [*BUILTIN_IDS, "t_tpl-1"]
     runtime.database.dispose()

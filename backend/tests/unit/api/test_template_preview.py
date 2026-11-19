@@ -11,6 +11,7 @@ from autotube.domain.capabilities import TextGenerator
 from autotube.domain.sample_scripts import TOPIC_MAX_LENGTH
 from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides
+from tests.fixtures.builtin_catalog import BUILTIN_IDS
 from tests.fixtures.explainer_data import TAKEAWAY_EN, explainer_writer
 from tests.fixtures.fake_providers import WriterCatalog
 from tests.fixtures.kids_data import draft_dict, smart_writer
@@ -47,7 +48,7 @@ def served(
 
 
 def assert_nothing_stored(client: TestClient) -> None:
-    assert [t["id"] for t in ok(client.get("/api/templates"))] == ["kids_story"]
+    assert [t["id"] for t in ok(client.get("/api/templates"))] == BUILTIN_IDS
     assert ok(client.get("/api/runs")) == []
 
 

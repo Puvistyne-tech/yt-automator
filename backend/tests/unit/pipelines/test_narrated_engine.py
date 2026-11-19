@@ -49,8 +49,8 @@ def test_every_description_language_gets_a_text_area() -> None:
     assert {area["ui:widget"] for area in areas.values() if isinstance(area, dict)} == {"textarea"}
 
 
-def test_the_only_builtin_is_the_kids_story_template() -> None:
-    [builtin] = engine().builtin_templates()
+def test_the_first_builtin_is_the_kids_story_template() -> None:
+    builtin = engine().builtin_templates()[0]
     assert (builtin.type_id, builtin.engine, builtin.origin, builtin.audience) == (
         "kids_story",
         ENGINE_ID,
@@ -63,8 +63,7 @@ def test_the_only_builtin_is_the_kids_story_template() -> None:
 
 def test_the_builtin_serves_the_kids_story_pipeline() -> None:
     narrated = engine()
-    [builtin] = narrated.builtin_templates()
-    pipeline = narrated.pipeline(builtin)
+    pipeline = narrated.pipeline(narrated.builtin_templates()[0])
     assert isinstance(pipeline, KidsStoryPipeline)
     assert pipeline.descriptor == KidsStoryPipeline().descriptor
 
