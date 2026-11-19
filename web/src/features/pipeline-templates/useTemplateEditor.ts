@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { pipelinePath } from "@/api/paths";
 import { useSaveTemplate } from "@/api/templates";
 import type { TemplateStatus, TemplateSummary } from "@/api/types";
@@ -10,6 +9,7 @@ import {
   templateInput,
 } from "@/features/pipeline-templates/model/form";
 import { useTemplateErrors } from "@/features/pipeline-templates/useTemplateErrors";
+import { useDraftState } from "@/shared/hooks/useDraftState";
 import { useNavigateAfterCreate } from "@/shared/hooks/useNavigateAfterCreate";
 
 interface EditorInput {
@@ -18,19 +18,8 @@ interface EditorInput {
   initial: TemplateDraft;
 }
 
-function useDraftState(initial: TemplateDraft) {
-  const [draft, setDraft] = useState(initial);
-  const [baseline, setBaseline] = useState(() => JSON.stringify(initial));
-  const dirty = JSON.stringify(draft) !== baseline;
-  const markSaved = (saved: TemplateDraft) => {
-    setDraft(saved);
-    setBaseline(JSON.stringify(saved));
-  };
-  return { draft, setDraft, dirty, markSaved };
-}
-
 export function useTemplateEditor({ engineId, template, initial }: EditorInput) {
-  const { draft, setDraft, dirty, markSaved } = useDraftState(initial);
+  const { draft, setDraft, dirty, markSaved } = useDraftState(initial, JSON.stringify);
   const problems = useTemplateErrors();
   const save = useSaveTemplate(template?.id);
   const notifier = useMutationNotifier();

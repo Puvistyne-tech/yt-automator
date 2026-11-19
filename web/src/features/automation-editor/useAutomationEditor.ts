@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useSaveAutomation } from "@/api/automations";
 import { type FieldErrors, hasErrors } from "@/api/errors";
 import { automationPath } from "@/api/paths";
@@ -11,6 +10,7 @@ import {
 } from "@/features/automation-editor/model/draft";
 import { firstErrorSection, sectionAnchor } from "@/features/automation-editor/model/sections";
 import { useEditorErrors } from "@/features/automation-editor/useEditorErrors";
+import { useDraftState } from "@/shared/hooks/useDraftState";
 import { useNavigateAfterCreate } from "@/shared/hooks/useNavigateAfterCreate";
 
 interface EditorInput {
@@ -38,17 +38,9 @@ function errorRevealer(
   };
 }
 
-function useDraftState(initial: AutomationDraft) {
-  const [draft, setDraft] = useState(initial);
-  const [baseline, setBaseline] = useState(() => draftSignature(initial));
-  const dirty = draftSignature(draft) !== baseline;
-  const markSaved = () => setBaseline(draftSignature(draft));
-  return { draft, setDraft, dirty, markSaved };
-}
-
 export function useAutomationEditor(input: EditorInput) {
   const { automationId, initial, pipelines, channels, onErrorsShown } = input;
-  const { draft, setDraft, dirty, markSaved } = useDraftState(initial);
+  const { draft, setDraft, dirty, markSaved } = useDraftState(initial, draftSignature);
   const pipeline = pipelines.find((p) => p.type_id === draft.pipeline_type);
   const editorErrors = useEditorErrors(draft, pipeline, channels);
   const onCreated = useNavigateAfterCreate(dirty, automationPath);
