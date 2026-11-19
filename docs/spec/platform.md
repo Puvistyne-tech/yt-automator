@@ -610,9 +610,12 @@ class PipelineEngine(Protocol):
 - `settings_model_for(definition, audience)` builds a subclass of the engine settings model with
   `pydantic.create_model`. Its schema equals the engine's; only the top-level section defaults change.
 - Defaults are deep-merged in this order (objects merge, lists and scalars replace): engine defaults, the
-  audience defaults (general only: `template/general_defaults.json`, which replaces the child-directed series
-  lines, editorial rules, question style, judge criteria, music mood, sound-effect prompt, description, tags and
-  hashtags), the values mapped from the definition, the `settings` overlay, then the kids floor (kids only).
+  audience defaults (general only: `template/general_defaults.json`), the values mapped from the definition,
+  the `settings` overlay, then the kids floor (kids only).
+- The general defaults leave nothing child-directed: tagline, an empty refrain, intro and outro lines,
+  editorial rules, the `ink_and_wash` style, a single adult cast member (`mira`), tone, writing style, an open
+  ending, themes, morals, question style, judge criteria, the motion prompt default, music mood, sound-effect
+  prompt, description, tags and hashtags. A test screens every text default of a blank general template.
 - `safety.audience` (`kids` | `general`, default `kids`) is pinned: a before-validator forces the template's
   audience whatever the input says. For general templates `story.source` is pinned to `llm_with_fallback` the
   same way. The `kids_story` pipeline uses the same pinned model with audience kids, so stored `kids_story`
@@ -635,8 +638,11 @@ class PipelineEngine(Protocol):
   danger…" editorial rule are added back if removed, every engine `picture_exclusions` term is appended if
   missing, and `story.age_min`/`age_max` stay capped at 12 by validation. The banned-word and brand gates are
   always on, and kids templates always use the kids system prompt.
-- General templates: the script system prompt is `story_system_general.txt` (no age range or reading level,
-  plus "The audience is general: the script must never address children…"); the reading-level gate does not
+- General templates: every prompt with a `_general` variant (`story_system`, `translate_system`, `image_scene`,
+  `image_thumbnail`, `judge`) is chosen by audience (`audience_prompts.py`); the story system prompt has no age
+  range or reading level and says "The audience is general: the script must never address children…"; an open
+  ending lets "viewers" rather than "children" wonder what happens next. The kids prompts are unchanged and
+  pinned, and the general prompts are pinned in `tests/fixtures/prompts/general/`; the reading-level gate does not
   apply; upload metadata records `made_for_kids: false` and the metadata score check expects the audience's
   value instead of `true`.
 - Child-directed term screen (`story/child_terms.py`, terms in `story/child_terms.json`, English and Tamil,

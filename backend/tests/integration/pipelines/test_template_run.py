@@ -17,6 +17,7 @@ from tests.fixtures.kids_fakes import FakeWriter, failing_writer
 from tests.fixtures.pipeline_runs import PAIRS, executed_run, pairs, planned_uploads
 from tests.fixtures.quick_sections import QUICK_SECTIONS
 from tests.fixtures.template_records import template
+from tests.fixtures.template_settings import general_writer
 
 pytestmark = pytest.mark.integration
 GENERAL_DEFINITION: dict[str, Any] = {
@@ -41,7 +42,7 @@ def assert_complete(run: Run) -> None:
 
 def test_a_general_story_template_runs_offline_and_is_not_made_for_kids(harness: Harness) -> None:
     general = template(audience=TemplateAudience.GENERAL, definition=GENERAL_DEFINITION)
-    run = run_of(harness, NarratedVideoEngine().pipeline(general), smart_writer(name="leaf_boat"))
+    run = run_of(harness, NarratedVideoEngine().pipeline(general), general_writer())
     assert_complete(run)
     metadata = [item for item in run.artifacts if item.meta.get("role") == "upload_metadata"]
     assert metadata and all(item.meta["made_for_kids"] is False for item in metadata)

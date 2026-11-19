@@ -11,9 +11,11 @@ from autotube.pipelines.narrated_video.story.normalise import speech_rules
 from autotube.pipelines.narrated_video.story.numbers import number_to_words
 
 CUE_LANGUAGE = "en"
+KIDS_LISTENERS = "children"
+GENERAL_LISTENERS = "viewers"
 OPEN_ENDING = (
     "The story ends openly and gently, without saying the moral aloud or a refrain, "
-    "so children can wonder what happens next."
+    "so {listeners} can wonder what happens next."
 )
 MORAL_RULE = "The moral must appear word for word, as you translate it, inside the last narration."
 NO_CUES = "is always an empty list."
@@ -40,7 +42,11 @@ def avoided_topics(topics: Sequence[str]) -> str:
     return f"\n\nNever write about these topics:\n{bullet_lines(kept)}" if kept else ""
 
 
-def ending_requirement(style: EndingStyle, refrain: str) -> str:
+def listeners(for_kids: bool) -> str:
+    return KIDS_LISTENERS if for_kids else GENERAL_LISTENERS
+
+
+def ending_requirement(style: EndingStyle, refrain: str, for_kids: bool) -> str:
     if style is EndingStyle.MORAL_AND_REFRAIN:
         return (
             "The last scene says the moral word for word, then ends with this exact refrain: "
@@ -51,7 +57,7 @@ def ending_requirement(style: EndingStyle, refrain: str) -> str:
             f'The last scene ends with this exact refrain: "{refrain}". Do not say the moral '
             "aloud; let the story show it."
         )
-    return OPEN_ENDING
+    return OPEN_ENDING.format(listeners=listeners(for_kids))
 
 
 def translation_ending_rules(style: EndingStyle, refrain: str) -> str:

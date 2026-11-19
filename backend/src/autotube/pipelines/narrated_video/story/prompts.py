@@ -4,6 +4,7 @@ import json
 from collections.abc import Sequence
 
 from autotube.domain.capabilities import CameraMove, TextRequest
+from autotube.pipelines.narrated_video.audience_prompts import audience_prompt
 from autotube.pipelines.narrated_video.languages import language_name
 from autotube.pipelines.narrated_video.resources import render_prompt, resource_json
 from autotube.pipelines.narrated_video.settings.cast import Character
@@ -33,24 +34,16 @@ def reading_level_text(settings: KidsStorySettings) -> str:
     return str(levels[level]) if isinstance(levels, dict) and level in levels else level
 
 
-def system_values(settings: KidsStorySettings, language: str) -> dict[str, object]:
-    return {
-        "series": settings.series.name.for_language(language),
-        "tagline": settings.series.tagline.for_language(language),
-        "tone": settings.story.tone,
-        "rules": bullet_lines(settings.series.editorial_rules),
-        "avoid_topics": avoided_topics(settings.safety.avoid_topics),
-    }
-
-
 def story_system(settings: KidsStorySettings, language: str) -> str:
-    if not settings.safety.for_kids:
-        return render_prompt("story_system_general.txt", **system_values(settings, language))
     return render_prompt(
-        "story_system.txt",
-        **system_values(settings, language),
+        audience_prompt("story_system.txt", settings),
+        series=settings.series.name.for_language(language),
+        tagline=settings.series.tagline.for_language(language),
         age_min=settings.story.age_min,
         age_max=settings.story.age_max,
+        tone=settings.story.tone,
+        rules=bullet_lines(settings.series.editorial_rules),
+        avoid_topics=avoided_topics(settings.safety.avoid_topics),
         reading_level=reading_level_text(settings),
     )
 
@@ -61,7 +54,7 @@ def style_values(settings: KidsStorySettings, language: str) -> dict[str, str]:
     return {
         "writing_style": rules.writing_style,
         "extra_instructions": extra_requirements(rules.extra_instructions),
-        "ending": ending_requirement(rules.ending_style, refrain),
+        "ending": ending_requirement(rules.ending_style, refrain, settings.safety.for_kids),
         "sound_effects": sound_effect_rule(settings.sound_effects.max_per_scene),
         "question_style": rules.question_style,
         "hook_style": settings.short.hook_style,
@@ -140,7 +133,7 @@ def translation_request(
     settings: KidsStorySettings, story: StoryDraft, source: str, target: str
 ) -> TextRequest:
     system = render_prompt(
-        "translate_system.txt",
+        audience_prompt("translate_system.txt", settings),
         series=settings.series.name.for_language(target),
         language=language_name(target),
         translation_style=settings.story.translation_style,

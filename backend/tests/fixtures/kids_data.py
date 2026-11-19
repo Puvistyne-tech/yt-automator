@@ -93,11 +93,15 @@ def tamil_answer(name: str = "golden_mango") -> str:
     return as_json(tamil_text(name))
 
 
-def smart_writer(judge_answer: str = "2", name: str = "golden_mango") -> FakeWriter:
+def smart_writer(
+    judge_answer: str = "2", name: str = "golden_mango", draft: dict[str, Any] | None = None
+) -> FakeWriter:
+    answer = as_json(draft) if draft else story_answer(name)
+
     def respond(request: TextRequest) -> str:
         if is_judge(request):
             return judge_answer
-        return tamil_answer(name) if is_translation(request) else story_answer(name)
+        return tamil_answer(name) if is_translation(request) else answer
 
     return FakeWriter(respond)
 

@@ -11,13 +11,15 @@ from autotube.pipelines.narrated_video.publishing.templates import (
     template_values,
 )
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.template.audience import with_audience
+from autotube.pipelines.narrated_video.story.child_terms import child_terms_in
+from autotube.pipelines.narrated_video.template.audience import audience_defaults, with_audience
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.merging import deep_merged
 from autotube.pipelines.narrated_video.template.settings_model import (
     kids_settings_model,
     settings_model_for,
 )
+from autotube.pipelines.narrated_video.template.text_leaves import text_leaves
 from tests.fixtures.kids_data import story
 from tests.fixtures.prompt_pins import stored_settings
 
@@ -113,12 +115,23 @@ def test_deep_merge_replaces_lists_and_scalars_and_merges_objects() -> None:
     assert merged == {"a": {"b": 1, "c": [2]}, "d": {"e": 1}}
 
 
-def test_general_defaults_replace_child_directed_text() -> None:
+def test_a_blank_general_template_inherits_no_child_directed_text() -> None:
     general = defaults_for(GENERAL)
-    assert general["safety"]["audience"] == "general"
-    assert "little friends" not in general["series"]["intro_line"]["en"]
-    assert general["metadata"]["tags"]["en"] != ENGINE["metadata"]["tags"]["en"]
-    assert general["story"]["age_max"] == ENGINE["story"]["age_max"]
+    assert [text for text in text_leaves(general) if child_terms_in(text)] == []
+    expected = deep_merged(ENGINE, audience_defaults(GENERAL))
+    pinned = deep_merged(expected, {"safety": {"audience": "general"}})
+    assert general == KidsStorySettings.model_validate(pinned).model_dump(mode="json")
+
+
+def test_general_defaults_replace_the_childrens_story_frame() -> None:
+    general = defaults_for(GENERAL)
+    assert [member["species"] for member in general["cast"]] == ["woman"]
+    assert general["story"]["ending_style"] == "open"
+    assert general["series"]["refrain"] == {"en": "", "ta": ""}
+    assert general["look"]["visual_style"] != ENGINE["look"]["visual_style"]
+    assert general["story"]["themes"] != ENGINE["story"]["themes"]
+    assert general["story"]["tone"] != ENGINE["story"]["tone"]
+    assert general["visuals"]["motion_prompt"] != ENGINE["visuals"]["motion_prompt"]
 
 
 @pytest.mark.parametrize("audience", [KIDS, GENERAL])

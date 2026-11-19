@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from autotube.domain.capabilities import TextRequest
+from autotube.pipelines.narrated_video.audience_prompts import audience_prompt
 from autotube.pipelines.narrated_video.resources import render_prompt
 from autotube.pipelines.narrated_video.settings.cast import Character
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
@@ -35,7 +36,7 @@ def thumbnail_subject(story: Story) -> str:
 
 def scene_prompt(settings: KidsStorySettings, scene: StoryScene) -> str:
     return render_prompt(
-        "image_scene.txt",
+        audience_prompt("image_scene.txt", settings),
         style=resolve_style(settings).prompt,
         visual=scene.visual,
         setting=scene.setting,
@@ -57,7 +58,7 @@ def character_prompt(settings: KidsStorySettings, member: Character) -> str:
 def thumbnail_prompt(settings: KidsStorySettings, story: Story) -> str:
     present = sorted(story.character_ids)
     return render_prompt(
-        "image_thumbnail.txt",
+        audience_prompt("image_thumbnail.txt", settings),
         style=resolve_style(settings).prompt,
         description=thumbnail_visual(story),
         characters=characters_text(settings, present),
@@ -88,7 +89,7 @@ def picture_judge_request(
     candidates: Sequence[Path],
 ) -> TextRequest:
     prompt = render_prompt(
-        "judge.txt",
+        audience_prompt("judge.txt", settings),
         visual=visual,
         characters=characters_text(settings, character_ids),
         style=resolve_style(settings).prompt,

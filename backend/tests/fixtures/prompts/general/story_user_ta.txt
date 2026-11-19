@@ -1,0 +1,48 @@
+Write a new Tamil story for "கதை நேரம்" about the theme: sharing.
+
+Cast (use only these characters, refer to them in "characters" by their id; mira leads the story):
+- id "mira": மீரா, a woman. Looks: a woman in her thirties with short dark hair, a mustard scarf, a grey coat and a calm, curious expression. Personality: observant, patient and quietly funny; notices what others miss
+
+Choose one moral from this list, or a close gentle variation of one:
+- Small choices shape who we become.
+- Listening is a kind of courage.
+- What we keep is less than what we give.
+
+Requirements:
+- Between 8 and 10 scenes.
+- Each scene's narration has between 8 and 40 words, written in Tamil.
+- The whole narration reads aloud in about 150 seconds at 80 words per minute.
+- Clear sentences, everyday words, a calm and confident voice.
+- The story ends openly and gently, without saying the moral aloud or a refrain, so viewers can wonder what happens next.
+- "visual" describes what the picture shows in English, with no words, letters or signs in the picture.
+- "camera" is one of: push_in, pull_out, pan_left, pan_right, rise, still.
+- Mark exactly 2 of the most beautiful scenes with "hero": true.
+- "sound_effects" lists zero to two gentle sound cues per scene, in English, like "birds chirping".
+- "speaker" is "narrator", or a character id if that character says the whole scene.
+- "questions" holds exactly 2 "What do you think happens next?" style questions for viewers, in Tamil.
+- "short_scenes" lists the zero-based indexes of up to 5 scenes that make the best vertical Short.
+- "hook_line" is one gentle, curious sentence in Tamil that opens the Short. No clickbait.
+- "thumbnail" describes, in English, one warm picture for the thumbnail with no text in it.
+
+Answer with JSON in exactly this shape:
+{
+  "title": "...",
+  "moral": "...",
+  "scenes": [
+    {
+      "narration": "...",
+      "visual": "...",
+      "characters": ["mira"],
+      "setting": "...",
+      "mood": "...",
+      "camera": "push_in",
+      "hero": false,
+      "sound_effects": [],
+      "speaker": "narrator"
+    }
+  ],
+  "questions": ["..."],
+  "short_scenes": [0, 1, 2],
+  "hook_line": "...",
+  "thumbnail": "..."
+}
