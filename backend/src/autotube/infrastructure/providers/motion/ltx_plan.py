@@ -63,10 +63,10 @@ def text_encoder_args(options: LtxOptions) -> list[str]:
     return ["--gemma", options.text_encoder] if options.text_encoder else []
 
 
-def guidance_args(options: LtxOptions) -> list[str]:
+def guidance_args(request: MotionRequest, options: LtxOptions) -> list[str]:
     if not options.use_nag:
         return []
-    return ["--nag", "--negative-prompt", options.negative_prompt]
+    return ["--nag", "--negative-prompt", request.negative_prompt or options.negative_prompt]
 
 
 def ltx_command(request: MotionRequest, options: LtxOptions, segment: Segment) -> list[str]:
@@ -80,7 +80,7 @@ def ltx_command(request: MotionRequest, options: LtxOptions, segment: Segment) -
         *text_encoder_args(options),
         "--prompt",
         request.prompt,
-        *guidance_args(options),
+        *guidance_args(request, options),
         "--image",
         str(segment.image),
         "0",

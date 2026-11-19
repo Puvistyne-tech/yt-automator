@@ -584,8 +584,9 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   Intermediates live in a temporary folder next to the output and are removed afterwards; a run that writes no
   output is an upstream failure. Options (each with title and description): `binary`, `model_dir` (default
   `~/.autotube/models/reverie-studio__ltx-2.5-mlx-q4-distilled`), `distilled` (passes `--distilled`, default
-  true), `text_encoder` (`--gemma`, omitted when empty), `negative_prompt`, `use_nag` (passes `--nag` and the
-  negative prompt), `seed`, `frame_rate`, `landscape_width`/`landscape_height` (704x384) and
+  true), `text_encoder` (`--gemma`, omitted when empty), `negative_prompt` (the fallback used when
+  `MotionRequest.negative_prompt` is empty), `use_nag` (passes `--nag` and the request's negative prompt, or the
+  option when the request has none), `seed`, `frame_rate`, `landscape_width`/`landscape_height` (704x384) and
   `portrait_width`/`portrait_height` (384x704), multiples of 64, `max_segment_seconds` (3), `image_strength`,
   `hf_home` (default `~/.autotube/hf`, sets `HF_HOME` when not empty), `hf_offline` (sets `HF_HUB_OFFLINE=1`),
   `ffmpeg_binary`, `crf`, `preset` and `timeout_seconds` (per command, 1200). A leading `~` in `model_dir` and

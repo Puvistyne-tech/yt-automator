@@ -119,8 +119,14 @@ def test_ltx_command_adds_text_encoder_and_drops_nag_and_distilled_when_asked() 
     command = ltx_command(request(), options, segment_plan(request(), options, WORK)[0])
     assert command[1:4] == ["generate", "--model", options.model_dir]
     assert command[4:6] == ["--gemma", "mlx-community/gemma-3-12b-it-4bit"]
-    assert "--nag" not in command
-    assert "--negative-prompt" not in command
+    assert {"--nag", "--negative-prompt"}.isdisjoint(command)
+
+
+@pytest.mark.parametrize(("given", "sent"), [("3D", "3D"), ("", LtxOptions().negative_prompt)])
+def test_request_negative_wins_else_option(given: str, sent: str) -> None:
+    motion = request().model_copy(update={"negative_prompt": given})
+    command = ltx_command(motion, LtxOptions(), segment_plan(motion, LtxOptions(), WORK)[0])
+    assert command[command.index("--negative-prompt") + 1] == sent
 
 
 def test_ltx_env_sets_offline_cache_only_when_configured(monkeypatch: pytest.MonkeyPatch) -> None:
