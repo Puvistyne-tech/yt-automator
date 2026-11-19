@@ -57,8 +57,10 @@ class RowRepository[M: BaseModel, R: SQLModel](RowStore[M, R]):
         super().__init__(db, row_type, model_type, to_row)
         self.order_column = order_column
 
-    def list(self) -> list[M]:
+    def rows(self) -> list[R]:
         order = col(getattr(self.row_type, self.order_column))
         with self.db.session() as session:
-            rows = session.exec(select(self.row_type).order_by(order)).all()
-            return [self.decode(row) for row in rows]
+            return list(session.exec(select(self.row_type).order_by(order)).all())
+
+    def list(self) -> list[M]:
+        return [self.decode(row) for row in self.rows()]

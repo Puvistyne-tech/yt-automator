@@ -55,6 +55,7 @@ def test_a_stored_template_reuses_the_pipeline_under_its_own_type_and_name() -> 
     assert pipeline.settings_model is KidsStorySettings
     assert KIDS_CONTENT in pipeline.descriptor.capabilities
     assert len(pipeline.stages()) == len(KidsStoryPipeline().stages())
+    assert pipeline.descriptor is pipeline.descriptor
 
 
 def test_problems_name_unknown_definition_fields_and_a_foreign_engine() -> None:

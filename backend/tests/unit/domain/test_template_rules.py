@@ -6,6 +6,7 @@ import pytest
 
 from autotube.domain.pipeline_templates import (
     BUILTIN_RELEASED_AT,
+    PipelineTemplate,
     TemplateAudience,
     TemplateOrigin,
     TemplateStatus,
@@ -14,8 +15,11 @@ from autotube.domain.pipeline_templates import (
 )
 from autotube.domain.template_rules import (
     NAME_MAX_LENGTH,
+    ensure_creatable,
     ensure_editable,
+    ensure_new_id,
     ensure_type_id_free,
+    ensure_type_id_owned,
     immutable_errors,
     name_errors,
     revised,
@@ -26,31 +30,41 @@ from tests.fixtures.fake_runtime import START
 from tests.fixtures.template_records import template
 
 LATER = START + timedelta(hours=1)
+TOO_LONG = "x" * (NAME_MAX_LENGTH + 1)
+
+
+def kids_builtin() -> PipelineTemplate:
+    return builtin_template("narrated_video", "kids_story", "Kids", "", TemplateAudience.KIDS, {})
 
 
 def test_user_type_ids_are_prefixed_template_ids() -> None:
     assert user_type_id("abc") == "t_abc"
 
 
-def test_builtin_templates_are_ready_first_revisions() -> None:
-    made = builtin_template("narrated_video", "kids_story", "Kids", "", TemplateAudience.KIDS, {})
-    assert (made.id, made.type_id, made.origin, made.status) == (
+def test_builtin_templates_are_first_revisions_named_after_their_type() -> None:
+    made = kids_builtin()
+    assert (made.id, made.type_id, made.origin, made.revision, made.created_at) == (
         "kids_story",
         "kids_story",
         TemplateOrigin.BUILTIN,
-        TemplateStatus.READY,
-    )
-    assert (made.revision, made.created_at, made.is_builtin, made.is_ready) == (
         1,
         BUILTIN_RELEASED_AT,
-        True,
-        True,
     )
 
 
-def test_a_draft_user_template_is_neither_builtin_nor_ready() -> None:
-    draft = template(status=TemplateStatus.DRAFT)
-    assert (draft.is_builtin, draft.is_ready) == (False, False)
+@pytest.mark.parametrize(
+    ("made", "builtin", "ready"),
+    [
+        (kids_builtin(), True, True),
+        (template(), False, True),
+        (template(status=TemplateStatus.DRAFT), False, False),
+    ],
+    ids=["builtin", "ready", "draft"],
+)
+def test_builtin_and_ready_follow_origin_and_status(
+    made: PipelineTemplate, builtin: bool, ready: bool
+) -> None:
+    assert (made.is_builtin, made.is_ready) == (builtin, ready)
 
 
 @pytest.mark.parametrize(
@@ -59,13 +73,11 @@ def test_a_draft_user_template_is_neither_builtin_nor_ready() -> None:
         ("Facts", {}),
         ("   ", {"name": "name is required"}),
         ("x" * NAME_MAX_LENGTH, {}),
-        (
-            "x" * (NAME_MAX_LENGTH + 1),
-            {"name": f"name must be at most {NAME_MAX_LENGTH} characters"},
-        ),
+        (f"  {'x' * NAME_MAX_LENGTH}  ", {}),
+        (TOO_LONG, {"name": f"name must be at most {NAME_MAX_LENGTH} characters"}),
     ],
 )
-def test_names_are_required_and_limited(name: str, expected: dict[str, str]) -> None:
+def test_names_are_required_and_limited_after_trimming(name: str, expected: dict[str, str]) -> None:
     assert name_errors(name) == expected
 
 
@@ -89,6 +101,31 @@ def test_taken_type_ids_are_refused() -> None:
     ensure_type_id_free("t_new", {"kids_story"})
 
 
+def test_a_new_template_needs_a_valid_name_and_a_free_type_id() -> None:
+    with pytest.raises(ValidationFailed) as invalid:
+        ensure_creatable(template(name=TOO_LONG), set())
+    assert list(invalid.value.fields) == ["name"]
+    with pytest.raises(RuleConflict) as taken:
+        ensure_creatable(template(), {"t_tpl-1"})
+    assert taken.value.code == "template_type_taken"
+    ensure_creatable(template(), {"kids_story"})
+
+
+def test_a_stored_id_cannot_be_added_again() -> None:
+    with pytest.raises(RuleConflict, match="'tpl-1'") as raised:
+        ensure_new_id("tpl-1", stored=True)
+    assert raised.value.code == "template_exists"
+    ensure_new_id("tpl-1", stored=False)
+
+
+def test_a_type_id_held_by_another_template_is_refused() -> None:
+    with pytest.raises(RuleConflict, match="'t_a'") as raised:
+        ensure_type_id_owned(template("b", type_id="t_a"), "a")
+    assert raised.value.code == "template_type_taken"
+    ensure_type_id_owned(template("a"), "a")
+    ensure_type_id_owned(template("a"), None)
+
+
 def test_only_ready_templates_with_a_free_type_id_are_served() -> None:
     assert servable(template(), {"kids_story"})
     assert not servable(template(status=TemplateStatus.DRAFT), set())
@@ -97,16 +134,44 @@ def test_only_ready_templates_with_a_free_type_id_are_served() -> None:
 
 def test_a_revision_keeps_identity_and_counts_up() -> None:
     proposed = template(
-        name="Renamed", revision=7, origin=TemplateOrigin.SUGGESTED, created_at=LATER
+        "other",
+        type_id="t_tpl-1",
+        engine="elsewhere",
+        name="Renamed",
+        revision=7,
+        origin=TemplateOrigin.SUGGESTED,
+        created_at=LATER,
     )
     updated = revised(template(revision=2), proposed, LATER)
-    assert (updated.name, updated.revision, updated.origin) == ("Renamed", 3, TemplateOrigin.BLANK)
-    assert (updated.created_at, updated.updated_at) == (START, LATER)
+    assert (updated.id, updated.engine, updated.origin) == (
+        "tpl-1",
+        "narrated_video",
+        TemplateOrigin.BLANK,
+    )
+    assert (updated.name, updated.revision, updated.created_at, updated.updated_at) == (
+        "Renamed",
+        3,
+        START,
+        LATER,
+    )
 
 
-def test_a_revision_refuses_builtins_immutable_changes_and_blank_names() -> None:
-    with pytest.raises(RuleConflict):
+def test_a_revision_refuses_builtins_with_their_code() -> None:
+    with pytest.raises(RuleConflict) as raised:
         revised(template(origin=TemplateOrigin.BUILTIN), template(), LATER)
+    assert raised.value.code == "template_builtin"
+
+
+@pytest.mark.parametrize(
+    ("proposed", "fields"),
+    [
+        (template(name=" ", audience=TemplateAudience.KIDS), ["audience", "name"]),
+        (template(type_id="t_other"), ["type_id"]),
+        (template(name=TOO_LONG), ["name"]),
+    ],
+    ids=["blank-name-and-audience", "type-id", "long-name"],
+)
+def test_a_revision_refuses_invalid_changes(proposed: PipelineTemplate, fields: list[str]) -> None:
     with pytest.raises(ValidationFailed) as raised:
-        revised(template(), template(name=" ", audience=TemplateAudience.KIDS), LATER)
-    assert sorted(raised.value.fields) == ["audience", "name"]
+        revised(template(), proposed, LATER)
+    assert sorted(raised.value.fields) == fields

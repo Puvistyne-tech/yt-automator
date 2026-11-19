@@ -18,6 +18,7 @@ from autotube.domain.settings_overrides import (
     effective_settings,
     storable_settings,
 )
+from autotube.domain.template_rules import ensure_new_id, ensure_type_id_owned
 
 
 class HasId(Protocol):
@@ -61,10 +62,19 @@ class InMemoryTemplates(InMemoryStore[PipelineTemplate]):
     def find_by_type_id(self, type_id: str) -> PipelineTemplate | None:
         return next((t for t in self.items.values() if t.type_id == type_id), None)
 
+    def list(self) -> builtins.list[PipelineTemplate]:
+        return sorted(self.items.values(), key=lambda template: template.created_at)
+
+    def holder_id(self, type_id: str) -> str | None:
+        holder = self.find_by_type_id(type_id)
+        return holder.id if holder is not None else None
+
     def add(self, template: PipelineTemplate) -> None:
-        self.save(template)
+        ensure_new_id(template.id, template.id in self.items)
+        self.update(template)
 
     def update(self, template: PipelineTemplate) -> None:
+        ensure_type_id_owned(template, self.holder_id(template.type_id))
         self.save(template)
 
 

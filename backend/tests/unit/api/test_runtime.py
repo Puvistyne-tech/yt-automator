@@ -14,6 +14,11 @@ from tests.fixtures.template_records import template
 from tests.unit.api.client import Api
 from tests.unit.infrastructure.records import run
 
+BROKEN_ROW = (
+    "INSERT INTO pipeline_templates (id, type_id, status, created_at, payload) "
+    """VALUES ('old', 't_old', 'ready', '0', '{"audience": "teens"}')"""
+)
+
 
 def test_caption_names_follow_the_saved_settings(
     config: RuntimeConfig, overrides: Overrides
@@ -94,6 +99,8 @@ def test_the_composed_registry_serves_stored_ready_templates(
     app = create_app(config, replace(overrides, pipelines=None))
     runtime: Runtime = app.state.runtime
     runtime.ports.templates.add(template())
+    with runtime.database.engine.begin() as connection:
+        connection.execute(text(BROKEN_ROW))
     listed = [pipeline.descriptor.type_id for pipeline in runtime.ports.pipelines.list()]
     assert listed == ["kids_story", "t_tpl-1"]
     runtime.database.dispose()

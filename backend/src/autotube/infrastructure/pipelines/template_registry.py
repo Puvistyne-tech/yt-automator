@@ -8,7 +8,7 @@ from autotube.domain.pipeline_engine import PipelineEngine
 from autotube.domain.pipeline_templates import PipelineTemplate
 from autotube.domain.ports import TemplateRepository
 from autotube.domain.template_rules import servable
-from autotube.infrastructure.pipelines.static_registry import indexed
+from autotube.infrastructure.pipelines.pipeline_index import indexed, indexed_engines
 
 
 def builtin_pipelines(engines: Sequence[PipelineEngine]) -> dict[str, Pipeline]:
@@ -24,7 +24,7 @@ class TemplatePipelineRegistry:
         engines: Sequence[PipelineEngine],
         templates: TemplateRepository,
     ) -> None:
-        self.engines = {engine.engine_id: engine for engine in engines}
+        self.engines = indexed_engines(engines)
         self.builtins = builtin_pipelines(engines)
         self.static = {
             type_id: pipeline
@@ -33,35 +33,40 @@ class TemplatePipelineRegistry:
         }
         self.reserved = frozenset(self.builtins) | frozenset(self.static)
         self.templates = templates
-        self.cache: dict[str, tuple[int, Pipeline]] = {}
+        self.cache: dict[str, tuple[PipelineTemplate, Pipeline]] = {}
 
     def list(self) -> builtins.list[Pipeline]:
-        stored = [
-            pipeline
-            for template in self.templates.list()
-            if (pipeline := self.served(template)) is not None
-        ]
-        return [*self.static.values(), *self.builtins.values(), *stored]
+        return [*self.static.values(), *self.builtins.values(), *self.stored()]
 
     def get(self, type_id: str) -> Pipeline | None:
         known = self.builtins.get(type_id) or self.static.get(type_id)
         if known is not None:
             return known
         template = self.templates.find_by_type_id(type_id)
-        return self.served(template) if template is not None else None
+        if template is None:
+            self.cache.pop(type_id, None)
+            return None
+        return self.served(template)
+
+    def stored(self) -> builtins.list[Pipeline]:
+        templates = self.templates.list()
+        present = {template.type_id for template in templates}
+        for type_id in set(self.cache) - present:
+            self.cache.pop(type_id, None)
+        return [pipeline for template in templates if (pipeline := self.served(template))]
 
     def served(self, template: PipelineTemplate) -> Pipeline | None:
-        engine = self.engines.get(template.engine)
-        if engine is None or not servable(template, self.reserved):
-            return None
         hit = self.cache.get(template.type_id)
-        if hit is not None and hit[0] == template.revision:
+        if hit is not None and hit[0] == template:
             return hit[1]
-        return self.resolved(engine, template)
-
-    def resolved(self, engine: PipelineEngine, template: PipelineTemplate) -> Pipeline | None:
-        if engine.problems(template):
-            return None
-        pipeline = engine.pipeline(template)
-        self.cache[template.type_id] = (template.revision, pipeline)
+        self.cache.pop(template.type_id, None)
+        pipeline = self.built(template)
+        if pipeline is not None:
+            self.cache[template.type_id] = (template, pipeline)
         return pipeline
+
+    def built(self, template: PipelineTemplate) -> Pipeline | None:
+        engine = self.engines.get(template.engine)
+        if engine is None or not servable(template, self.reserved) or engine.problems(template):
+            return None
+        return engine.pipeline(template)

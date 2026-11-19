@@ -27,6 +27,7 @@ from autotube.infrastructure.db.settings_repositories import (
     SqlProviderConfigRepository,
     SqlQuotaLedger,
 )
+from tests.fixtures.fake_diagnostics import MIGRATION_HEAD
 from tests.fixtures.fake_runtime import START
 from tests.unit.infrastructure.records import automation, channel, credential, run
 
@@ -39,7 +40,7 @@ def test_migrations_are_idempotent_and_enable_wal(database: Database) -> None:
         busy_timeout = connection.execute(text("PRAGMA busy_timeout")).scalar()
         assert busy_timeout == RuntimeConfig().database_busy_timeout_ms
         version = connection.execute(text("SELECT version_num FROM alembic_version")).scalar()
-        assert version == "0002"
+        assert version == MIGRATION_HEAD
 
 
 @pytest.mark.parametrize(

@@ -21,12 +21,12 @@ ENGINE_NAME = "Narrated video"
 class TemplatePipeline(KidsStoryPipeline):
     def __init__(self, template: PipelineTemplate) -> None:
         super().__init__()
-        self.template = template
+        named = {"type_id": template.type_id, "name": template.name}
+        self.named_descriptor = super().descriptor.model_copy(update=named)
 
     @property
     def descriptor(self) -> PipelineDescriptor:
-        named = {"type_id": self.template.type_id, "name": self.template.name}
-        return super().descriptor.model_copy(update=named)
+        return self.named_descriptor
 
 
 class NarratedVideoEngine:

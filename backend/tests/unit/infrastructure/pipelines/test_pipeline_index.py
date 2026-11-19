@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from autotube.domain.pipeline import Pipeline
 from autotube.domain.pipeline_descriptors import PipelineDescriptor
 from autotube.domain.ui_schema import ui_schema_problems
-from autotube.infrastructure.pipelines.static_registry import (
+from autotube.infrastructure.pipelines.pipeline_index import (
     DuplicatePipelineError,
     indexed,
 )

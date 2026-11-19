@@ -36,7 +36,7 @@ PipelineDescriptor  type_id, name, description, version, settings_schema (JSON S
 StageDescriptor     id, title, description
 LanguageOption      code, name
 VariantOption       id, name, aspect ("16:9" | "9:16"), description
-PipelineTemplate    id, type_id, engine, name (1..80 characters, not blank), description,
+PipelineTemplate    id, type_id, engine, name (non-empty; see the template rules), description,
                     audience: kids | general, status: draft | ready = draft,
                     origin: builtin | blank | duplicate | suggested, revision: int >= 1 = 1,
                     definition (object described by the engine's definition model), created_at, updated_at
@@ -484,8 +484,10 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
 missing or `change` returns None; the read and the write happen in one transaction;
 delete_if(run_id, check) -> the deleted run, or None when it is missing or `check` refuses it, in one transaction),
 `ChannelRepository` (get, find_by_youtube_id, list, save, delete),
-`TemplateRepository` (get, find_by_type_id, list ordered by creation, add, update, delete; add refuses an id
-or type id that is already stored), `ProviderConfigRepository` (list, save_all),
+`TemplateRepository` (get, find_by_type_id, list ordered by `created_at`, add, update, delete; add refuses a
+stored id with `RuleConflict("template_exists")`; add and update refuse a type id held by another template with
+`RuleConflict("template_type_taken")`; list and find_by_type_id skip stored rows that no longer decode, so one
+bad row never breaks `GET /pipelines`), `ProviderConfigRepository` (list, save_all),
 `AppSettingsRepository` (get, save), `QuotaLedger` (used_today(credential_id, day), record(credential_id, units, day)),
 `SecretStore` (get, set, delete, has), `Clock` (now), `IdGenerator` (new), `PipelineRegistry` (list, get),
 `ProviderCatalog` (descriptors, secrets, option_errors(configs) -> {path: message},
@@ -548,8 +550,9 @@ class PipelineEngine(Protocol):
 - `type_id` is fixed at creation: `t_<id>` for a user template, the engine's own id for a built-in. A rename never
   changes it.
 - Rules (`domain/template_rules.py`): built-ins are read-only (`template_builtin`); audience and type id cannot
-  change on update; each update increments `revision` and keeps id, engine, origin and `created_at`; the name is
-  required and at most 80 characters; a type id already served is refused (`template_type_taken`).
+  change on update; each update increments `revision` and keeps id, engine, origin and `created_at`; on creation
+  and on every update the name must not be blank and is at most 80 characters, measured after trimming
+  surrounding spaces; a type id already served is refused (`template_type_taken`).
 - Built-ins are packaged with their engine (origin `builtin`, status `ready`, revision 1) and never stored.
   User templates are stored in the `pipeline_templates` table (`id`, unique `type_id`, `status`, `created_at`,
   JSON `payload`), added by migration `0002`.
@@ -562,10 +565,13 @@ class PipelineEngine(Protocol):
 
 - `list()` returns the static pipelines whose type id no engine built-in serves, then every engine's built-ins,
   then the stored templates that are `ready`, belong to an installed engine and have no `problems`.
-- `get(type_id)` resolves the same set, a stored template through `engine.pipeline(template)`, cached per
-  type id until its `revision` changes.
+- `get(type_id)` resolves the same set, a stored template through `engine.pipeline(template)`. The pipeline is
+  cached per type id together with the template it was built from, and rebuilt when the stored template differs
+  in any field. The entry is dropped when the template is deleted or stops being served.
 - A stored template can never shadow a built-in or static type id; such a template is not served.
-- Two static pipelines, or two built-ins, with the same `type_id` are refused when the registry is built.
+- Two static pipelines, two built-ins with the same `type_id`, or two engines with the same `engine_id` are
+  refused when the registry is built (`infrastructure/pipelines/pipeline_index.py`).
+- A stored template's pipeline builds its descriptor once, so listing pipelines does not rebuild schemas.
 
 ### Provider resolution
 
