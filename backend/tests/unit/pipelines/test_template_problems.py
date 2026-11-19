@@ -88,9 +88,12 @@ def test_an_overlay_that_does_not_validate_is_reported_under_settings() -> None:
     assert set(found) == {"definition.settings.story.scene_count_min", "definition.settings.bogus"}
 
 
-@pytest.mark.parametrize("audience", [KIDS, GENERAL])
-def test_an_overlay_cannot_lift_the_age_cap(audience: TemplateAudience) -> None:
-    assert set(problems(audience, settings={"story": {"age_max": 15}})) == {
+def test_an_overlay_cannot_lift_the_kids_age_cap() -> None:
+    found = problems(KIDS, settings={"story": {"age_max": 15}})
+    assert set(found) == {"definition.settings"}
+    assert "children aged 12 or under" in found["definition.settings"]
+    assert problems(GENERAL, settings={"story": {"age_max": 15}}) == {}
+    assert set(problems(GENERAL, settings={"story": {"age_max": 100}})) == {
         "definition.settings.story.age_max"
     }
 

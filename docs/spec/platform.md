@@ -692,8 +692,9 @@ class PipelineEngine(Protocol):
   any child character, its banned words keep violent words but allow suspense words, and its picture exclusions
   replace the defaults with a list that includes gore, blood, wounds, weapons, corpses, children and babies; it
   leaves out the defaults' "scary", "gloomy" and "sharp teeth" on purpose, because a suspense picture may be
-  dark. Only `scary_stories` has a `safety` overlay; the other built-ins keep the default banned words, and a
-  kids template built from its definition gets the full kids floor back.
+  dark. Only `scary_stories` has a `safety` overlay; the other built-ins keep their audience's default banned words
+  (the kids list for kids, an empty list for general), and a kids template built from its definition gets the
+  full kids floor back.
 - A packaged file that fails `PackagedTemplate` validation, or repeats another file's id
   (`DuplicateBuiltinError`), stops startup, because the registry loads the built-ins when it is built; the tests
   load every file, so CI catches either before release.
@@ -752,6 +753,12 @@ and an empty value is called "the default", never "the engine's".
   editorial rules, the `ink_and_wash` style, a single adult cast member (`mira`), tone, writing style, an open
   ending, themes, morals, question style, judge criteria, the motion prompt default, music mood, sound-effect
   prompt, description, tags and hashtags. A test screens every text default of a blank general template.
+- The general defaults carry no kids safety defaults: `safety.banned_words` is empty (user-editable),
+  `story.age_min`/`age_max` are 13 and 99, `story.reading_level` is `general` ("Clear sentences and everyday
+  words for teenagers and adults.") and `story.enabled_checks` leaves out `reading_level` (the reading level
+  gate never runs for a general audience anyway). Brand names and the picture exclusions stay. Tested over
+  every general built-in; every kids template keeps the kids banned words, an age range at most 12, a kids
+  reading level and the `reading_level` check.
 - `safety.audience` (`kids` | `general`, default `kids`) is pinned: a before-validator forces the template's
   audience whatever the input says. For general templates `story.source` is pinned to `llm_with_fallback` the
   same way. The `kids_story` pipeline uses the same pinned model with audience kids, so stored `kids_story`
@@ -788,7 +795,9 @@ and an empty value is called "the default", never "the engine's".
   - `story.enabled_checks` always contains `reading_level`, the only switchable check that guards
     age-appropriate language (scene count, words per scene, duration, ending, cast and structure are form
     checks);
-  - `story.age_min`/`age_max` stay capped at 12 by validation.
+  - `story.age_max` (field bound 1 to 99) must be at most 12 and `story.reading_level` must not be `general`
+    for a kids audience: the settings model refuses either ("a kids video is for children aged 12 or under",
+    "a kids video needs a kids reading level, not general"), reported on `definition.settings` at save.
   The banned-word and brand gates are always on, and kids templates of every structure always use the kids
   system prompt (`story_system.txt`, with the age range and reading level).
   Behaviour change: a stored kids automation whose settings removed a floored entry gets it back silently when

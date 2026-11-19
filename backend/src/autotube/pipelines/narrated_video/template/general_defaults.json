@@ -24,6 +24,9 @@
       "Use clear sentences and everyday words."
     ]
   },
+  "safety": {
+    "banned_words": []
+  },
   "look": {
     "visual_style": "ink_and_wash"
   },
@@ -57,7 +60,10 @@
       "Listening is a kind of courage.",
       "What we keep is less than what we give."
     ],
-    "reading_level": "early_reader",
+    "age_min": 13,
+    "age_max": 99,
+    "reading_level": "general",
+    "enabled_checks": ["scene_count", "words_per_scene", "duration", "ending", "cast", "structure"],
     "question_style": "\"What do you think happens next?\" style questions for viewers"
   },
   "visuals": {
