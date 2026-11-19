@@ -824,7 +824,11 @@ and an empty value is called "the default", never "the engine's".
   Uploads stay private and reviewed by default.
 - A general template never uses the bundled stories, which are children's stories: when the writer is missing,
   fails or never passes the gates, the story stage fails with "…never falls back to the bundled children's
-  stories" instead.
+  stories" instead. Every no-fallback failure (general, or a structure without bundled scripts) appends why,
+  after "; ": "story writer unavailable: <error>", or "the last story attempt N failed checks: <checks>" /
+  "the last translation to <language> attempt N failed: <problems>" (`authored_scripts` raises
+  `ScriptRejectedError` with the last failure the author logged; a template sample maps it to its "did not
+  write a script that passed the checks" message).
 
 #### Structures (`pipelines/narrated_video/structures/`)
 

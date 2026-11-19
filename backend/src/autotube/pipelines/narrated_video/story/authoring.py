@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
 
 from autotube.domain.capabilities import Capability, TextGenerator, TextRequest
@@ -21,12 +21,21 @@ class WriterUnavailableError(RuntimeError):
     pass
 
 
+class ScriptRejectedError(RuntimeError):
+    pass
+
+
 @dataclass(frozen=True)
 class StoryAuthor:
     llm: TextGenerator
     settings: KidsStorySettings
     log: StageLog
     seed: str = ""
+    failures: list[str] = field(default_factory=list)
+
+    def failed(self, message: str) -> None:
+        self.failures.append(message)
+        self.log(message, LogLevel.WARNING)
 
     def answer(self, request_text: Callable[[], str]) -> str:
         try:
@@ -51,10 +60,7 @@ class StoryAuthor:
         return Attempt(number, language, raw, story, tuple(problems))
 
     def rejected(self, attempt: Attempt) -> None:
-        self.log(
-            f"story attempt {attempt.number} failed checks: {'; '.join(attempt.problems)}",
-            LogLevel.WARNING,
-        )
+        self.failed(f"story attempt {attempt.number} failed checks: {'; '.join(attempt.problems)}")
 
     def written(self, theme: str, language: str) -> Story | None:
         last: Attempt | None = None
@@ -77,10 +83,7 @@ class StoryAuthor:
                 problems = translation_problems(result, self.settings)
                 if not problems:
                     return result
-            self.log(
-                f"translation to {target} attempt {attempt} failed: {'; '.join(problems)}",
-                LogLevel.WARNING,
-            )
+            self.failed(f"translation to {target} attempt {attempt} failed: {'; '.join(problems)}")
         return None
 
 
@@ -91,9 +94,16 @@ def authored_scripts(
     seed: str,
     theme: str,
     order: Sequence[str],
-) -> Written | None:
+) -> Written:
     llm = providers.resolve(Capability.LLM)
     author = StoryAuthor(llm, settings, log, seed)
+    stories = all_languages(author, theme, order)
+    if stories is None:
+        raise ScriptRejectedError(author.failures[-1])
+    return stories, llm.provider_id
+
+
+def all_languages(author: StoryAuthor, theme: str, order: Sequence[str]) -> dict[str, Story] | None:
     first = author.written(theme, order[0])
     if first is None:
         return None
@@ -103,4 +113,4 @@ def authored_scripts(
         if translated is None:
             return None
         stories[language] = translated
-    return stories, llm.provider_id
+    return stories

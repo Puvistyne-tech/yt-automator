@@ -9,13 +9,15 @@ from autotube.pipelines.narrated_video.stages.story import ScriptUnavailableErro
 from autotube.pipelines.narrated_video.story.child_terms import child_terms_in
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
 from tests.fixtures.explainer_data import (
+    HOOKLESS,
     TAKEAWAY_ENDING,
+    explainer_draft,
     explainer_settings,
     explainer_story,
     explainer_writer,
 )
 from tests.fixtures.kids_data import StageRig, meta_of
-from tests.fixtures.kids_fakes import FakeProviders, failing_writer
+from tests.fixtures.kids_fakes import FakeProviders, as_json, failing_writer, scripted_writer
 from tests.fixtures.quick_sections import QUICK_SECTIONS
 from tests.fixtures.template_settings import GENERAL, KIDS
 
@@ -63,9 +65,22 @@ def test_an_explainer_never_falls_back_to_a_bundled_story(
     tmp_path: Path, audience: TemplateAudience, reason: str
 ) -> None:
     rig = stage_rig(tmp_path, audience, FakeProviders(writer=failing_writer()))
-    with pytest.raises(ScriptUnavailableError, match=reason):
+    with pytest.raises(ScriptUnavailableError, match=reason) as raised:
         rig.run(StoryStage())
+    assert "story writer unavailable" in str(raised.value)
     assert meta_of(rig, "story") == []
+
+
+def test_a_rejected_general_explainer_names_the_last_failed_checks(tmp_path: Path) -> None:
+    draft = explainer_draft()
+    draft["scenes"][0] = {**draft["scenes"][0], "narration": HOOKLESS}
+    rig = stage_rig(tmp_path, GENERAL, FakeProviders(writer=scripted_writer([as_json(draft)] * 3)))
+    with pytest.raises(ScriptUnavailableError, match="never falls back") as raised:
+        rig.run(StoryStage())
+    assert (
+        "; the last story attempt 3 failed checks: open the first scene with the question"
+        in str(raised.value)
+    )
 
 
 @pytest.mark.parametrize("audience", [KIDS, GENERAL])

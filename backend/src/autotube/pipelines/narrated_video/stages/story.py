@@ -13,6 +13,7 @@ from autotube.pipelines.narrated_video.settings.story_choices import says_refrai
 from autotube.pipelines.narrated_video.stages.media_types import JSON
 from autotube.pipelines.narrated_video.stages.run_settings import kids_settings
 from autotube.pipelines.narrated_video.story.authoring import (
+    ScriptRejectedError,
     WriterUnavailableError,
     Written,
     authored_scripts,
@@ -81,7 +82,7 @@ class StoryStage:
             return self.written_only(context, settings, order, theme)
         if settings.story.source is StorySource.LLM_WITH_FALLBACK:
             written = self.from_writer(context, settings, order, theme)
-            if written is not None:
+            if not isinstance(written, str):
                 return written
             context.log(
                 "falling back to a bundled story",
@@ -93,23 +94,23 @@ class StoryStage:
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
     ) -> Written:
         written = self.from_writer(context, settings, order, theme)
-        if written is None:
-            raise ScriptUnavailableError(no_fallback_reason(settings))
+        if isinstance(written, str):
+            raise ScriptUnavailableError(f"{no_fallback_reason(settings)}; {written}")
         return written
 
     def from_writer(
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
-    ) -> Written | None:
+    ) -> Written | str:
         try:
             return authored_scripts(
                 context.providers, settings, context.log, context.run_id, theme, order
             )
+        except ScriptRejectedError as error:
+            return f"the last {error}"
         except (LookupError, WriterUnavailableError) as error:
-            context.log(
-                f"story writer unavailable: {error}",
-                LogLevel.WARNING,
-            )
-            return None
+            reason = f"story writer unavailable: {error}"
+            context.log(reason, LogLevel.WARNING)
+            return reason
 
     def from_bundle(
         self, context: StageContext, settings: KidsStorySettings, order: Sequence[str], theme: str
