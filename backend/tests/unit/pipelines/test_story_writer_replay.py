@@ -106,6 +106,18 @@ def test_without_repair_the_same_answers_fall_back(tmp_path: Path) -> None:
     assert rig.run(StoryStage()).provider == "bundled"
 
 
+def test_three_mac_answers_fall_back_and_say_why(tmp_path: Path) -> None:
+    writer = replay_writer([draft(34, "")] * 3)
+    rig = StageRig(tmp_path, settings=mac_settings(), providers=FakeProviders(writer=writer))
+    assert rig.run(StoryStage()).provider == "bundled"
+    warnings = rig.book.warnings()
+    for number in (1, 2, 3):
+        rejected = f"story attempt {number} failed checks (170 words, 5 scenes, about 85 s)"
+        assert any(rejected in line for line in warnings)
+        assert (tmp_path / "story" / f"attempt-{number}-en.json").exists()
+    assert any("has 9 scenes" in line and "4 to 6 scenes" in line for line in warnings)
+
+
 def test_a_repair_that_breaks_the_length_still_fails_the_attempt() -> None:
     full = draft(26, MORAL)
     settings = mac_settings(
