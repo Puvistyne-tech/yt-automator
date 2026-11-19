@@ -4,10 +4,14 @@ from typing import Any
 
 import pytest
 
-from autotube.domain.pipeline_descriptors import KIDS_CONTENT, default_settings_of
+from autotube.domain.pipeline_descriptors import (
+    KIDS_CONTENT,
+    PipelineDescriptor,
+    default_settings_of,
+)
 from autotube.domain.pipeline_templates import TemplateAudience
-from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.series import (
     BANNED_WORDS,
     BRAND_NAMES,
@@ -15,23 +19,32 @@ from autotube.pipelines.narrated_video.settings.series import (
     PICTURE_EXCLUSIONS,
 )
 from autotube.pipelines.narrated_video.template.kids_floor import kids_floor, listed_terms
-from tests.fixtures.template_records import template
+from tests.fixtures.template_settings import pipeline_of
 
 KIDS, GENERAL = TemplateAudience.KIDS, TemplateAudience.GENERAL
+ENGINE = KidsStorySettings().model_dump(mode="json")
 WEAKENED = {
     "series": {"editorial_rules": ["Be fun."]},
     "safety": {"banned_words": [], "brand_names": ["Acme"], "picture_exclusions": "blur"},
 }
 
 
-def descriptor_of(audience: TemplateAudience, **definition: Any) -> Any:
-    pipeline = NarratedVideoEngine().pipeline(template(audience=audience, definition=definition))
-    return pipeline.descriptor
+def descriptor_of(audience: TemplateAudience, **definition: Any) -> PipelineDescriptor:
+    return pipeline_of(audience, **definition).descriptor
 
 
 def defaults_of(audience: TemplateAudience, **definition: Any) -> dict[str, Any]:
-    pipeline = NarratedVideoEngine().pipeline(template(audience=audience, definition=definition))
-    return default_settings_of(pipeline.settings_model)
+    return default_settings_of(pipeline_of(audience, **definition).settings_model)
+
+
+def floors_of(defaults: dict[str, Any]) -> tuple[Any, ...]:
+    safety = defaults["safety"]
+    return (
+        defaults["series"]["editorial_rules"],
+        safety["banned_words"],
+        safety["brand_names"],
+        safety["picture_exclusions"],
+    )
 
 
 def test_only_kids_templates_carry_the_kids_capability() -> None:
@@ -57,7 +70,14 @@ def test_the_derived_ui_schema_hides_the_audience_and_general_age_fields() -> No
 def test_the_definition_sets_basic_and_adds_hidden_paths() -> None:
     ui = descriptor_of(GENERAL, basic=["story.tone"], hidden=["story.morals"]).ui_schema
     assert ui["ui:basic"] == ["story.tone"]
-    assert ui["ui:hidden"][:2] == ["story.morals", "safety.audience"]
+    assert ui["ui:hidden"] == [
+        "story.morals",
+        "safety.audience",
+        "story.age_min",
+        "story.age_max",
+        "story.reading_level",
+        "story.source",
+    ]
 
 
 def test_a_kids_overlay_cannot_remove_any_floor() -> None:
@@ -91,3 +111,31 @@ def test_the_floor_keeps_text_that_already_meets_it() -> None:
 )
 def test_the_floor_leaves_unreadable_values_to_validation(values: dict[str, Any]) -> None:
     assert kids_floor(values) == values
+
+
+def test_no_mapped_definition_field_touches_a_kids_floor() -> None:
+    mapped = defaults_of(
+        KIDS,
+        brief="Animal friends.",
+        length="long",
+        tone="cosy",
+        topics=["rain"],
+        visual_style="ink_line_art",
+        music_mood="soft harp",
+        title_template={"en": "{title}!"},
+        tags={"en": ["stories"]},
+        hashtags={"en": ["#Stories"]},
+        category="27",
+    )
+    assert floors_of(mapped) == floors_of(ENGINE)
+
+
+def test_a_partial_overlay_gets_the_floor_without_duplicates() -> None:
+    safety = {"banned_words": ["kill", "Gun"], "brand_names": ["lego", "Acme"]}
+    floored = defaults_of(KIDS, settings={"safety": safety})["safety"]
+    assert floored["banned_words"] == [
+        "kill",
+        "Gun",
+        *(w for w in BANNED_WORDS if w not in ("kill", "gun")),
+    ]
+    assert floored["brand_names"] == ["lego", "Acme", *(b for b in BRAND_NAMES if b != "Lego")]

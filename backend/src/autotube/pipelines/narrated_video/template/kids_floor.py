@@ -23,7 +23,8 @@ def list_floor(floor: Sequence[str]) -> Floor:
     def apply(value: JsonValue) -> JsonValue:
         if not isinstance(value, list):
             return value
-        return [*value, *(item for item in floor if item not in value)]
+        present = {item.casefold() for item in value if isinstance(item, str)}
+        return [*value, *(item for item in floor if item.casefold() not in present)]
 
     return apply
 

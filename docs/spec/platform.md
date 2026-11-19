@@ -635,8 +635,8 @@ class PipelineEngine(Protocol):
 
 - Kids floor (`template/kids_floor.py`), applied to kids template defaults after the merge, so neither a
   definition nor an overlay can weaken it: the engine's banned words, brand names and the "No violence, fear,
-  danger…" editorial rule are added back if removed, every engine `picture_exclusions` term is appended if
-  missing, and `story.age_min`/`age_max` stay capped at 12 by validation. The banned-word and brand gates are
+  danger…" editorial rule are appended if missing (compared ignoring case, never duplicated), every engine
+  `picture_exclusions` term is appended if missing, and `story.age_min`/`age_max` stay capped at 12 by validation. The banned-word and brand gates are
   always on, and kids templates always use the kids system prompt.
 - General templates: every prompt with a `_general` variant (`story_system`, `translate_system`, `image_scene`,
   `image_thumbnail`, `judge`) is chosen by audience (`audience_prompts.py`); the story system prompt has no age
