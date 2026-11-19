@@ -11,7 +11,7 @@ import type {
   TemplateSummary,
 } from "@/api/types";
 
-type Errors = Record<string, string>;
+export type Errors = Record<string, string>;
 
 const NAME_MAX_LENGTH = 80;
 const COPY_SUFFIX = " (copy)";

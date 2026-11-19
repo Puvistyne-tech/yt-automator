@@ -841,8 +841,9 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
 
 - Preview (`application/preview_template_script.py::PreviewTemplateScript`) takes a TemplatePreviewInput and
   stores nothing: no template, no run, no id. It builds the unsaved template with id `preview` (type id
-  `t_preview`, `preview_template`), then reports field errors (400) exactly as create does: `input_errors`, then
-  an engine that is not installed (`engine`) or the engine's `problems`. The language defaults to the first of
+  `t_preview`, `preview_template`), then reports field errors (400) in sequence, each group alone: `input_errors`
+  first (origin and name), then the engine errors (an engine that is not installed, `engine`, or the
+  engine's `problems`). A `topic` over 300 characters is refused by the request schema before both. The language defaults to the first of
   the template pipeline's languages; any other unoffered language is a `language` field error. It resolves
   providers from the saved provider configs, calls `engine.sample_script` synchronously (each provider call keeps
   its own timeout) and maps `SampleUnavailableError` to 409 `preview_unavailable` with the engine's message.

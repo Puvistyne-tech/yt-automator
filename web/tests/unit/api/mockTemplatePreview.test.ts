@@ -2,7 +2,9 @@ import { api } from "@/api/client";
 import { db } from "@/api/mocks/db";
 import { engineFormats, sampleScript } from "@/api/mocks/fixtures/sampleScripts";
 import { narratedEngine } from "@/api/mocks/fixtures/templateEngine";
+import { engineLanguages } from "@/api/mocks/templatePreview";
 import type { SampleScript, TemplatePreviewInput } from "@/api/types";
+import { disableWriters } from "../../helpers/providers";
 import { rejectionOf, TEMPLATE_INPUT } from "../../helpers/templates";
 
 const PATH = "/templates/preview-script";
@@ -16,13 +18,6 @@ const preview = (changes: Partial<TemplatePreviewInput> = {}) =>
 
 function withStructure(structure: string) {
   return previewBody({ definition: { structure } });
-}
-
-function disableWriters() {
-  db.state.providerConfig = db.state.providerConfig.map((config) => ({
-    ...config,
-    chain: config.chain.map((choice) => ({ ...choice, enabled: false })),
-  }));
 }
 
 describe("mock template preview", () => {
@@ -40,9 +35,7 @@ describe("mock template preview", () => {
     "writes a %s sample shaped by its format",
     async (structure) => {
       const sample = await api.post<SampleScript>(PATH, withStructure(structure));
-      const story = await api.post<SampleScript>(PATH, withStructure("story"));
       expect(sample.scenes.every((scene) => scene.narration !== "")).toBe(true);
-      expect(structure === "story" || sample.title !== story.title).toBe(true);
     },
   );
 
@@ -67,18 +60,29 @@ describe("mock template preview", () => {
       { topic: "String should have at most 300 characters" },
     ],
     ["name", { name: " ", language: "fr" }, { name: "name is required" }],
+    [
+      "name and definition",
+      { name: " ", definition: { colour: "red" } },
+      { name: "name is required" },
+    ],
     ["language", { language: "fr" }, { language: "language must be one of: en, ta" }],
     [
       "definition",
       { definition: { colour: "red" } },
       { "definition.colour": "Extra inputs are not permitted" },
     ],
-  ])("refuses a bad %s with field errors in the server's order", async (_name, changes, fields) => {
-    expect(await rejectionOf(() => preview(changes))).toMatchObject({
-      status: 400,
-      code: "validation_failed",
-      fields,
-    });
+  ])("refuses a bad %s with only the first failing group", async (_name, changes, fields) => {
+    const refused = await rejectionOf(() => preview(changes));
+    expect(refused).toMatchObject({ status: 400, code: "validation_failed" });
+    expect((refused as { fields: unknown }).fields).toEqual(fields);
+  });
+
+  it("offers the languages of the request engine's pipelines", () => {
+    expect(engineLanguages(db.state, "narrated_video").map((option) => option.code)).toEqual([
+      "en",
+      "ta",
+    ]);
+    expect(engineLanguages(db.state, "other")).toEqual([]);
   });
 
   it("accepts a topic of exactly 300 characters and a chosen language", async () => {

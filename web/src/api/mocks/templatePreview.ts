@@ -2,10 +2,15 @@ import { HttpResponse } from "msw";
 import { ruleConflict, validationFailed } from "@/api/mocks/db";
 import { defaultFormat, sampleScript } from "@/api/mocks/fixtures/sampleScripts";
 import type { MockState } from "@/api/mocks/fixtures/seed";
-import { engineErrors, nameErrors, originErrors } from "@/api/mocks/templateRules";
+import {
+  allTemplates,
+  type Errors,
+  engineErrors,
+  nameErrors,
+  originErrors,
+  servedPipelines,
+} from "@/api/mocks/templateRules";
 import type { LanguageOption, TemplatePreviewInput } from "@/api/types";
-
-type Errors = Record<string, string>;
 
 export const TOPIC_MAX_LENGTH = 300;
 const TEXT_CAPABILITY = "llm";
@@ -35,8 +40,14 @@ export function readyWriter(state: MockState): string | null {
   return ready?.provider_id ?? null;
 }
 
-function inputErrors(state: MockState, input: TemplatePreviewInput): Errors {
-  return { ...originErrors(input), ...nameErrors(input.name), ...engineErrors(state, input) };
+export function engineLanguages(state: MockState, engine: string): LanguageOption[] {
+  const types = new Set(
+    allTemplates(state)
+      .filter((template) => template.engine === engine)
+      .map((template) => template.type_id),
+  );
+  const pipeline = servedPipelines(state).find((served) => types.has(served.type_id));
+  return pipeline?.languages ?? [];
 }
 
 function formatOf(state: MockState, input: TemplatePreviewInput): string {
@@ -56,11 +67,12 @@ function firstFailure(checks: readonly (() => Errors)[]): Errors {
 }
 
 export function previewReply(state: MockState, input: TemplatePreviewInput): Response {
-  const offered = state.pipelines[0]?.languages ?? [];
+  const offered = engineLanguages(state, input.engine);
   const language = input.language || (offered[0]?.code ?? "");
   const errors = firstFailure([
     () => topicErrors(input.topic ?? ""),
-    () => inputErrors(state, input),
+    () => ({ ...originErrors(input), ...nameErrors(input.name) }),
+    () => engineErrors(state, input),
     () => languageErrors(language, offered),
   ]);
   if (Object.keys(errors).length > 0) {
