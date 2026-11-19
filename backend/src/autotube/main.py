@@ -17,7 +17,7 @@ from autotube.application.run_doctor import RunDoctor
 from autotube.composition.overrides import Overrides as Overrides
 from autotube.composition.ports import Ports
 from autotube.composition.use_cases import build_use_cases
-from autotube.domain.ports import AppSettingsRepository, SecretStore, TemplateRepository
+from autotube.domain.ports import AppSettingsRepository, EngineCatalog, SecretStore
 from autotube.infrastructure.config import RuntimeConfig, load_config
 from autotube.infrastructure.db.database import Database
 from autotube.infrastructure.db.entity_repositories import (
@@ -34,6 +34,7 @@ from autotube.infrastructure.db.settings_repositories import (
 from autotube.infrastructure.db.template_repository import SqlTemplateRepository
 from autotube.infrastructure.diagnostics.setup_defaults import setup_defaults as setup_defaults
 from autotube.infrastructure.diagnostics.system_inspector import build_system_inspector
+from autotube.infrastructure.pipelines.engine_catalog import InstalledEngineCatalog
 from autotube.infrastructure.pipelines.template_registry import TemplatePipelineRegistry
 from autotube.infrastructure.providers.catalog import build_provider_catalog
 from autotube.infrastructure.runtime.events import InProcessRunEvents
@@ -98,8 +99,10 @@ def app_settings(config: RuntimeConfig, database: Database) -> SqlAppSettingsRep
     return SqlAppSettingsRepository(database, str(config.data_dir), settings_overrides(config))
 
 
-def pipeline_registry(templates: TemplateRepository) -> TemplatePipelineRegistry:
-    return TemplatePipelineRegistry(installed_pipelines(), installed_engines(), templates)
+def pipeline_registry(
+    engines: EngineCatalog, templates: SqlTemplateRepository
+) -> TemplatePipelineRegistry:
+    return TemplatePipelineRegistry(installed_pipelines(), engines, templates)
 
 
 def build_ports(
@@ -108,6 +111,7 @@ def build_ports(
     secrets = overrides.secrets or secret_store(config)
     settings = app_settings(config, database)
     templates = SqlTemplateRepository(database)
+    engines = overrides.engines or InstalledEngineCatalog(installed_engines())
     return Ports(
         credentials=SqlCredentialRepository(database),
         channels=SqlChannelRepository(database),
@@ -125,7 +129,8 @@ def build_ports(
         files=FileRunStorage(config.data_dir),
         queue=queue,
         events=overrides.events or InProcessRunEvents(config.event_queue_size),
-        pipelines=overrides.pipelines or pipeline_registry(templates),
+        pipelines=overrides.pipelines or pipeline_registry(engines, templates),
+        engines=engines,
         catalog=overrides.catalog or build_provider_catalog(secrets, config.data_dir),
         youtube=overrides.youtube or youtube_gateway(config, settings),
         inspector=overrides.inspector or build_system_inspector(config),

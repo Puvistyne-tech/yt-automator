@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 from datetime import datetime
 
-from autotube.domain.pipeline_templates import PipelineTemplate
-from autotube.shared.errors import RuleConflict, raise_if_invalid
+from autotube.domain.automations import Automation
+from autotube.domain.pipeline_templates import PipelineTemplate, TemplateOrigin
+from autotube.domain.runs import Run
+from autotube.domain.template_usage import ensure_unused
+from autotube.shared.errors import RuleConflict
 
 NAME_MAX_LENGTH = 80
-IMMUTABLE_FIELDS = ("audience", "type_id")
+IMMUTABLE_FIELDS = ("audience", "engine", "type_id")
+DRAFT_REMEDY = "it must stay ready until they move to another pipeline and their runs finish"
 
 
 def name_errors(name: str) -> dict[str, str]:
@@ -35,6 +39,40 @@ def immutable_errors(current: PipelineTemplate, proposed: PipelineTemplate) -> d
     }
 
 
+def revision_errors(current: PipelineTemplate, proposed: PipelineTemplate) -> dict[str, str]:
+    return immutable_errors(current, proposed) | name_errors(proposed.name)
+
+
+def missing_engine_errors(engine_id: str) -> dict[str, str]:
+    return {"engine": f"engine {engine_id!r} is not installed"}
+
+
+def origin_errors(origin: TemplateOrigin) -> dict[str, str]:
+    if origin is TemplateOrigin.BUILTIN:
+        return {"origin": "built-in templates come only from installed engines"}
+    return {}
+
+
+def ensure_draft_allowed(
+    current: PipelineTemplate,
+    proposed: PipelineTemplate,
+    automations: Iterable[Automation],
+    runs: Iterable[Run],
+) -> None:
+    if current.is_ready and not proposed.is_ready:
+        ensure_unused(current.type_id, automations, runs, DRAFT_REMEDY)
+
+
+def found_template(
+    template_id: str, builtins: Iterable[PipelineTemplate], stored: PipelineTemplate | None
+) -> PipelineTemplate | None:
+    return next((t for t in builtins if t.id == template_id), stored)
+
+
+def taken_type_ids(served: Iterable[str], builtins: Iterable[PipelineTemplate]) -> set[str]:
+    return {*served, *(template.type_id for template in builtins)}
+
+
 def ensure_type_id_free(type_id: str, taken: Collection[str]) -> None:
     if type_id in taken:
         raise RuleConflict("template_type_taken", f"pipeline type {type_id!r} already exists")
@@ -50,11 +88,6 @@ def ensure_new_id(template_id: str, stored: bool) -> None:
         raise RuleConflict("template_exists", f"template {template_id!r} already exists")
 
 
-def ensure_creatable(template: PipelineTemplate, taken_type_ids: Collection[str]) -> None:
-    raise_if_invalid(name_errors(template.name))
-    ensure_type_id_free(template.type_id, taken_type_ids)
-
-
 def servable(template: PipelineTemplate, reserved_type_ids: Collection[str]) -> bool:
     return template.is_ready and template.type_id not in reserved_type_ids
 
@@ -62,12 +95,5 @@ def servable(template: PipelineTemplate, reserved_type_ids: Collection[str]) -> 
 def revised(
     current: PipelineTemplate, proposed: PipelineTemplate, now: datetime
 ) -> PipelineTemplate:
-    ensure_editable(current)
-    raise_if_invalid(immutable_errors(current, proposed) | name_errors(proposed.name))
-    kept = {
-        "id": current.id,
-        "engine": current.engine,
-        "origin": current.origin,
-        "created_at": current.created_at,
-    }
+    kept = {"id": current.id, "origin": current.origin, "created_at": current.created_at}
     return proposed.model_copy(update=kept | {"revision": current.revision + 1, "updated_at": now})

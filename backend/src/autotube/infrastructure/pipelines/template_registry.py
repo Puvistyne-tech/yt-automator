@@ -4,16 +4,20 @@ import builtins
 from collections.abc import Sequence
 
 from autotube.domain.pipeline import Pipeline
-from autotube.domain.pipeline_engine import PipelineEngine
+from autotube.domain.pipeline_engine import builtin_templates_of
 from autotube.domain.pipeline_templates import PipelineTemplate
-from autotube.domain.ports import TemplateRepository
+from autotube.domain.ports import EngineCatalog, TemplateRepository
 from autotube.domain.template_rules import servable
-from autotube.infrastructure.pipelines.pipeline_index import indexed, indexed_engines
+from autotube.infrastructure.pipelines.pipeline_index import indexed
 
 
-def builtin_pipelines(engines: Sequence[PipelineEngine]) -> dict[str, Pipeline]:
+def builtin_pipelines(engines: EngineCatalog) -> dict[str, Pipeline]:
     return indexed(
-        [engine.pipeline(template) for engine in engines for template in engine.builtin_templates()]
+        [
+            engine.pipeline(template)
+            for template in builtin_templates_of(engines.list())
+            if (engine := engines.get(template.engine)) is not None
+        ]
     )
 
 
@@ -21,10 +25,10 @@ class TemplatePipelineRegistry:
     def __init__(
         self,
         static: Sequence[Pipeline],
-        engines: Sequence[PipelineEngine],
+        engines: EngineCatalog,
         templates: TemplateRepository,
     ) -> None:
-        self.engines = indexed_engines(engines)
+        self.engines = engines
         self.builtins = builtin_pipelines(engines)
         self.static = {
             type_id: pipeline

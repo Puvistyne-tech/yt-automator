@@ -1,0 +1,72 @@
+from __future__ import annotations
+
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
+
+from autotube.domain.model_base import JsonObject
+from autotube.domain.pipeline import Pipeline
+from autotube.domain.pipeline_engine import PipelineEngine
+from autotube.domain.pipeline_templates import (
+    PipelineTemplate,
+    TemplateAudience,
+    builtin_template,
+)
+from autotube.domain.validation import validated_settings
+from tests.fixtures.fake_pipeline import FakePipeline
+
+ENGINE_ID = "sample"
+BUILTIN_TYPE = "sample_builtin"
+REFUSED_BRIEF = "refused"
+
+
+class SampleDefinition(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    brief: str = ""
+    length: Literal["short", "long"] = "short"
+
+
+def brief_problems(definition: JsonObject) -> dict[str, str]:
+    if definition.get("brief") == REFUSED_BRIEF:
+        return {"definition.brief": "this brief is refused"}
+    return {}
+
+
+@dataclass(frozen=True)
+class FakeEngine:
+    engine_id: str = ENGINE_ID
+    name: str = "Sample engine"
+    definition_model: type[BaseModel] = SampleDefinition
+    definition_ui_schema: JsonObject = field(
+        default_factory=lambda: {"brief": {"ui:widget": "textarea"}}
+    )
+
+    def blank(self, audience: TemplateAudience) -> JsonObject:
+        return {"brief": f"for a {audience.value} audience"}
+
+    def problems(self, template: PipelineTemplate) -> dict[str, str]:
+        _, errors = validated_settings(SampleDefinition, template.definition, "definition")
+        return errors | brief_problems(template.definition)
+
+    def pipeline(self, template: PipelineTemplate) -> Pipeline:
+        return FakePipeline(type_id=template.type_id)
+
+    def builtin_templates(self) -> list[PipelineTemplate]:
+        general = TemplateAudience.GENERAL
+        definition: JsonObject = {"brief": "facts", "length": "long"}
+        made = builtin_template(ENGINE_ID, BUILTIN_TYPE, "Sample", "Ships", general, definition)
+        return [made]
+
+
+class FakeEngineCatalog:
+    def __init__(self, engines: Sequence[PipelineEngine] = ()) -> None:
+        self.engines = {engine.engine_id: engine for engine in engines or (FakeEngine(),)}
+
+    def list(self) -> list[PipelineEngine]:
+        return list(self.engines.values())
+
+    def get(self, engine_id: str) -> PipelineEngine | None:
+        return self.engines.get(engine_id)

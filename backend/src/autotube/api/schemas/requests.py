@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from autotube.domain.channels import ChannelDefaults
 from autotube.domain.model_base import JsonObject
+from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.domain.run_enums import ReviewDecision
 from autotube.domain.settings import AppSettingsInput
 
@@ -31,6 +32,13 @@ class ImportRequest(RequestModel):
     channel_map: dict[str, str | None] = Field(
         default_factory=dict,
         description="Exported channel id to a connected channel id, or null to leave it out",
+    )
+
+
+class DuplicateTemplateRequest(RequestModel):
+    name: str | None = Field(default=None, description="Name of the copy; default adds (copy)")
+    audience: TemplateAudience | None = Field(
+        default=None, description="Audience of the copy; default keeps the source's"
     )
 
 

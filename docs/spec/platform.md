@@ -40,6 +40,12 @@ PipelineTemplate    id, type_id, engine, name (non-empty; see the template rules
                     audience: kids | general, status: draft | ready = draft,
                     origin: builtin | blank | duplicate | suggested, revision: int >= 1 = 1,
                     definition (object described by the engine's definition model), created_at, updated_at
+TemplateSummary     PipelineTemplate + builtin: bool + automations_using: int (automations whose
+                    pipeline_type is the template's type_id)
+TemplateInput       engine, name, description = "", audience, status = draft, origin = blank,
+                    definition (object) = {}; no other field is accepted
+EngineSummary       engine_id, name, definition_schema (JSON Schema of the definition model),
+                    definition_ui_schema (object), blank: {kids: object, general: object}
 
 Automation      id, name, description, pipeline_type, settings (object), languages: [code],
                 targets: [Target], schedule, review_policy, retry_policy, enabled, created_at,
@@ -344,7 +350,7 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   <reject_below>", and the same text is logged as a warning. A run with no score is never rejected automatically.
 - With `auto_publish`, a run publishes as soon as it is approved: at once when the score approves it, and through
   the run queue when a person approves it. It logs "Publishing automatically after approval". When publishing
-  cannot start (quota, nothing to publish, automation deleted, a publish already started), or every upload fails,
+  cannot start (quota, nothing to publish, automation deleted, pipeline missing, a publish already started), or every upload fails,
   the run stays `approved` and logs a warning "Auto-publish stopped: <reason>" ("no upload succeeded" when every
   upload failed). When some uploads succeed the run is `published` and the failed uploads keep their errors. Without `auto_publish` nothing publishes until a person
   presses Publish. A rejected run never publishes. Auto-publish uses the same upload plan as a manual publish, so
@@ -363,6 +369,9 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
 - Every upload records the effective `privacy` and `made_for_kids` it was planned with (target value, else the
   channel default; kids pipelines always force made-for-kids), skipped uploads included. Uploads stored before
   these fields existed report them as null.
+- Publishing fails closed: when the run's `pipeline_type` no longer resolves to an installed pipeline, publish is
+  refused with `pipeline_missing` (409), nothing is uploaded and the run stays `approved`
+  (`domain/publish_plan.py::require_publishing_descriptor`).
 - When every upload fails the run returns to `approved` with the error "no upload succeeded", so it can be published again.
 - On startup, interrupted runs are recovered through the normal transitions, each emitting a `status` event:
   a `running` run becomes `failed` ("interrupted: the app stopped while the run was running") and its running
@@ -518,12 +527,14 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
 missing or `change` returns None; the read and the write happen in one transaction;
 delete_if(run_id, check) -> the deleted run, or None when it is missing or `check` refuses it, in one transaction),
 `ChannelRepository` (get, find_by_youtube_id, list, save, delete),
-`TemplateRepository` (get, find_by_type_id, list ordered by `created_at`, add, update, delete; add refuses a
+`TemplateRepository` (get, find_by_type_id, type_id_of(template_id) -> the stored row's type id even when its
+payload no longer decodes, or None, list ordered by `created_at`, add, update, delete; add refuses a
 stored id with `RuleConflict("template_exists")`; add and update refuse a type id held by another template with
-`RuleConflict("template_type_taken")`; list and find_by_type_id skip stored rows that no longer decode, so one
+`RuleConflict("template_type_taken")`; get, list and find_by_type_id skip stored rows that no longer decode, so one
 bad row never breaks `GET /pipelines`), `ProviderConfigRepository` (list, save_all),
 `AppSettingsRepository` (get, save), `QuotaLedger` (used_today(credential_id, day), record(credential_id, units, day)),
 `SecretStore` (get, set, delete, has), `Clock` (now), `IdGenerator` (new), `PipelineRegistry` (list, get),
+`EngineCatalog` (list, get(engine_id) -> PipelineEngine or None; the installed template engines),
 `ProviderCatalog` (descriptors, secrets, option_errors(configs) -> {path: message},
 resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
 exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
@@ -583,8 +594,9 @@ class PipelineEngine(Protocol):
 - `problems` maps a field path (`definition.<path>`, or `engine` for a template of another engine) to a message.
 - `type_id` is fixed at creation: `t_<id>` for a user template, the engine's own id for a built-in. A rename never
   changes it.
-- Rules (`domain/template_rules.py`): built-ins are read-only (`template_builtin`); audience and type id cannot
-  change on update; each update increments `revision` and keeps id, engine, origin and `created_at`; on creation
+- Rules (`domain/template_rules.py`): built-ins are read-only (`template_builtin`); audience, engine and type id
+  cannot change on update (`revision_errors`); `revised` increments `revision` and keeps id, origin and
+  `created_at` without re-checking; on creation
   and on every update the name must not be blank and is at most 80 characters, measured after trimming
   surrounding spaces; a type id already served is refused (`template_type_taken`).
 - Built-ins are packaged with their engine (origin `builtin`, status `ready`, revision 1) and never stored.
@@ -594,7 +606,43 @@ class PipelineEngine(Protocol):
   so its descriptor is unchanged. A stored template is served by the same pipeline under the template's
   `type_id` and `name`. Its definition model is still empty.
 
-`infrastructure/pipelines/template_registry.py` holds `TemplatePipelineRegistry(static, engines, templates)`, the
+Template use cases (`application/*_template*.py`, sharing `application/template_lookup.py`) reach engines only
+through `EngineCatalog`, which the composition root builds from `installed_engines()`
+(`infrastructure/pipelines/engine_catalog.py`). They treat `definition` as opaque and validate it only through
+`engine.problems(template)`.
+
+- A template id is looked up among the engines' built-ins first (a built-in's id is its type id), then among
+  stored templates (`found_template`). An unknown id, or a stored row that no longer decodes, is
+  `template_not_found`, except for delete. The taken type ids are the served pipeline types plus every built-in's
+  (`taken_type_ids`). The built-ins of all engines come from `domain/pipeline_engine.py::builtin_templates_of`,
+  which the template registry uses too.
+- A template is in use (`domain/template_usage.py`) while any automation's `pipeline_type` is its type id,
+  enabled or disabled, or while any open run has it as `pipeline_type`. A run is open when it is queued, running,
+  publishing, awaiting review or approved, or failed with a pending automatic retry (`retry_at` set).
+  `template_in_use` names the automations in name order and the open runs in id order.
+- List returns every engine's built-ins, then the stored templates by `created_at`, each as a TemplateSummary.
+- Create assigns a fresh id and type id `t_<id>`, revision 1 and `created_at = updated_at = now`, and stores the
+  name trimmed. Field errors (400), each checked once: `origin: builtin` and the name rules (`input_errors`),
+  then an engine that is not installed (`engine`) or the engine's `problems`. A type id already served or built in is
+  `template_type_taken` (409).
+- Update replaces name, description, audience, status and definition. A built-in is refused first with
+  `template_builtin` (409). Field errors (400), reported together: an audience or engine change, the name rules,
+  the engine's `problems` (or `engine` when it is no longer installed); the `origin` sent is ignored and the
+  stored origin kept, and a `type_id` in the body is refused by the request schema. Setting a `ready` template to
+  `draft` while it is in use is `template_in_use` (409); otherwise any status change is allowed. The revision then
+  increments through `revised`.
+- Delete refuses a built-in with `template_builtin` and a template in use with `template_in_use`
+  (`domain/deletion_rules.py::ensure_template_deletable`). A stored row that no longer decodes is deleted through
+  its stored type id with the same in-use check, without decoding. The in-use check and the delete are separate
+  reads, so a run started between them is not caught.
+- Duplicate works for built-ins and stored templates. The copy has a fresh id and type id, origin `duplicate`,
+  status `draft`, revision 1, the source's engine, description and definition, the requested audience or the
+  source's, and the requested name or the source name shortened to fit with `COPY_NAME_SUFFIX` " (copy)"
+  appended (`domain/copy_names.py`, shared with duplicating an automation). It is validated once: the name rules
+  and the engine's `problems` together (400), then a free type id (409 `template_type_taken`).
+
+`infrastructure/pipelines/template_registry.py` holds `TemplatePipelineRegistry(static, engines: EngineCatalog,
+templates)`, the
 `PipelineRegistry` adapter the composition root builds from the index and the `TemplateRepository`:
 
 - `list()` returns the static pipelines whose type id no engine built-in serves, then every engine's built-ins,
@@ -775,7 +823,7 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | POST `/runs/{id}/retry` | `{from_stage?}` | Run |
 | POST `/runs/{id}/cancel` | | Run |
 | POST `/runs/{id}/review` | `{decision, notes?}` | Run |
-| POST `/runs/{id}/publish` | | Run |
+| POST `/runs/{id}/publish` | | Run; 409 `pipeline_missing` when the run's pipeline is no longer installed |
 | DELETE `/runs/{id}` | | 204 |
 | GET `/runs/{id}/artifacts/{artifact_id}` | | the file, with range support; 416 for an unsatisfiable range, 404 `artifact_file_not_found` when the file is gone |
 | GET `/events` | | server-sent events: first `: connected`, then each `data:` a RunEvent, with `: heartbeat` comments |
@@ -789,6 +837,13 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | GET `/storage` | | StorageReport |
 | GET `/storage/cleanup` | | CleanupReport with `dry_run: true`; removes nothing |
 | POST `/storage/cleanup` | | CleanupReport with `dry_run: false` and what was removed |
+| GET `/template-engines` | | `[EngineSummary]` |
+| GET `/templates` | | `[TemplateSummary]`, built-ins first |
+| GET `/templates/{id}` | | TemplateSummary; a built-in's id is its type id; 404 `template_not_found` |
+| POST `/templates` | `TemplateInput` | TemplateSummary, 201; 400 with field errors; 409 `template_type_taken` |
+| PUT `/templates/{id}` | `TemplateInput` | TemplateSummary; 409 `template_builtin`; 400 for an audience, engine or type id change and for field errors; 409 `template_in_use` for ready to draft while automations or open runs use it |
+| DELETE `/templates/{id}` | | 204, also for a stored row that no longer decodes; 404 `template_not_found`; 409 `template_builtin`; 409 `template_in_use` naming the automations and open runs |
+| POST `/templates/{id}/duplicate` | optional `{name?, audience?}` | TemplateSummary, 201; 400 with field errors; 404 `template_not_found`; 409 `template_type_taken` |
 
 `AutomationInput` is Automation without `id`, timestamps and derived fields. Target `id` is optional on input.
 

@@ -10,12 +10,15 @@ from autotube.application.clean_up_storage import CleanUpStorage
 from autotube.application.complete_channel_connect import CompleteChannelConnect
 from autotube.application.create_automation import CreateAutomation
 from autotube.application.create_credential import CreateCredential
+from autotube.application.create_template import CreateTemplate
 from autotube.application.delete_automation import DeleteAutomation
 from autotube.application.delete_channel import DeleteChannel
 from autotube.application.delete_credential import DeleteCredential
 from autotube.application.delete_run import DeleteRun
 from autotube.application.delete_secret import DeleteSecret
+from autotube.application.delete_template import DeleteTemplate
 from autotube.application.duplicate_automation import DuplicateAutomation
+from autotube.application.duplicate_template import DuplicateTemplate
 from autotube.application.execute_run import ExecuteRun
 from autotube.application.export_automation import ExportAutomation
 from autotube.application.get_automation import GetAutomation
@@ -25,6 +28,7 @@ from autotube.application.get_providers import GetProviders
 from autotube.application.get_run import GetRun
 from autotube.application.get_settings import GetSettings
 from autotube.application.get_storage import GetStorage
+from autotube.application.get_template import GetTemplate
 from autotube.application.import_automation import ImportAutomation
 from autotube.application.list_automations import ListAutomations
 from autotube.application.list_channel_playlists import ListChannelPlaylists
@@ -33,6 +37,8 @@ from autotube.application.list_credentials import ListCredentials
 from autotube.application.list_pipelines import ListPipelines
 from autotube.application.list_runs import ListRuns
 from autotube.application.list_secrets import ListSecrets
+from autotube.application.list_template_engines import ListTemplateEngines
+from autotube.application.list_templates import ListTemplates
 from autotube.application.open_run_artifact import OpenRunArtifact
 from autotube.application.preview_cleanup import PreviewCleanup
 from autotube.application.publish_run import PublishRun
@@ -51,6 +57,7 @@ from autotube.application.start_run import StartRun
 from autotube.application.update_automation import UpdateAutomation
 from autotube.application.update_channel_defaults import UpdateChannelDefaults
 from autotube.application.update_credential import UpdateCredential
+from autotube.application.update_template import UpdateTemplate
 from autotube.domain.ports import RunEvents
 
 
@@ -129,12 +136,24 @@ class StorageUseCases:
 
 
 @dataclass(frozen=True)
+class TemplateUseCases:
+    list_engines: ListTemplateEngines
+    list_templates: ListTemplates
+    get: GetTemplate
+    create: CreateTemplate
+    update: UpdateTemplate
+    delete: DeleteTemplate
+    duplicate: DuplicateTemplate
+
+
+@dataclass(frozen=True)
 class UseCases:
     channels: ChannelUseCases
     automations: AutomationUseCases
     runs: RunUseCases
     config: ConfigUseCases
     storage: StorageUseCases
+    templates: TemplateUseCases
     events: RunEvents
 
 

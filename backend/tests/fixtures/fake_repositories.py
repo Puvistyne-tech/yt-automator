@@ -59,6 +59,18 @@ class InMemoryChannels(InMemoryStore[Channel]):
 
 
 class InMemoryTemplates(InMemoryStore[PipelineTemplate]):
+    def __init__(self) -> None:
+        super().__init__()
+        self.undecodable: dict[str, str] = {}
+
+    def type_id_of(self, template_id: str) -> str | None:
+        stored = self.items.get(template_id)
+        return stored.type_id if stored is not None else self.undecodable.get(template_id)
+
+    def delete(self, item_id: str) -> None:
+        super().delete(item_id)
+        self.undecodable.pop(item_id, None)
+
     def find_by_type_id(self, type_id: str) -> PipelineTemplate | None:
         return next((t for t in self.items.values() if t.type_id == type_id), None)
 
