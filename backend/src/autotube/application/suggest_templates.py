@@ -9,7 +9,6 @@ from autotube.domain.pipeline_engine import PipelineEngine
 from autotube.domain.ports import Clock, ProviderCatalog, ProviderConfigRepository
 from autotube.domain.suggestion_screen import screened_suggestions, suggestion_input
 from autotube.domain.template_inputs import TemplateInput, input_errors, new_template
-from autotube.domain.template_rules import missing_engine_errors
 from autotube.domain.template_suggestions import (
     SuggestionBrief,
     SuggestionDrafts,
@@ -19,7 +18,7 @@ from autotube.domain.template_suggestions import (
     TemplateSuggestions,
 )
 from autotube.domain.trends import TrendQuery, audience_trends
-from autotube.shared.errors import RuleConflict, ValidationFailed
+from autotube.shared.errors import RuleConflict
 
 SUGGESTIONS_UNAVAILABLE = "suggestions_unavailable"
 SUGGESTION_TEMPLATE_ID = "suggestion"
@@ -39,7 +38,7 @@ class SuggestTemplates:
     policy: SuggestionPolicy = field(default_factory=SuggestionPolicy)
 
     def execute(self, request: SuggestionRequest) -> TemplateSuggestions:
-        engine = self.engine(request.engine)
+        engine = self.lookup.engine_by_id(request.engine)
         query = TrendQuery(
             region=request.region, category=request.category, limit=self.policy.trend_limit
         )
@@ -56,12 +55,6 @@ class SuggestTemplates:
         if not kept:
             raise RuleConflict(SUGGESTIONS_UNAVAILABLE, NOTHING_USABLE)
         return TemplateSuggestions(suggestions=kept, source=report.origin, dropped=dropped)
-
-    def engine(self, engine_id: str) -> PipelineEngine:
-        engine = self.lookup.engines.get(engine_id)
-        if engine is None:
-            raise ValidationFailed(missing_engine_errors(engine_id))
-        return engine
 
     def drafts(self, engine: PipelineEngine, brief: SuggestionBrief) -> SuggestionDrafts:
         providers = self.catalog.resolver(self.provider_configs.list())
