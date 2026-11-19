@@ -67,6 +67,26 @@ function updated(current: PipelineTemplate, input: TemplateInput) {
   return reply(next);
 }
 
+function withEditable(
+  id: unknown,
+  act: (template: PipelineTemplate) => Response | Promise<Response>,
+) {
+  const current = findTemplate(id);
+  if (current === undefined) {
+    return notFound("template", id);
+  }
+  return current.origin === "builtin" ? builtinConflict(current) : act(current);
+}
+
+function removed(current: PipelineTemplate) {
+  const conflict = inUseConflict(db.state, current.type_id, DELETE_REMEDY);
+  if (conflict !== null) {
+    return conflict;
+  }
+  db.state.templates = db.state.templates.filter((t) => t.id !== current.id);
+  return noContent();
+}
+
 function copyName(name: string): string {
   return `${name.slice(0, 80 - COPY_SUFFIX.length)}${COPY_SUFFIX}`;
 }
@@ -88,31 +108,12 @@ export const templateHandlers = [
     }
     return created({ origin: "blank", ...input, name: input.name.trim() });
   }),
-  http.put("/api/templates/:id", async ({ params, request }) => {
-    const current = findTemplate(params.id);
-    if (current === undefined) {
-      return notFound("template", params.id);
-    }
-    if (current.origin === "builtin") {
-      return builtinConflict(current);
-    }
-    return updated(current, (await request.json()) as TemplateInput);
-  }),
-  http.delete("/api/templates/:id", ({ params }) => {
-    const current = findTemplate(params.id);
-    if (current === undefined) {
-      return notFound("template", params.id);
-    }
-    if (current.origin === "builtin") {
-      return builtinConflict(current);
-    }
-    const conflict = inUseConflict(db.state, current.type_id, DELETE_REMEDY);
-    db.state.templates =
-      conflict === null
-        ? db.state.templates.filter((t) => t.id !== current.id)
-        : db.state.templates;
-    return conflict ?? noContent();
-  }),
+  http.put("/api/templates/:id", ({ params, request }) =>
+    withEditable(params.id, async (current) =>
+      updated(current, (await request.json()) as TemplateInput),
+    ),
+  ),
+  http.delete("/api/templates/:id", ({ params }) => withEditable(params.id, removed)),
   http.post("/api/templates/:id/duplicate", async ({ params, request }) => {
     const source = findTemplate(params.id);
     if (source === undefined) {
