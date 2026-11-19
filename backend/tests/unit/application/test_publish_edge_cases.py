@@ -6,7 +6,7 @@ from autotube.domain.channels import ChannelDefaults
 from autotube.domain.publish_plan import plan_uploads
 from autotube.domain.run_enums import RunStatus, UploadStatus
 from autotube.domain.youtube import ChannelAuth, UploadedVideo, VideoUpload
-from autotube.shared.errors import NotFound
+from autotube.shared.errors import NotFound, RuleConflict
 from tests.fixtures.builders import add_channel, add_credential, target_input
 from tests.fixtures.fake_pipeline import FakePipelineRegistry
 from tests.fixtures.harness import Harness
@@ -26,30 +26,22 @@ def test_upload_error_without_message_is_named_by_its_class(
     assert upload.status is UploadStatus.FAILED and upload.error == "TimeoutError"
 
 
-@pytest.mark.parametrize(
-    ("pipeline_type", "target_kids", "channel_kids", "expected"),
-    [
-        ("fake_kids", None, False, True),
-        ("fake", None, True, True),
-        ("fake", False, True, False),
-        ("fake", None, False, False),
-    ],
-)
-def test_publish_after_pipeline_is_uninstalled(
-    harness: Harness,
-    pipeline_type: str,
-    target_kids: bool | None,
-    channel_kids: bool,
-    expected: bool,
+@pytest.mark.parametrize("pipeline_type", ["fake_kids", "fake"])
+def test_publish_with_an_unresolvable_pipeline_is_refused(
+    harness: Harness, pipeline_type: str
 ) -> None:
     add_credential(harness)
-    add_channel(harness, defaults=ChannelDefaults(made_for_kids=channel_kids))
+    add_channel(harness, defaults=ChannelDefaults(made_for_kids=False))
     run = approved_run(
-        harness, pipeline_type=pipeline_type, targets=(target_input(made_for_kids=target_kids),)
+        harness, pipeline_type=pipeline_type, targets=(target_input(made_for_kids=None),)
     )
     harness.pipelines = FakePipelineRegistry([])
-    assert publish_run(harness).execute(run.id).status is RunStatus.PUBLISHED
-    assert harness.youtube.uploads[0].made_for_kids is expected
+    with pytest.raises(RuleConflict, match=pipeline_type) as raised:
+        publish_run(harness).execute(run.id)
+    assert raised.value.code == "pipeline_missing"
+    assert harness.youtube.uploads == []
+    stored = harness.runs.get(run.id)
+    assert stored is not None and stored.status is RunStatus.APPROVED
 
 
 def test_publish_with_deleted_credential_is_not_found(harness: Harness) -> None:
@@ -67,9 +59,9 @@ def test_caption_language_falls_back_to_the_plan_language(
     run = approved_run(harness, languages=("en", "ta"), targets=(target_input(language="ta"),))
     automation = harness.automations.get(run.automation_id)
     assert automation is not None
-    (plan,) = plan_uploads(
-        run, automation.targets, {"chan-1": harness.channels.list()[0]}, None, harness.clock.now()
-    )
+    channels = {"chan-1": harness.channels.list()[0]}
+    descriptor = harness.pipeline.descriptor
+    (plan,) = plan_uploads(run, automation.targets, channels, descriptor, harness.clock.now())
     track = next(a for a in run.artifacts if a.filename == "en.srt")
     plan = plan.model_copy(
         update={"captions": (track.model_copy(update={"language": track_language}),)}

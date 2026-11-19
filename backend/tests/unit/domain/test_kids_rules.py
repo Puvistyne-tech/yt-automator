@@ -41,10 +41,6 @@ def test_effective_made_for_kids(
     assert effective_made_for_kids(target, defaults, descriptor) is expected
 
 
-def test_missing_descriptor_falls_back_to_target_and_channel() -> None:
-    assert effective_made_for_kids(target_input(), ChannelDefaults(made_for_kids=True), None)
-
-
 @pytest.mark.parametrize(
     ("target_value", "expected"),
     [
