@@ -14,13 +14,7 @@ from autotube.pipelines.narrated_video.story.bundled_fit import (
 )
 from tests.fixtures.kids_data import REFRAIN_EN, StageRig, quick_settings
 from tests.fixtures.kids_fakes import FakeProviders, failing_writer
-
-MAC_STORY = {
-    "target_duration_seconds": 60,
-    "duration_tolerance_seconds": 20,
-    "scene_count_min": 4,
-    "scene_count_max": 6,
-}
+from tests.fixtures.mac_runs import mac_settings
 
 
 def by_id(story_id: str) -> BundledStory:
@@ -50,7 +44,7 @@ def test_the_fitting_stories_are_preferred() -> None:
 
 
 def test_without_a_fit_the_closest_scene_count_is_used_and_named() -> None:
-    wish = length_wish(quick_settings(story=MAC_STORY), "en", REFRAIN_EN)
+    wish = length_wish(mac_settings(), "en", REFRAIN_EN)
     shorter = cut(by_id("golden_mango"), 7)
     assert length_pool([*bundled_stories(), shorter], wish) == [shorter]
     assert length_pool(bundled_stories(), wish) == bundled_stories()
@@ -60,7 +54,7 @@ def test_without_a_fit_the_closest_scene_count_is_used_and_named() -> None:
 
 
 def test_the_stage_warns_when_the_fallback_ignores_the_length(tmp_path: Path) -> None:
-    settings = quick_settings(story=MAC_STORY)
+    settings = mac_settings()
     rig = StageRig(tmp_path, settings=settings, providers=FakeProviders(writer=failing_writer()))
     assert rig.run(StoryStage()).provider == "bundled"
     warnings = rig.book.warnings()

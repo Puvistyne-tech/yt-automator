@@ -9,14 +9,14 @@ from autotube.pipelines.narrated_video.story.answer_schema import draft_schema, 
 from autotube.pipelines.narrated_video.story.model import StoryDraft, StoryText
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
 from tests.fixtures.explainer_data import TAKEAWAY_ENDING, explainer_draft, explainer_settings
-from tests.fixtures.kids_data import draft_dict, quick_settings, story
+from tests.fixtures.kids_data import draft_dict, story
 from tests.fixtures.list_data import list_settings, list_story
+from tests.fixtures.mac_runs import mac_settings
 from tests.fixtures.quiz_data import quiz_settings, quiz_story
 from tests.fixtures.schema_fit import misfits
 from tests.fixtures.shaped_scripts import shaped_draft
 from tests.fixtures.template_settings import GENERAL, KIDS
 
-MAC_STORY = {"scene_count_min": 4, "scene_count_max": 6}
 CASTLESS = {
     "list": list_settings(GENERAL),
     "countdown": list_settings(GENERAL, "countdown"),
@@ -33,7 +33,7 @@ def moral_of(schema: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
 
 
 def test_a_kids_story_must_send_a_moral_and_its_scene_range() -> None:
-    schema = draft_schema(quick_settings(story=MAC_STORY))
+    schema = draft_schema(mac_settings())
     assert moral_of(schema) == (True, {"type": "string", "minLength": 1, "title": "Moral"})
     scenes = schema["properties"]["scenes"]
     assert (scenes["minItems"], scenes["maxItems"]) == (4, 6) and "scenes" in schema["required"]
@@ -42,7 +42,7 @@ def test_a_kids_story_must_send_a_moral_and_its_scene_range() -> None:
 
 
 def test_the_story_request_and_translation_send_the_shaped_schemas() -> None:
-    settings = quick_settings(story=MAC_STORY)
+    settings = mac_settings()
     assert story_request(settings, "sharing", "en").json_schema == draft_schema(settings)
     request = translation_request(settings, story(), "en", "ta")
     assert request.json_schema == text_schema(settings, story())

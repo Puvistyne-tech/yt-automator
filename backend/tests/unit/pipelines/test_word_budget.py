@@ -16,17 +16,12 @@ from autotube.pipelines.narrated_video.structures.word_budget import (
     word_budget,
 )
 from tests.fixtures.builtin_catalog import BUILTIN_IDS
-from tests.fixtures.kids_data import quick_settings, story
+from tests.fixtures.kids_data import story
+from tests.fixtures.mac_runs import mac_settings
 from tests.fixtures.template_settings import GENERAL, model_for
 
 ENGINE = NarratedVideoEngine()
 BUILTINS = {item.id: item for item in ENGINE.builtin_templates()}
-MAC_STORY = {
-    "target_duration_seconds": 60,
-    "duration_tolerance_seconds": 20,
-    "scene_count_min": 4,
-    "scene_count_max": 6,
-}
 LANGUAGES = ["en", "ta"]
 
 
@@ -50,9 +45,9 @@ def test_word_range_rounds_inwards() -> None:
 
 
 def test_the_mac_story_budget_fits_the_duration_gate() -> None:
-    budget = word_budget(quick_settings(story=MAC_STORY), "en")
+    budget = word_budget(mac_settings(), "en")
     assert budget == WordBudget(total=(80, 160), target=120, per_scene=(20, 26))
-    prompt = story_request(quick_settings(story=MAC_STORY), "sharing", "en").prompt
+    prompt = story_request(mac_settings(), "sharing", "en").prompt
     assert "between 20 and 26 words, written in English" in prompt
     assert "between 80 and 160 words in total, about 120" in prompt
 

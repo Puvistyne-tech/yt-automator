@@ -11,23 +11,14 @@ from autotube.pipelines.narrated_video.story.attempts import attempt_record
 from autotube.pipelines.narrated_video.story.authoring import StoryAuthor
 from tests.fixtures.kids_data import REFRAIN_EN, StageRig, is_translation, meta_of, quick_settings
 from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, LogBook, as_json, scripted_writer
+from tests.fixtures.mac_runs import mac_settings
 from tests.fixtures.script_builders import scripted_draft
 from tests.fixtures.shaped_scripts import narration
 
-MAC_STORY = {
-    "target_duration_seconds": 60,
-    "duration_tolerance_seconds": 20,
-    "scene_count_min": 4,
-    "scene_count_max": 6,
-}
 MORAL = "Sharing makes everyone happier."
 SCENES = 5
 REFRAIN_TA = quick_settings().series.refrain.ta
 MORAL_TA = "பகிர்ந்தால் எல்லோருக்கும் மகிழ்ச்சி."
-
-
-def mac_settings(**story: Any) -> Any:
-    return quick_settings(story={**MAC_STORY, **story})
 
 
 def draft(words_per_scene: int, moral: str) -> dict[str, Any]:
