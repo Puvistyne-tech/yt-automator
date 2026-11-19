@@ -15,7 +15,7 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.styles.resolve import resolve_style
 from autotube.pipelines.narrated_video.text.scripts import script_language
-from autotube.pipelines.narrated_video.text.templates import filled_template
+from autotube.pipelines.narrated_video.text.templates import EMPTY, render_template
 
 CENTRED = 0.5
 INTRO_CARD = "intro"
@@ -44,7 +44,9 @@ def lettering_for(
 
 
 def template_lines(template: LocalizedText, settings: KidsStorySettings, story: Story) -> list[str]:
-    text = filled_template(template.for_language(story.language), template_values(story, settings))
+    text = render_template(
+        template.for_language(story.language), template_values(story, settings), EMPTY
+    )
     return [line.strip() for line in text.split("\n") if line.strip()]
 
 

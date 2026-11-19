@@ -16,7 +16,7 @@ from autotube.pipelines.narrated_video.structures.registry import metadata_place
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.settings_model import template_defaults
 from autotube.pipelines.narrated_video.template.text_leaves import text_leaves
-from autotube.pipelines.narrated_video.text.templates import filled_template, unknown_placeholders
+from autotube.pipelines.narrated_video.text.templates import render_template, unknown_placeholders
 from tests.fixtures.explainer_data import explainer_settings, explainer_story
 from tests.fixtures.template_records import template
 from tests.fixtures.template_settings import GENERAL, KIDS, model_for
@@ -29,8 +29,9 @@ def problems(audience: TemplateAudience = GENERAL, **definition: Any) -> dict[st
     return NarratedVideoEngine().problems(template(audience=audience, definition=definition))
 
 
-def test_filled_template_empties_every_unknown_placeholder() -> None:
-    assert filled_template("{title} - {nope} {", {"title": "Hi"}) == "Hi -  {"
+def test_render_template_can_empty_every_unknown_placeholder() -> None:
+    assert render_template("{title} - {nope} {", {"title": "Hi"}, "") == "Hi -  {"
+    assert render_template("{nope}", {}, "?") == "?"
 
 
 @pytest.mark.parametrize("audience", [KIDS, GENERAL])
