@@ -1,0 +1,164 @@
+{
+  "theme": "the first lighthouses",
+  "cast": [],
+  "setting": "an ancient harbour on a rocky coast",
+  "mood": "calm and stately",
+  "thumbnail": "a tall ancient stone lighthouse with a fire at its top above a dark sea",
+  "short_scenes": [0, 4, 13],
+  "text": {
+    "en": {
+      "title": "How the First Lighthouses Lit the Way",
+      "moral": "A steady light can guide strangers safely home.",
+      "hook_line": "How did sailors find their way home before radio?",
+      "questions": ["Why did the first lights move from beaches to towers?", "Where does the word for lighthouse in some languages come from?"]
+    },
+    "ta": {
+      "title": "முதல் கலங்கரை விளக்கங்கள் வழிகாட்டிய கதை",
+      "moral": "ஒரு நிலையான ஒளி அந்நியர்களையும் பாதுகாப்பாக வீடு சேர்க்கும்.",
+      "hook_line": "வானொலிக்கு முன்பு மாலுமிகள் எப்படி வழி கண்டார்கள்?",
+      "questions": ["முதல் விளக்குகள் ஏன் கோபுரங்களுக்கு மாறின?", "கலங்கரை விளக்கத்துக்கான சொல் எங்கிருந்து வந்தது?"]
+    }
+  },
+  "scenes": [
+    {
+      "visual": "a wooden sailing ship on a dark sea with a faint light on a distant shore",
+      "action": "The ship rocks gently on the dark waves.",
+      "en": {
+        "narration": "How did sailors find their way home in the dark, long before radio, radar or satellites? For thousands of years, the answer was a light on the shore. This is the story of the first lighthouses, and how they changed travel by sea."
+      },
+      "ta": {
+        "narration": "வானொலியும் செயற்கைக்கோளும் இல்லாத காலத்தில், இருட்டில் மாலுமிகள் எப்படி வீடு திரும்பினார்கள்? கரையில் எரிந்த ஒரு விளக்குதான் விடை. முதல் கலங்கரை விளக்கங்களின் கதை இது."
+      }
+    },
+    {
+      "visual": "jagged rocks hidden just under moonlit waves near a cliff",
+      "action": "Waves break white over the hidden rocks.",
+      "en": {
+        "narration": "Imagine the sea at night three thousand years ago. There are no maps of the coast you can trust, and rocks hide just under the waves. A ship that misses its harbour by a little can be lost by morning."
+      },
+      "ta": {
+        "narration": "மூவாயிரம் ஆண்டுகளுக்கு முன்பு இரவுக் கடலை நினைத்துப் பாருங்கள். நம்பகமான வரைபடங்கள் இல்லை. அலைகளுக்குக் கீழே பாறைகள் மறைந்திருந்தன."
+      }
+    },
+    {
+      "visual": "a bonfire burning on a hilltop above a small harbour at night",
+      "action": "Sparks rise from the hilltop fire.",
+      "en": {
+        "narration": "The earliest guides were simple fires. People living near busy harbours lit them on hilltops and beaches so that crews could see where the land began. Ancient poems describe these fires, burning through the night for anyone at sea."
+      },
+      "ta": {
+        "narration": "முதல் வழிகாட்டிகள் எளிய நெருப்புதான். துறைமுகங்களுக்கு அருகில் வாழ்ந்தவர்கள் குன்றுகளிலும் கடற்கரைகளிலும் இரவு முழுவதும் நெருப்பு மூட்டினார்கள்."
+      }
+    },
+    {
+      "visual": "builders raising a stone tower beside the sea",
+      "action": "A large stone block is lifted into place.",
+      "en": {
+        "narration": "But a fire on a beach can only be seen from a short distance. To reach farther, the light had to go higher. So builders began to raise towers, placing the flame at the very top where it could shine over the horizon."
+      },
+      "ta": {
+        "narration": "கடற்கரை நெருப்பை அருகில் இருந்து மட்டுமே பார்க்க முடியும். தொலைவுக்குத் தெரிய ஒளி உயரத்தில் இருக்க வேண்டும். அதனால் கோபுரங்கள் கட்டப்பட்டன."
+      }
+    },
+    {
+      "visual": "a huge white stone lighthouse on a small island at the mouth of a harbour",
+      "action": "The camera tilts up the tall tower.",
+      "en": {
+        "narration": "The most famous early tower stood on the island of Pharos, at the harbour of Alexandria in Egypt. Finished more than two thousand years ago, it rose well over one hundred metres, taller than almost any building of its time."
+      },
+      "ta": {
+        "narration": "எகிப்தின் அலெக்சாண்ட்ரியா துறைமுகத்தில், ஃபாரோஸ் தீவில் மிகப் புகழ்பெற்ற கோபுரம் இருந்தது. அது நூறு மீட்டருக்கும் மேல் உயரமாக இருந்தது."
+      }
+    },
+    {
+      "visual": "a great fire at the top of the tower reflected by polished metal mirrors",
+      "action": "Light flashes off the bronze mirrors.",
+      "en": {
+        "narration": "Writers of the time said its light could be seen from far out at sea. By day, a column of smoke marked the spot. By night, a great fire burned at the top, and some say polished metal mirrors helped to throw the light outward."
+      },
+      "ta": {
+        "narration": "பகலில் புகை அந்த இடத்தைக் காட்டியது. இரவில் உச்சியில் பெரிய நெருப்பு எரிந்தது. பளபளப்பான உலோகக் கண்ணாடிகள் ஒளியைத் தொலைவுக்கு அனுப்பியதாகச் சிலர் கூறுகிறார்கள்."
+      }
+    },
+    {
+      "visual": "keepers carrying bundles of wood up a winding stone stairway",
+      "action": "A keeper climbs the stairs with a heavy bundle.",
+      "en": {
+        "narration": "Keeping that fire alive was hard, endless work. Fuel had to be carried up the tower every day, whether it was wood, oil or other materials. Keepers tended the flame through storms, because one dark night could mean a ship on the rocks."
+      },
+      "ta": {
+        "narration": "அந்த நெருப்பை அணையாமல் காப்பது கடினமான வேலை. ஒவ்வொரு நாளும் எரிபொருளை மேலே சுமந்து செல்ல வேண்டும். புயலிலும் காவலர்கள் விளக்கைக் காத்தார்கள்."
+      }
+    },
+    {
+      "visual": "a map of an ancient sea with small towers marked along its coasts",
+      "action": "Small lights appear one by one along the coast.",
+      "en": {
+        "narration": "The idea spread along the trade routes. Across the Mediterranean, towns built their own towers at harbour mouths and dangerous headlands. Some of these towers were so useful that they stayed in service for many centuries after they were built."
+      },
+      "ta": {
+        "narration": "இந்த எண்ணம் வணிகப் பாதைகள் வழியே பரவியது. மத்தியதரைக் கடல் முழுவதும் துறைமுக வாயில்களில் கோபுரங்கள் எழுந்தன."
+      }
+    },
+    {
+      "visual": "a square stone lighthouse on a green headland above a grey northern sea",
+      "action": "The lighthouse beam sweeps over the water.",
+      "en": {
+        "narration": "One Roman tower on the coast of northern Spain is still standing today. It has been rebuilt and repaired over the years, but its core is nearly two thousand years old, and it still guides ships into the harbour at night."
+      },
+      "ta": {
+        "narration": "வடக்கு ஸ்பெயின் கடற்கரையில் உள்ள ஒரு ரோமானியக் கோபுரம் இன்றும் நிற்கிறது. அதன் மையப் பகுதி கிட்டத்தட்ட இரண்டாயிரம் ஆண்டுகள் பழமையானது."
+      }
+    },
+    {
+      "visual": "a busy ancient port full of ships unloading goods at dusk",
+      "action": "Sailors roll barrels down a wooden ramp.",
+      "en": {
+        "narration": "Over time, lighthouses changed how people traded. Ships could sail along coasts with more confidence, arrive later in the day and leave earlier. Busy ports grew busier, and goods, food and ideas moved more freely from one shore to another."
+      },
+      "ta": {
+        "narration": "கலங்கரை விளக்கங்கள் வணிகத்தை மாற்றின. கப்பல்கள் நம்பிக்கையுடன் பயணித்தன. துறைமுகங்கள் வளர்ந்தன, பொருட்களும் எண்ணங்களும் எளிதாகப் பரவின."
+      }
+    },
+    {
+      "visual": "huge carved stone blocks lying on the sandy floor of a harbour",
+      "action": "Sunlight ripples over the stones underwater.",
+      "en": {
+        "narration": "The tower at Pharos did not last forever. After many centuries, a series of strong earthquakes damaged it badly, and its last stones eventually fell. Much later, divers found huge blocks in the harbour that may once have been part of it."
+      },
+      "ta": {
+        "narration": "ஃபாரோஸ் கோபுரம் என்றென்றும் நிலைக்கவில்லை. பல நிலநடுக்கங்கள் அதைச் சேதப்படுத்தின. பின்னர் துறைமுகத்தில் பெரிய கற்களை முக்குளிப்பவர்கள் கண்டெடுத்தார்கள்."
+      }
+    },
+    {
+      "visual": "an old open book showing a drawing of the island tower",
+      "action": "The pages of the old book turn slowly.",
+      "en": {
+        "narration": "Yet its name lived on. In several languages, the word for a lighthouse still comes from Pharos. Each time someone uses that word, they are pointing back to a single tower on a small island more than two thousand years ago."
+      },
+      "ta": {
+        "narration": "ஆனால் அதன் பெயர் வாழ்கிறது. பல மொழிகளில் கலங்கரை விளக்கத்துக்கான சொல் ஃபாரோஸ் என்பதிலிருந்தே வருகிறது."
+      }
+    },
+    {
+      "visual": "a modern lighthouse with a large glass lens shining over a calm sea",
+      "action": "The great glass lens turns and flashes.",
+      "en": {
+        "narration": "Lighthouses kept improving for centuries afterwards, with better lamps, glass lenses, and finally electric lights. Today, satellites help ships find their way, yet many lighthouses still shine, as a backup and as a promise to anyone at sea."
+      },
+      "ta": {
+        "narration": "பின்னர் சிறந்த விளக்குகளும் கண்ணாடி லென்ஸ்களும் மின்விளக்குகளும் வந்தன. இன்று செயற்கைக்கோள்கள் உதவினாலும், பல கலங்கரை விளக்கங்கள் இன்னும் ஒளிர்கின்றன."
+      }
+    },
+    {
+      "visual": "a lighthouse on a cliff at dusk guiding a small boat into harbour",
+      "action": "The boat turns toward the harbour light.",
+      "en": {
+        "narration": "So the next time you see a lighthouse on a cliff, think of the long chain of keepers who climbed those stairs through the night. Their work leaves us a simple lesson: a steady light can guide strangers safely home."
+      },
+      "ta": {
+        "narration": "அடுத்த முறை ஒரு கலங்கரை விளக்கத்தைப் பார்க்கும்போது, இரவு முழுவதும் படிகளில் ஏறிய காவலர்களை நினைத்துக்கொள்ளுங்கள். அவர்கள் தரும் பாடம் எளிது: ஒரு நிலையான ஒளி அந்நியர்களையும் பாதுகாப்பாக வீடு சேர்க்கும்."
+      }
+    }
+  ]
+}

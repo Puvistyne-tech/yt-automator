@@ -14,7 +14,13 @@ from autotube.domain.ports import (
     TemplateRepository,
 )
 from autotube.domain.runs import Run, RunQuery
-from autotube.domain.template_rules import found_template, missing_engine_errors, taken_type_ids
+from autotube.domain.template_rules import (
+    ensure_new_id,
+    ensure_type_id_free,
+    found_template,
+    missing_engine_errors,
+    taken_type_ids,
+)
 from autotube.domain.template_views import TemplateSummary, template_summary
 from autotube.shared.errors import ValidationFailed, raise_if_invalid
 
@@ -65,6 +71,10 @@ class TemplateLookup:
         engine = self.engines.get(proposed.engine)
         fixed = {} if engine is None else engine.revision_problems(current, proposed)
         return self.problems(proposed) | fixed
+
+    def ensure_unclaimed(self, template: PipelineTemplate) -> None:
+        ensure_new_id(template.id, self.find(template.id) is not None)
+        ensure_type_id_free(template.type_id, self.taken_type_ids())
 
     def taken_type_ids(self) -> set[str]:
         served = (pipeline.descriptor.type_id for pipeline in self.pipelines.list())

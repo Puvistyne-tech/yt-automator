@@ -1,0 +1,110 @@
+{
+  "id": "scary_stories",
+  "name": "Scary stories",
+  "description": "Short suspense and mystery stories for teenagers and adults, built on atmosphere and tension rather than gore.",
+  "audience": "general",
+  "definition": {
+    "brief": "Each video is an original, eerie short story for teenagers and adults: an ordinary place, a small strange detail, and tension that builds to an unsettling twist. Create fear through atmosphere, sound and suggestion. No gore, no graphic violence, no cruelty to animals, and no harm to anyone young. Every character is a teenager or an adult.",
+    "tone": "eerie, quiet, suspenseful",
+    "topics": [
+      "a knock at midnight",
+      "the empty lift",
+      "a voice on the old radio",
+      "the house at the end of the road",
+      "a photograph that changes",
+      "the last train home",
+      "footsteps in the attic",
+      "a mirror that lags behind",
+      "the lighthouse logbook",
+      "a call from a disconnected number",
+      "fog on the moor",
+      "the room that was not there yesterday",
+      "a letter with no sender"
+    ],
+    "visual_style": "pencil_sketch",
+    "music_mood": "dark ambient drones with low strings and soft distant chimes, slow, tense and atmospheric",
+    "description_template": {
+      "en": "{title}\n\nA short suspense story from {series} about {theme}. {tagline}.\n\nWhat do you think happened?\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் ஒரு திகில் சிறுகதை. {tagline}.\n\nஎன்ன நடந்திருக்கும் என்று நினைக்கிறீர்கள்?\n{questions}\n\n{hashtags}"
+    },
+    "tags": {
+      "en": [
+        "scary stories",
+        "suspense stories",
+        "mystery stories",
+        "creepy stories",
+        "short horror stories"
+      ],
+      "ta": [
+        "திகில் கதைகள்",
+        "மர்மக் கதைகள்",
+        "தமிழ் திகில் கதைகள்"
+      ]
+    },
+    "hashtags": {
+      "en": [
+        "#ScaryStories",
+        "#Suspense",
+        "#Mystery"
+      ],
+      "ta": [
+        "#திகில்கதைகள்",
+        "#மர்மம்",
+        "#ScaryStories"
+      ]
+    },
+    "category": "24",
+    "settings": {
+      "series": {
+        "name": {
+          "en": "Midnight Tales",
+          "ta": "நள்ளிரவுக் கதைகள்"
+        },
+        "tagline": {
+          "en": "Quiet stories with a chill",
+          "ta": "மெல்லிய நடுக்கம் தரும் கதைகள்"
+        },
+        "intro_line": {
+          "en": "Welcome to {series}. Turn down the lights.",
+          "ta": "{series} உங்களை வரவேற்கிறது. விளக்குகளைக் குறைத்துக்கொள்ளுங்கள்."
+        },
+        "outro_line": {
+          "en": "Thanks for listening. Sleep well, if you can.",
+          "ta": "கேட்டதற்கு நன்றி. முடிந்தால் நன்றாகத் தூங்குங்கள்."
+        },
+        "editorial_rules": [
+          "Every story is original and written for teenagers and adults.",
+          "Build fear through atmosphere, sound and suggestion, never through gore or graphic violence.",
+          "Every character is a teenager or an adult; no story shows or speaks to a child.",
+          "No cruelty to animals, no self-harm and no real crimes.",
+          "No brands, products, real people, places of worship or current events.",
+          "Use clear sentences and everyday words."
+        ]
+      },
+      "safety": {
+        "banned_words": [
+          "kill",
+          "killed",
+          "murder",
+          "blood",
+          "bloody",
+          "gore",
+          "corpse",
+          "gun",
+          "knife",
+          "weapon",
+          "suicide",
+          "stupid",
+          "hate"
+        ],
+        "avoid_topics": [
+          "harm to anyone young",
+          "self-harm",
+          "real crimes",
+          "cruelty to animals"
+        ],
+        "picture_exclusions": "text, letters, words, captions, watermark, logo, signature, gore, blood, wounds, violence, weapons, corpses, children, babies, distorted faces, extra limbs"
+      }
+    }
+  }
+}

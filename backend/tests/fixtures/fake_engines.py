@@ -123,6 +123,19 @@ class FakeEngine:
         return [made]
 
 
+@dataclass(frozen=True)
+class BuiltinEngine(FakeEngine):
+    builtins: tuple[PipelineTemplate, ...] = ()
+
+    def builtin_templates(self) -> list[PipelineTemplate]:
+        return list(self.builtins)
+
+
+def general_builtin(type_id: str, definition: JsonObject | None = None) -> PipelineTemplate:
+    general = TemplateAudience.GENERAL
+    return builtin_template(ENGINE_ID, type_id, type_id.title(), "", general, definition or {})
+
+
 class FakeEngineCatalog:
     def __init__(self, engines: Sequence[PipelineEngine] = ()) -> None:
         self.engines = {engine.engine_id: engine for engine in engines or (FakeEngine(),)}

@@ -106,7 +106,10 @@ function templatePipeline(base: PipelineDescriptor, template: PipelineTemplate) 
 
 export function servedPipelines(state: MockState): PipelineDescriptor[] {
   const [base] = state.pipelines;
-  const ready = state.templates.filter((template) => template.status === "ready");
+  const listed = new Set(state.pipelines.map((pipeline) => pipeline.type_id));
+  const ready = allTemplates(state).filter(
+    (template) => template.status === "ready" && !listed.has(template.type_id),
+  );
   return base === undefined
     ? state.pipelines
     : [...state.pipelines, ...ready.map((template) => templatePipeline(base, template))];

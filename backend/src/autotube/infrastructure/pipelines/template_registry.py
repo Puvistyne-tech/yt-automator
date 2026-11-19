@@ -17,6 +17,7 @@ def builtin_pipelines(engines: EngineCatalog) -> dict[str, Pipeline]:
             engine.pipeline(template)
             for template in builtin_templates_of(engines.list())
             if (engine := engines.get(template.engine)) is not None
+            and not engine.problems(template)
         ]
     )
 

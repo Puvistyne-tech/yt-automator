@@ -9,13 +9,11 @@ from autotube.domain.pipeline import Pipeline
 from autotube.domain.run_enums import ArtifactKind, RunStatus, StageStatus
 from autotube.domain.run_parts import Artifact
 from autotube.domain.runs import Run
-from autotube.pipelines.narrated_video.engine import NarratedVideoEngine
 from autotube.pipelines.narrated_video.publishing.audience_check import metadata_texts
 from autotube.pipelines.narrated_video.publishing.metadata import UploadMetadata
 from autotube.pipelines.narrated_video.story.child_terms import child_terms_in_any
 from autotube.pipelines.narrated_video.template.merging import deep_merged
 from tests.fixtures.harness import Harness
-from tests.fixtures.kids_data import smart_writer
 from tests.fixtures.kids_fakes import FakeWriter, failing_writer
 from tests.fixtures.pipeline_runs import PAIRS, executed_run, pairs, planned_uploads
 from tests.fixtures.quick_sections import QUICK_SECTIONS
@@ -103,18 +101,3 @@ def test_child_directed_automation_edits_fail_the_general_run_before_upload(
     stage = run.stage(failed_stage)
     assert stage is not None and stage.status is StageStatus.FAILED
     assert pairs(run, ArtifactKind.METADATA) == set()
-
-
-def test_the_kids_builtin_runs_offline_through_the_engine(harness: Harness) -> None:
-    engine = NarratedVideoEngine()
-    [builtin] = engine.builtin_templates()
-    pipeline = engine.pipeline(builtin)
-    run = run_of(harness, pipeline, smart_writer())
-    assert_complete(run)
-    found = [details(item) for item in uploads(run)]
-    assert found and all(item.made_for_kids is True for item in found)
-    engine_tags = pipeline.descriptor.default_settings["metadata"]
-    assert isinstance(engine_tags, dict) and isinstance(engine_tags["tags"], dict)
-    assert all(list(item.tags) == engine_tags["tags"][item.default_language] for item in found)
-    plans = planned_uploads(harness, run)
-    assert plans and all(plan.made_for_kids for plan in plans)

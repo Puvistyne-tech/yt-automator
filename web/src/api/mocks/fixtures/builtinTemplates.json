@@ -1,0 +1,500 @@
+[
+  {
+    "id": "amazing_facts",
+    "name": "Amazing facts",
+    "description": "Numbered lists of surprising, true facts about nature, science and the world around us.",
+    "audience": "general",
+    "definition": {
+      "structure": "list",
+      "brief": "Each video counts through surprising, true facts about one subject from nature, science, space or everyday life. Every fact is accurate and checkable, explained in plain words, and comes with one vivid detail that makes it easy to remember. Never invent numbers or records.",
+      "tone": "curious, lively, clear",
+      "topics": [
+        "octopuses",
+        "the deep ocean",
+        "the human brain",
+        "volcanoes",
+        "the solar system",
+        "ancient trees",
+        "deserts",
+        "lightning",
+        "glaciers",
+        "migrating birds",
+        "the human heart",
+        "coral reefs",
+        "black holes",
+        "honeybees"
+      ],
+      "visual_style": "flat_vector",
+      "music_mood": "light, upbeat electronic music with soft plucked synths and a steady beat, curious and bright",
+      "description_template": {
+        "en": "{title}\n\n{count} surprising facts about {theme}, from {series}. {tagline}.\n\nIn this video: {items}\n\nTest yourself:\n{questions}\n\n{hashtags}",
+        "ta": "{title}\n\n{series} வழங்கும் {count} வியப்பான உண்மைகள். {tagline}.\n\nஇந்த வீடியோவில்: {items}\n\n{questions}\n\n{hashtags}"
+      },
+      "tags": {
+        "en": [
+          "amazing facts",
+          "science facts",
+          "nature facts",
+          "did you know",
+          "learn something new"
+        ],
+        "ta": ["தமிழ் உண்மைகள்", "அறிவியல் உண்மைகள்", "உங்களுக்குத் தெரியுமா"]
+      },
+      "hashtags": {
+        "en": ["#AmazingFacts", "#DidYouKnow", "#LearnSomethingNew"],
+        "ta": ["#தமிழ்உண்மைகள்", "#அறிவியல்", "#DidYouKnow"]
+      },
+      "category": "27",
+      "settings": {
+        "series": {
+          "name": {
+            "en": "Amazing Facts",
+            "ta": "அற்புத உண்மைகள்"
+          },
+          "tagline": {
+            "en": "Surprising facts, clearly told",
+            "ta": "வியப்பான உண்மைகள், எளிய சொற்களில்"
+          },
+          "intro_line": {
+            "en": "Welcome to {series}. Here are today's facts!",
+            "ta": "{series} உங்களை வரவேற்கிறது. இன்றைய உண்மைகளைப் பார்ப்போம்!"
+          },
+          "outro_line": {
+            "en": "Thanks for watching. See you soon for more facts!",
+            "ta": "பார்த்ததற்கு நன்றி. மேலும் உண்மைகளுடன் விரைவில் சந்திப்போம்!"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "daily_motivation",
+    "name": "Daily motivation",
+    "description": "A short daily lift: one practical idea about habits, focus or resilience, ending with a line to remember.",
+    "audience": "general",
+    "definition": {
+      "structure": "explainer",
+      "brief": "Each video takes one practical idea about habits, focus, patience or resilience, explains it with an everyday example, and ends with one clear line to remember. Be warm and honest, never preachy. No medical, financial or relationship advice, and no quotes from real people.",
+      "length": "short",
+      "tone": "warm, steady, encouraging",
+      "topics": [
+        "starting small",
+        "keeping a promise to yourself",
+        "patience",
+        "learning from mistakes",
+        "rest and recovery",
+        "focus",
+        "gratitude",
+        "asking for help",
+        "consistency over intensity",
+        "doing the hard task first",
+        "progress over perfection",
+        "staying curious",
+        "being kind to yourself",
+        "finishing what you start"
+      ],
+      "visual_style": "cinematic_realistic",
+      "music_mood": "gentle, uplifting piano with soft strings that slowly builds, hopeful and calm",
+      "description_template": {
+        "en": "{title}\n\n{tagline}.\n\nToday's idea: {takeaway}\n\nThink about it:\n{questions}\n\n{hashtags}",
+        "ta": "{title}\n\n{tagline}.\n\nஇன்றைய சிந்தனை: {takeaway}\n\n{questions}\n\n{hashtags}"
+      },
+      "tags": {
+        "en": ["motivation", "daily motivation", "self improvement", "good habits", "mindset"],
+        "ta": ["தமிழ் ஊக்கம்", "தினசரி ஊக்கம்", "நல்ல பழக்கங்கள்"]
+      },
+      "hashtags": {
+        "en": ["#Motivation", "#DailyMotivation", "#Mindset"],
+        "ta": ["#ஊக்கம்", "#தினசரிஊக்கம்", "#Motivation"]
+      },
+      "category": "24",
+      "settings": {
+        "series": {
+          "name": {
+            "en": "Daily Lift",
+            "ta": "தினம் ஒரு ஊக்கம்"
+          },
+          "tagline": {
+            "en": "One small idea for a better day",
+            "ta": "நல்ல நாளுக்கு ஒரு சிறிய சிந்தனை"
+          },
+          "intro_line": {
+            "en": "Welcome to {series}. Here's today's idea.",
+            "ta": "{series} உங்களை வரவேற்கிறது. இன்றைய சிந்தனை இதோ."
+          },
+          "outro_line": {
+            "en": "Thanks for watching. Come back tomorrow for another idea.",
+            "ta": "பார்த்ததற்கு நன்றி. நாளை இன்னொரு சிந்தனையுடன் சந்திப்போம்."
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "fun_facts_for_kids",
+    "name": "Fun facts for kids",
+    "description": "Cheerful numbered lists of simple, true facts about animals, nature and space for young children.",
+    "audience": "kids",
+    "definition": {
+      "structure": "list",
+      "brief": "Each video shares simple, true and cheerful facts about one thing young children love, such as an animal, the weather or the sky. Use short sentences, everyday words and one fun detail per fact. Nothing frightening.",
+      "tone": "cheerful, gentle, curious",
+      "topics": [
+        "penguins",
+        "elephants",
+        "the moon",
+        "rainbows",
+        "butterflies",
+        "dinosaurs",
+        "the ocean",
+        "frogs",
+        "snow",
+        "trees",
+        "the stars",
+        "owls",
+        "giraffes",
+        "clouds"
+      ],
+      "visual_style": "flat_cartoon_2d",
+      "music_mood": "bright, playful ukulele and xylophone music, light and happy",
+      "description_template": {
+        "en": "{title}\n\n{count} fun facts about {theme} from {series}. {tagline}.\n\nIn this video: {items}\n\nTalk about it together:\n{questions}\n\n{hashtags}",
+        "ta": "{title}\n\n{series} வழங்கும் {count} சுவையான உண்மைகள். {tagline}.\n\nஇந்த வீடியோவில்: {items}\n\n{questions}\n\nசேர்ந்து பாருங்கள், சேர்ந்து கற்றுக்கொள்ளுங்கள்.\n\n{hashtags}"
+      },
+      "tags": {
+        "en": [
+          "fun facts for kids",
+          "kids learning",
+          "animal facts for kids",
+          "learning videos for kids"
+        ],
+        "ta": ["குழந்தைகளுக்கான உண்மைகள்", "தமிழ் கற்றல்", "Tamil kids learning"]
+      },
+      "hashtags": {
+        "en": ["#FunFactsForKids", "#KidsLearning", "#LearnWithFun"],
+        "ta": ["#குழந்தைகள்கற்றல்", "#FunFactsForKids", "#KidsLearning"]
+      },
+      "category": "27",
+      "settings": {
+        "series": {
+          "name": {
+            "en": "Little Explorers",
+            "ta": "சின்ன ஆய்வாளர்கள்"
+          },
+          "tagline": {
+            "en": "Happy facts for curious minds",
+            "ta": "ஆர்வமுள்ள மனங்களுக்கு மகிழ்ச்சியான உண்மைகள்"
+          },
+          "intro_line": {
+            "en": "Hello, little explorers! Welcome to {series}. Let's learn something fun!",
+            "ta": "வணக்கம், சின்ன நண்பர்களே! {series} உங்களை வரவேற்கிறது. சுவையான ஒன்றைக் கற்போம்!"
+          },
+          "outro_line": {
+            "en": "Thank you for learning with us. See you next time!",
+            "ta": "எங்களுடன் கற்றதற்கு நன்றி. மீண்டும் சந்திப்போம்!"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "history_in_five_minutes",
+    "name": "History in five minutes",
+    "description": "One invention, journey or turning point from history, explained from start to finish in about five minutes.",
+    "audience": "general",
+    "definition": {
+      "structure": "explainer",
+      "brief": "Each video explains one invention, journey or turning point from world history in about five minutes: the world before it, how it came about, what changed, and why it still matters today. Stay accurate, explain dates and places in plain words, focus on ideas and everyday life rather than famous names, and never dwell on graphic detail about war or violence.",
+      "length": "long",
+      "tone": "vivid, calm, authoritative",
+      "topics": [
+        "the first lighthouses",
+        "how paper spread around the world",
+        "the Silk Road",
+        "the first maps of the world",
+        "the printing press",
+        "how the pyramids were built",
+        "the first postal services",
+        "the first mechanical clocks",
+        "the age of sail",
+        "the first railways",
+        "the telegraph",
+        "ancient Roman roads",
+        "the first libraries",
+        "how the compass changed travel"
+      ],
+      "visual_style": "woodblock_print",
+      "music_mood": "cinematic orchestral music with soft strings and light percussion, curious and stately",
+      "description_template": {
+        "en": "{title}\n\n{series} explains {theme} in about five minutes. {tagline}.\n\nThe takeaway: {takeaway}\n\nThink about it:\n{questions}\n\n{hashtags}",
+        "ta": "{title}\n\n{series} வழங்கும் ஐந்து நிமிட வரலாறு. {tagline}.\n\nநினைவில் கொள்ள: {takeaway}\n\n{questions}\n\n{hashtags}"
+      },
+      "tags": {
+        "en": [
+          "history",
+          "world history",
+          "history explained",
+          "history in five minutes",
+          "learn history"
+        ],
+        "ta": ["தமிழில் வரலாறு", "உலக வரலாறு", "வரலாறு விளக்கம்"]
+      },
+      "hashtags": {
+        "en": ["#History", "#WorldHistory", "#HistoryExplained"],
+        "ta": ["#வரலாறு", "#உலகவரலாறு", "#History"]
+      },
+      "category": "27",
+      "settings": {
+        "series": {
+          "name": {
+            "en": "History in Five",
+            "ta": "ஐந்து நிமிட வரலாறு"
+          },
+          "tagline": {
+            "en": "The past, clearly explained",
+            "ta": "கடந்த காலம், தெளிவாக"
+          },
+          "intro_line": {
+            "en": "Welcome to {series}. Let's step back in time!",
+            "ta": "{series} உங்களை வரவேற்கிறது. காலத்தில் பின்னோக்கிச் செல்வோம்!"
+          },
+          "outro_line": {
+            "en": "Thanks for watching. See you in the next chapter of history!",
+            "ta": "பார்த்ததற்கு நன்றி. அடுத்த வரலாற்றுப் பக்கத்தில் சந்திப்போம்!"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "quick_quiz",
+    "name": "Quick quiz",
+    "description": "Fast general-knowledge quizzes with three choices per question, a pause to think and a clear reveal.",
+    "audience": "general",
+    "definition": {
+      "structure": "quiz",
+      "brief": "Each video asks a handful of general-knowledge questions about one subject, offers three choices for each, pauses so viewers can guess, then reveals the answer with one interesting fact. Questions are fair, unambiguous and accurate, and the wrong choices are believable.",
+      "tone": "upbeat, playful, clear",
+      "topics": [
+        "world capitals",
+        "the solar system",
+        "the human body",
+        "ocean life",
+        "famous inventions",
+        "world geography",
+        "weather and climate",
+        "rainforest animals",
+        "the periodic table",
+        "rivers and lakes",
+        "ancient civilisations",
+        "musical instruments",
+        "food from around the world",
+        "the rules of popular sports"
+      ],
+      "visual_style": "chalkboard",
+      "music_mood": "bouncy, upbeat game-show style music with light percussion and plucked synths",
+      "description_template": {
+        "en": "{title}\n\nA {question_count}-question quiz from {series} about {theme}. {tagline}.\n\nPause before each answer and keep score!\n\nMore to think about:\n{questions}\n\n{hashtags}",
+        "ta": "{title}\n\n{series} வழங்கும் {question_count} கேள்விகள் கொண்ட வினாடி வினா. {tagline}.\n\nஒவ்வொரு விடைக்கும் முன் நிறுத்தி யோசியுங்கள்!\n\n{questions}\n\n{hashtags}"
+      },
+      "tags": {
+        "en": ["quiz", "trivia", "general knowledge", "test your knowledge", "quick quiz"],
+        "ta": ["தமிழ் வினாடி வினா", "பொது அறிவு", "பொது அறிவு வினா"]
+      },
+      "hashtags": {
+        "en": ["#Quiz", "#Trivia", "#GeneralKnowledge"],
+        "ta": ["#வினாடிவினா", "#பொதுஅறிவு", "#Quiz"]
+      },
+      "category": "27",
+      "settings": {
+        "series": {
+          "name": {
+            "en": "Quick Quiz",
+            "ta": "விரைவு வினாடி வினா"
+          },
+          "tagline": {
+            "en": "Guess first, then find out",
+            "ta": "முதலில் யூகியுங்கள், பிறகு தெரிந்துகொள்ளுங்கள்"
+          },
+          "intro_line": {
+            "en": "Welcome to {series}. Get ready to guess!",
+            "ta": "{series} உங்களை வரவேற்கிறது. யூகிக்கத் தயாராகுங்கள்!"
+          },
+          "outro_line": {
+            "en": "Thanks for playing. How many did you get right?",
+            "ta": "விளையாடியதற்கு நன்றி. எத்தனை சரியாகச் சொன்னீர்கள்?"
+          }
+        },
+        "story": {
+          "answer_choices": 3
+        }
+      }
+    }
+  },
+  {
+    "id": "scary_stories",
+    "name": "Scary stories",
+    "description": "Short suspense and mystery stories for teenagers and adults, built on atmosphere and tension rather than gore.",
+    "audience": "general",
+    "definition": {
+      "brief": "Each video is an original, eerie short story for teenagers and adults: an ordinary place, a small strange detail, and tension that builds to an unsettling twist. Create fear through atmosphere, sound and suggestion. No gore, no graphic violence, no cruelty to animals, and no harm to anyone young. Every character is a teenager or an adult.",
+      "tone": "eerie, quiet, suspenseful",
+      "topics": [
+        "a knock at midnight",
+        "the empty lift",
+        "a voice on the old radio",
+        "the house at the end of the road",
+        "a photograph that changes",
+        "the last train home",
+        "footsteps in the attic",
+        "a mirror that lags behind",
+        "the lighthouse logbook",
+        "a call from a disconnected number",
+        "fog on the moor",
+        "the room that was not there yesterday",
+        "a letter with no sender"
+      ],
+      "visual_style": "pencil_sketch",
+      "music_mood": "dark ambient drones with low strings and soft distant chimes, slow, tense and atmospheric",
+      "description_template": {
+        "en": "{title}\n\nA short suspense story from {series} about {theme}. {tagline}.\n\nWhat do you think happened?\n{questions}\n\n{hashtags}",
+        "ta": "{title}\n\n{series} வழங்கும் ஒரு திகில் சிறுகதை. {tagline}.\n\nஎன்ன நடந்திருக்கும் என்று நினைக்கிறீர்கள்?\n{questions}\n\n{hashtags}"
+      },
+      "tags": {
+        "en": [
+          "scary stories",
+          "suspense stories",
+          "mystery stories",
+          "creepy stories",
+          "short horror stories"
+        ],
+        "ta": ["திகில் கதைகள்", "மர்மக் கதைகள்", "தமிழ் திகில் கதைகள்"]
+      },
+      "hashtags": {
+        "en": ["#ScaryStories", "#Suspense", "#Mystery"],
+        "ta": ["#திகில்கதைகள்", "#மர்மம்", "#ScaryStories"]
+      },
+      "category": "24",
+      "settings": {
+        "series": {
+          "name": {
+            "en": "Midnight Tales",
+            "ta": "நள்ளிரவுக் கதைகள்"
+          },
+          "tagline": {
+            "en": "Quiet stories with a chill",
+            "ta": "மெல்லிய நடுக்கம் தரும் கதைகள்"
+          },
+          "intro_line": {
+            "en": "Welcome to {series}. Turn down the lights.",
+            "ta": "{series} உங்களை வரவேற்கிறது. விளக்குகளைக் குறைத்துக்கொள்ளுங்கள்."
+          },
+          "outro_line": {
+            "en": "Thanks for listening. Sleep well, if you can.",
+            "ta": "கேட்டதற்கு நன்றி. முடிந்தால் நன்றாகத் தூங்குங்கள்."
+          },
+          "editorial_rules": [
+            "Every story is original and written for teenagers and adults.",
+            "Build fear through atmosphere, sound and suggestion, never through gore or graphic violence.",
+            "Every character is a teenager or an adult; no story shows or speaks to a child.",
+            "No cruelty to animals, no self-harm and no real crimes.",
+            "No brands, products, real people, places of worship or current events.",
+            "Use clear sentences and everyday words."
+          ]
+        },
+        "safety": {
+          "banned_words": [
+            "kill",
+            "killed",
+            "murder",
+            "blood",
+            "bloody",
+            "gore",
+            "corpse",
+            "gun",
+            "knife",
+            "weapon",
+            "suicide",
+            "stupid",
+            "hate"
+          ],
+          "avoid_topics": [
+            "harm to anyone young",
+            "self-harm",
+            "real crimes",
+            "cruelty to animals"
+          ],
+          "picture_exclusions": "text, letters, words, captions, watermark, logo, signature, gore, blood, wounds, violence, weapons, corpses, children, babies, distorted faces, extra limbs"
+        }
+      }
+    }
+  },
+  {
+    "id": "top_ten_countdown",
+    "name": "Top 10 countdown",
+    "description": "Ranked countdowns from number ten to number one about records in nature, geography and space.",
+    "audience": "general",
+    "definition": {
+      "structure": "countdown",
+      "brief": "Each video ranks ten things in one subject, from number ten down to number one: the fastest, biggest, oldest, loudest or strangest. Every entry is real and accurate, gets one short reason for its place, and the countdown builds to a satisfying number one.",
+      "tone": "energetic, playful, confident",
+      "topics": [
+        "the fastest animals",
+        "the longest rivers",
+        "the highest mountains",
+        "the biggest deserts",
+        "the deepest lakes",
+        "the largest animals",
+        "the loudest animals",
+        "the oldest trees",
+        "the longest-living animals",
+        "the coldest places on Earth",
+        "the hottest places on Earth",
+        "the biggest moons in the solar system",
+        "the strangest deep-sea creatures"
+      ],
+      "visual_style": "pixel_art",
+      "music_mood": "punchy, upbeat electronic music with a driving beat that builds toward the end",
+      "title_template": {
+        "en": "{title} | Top {count} Countdown",
+        "ta": "{title} | முதல் {count} தரவரிசை"
+      },
+      "description_template": {
+        "en": "{title}\n\nA countdown of {count} from {series}, all about {theme}. {tagline}.\n\nThe countdown: {items}\n\nHow many did you know?\n{questions}\n\n{hashtags}",
+        "ta": "{title}\n\n{series} வழங்கும் {count} இடங்களின் தரவரிசை. {tagline}.\n\nவரிசை: {items}\n\nஉங்களுக்கு எத்தனை தெரியும்?\n{questions}\n\n{hashtags}"
+      },
+      "tags": {
+        "en": ["top 10", "countdown", "rankings", "world records", "top ten facts"],
+        "ta": ["முதல் பத்து", "தமிழ் தரவரிசை", "சாதனைகள்"]
+      },
+      "hashtags": {
+        "en": ["#Top10", "#Countdown", "#Rankings"],
+        "ta": ["#முதல்பத்து", "#தரவரிசை", "#Top10"]
+      },
+      "category": "24",
+      "settings": {
+        "series": {
+          "name": {
+            "en": "Top Ten",
+            "ta": "முதல் பத்து"
+          },
+          "tagline": {
+            "en": "Ten picks, one winner",
+            "ta": "பத்துத் தேர்வுகள், ஒரே வெற்றியாளர்"
+          },
+          "intro_line": {
+            "en": "Welcome to {series}. Let's count them down!",
+            "ta": "{series} உங்களை வரவேற்கிறது. எண்ணத் தொடங்குவோம்!"
+          },
+          "outro_line": {
+            "en": "Thanks for watching. See you at the next countdown!",
+            "ta": "பார்த்ததற்கு நன்றி. அடுத்த தரவரிசையில் சந்திப்போம்!"
+          }
+        },
+        "story": {
+          "item_count": 10
+        }
+      }
+    }
+  }
+]

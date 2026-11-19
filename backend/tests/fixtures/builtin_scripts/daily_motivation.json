@@ -1,0 +1,74 @@
+{
+  "theme": "starting small",
+  "cast": [],
+  "setting": "a quiet home in soft morning light",
+  "mood": "warm and hopeful",
+  "thumbnail": "a pair of running shoes by an open door in golden morning light",
+  "short_scenes": [0, 1, 4],
+  "text": {
+    "en": {
+      "title": "Why Starting Small Works",
+      "moral": "Start small, and keep going.",
+      "hook_line": "What if the first step is the hardest part?",
+      "questions": ["What small step could you take today?", "Which goal feels too big right now?"]
+    },
+    "ta": {
+      "title": "சிறிய தொடக்கம் ஏன் வெற்றி தரும்",
+      "moral": "சிறிதாகத் தொடங்குங்கள், தொடர்ந்து செல்லுங்கள்.",
+      "hook_line": "முதல் அடிதான் கடினமான பகுதியா?",
+      "questions": ["இன்று நீங்கள் எடுக்கக்கூடிய சிறிய அடி எது?", "இப்போது எந்த இலக்கு மிகப் பெரியதாகத் தோன்றுகிறது?"]
+    }
+  },
+  "scenes": [
+    {
+      "visual": "a pair of running shoes waiting by a front door at sunrise",
+      "action": "Sunlight slowly spreads across the floor.",
+      "en": {
+        "narration": "What if the hardest part of any goal is simply the first step? Big plans can feel heavy. Today, let us look at why starting small works so well."
+      },
+      "ta": {
+        "narration": "எந்த இலக்கிலும் கடினமானது முதல் அடிதானா? பெரிய திட்டங்கள் சுமையாகத் தோன்றலாம். சிறிய தொடக்கம் ஏன் பலன் தருகிறது என்று பார்ப்போம்."
+      }
+    },
+    {
+      "visual": "an open book and a cup of tea on a table by a window",
+      "action": "A page of the book turns in the breeze.",
+      "en": {
+        "narration": "A small step asks very little of you. Five minutes of reading, one short walk, one tidy shelf. Because it is easy, you are far more likely to do it."
+      },
+      "ta": {
+        "narration": "சிறிய அடிக்கு அதிக முயற்சி தேவையில்லை. ஐந்து நிமிட வாசிப்பு, ஒரு சிறு நடை. எளிது என்பதால் அதைச் செய்துவிடுவோம்."
+      }
+    },
+    {
+      "visual": "a calendar on a wall with one day neatly ticked off",
+      "action": "A pen draws a tick on the calendar.",
+      "en": {
+        "narration": "Each small step also leaves a mark. When you finish it, you show yourself that you follow through, and that feeling makes the next day a little easier."
+      },
+      "ta": {
+        "narration": "ஒவ்வொரு சிறிய அடியும் ஒரு தடத்தை விட்டுச் செல்கிறது. சொன்னதைச் செய்பவர் நான் என்று அது நமக்கே காட்டுகிறது."
+      }
+    },
+    {
+      "visual": "a long path through green hills with footprints leading into the distance",
+      "action": "The camera follows the footprints up the hill.",
+      "en": {
+        "narration": "Over weeks, the small steps add up. Five minutes a day becomes hours of practice, and a goal that once felt far away starts to come into view."
+      },
+      "ta": {
+        "narration": "வாரங்கள் செல்லச் செல்ல, சிறிய அடிகள் சேர்ந்து பெரிதாகின்றன. ஒருகாலத்தில் தொலைவில் தெரிந்த இலக்கு அருகில் வருகிறது."
+      }
+    },
+    {
+      "visual": "a person's hand opening a front door onto a bright morning street",
+      "action": "The door swings open onto the morning.",
+      "en": {
+        "narration": "So pick one tiny action you can do today, and do it before the day ends. Remember this: start small, and keep going."
+      },
+      "ta": {
+        "narration": "இன்று செய்யக்கூடிய ஒரு சிறிய செயலைத் தேர்ந்தெடுத்து, நாள் முடிவதற்குள் செய்யுங்கள். நினைவில் கொள்ளுங்கள்: சிறிதாகத் தொடங்குங்கள், தொடர்ந்து செல்லுங்கள்."
+      }
+    }
+  ]
+}

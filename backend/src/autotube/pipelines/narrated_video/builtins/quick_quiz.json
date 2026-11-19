@@ -1,0 +1,83 @@
+{
+  "id": "quick_quiz",
+  "name": "Quick quiz",
+  "description": "Fast general-knowledge quizzes with three choices per question, a pause to think and a clear reveal.",
+  "audience": "general",
+  "definition": {
+    "structure": "quiz",
+    "brief": "Each video asks a handful of general-knowledge questions about one subject, offers three choices for each, pauses so viewers can guess, then reveals the answer with one interesting fact. Questions are fair, unambiguous and accurate, and the wrong choices are believable.",
+    "tone": "upbeat, playful, clear",
+    "topics": [
+      "world capitals",
+      "the solar system",
+      "the human body",
+      "ocean life",
+      "famous inventions",
+      "world geography",
+      "weather and climate",
+      "rainforest animals",
+      "the periodic table",
+      "rivers and lakes",
+      "ancient civilisations",
+      "musical instruments",
+      "food from around the world",
+      "the rules of popular sports"
+    ],
+    "visual_style": "chalkboard",
+    "music_mood": "bouncy, upbeat game-show style music with light percussion and plucked synths",
+    "description_template": {
+      "en": "{title}\n\nA {question_count}-question quiz from {series} about {theme}. {tagline}.\n\nPause before each answer and keep score!\n\nMore to think about:\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் {question_count} கேள்விகள் கொண்ட வினாடி வினா. {tagline}.\n\nஒவ்வொரு விடைக்கும் முன் நிறுத்தி யோசியுங்கள்!\n\n{questions}\n\n{hashtags}"
+    },
+    "tags": {
+      "en": [
+        "quiz",
+        "trivia",
+        "general knowledge",
+        "test your knowledge",
+        "quick quiz"
+      ],
+      "ta": [
+        "தமிழ் வினாடி வினா",
+        "பொது அறிவு",
+        "பொது அறிவு வினா"
+      ]
+    },
+    "hashtags": {
+      "en": [
+        "#Quiz",
+        "#Trivia",
+        "#GeneralKnowledge"
+      ],
+      "ta": [
+        "#வினாடிவினா",
+        "#பொதுஅறிவு",
+        "#Quiz"
+      ]
+    },
+    "category": "27",
+    "settings": {
+      "series": {
+        "name": {
+          "en": "Quick Quiz",
+          "ta": "விரைவு வினாடி வினா"
+        },
+        "tagline": {
+          "en": "Guess first, then find out",
+          "ta": "முதலில் யூகியுங்கள், பிறகு தெரிந்துகொள்ளுங்கள்"
+        },
+        "intro_line": {
+          "en": "Welcome to {series}. Get ready to guess!",
+          "ta": "{series} உங்களை வரவேற்கிறது. யூகிக்கத் தயாராகுங்கள்!"
+        },
+        "outro_line": {
+          "en": "Thanks for playing. How many did you get right?",
+          "ta": "விளையாடியதற்கு நன்றி. எத்தனை சரியாகச் சொன்னீர்கள்?"
+        }
+      },
+      "story": {
+        "answer_choices": 3
+      }
+    }
+  }
+}

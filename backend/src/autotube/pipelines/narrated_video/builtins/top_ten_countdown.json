@@ -1,0 +1,86 @@
+{
+  "id": "top_ten_countdown",
+  "name": "Top 10 countdown",
+  "description": "Ranked countdowns from number ten to number one about records in nature, geography and space.",
+  "audience": "general",
+  "definition": {
+    "structure": "countdown",
+    "brief": "Each video ranks ten things in one subject, from number ten down to number one: the fastest, biggest, oldest, loudest or strangest. Every entry is real and accurate, gets one short reason for its place, and the countdown builds to a satisfying number one.",
+    "tone": "energetic, playful, confident",
+    "topics": [
+      "the fastest animals",
+      "the longest rivers",
+      "the highest mountains",
+      "the biggest deserts",
+      "the deepest lakes",
+      "the largest animals",
+      "the loudest animals",
+      "the oldest trees",
+      "the longest-living animals",
+      "the coldest places on Earth",
+      "the hottest places on Earth",
+      "the biggest moons in the solar system",
+      "the strangest deep-sea creatures"
+    ],
+    "visual_style": "pixel_art",
+    "music_mood": "punchy, upbeat electronic music with a driving beat that builds toward the end",
+    "title_template": {
+      "en": "{title} | Top {count} Countdown",
+      "ta": "{title} | முதல் {count} தரவரிசை"
+    },
+    "description_template": {
+      "en": "{title}\n\nA countdown of {count} from {series}, all about {theme}. {tagline}.\n\nThe countdown: {items}\n\nHow many did you know?\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் {count} இடங்களின் தரவரிசை. {tagline}.\n\nவரிசை: {items}\n\nஉங்களுக்கு எத்தனை தெரியும்?\n{questions}\n\n{hashtags}"
+    },
+    "tags": {
+      "en": [
+        "top 10",
+        "countdown",
+        "rankings",
+        "world records",
+        "top ten facts"
+      ],
+      "ta": [
+        "முதல் பத்து",
+        "தமிழ் தரவரிசை",
+        "சாதனைகள்"
+      ]
+    },
+    "hashtags": {
+      "en": [
+        "#Top10",
+        "#Countdown",
+        "#Rankings"
+      ],
+      "ta": [
+        "#முதல்பத்து",
+        "#தரவரிசை",
+        "#Top10"
+      ]
+    },
+    "category": "24",
+    "settings": {
+      "series": {
+        "name": {
+          "en": "Top Ten",
+          "ta": "முதல் பத்து"
+        },
+        "tagline": {
+          "en": "Ten picks, one winner",
+          "ta": "பத்துத் தேர்வுகள், ஒரே வெற்றியாளர்"
+        },
+        "intro_line": {
+          "en": "Welcome to {series}. Let's count them down!",
+          "ta": "{series} உங்களை வரவேற்கிறது. எண்ணத் தொடங்குவோம்!"
+        },
+        "outro_line": {
+          "en": "Thanks for watching. See you at the next countdown!",
+          "ta": "பார்த்ததற்கு நன்றி. அடுத்த தரவரிசையில் சந்திப்போம்!"
+        }
+      },
+      "story": {
+        "item_count": 10
+      }
+    }
+  }
+}

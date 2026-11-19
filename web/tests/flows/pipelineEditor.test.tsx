@@ -123,8 +123,8 @@ describe("Pipeline editor: edit", () => {
     await user.click(ready);
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    await findToast("Saved “History in five minutes”.");
-    expect(stored("History in five minutes")?.status).toBe("ready");
+    await findToast("Saved “Ancient empires”.");
+    expect(stored("Ancient empires")?.status).toBe("ready");
   });
 
   it("explains why a pipeline in use cannot go back to draft", async () => {

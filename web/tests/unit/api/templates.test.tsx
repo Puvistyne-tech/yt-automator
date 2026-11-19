@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { usePipelines } from "@/api/catalog";
 import { ApiError } from "@/api/errors";
 import { keys } from "@/api/keys";
+import { BUILTIN_TEMPLATES, USER_TEMPLATES } from "@/api/mocks/fixtures/templates";
 import {
   PREVIEW_UNAVAILABLE,
   SUGGESTIONS_UNAVAILABLE,
@@ -22,6 +23,10 @@ import {
 } from "@/api/templates";
 import { AppProviders, createQueryClient } from "@/app/AppProviders";
 import { rejectionOf, TEMPLATE_INPUT } from "../../helpers/templates";
+
+const SEEDED_TEMPLATES = BUILTIN_TEMPLATES.length + USER_TEMPLATES.length;
+const SERVED_PIPELINES =
+  BUILTIN_TEMPLATES.length + USER_TEMPLATES.filter((t) => t.status === "ready").length;
 
 function wrapper({ children }: { children: ReactNode }) {
   return <AppProviders client={createQueryClient(false)}>{children}</AppProviders>;
@@ -73,7 +78,10 @@ describe("template query hooks", () => {
     await waitFor(() => expect(list.result.current.data).toBeDefined());
     await waitFor(() => expect(engines.result.current.data).toHaveLength(1));
     await waitFor(() => expect(one.result.current.data?.name).toBe("Space facts"));
-    expect(list.result.current.data?.map((t) => t.builtin)).toEqual([true, false, false]);
+    expect(list.result.current.data?.map((t) => t.builtin)).toEqual([
+      ...BUILTIN_TEMPLATES.map(() => true),
+      ...USER_TEMPLATES.map(() => false),
+    ]);
   });
 
   it("does not fetch a template without an id", () => {
@@ -123,12 +131,12 @@ describe("template mutation hooks", () => {
     [
       "duplicate",
       (h) => h.duplicate.mutateAsync({ id: "kids_story", request: {} }),
-      (h) => expect(h.templates.data).toHaveLength(4),
+      (h) => expect(h.templates.data).toHaveLength(SEEDED_TEMPLATES + 1),
     ],
   ])("refreshes templates and pipelines after %s", async (_name, mutate, check) => {
     const { invalidate, hooks } = renderMutations();
-    await waitFor(() => expect(hooks.result.current.pipelines.data).toHaveLength(2));
-    await waitFor(() => expect(hooks.result.current.templates.data).toHaveLength(3));
+    await waitFor(() => expect(hooks.result.current.pipelines.data).toHaveLength(SERVED_PIPELINES));
+    await waitFor(() => expect(hooks.result.current.templates.data).toHaveLength(SEEDED_TEMPLATES));
 
     await act(() => mutate(hooks.result.current));
 

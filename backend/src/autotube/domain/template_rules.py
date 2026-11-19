@@ -87,8 +87,8 @@ def ensure_type_id_owned(template: PipelineTemplate, holder_id: str | None) -> N
         ensure_type_id_free(template.type_id, {template.type_id})
 
 
-def ensure_new_id(template_id: str, stored: bool) -> None:
-    if stored:
+def ensure_new_id(template_id: str, taken: bool) -> None:
+    if taken:
         raise RuleConflict("template_exists", f"template {template_id!r} already exists")
 
 

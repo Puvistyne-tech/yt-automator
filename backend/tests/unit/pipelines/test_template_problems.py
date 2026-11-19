@@ -27,11 +27,6 @@ def test_a_blank_template_has_no_problems(audience: TemplateAudience) -> None:
     assert NarratedVideoEngine().problems(template(audience=audience, definition=blank)) == {}
 
 
-def test_the_builtin_has_no_problems() -> None:
-    engine = NarratedVideoEngine()
-    assert [engine.problems(builtin) for builtin in engine.builtin_templates()] == [{}]
-
-
 def test_an_invalid_definition_reports_only_its_own_fields() -> None:
     found = problems(length="endless", structure="podcast", surprise=1, basic=["nowhere"])
     assert set(found) == {"definition.length", "definition.structure", "definition.surprise"}

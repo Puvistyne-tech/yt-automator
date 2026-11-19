@@ -19,6 +19,7 @@ from autotube.infrastructure.pipelines.pipeline_index import DuplicatePipelineEr
 from autotube.infrastructure.pipelines.template_registry import TemplatePipelineRegistry
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
 from autotube.pipelines.registry import installed_engines, installed_pipelines
+from tests.fixtures.builtin_catalog import BUILTIN_IDS
 from tests.fixtures.fake_engines import FakeEngine
 from tests.fixtures.fake_pipeline import FakePipeline, FakeSettings
 from tests.fixtures.fake_repositories import InMemoryTemplates
@@ -73,7 +74,7 @@ def stored(*items: PipelineTemplate) -> InMemoryTemplates:
 def test_kids_story_is_served_with_the_plugins_own_descriptor() -> None:
     pipelines = registry(InMemoryTemplates())
     own = KidsStoryPipeline().descriptor
-    [listed] = pipelines.list()
+    listed = pipelines.list()[0]
     for descriptor in (served(pipelines, "kids_story").descriptor, listed.descriptor):
         assert descriptor == own
         assert descriptor.model_dump_json() == own.model_dump_json()
@@ -99,17 +100,17 @@ def test_a_stored_kids_template_differs_from_kids_story_only_in_its_identity() -
 
 def test_static_pipelines_not_served_by_an_engine_stay_listed() -> None:
     pipelines = registry(InMemoryTemplates(), FakePipeline())
-    assert type_ids(pipelines.list()) == ["fake", "kids_story"]
+    assert type_ids(pipelines.list()) == ["fake", *BUILTIN_IDS]
     assert served(pipelines, "fake").descriptor.type_id == "fake"
 
 
 def test_ready_templates_are_listed_in_order_and_resolved_separately() -> None:
     pipelines = registry(stored(template("a", name="First"), template("b", name="Second")))
-    assert type_ids(pipelines.list()) == ["kids_story", "t_a", "t_b"]
+    assert type_ids(pipelines.list()) == [*BUILTIN_IDS, "t_a", "t_b"]
     first, second = served(pipelines, "t_a"), served(pipelines, "t_b")
     assert first is not second
     assert (first.descriptor.name, second.descriptor.name) == ("First", "Second")
-    assert pipelines.list()[1:] == [first, second]
+    assert pipelines.list()[len(BUILTIN_IDS) :] == [first, second]
     assert pipelines.get("t_missing") is None
 
 
@@ -124,7 +125,7 @@ def test_ready_templates_are_listed_in_order_and_resolved_separately() -> None:
 )
 def test_unservable_templates_are_neither_listed_nor_resolvable(item: PipelineTemplate) -> None:
     pipelines = registry(stored(item))
-    assert type_ids(pipelines.list()) == ["kids_story"]
+    assert type_ids(pipelines.list()) == BUILTIN_IDS
     assert pipelines.get("t_tpl-1") is None
 
 
@@ -132,7 +133,7 @@ def test_unservable_templates_are_neither_listed_nor_resolvable(item: PipelineTe
 def test_a_stored_template_never_shadows_a_builtin_or_static_type(taken: str) -> None:
     genuine = registry(InMemoryTemplates(), FakePipeline())
     pipelines = registry(stored(template(type_id=taken, name="Impostor")), FakePipeline())
-    assert type_ids(pipelines.list()) == ["fake", "kids_story"]
+    assert type_ids(pipelines.list()) == ["fake", *BUILTIN_IDS]
     assert served(pipelines, taken).descriptor == served(genuine, taken).descriptor
 
 
@@ -163,7 +164,7 @@ def test_a_template_set_back_to_draft_is_hidden_until_ready_again() -> None:
     served(pipelines, "t_tpl-1")
     templates.update(template(status=TemplateStatus.DRAFT, revision=2))
     assert pipelines.get("t_tpl-1") is None
-    assert type_ids(pipelines.list()) == ["kids_story"]
+    assert type_ids(pipelines.list()) == BUILTIN_IDS
     templates.update(template(revision=3))
     assert served(pipelines, "t_tpl-1").descriptor.type_id == "t_tpl-1"
 
@@ -174,7 +175,7 @@ def test_a_served_template_that_gains_problems_is_no_longer_served() -> None:
     served(pipelines, "t_tpl-1")
     templates.update(template(definition={"unknown": True}, revision=2))
     assert pipelines.get("t_tpl-1") is None
-    assert type_ids(pipelines.list()) == ["kids_story"]
+    assert type_ids(pipelines.list()) == BUILTIN_IDS
 
 
 def test_two_static_pipelines_with_one_type_id_are_refused() -> None:

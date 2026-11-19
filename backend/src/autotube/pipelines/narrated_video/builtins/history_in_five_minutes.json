@@ -1,0 +1,81 @@
+{
+  "id": "history_in_five_minutes",
+  "name": "History in five minutes",
+  "description": "One invention, journey or turning point from history, explained from start to finish in about five minutes.",
+  "audience": "general",
+  "definition": {
+    "structure": "explainer",
+    "brief": "Each video explains one invention, journey or turning point from world history in about five minutes: the world before it, how it came about, what changed, and why it still matters today. Stay accurate, explain dates and places in plain words, focus on ideas and everyday life rather than famous names, and never dwell on graphic detail about war or violence.",
+    "length": "long",
+    "tone": "vivid, calm, authoritative",
+    "topics": [
+      "the first lighthouses",
+      "how paper spread around the world",
+      "the Silk Road",
+      "the first maps of the world",
+      "the printing press",
+      "how the pyramids were built",
+      "the first postal services",
+      "the first mechanical clocks",
+      "the age of sail",
+      "the first railways",
+      "the telegraph",
+      "ancient Roman roads",
+      "the first libraries",
+      "how the compass changed travel"
+    ],
+    "visual_style": "woodblock_print",
+    "music_mood": "cinematic orchestral music with soft strings and light percussion, curious and stately",
+    "description_template": {
+      "en": "{title}\n\n{series} explains {theme} in about five minutes. {tagline}.\n\nThe takeaway: {takeaway}\n\nThink about it:\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் ஐந்து நிமிட வரலாறு. {tagline}.\n\nநினைவில் கொள்ள: {takeaway}\n\n{questions}\n\n{hashtags}"
+    },
+    "tags": {
+      "en": [
+        "history",
+        "world history",
+        "history explained",
+        "history in five minutes",
+        "learn history"
+      ],
+      "ta": [
+        "தமிழில் வரலாறு",
+        "உலக வரலாறு",
+        "வரலாறு விளக்கம்"
+      ]
+    },
+    "hashtags": {
+      "en": [
+        "#History",
+        "#WorldHistory",
+        "#HistoryExplained"
+      ],
+      "ta": [
+        "#வரலாறு",
+        "#உலகவரலாறு",
+        "#History"
+      ]
+    },
+    "category": "27",
+    "settings": {
+      "series": {
+        "name": {
+          "en": "History in Five",
+          "ta": "ஐந்து நிமிட வரலாறு"
+        },
+        "tagline": {
+          "en": "The past, clearly explained",
+          "ta": "கடந்த காலம், தெளிவாக"
+        },
+        "intro_line": {
+          "en": "Welcome to {series}. Let's step back in time!",
+          "ta": "{series} உங்களை வரவேற்கிறது. காலத்தில் பின்னோக்கிச் செல்வோம்!"
+        },
+        "outro_line": {
+          "en": "Thanks for watching. See you in the next chapter of history!",
+          "ta": "பார்த்ததற்கு நன்றி. அடுத்த வரலாற்றுப் பக்கத்தில் சந்திப்போம்!"
+        }
+      }
+    }
+  }
+}

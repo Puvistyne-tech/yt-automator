@@ -20,6 +20,7 @@ from autotube.pipelines.narrated_video.plugin import (
     ui_schema,
 )
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.template.builtins import packaged_templates
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.descriptor import template_descriptor
 from autotube.pipelines.narrated_video.template.problems import template_problems
@@ -102,4 +103,5 @@ class NarratedVideoEngine:
 
     def builtin_templates(self) -> list[PipelineTemplate]:
         kids = TemplateAudience.KIDS
-        return [builtin_template(ENGINE_ID, TYPE_ID, NAME, DESCRIPTION, kids, self.blank(kids))]
+        kids_story = builtin_template(ENGINE_ID, TYPE_ID, NAME, DESCRIPTION, kids, self.blank(kids))
+        return [kids_story, *packaged_templates(ENGINE_ID)]

@@ -1,0 +1,133 @@
+{
+  "theme": "octopuses",
+  "cast": [],
+  "setting": "a bright coral reef in clear blue water",
+  "mood": "curious and bright",
+  "thumbnail": "an orange octopus spreading its arms across a colourful coral reef",
+  "short_scenes": [0, 1, 3],
+  "text": {
+    "en": {
+      "title": "Seven Amazing Facts About Octopuses",
+      "hook_line": "Meet the cleverest animal in the sea.",
+      "questions": ["How many hearts does an octopus have?", "Which fact surprised you most?"]
+    },
+    "ta": {
+      "title": "ஆக்டோபஸ் பற்றிய ஏழு அற்புத உண்மைகள்",
+      "hook_line": "கடலின் மிகப் புத்திசாலியான உயிரினத்தைச் சந்தியுங்கள்.",
+      "questions": ["ஆக்டோபஸுக்கு எத்தனை இதயங்கள்?", "எந்த உண்மை உங்களை அதிகம் வியக்க வைத்தது?"]
+    }
+  },
+  "scenes": [
+    {
+      "visual": "an orange octopus resting among corals, its arms curled",
+      "action": "The octopus slowly uncurls one arm.",
+      "en": {
+        "narration": "Octopuses are some of the strangest animals in the ocean. They are clever, soft and full of surprises. Here are seven amazing facts about them that you may not know yet."
+      },
+      "ta": {
+        "narration": "ஆக்டோபஸ்கள் கடலின் மிக விசித்திரமான உயிரினங்களில் ஒன்று. அவற்றைப் பற்றிய ஏழு அற்புத உண்மைகளைப் பார்ப்போம்."
+      }
+    },
+    {
+      "visual": "a cut-away diagram of an octopus with three glowing hearts",
+      "action": "The three hearts pulse one after another.",
+      "en": {
+        "number": 1,
+        "heading": "Three hearts",
+        "narration": "Number one: an octopus has three hearts. Two of them work for the gills, and the third serves the rest of the body. When the octopus swims, that third heart pauses, so it often prefers to crawl."
+      },
+      "ta": {
+        "heading": "மூன்று இதயங்கள்",
+        "narration": "முதலாவது: ஆக்டோபஸுக்கு மூன்று இதயங்கள் உள்ளன. அது நீந்தும்போது ஒரு இதயம் ஓய்வெடுக்கிறது."
+      }
+    },
+    {
+      "visual": "an octopus touching a shell with several arms at once",
+      "action": "Each arm reaches in a different direction.",
+      "en": {
+        "number": 2,
+        "heading": "Arms that think",
+        "narration": "Number two: most of an octopus's nerve cells are in its arms, not in its head. Each arm can touch, taste and react on its own, almost as if it had a small mind of its own."
+      },
+      "ta": {
+        "heading": "சிந்திக்கும் கைகள்",
+        "narration": "இரண்டாவது: ஆக்டோபஸின் பெரும்பாலான நரம்பு செல்கள் அதன் கைகளில் உள்ளன. ஒவ்வொரு கையும் தானே தொட்டுச் சுவைக்கும்."
+      }
+    },
+    {
+      "visual": "an octopus half hidden on a rock, its skin matching the stone",
+      "action": "The octopus changes from red to sandy grey.",
+      "en": {
+        "number": 3,
+        "heading": "Masters of colour",
+        "narration": "Number three: an octopus can change the colour and the texture of its skin in less than a second. It uses this trick to hide on rocks, sand and coral, or to send a quick signal."
+      },
+      "ta": {
+        "heading": "நிறம் மாற்றும் திறன்",
+        "narration": "மூன்றாவது: ஒரு நொடிக்குள் ஆக்டோபஸ் தன் நிறத்தையும் தோலையும் மாற்றும். பாறையிலும் மணலிலும் அது மறைந்துவிடும்."
+      }
+    },
+    {
+      "visual": "an octopus squeezing through a narrow gap between two rocks",
+      "action": "The octopus pours itself through the gap.",
+      "en": {
+        "number": 4,
+        "heading": "No bones at all",
+        "narration": "Number four: an octopus has no bones. Its only hard part is a small beak, so it can squeeze through any gap that is bigger than that beak, even a tiny crack in a rock."
+      },
+      "ta": {
+        "heading": "எலும்பே இல்லை",
+        "narration": "நான்காவது: ஆக்டோபஸுக்கு எலும்புகள் இல்லை. அதனால் பாறையின் சிறிய இடுக்கிலும் அது நுழைந்துவிடும்."
+      }
+    },
+    {
+      "visual": "an octopus wrapped around a glass jar with a lid on the sea floor",
+      "action": "The octopus twists the lid of the jar.",
+      "en": {
+        "number": 5,
+        "heading": "A puzzle solver",
+        "narration": "Number five: octopuses are excellent problem solvers. In aquariums, some have learned to open jars with screw lids to reach the food inside, and a few even slip out of their tanks at night."
+      },
+      "ta": {
+        "heading": "புதிர் தீர்க்கும் அறிவு",
+        "narration": "ஐந்தாவது: ஆக்டோபஸ்கள் புதிர்களைத் தீர்ப்பதில் வல்லவை. மூடிய ஜாடியைத் திறந்து உள்ளே உள்ள உணவை எடுக்கும்."
+      }
+    },
+    {
+      "visual": "a deep blue sea with a pale octopus drifting in cold water",
+      "action": "The octopus drifts slowly down into the dark.",
+      "en": {
+        "number": 6,
+        "heading": "Blue inside",
+        "narration": "Number six: the fluid inside an octopus is blue, not red. It carries oxygen with copper instead of iron, which works better in the cold, dark water deep in the sea."
+      },
+      "ta": {
+        "heading": "உள்ளே நீல நிறம்",
+        "narration": "ஆறாவது: ஆக்டோபஸின் உடல் திரவம் நீல நிறம். அது இரும்புக்குப் பதிலாகச் செம்பைப் பயன்படுத்துகிறது."
+      }
+    },
+    {
+      "visual": "an octopus jetting away behind a cloud of dark ink",
+      "action": "A dark cloud of ink spreads through the water.",
+      "en": {
+        "number": 7,
+        "heading": "Ink for a getaway",
+        "narration": "Number seven: when danger comes close, an octopus squirts a cloud of dark ink into the water. The cloud hides its getaway and can even dull the sense of smell of whatever is chasing it."
+      },
+      "ta": {
+        "heading": "தப்பிக்க மை",
+        "narration": "ஏழாவது: ஆபத்து வந்தால் ஆக்டோபஸ் கருமையான மையைப் பீய்ச்சுகிறது. அந்த மேகத்தின் பின்னால் அது தப்பிவிடும்."
+      }
+    },
+    {
+      "visual": "a wide view of a coral reef with an octopus hiding among the rocks",
+      "action": "Small fish swim slowly past the hidden octopus.",
+      "en": {
+        "narration": "Those were seven amazing facts about octopuses. Next time you look at the sea, remember that a clever, colour-changing animal with three hearts may be hiding among the rocks."
+      },
+      "ta": {
+        "narration": "ஆக்டோபஸ் பற்றிய ஏழு அற்புத உண்மைகள் இவை. அடுத்த முறை கடலைப் பார்க்கும்போது, பாறைகளுக்கு இடையே அது ஒளிந்திருக்கலாம்."
+      }
+    }
+  ]
+}
