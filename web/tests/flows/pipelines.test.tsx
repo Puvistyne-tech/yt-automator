@@ -61,6 +61,9 @@ describe("Pipelines list", () => {
 
     const general = await findSection("General");
     expect(general.getByRole("radio", { name: /^Space facts/ })).toBeChecked();
+    const audienceOf = (name: RegExp) => general.getByRole("radio", { name }).closest("label");
+    expect(audienceOf(/^Space facts/)).toHaveTextContent("General audience");
+    expect(audienceOf(/^Kids story videos/)).toHaveTextContent("For kids");
     expect(pathOf(router)).toBe("/automations/new");
   });
 

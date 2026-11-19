@@ -1,19 +1,11 @@
-import type { TemplateAudience, TemplateSummary } from "@/api/types";
+import { AUDIENCE_LABELS, type Label } from "@/api/labels";
+import type { TemplateSummary } from "@/api/types";
 import { pluralize } from "@/shared/format/text";
-import type { Tone } from "@/shared/ui";
 
-export interface TemplateBadge {
-  label: string;
-  tone: Tone;
-}
-
-export const AUDIENCE_BADGES: Record<TemplateAudience, TemplateBadge> = {
-  kids: { label: "For kids", tone: "accent" },
-  general: { label: "General audience", tone: "neutral" },
-};
+export type TemplateBadge = Label;
 
 export function templateBadges(template: TemplateSummary): TemplateBadge[] {
-  const badges: TemplateBadge[] = [AUDIENCE_BADGES[template.audience]];
+  const badges: TemplateBadge[] = [AUDIENCE_LABELS[template.audience]];
   if (template.builtin) {
     badges.unshift({ label: "Built-in", tone: "info" });
   }

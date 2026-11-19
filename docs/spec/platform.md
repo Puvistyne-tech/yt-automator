@@ -879,6 +879,8 @@ pipeline type when it is served), `/automations/:id`, `/pipelines`, `/pipelines/
   plain-language summary of the schedule and review rules, for example "Runs every 6 hours, 08:00 to 20:00,
   at most 2 a day. Publishes privately after you approve.", built by a pure function. When a target goes public
   at a time of day, the summary names it ("Goes public at 18:00 (Asia/Kolkata).").
+  Each pipeline type in the picker and in the saved automation's summary shows its audience badge: "For kids"
+  when its capabilities include `kids_content`, otherwise "General audience".
   A two-way toggle at the top switches between "Simple" (the default) and "All settings"; the choice is
   remembered per browser in localStorage (`autotube.editor.settings-view`), and an unavailable storage falls
   back to Simple. Simple shows, in Content, only the pipeline's `ui:basic` fields under their section titles

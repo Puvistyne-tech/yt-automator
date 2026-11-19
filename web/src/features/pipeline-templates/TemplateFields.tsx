@@ -1,8 +1,8 @@
 import type { FieldErrors } from "@/api/errors";
+import { AUDIENCE_LABELS } from "@/api/labels";
 import type { EngineSummary } from "@/api/types";
 import { AUDIENCE_NOTE, audienceDescription } from "@/features/pipeline-templates/AudienceChoice";
 import type { TemplateDraft } from "@/features/pipeline-templates/model/form";
-import { AUDIENCE_BADGES } from "@/features/pipeline-templates/model/listing";
 import { scopedErrors } from "@/shared/schema-form/errors";
 import { SchemaForm } from "@/shared/schema-form/SchemaForm";
 import { Badge, Card, FormField, Input, Switch, Textarea } from "@/shared/ui";
@@ -17,7 +17,7 @@ interface TemplateFieldsProps {
 }
 
 function AudienceSummary({ draft }: { draft: TemplateDraft }) {
-  const badge = AUDIENCE_BADGES[draft.audience];
+  const badge = AUDIENCE_LABELS[draft.audience];
   return (
     <div className="panel-inset panel-inset-muted stack-sm">
       <span className="row">

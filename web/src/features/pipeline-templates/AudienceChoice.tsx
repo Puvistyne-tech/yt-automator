@@ -1,5 +1,5 @@
+import { AUDIENCE_LABELS } from "@/api/labels";
 import type { TemplateAudience } from "@/api/types";
-import { AUDIENCE_BADGES } from "@/features/pipeline-templates/model/listing";
 import { type RadioCardOption, RadioCards } from "@/shared/ui";
 
 export const AUDIENCE_NOTE =
@@ -19,7 +19,7 @@ const AUDIENCE_OPTIONS: RadioCardOption<TemplateAudience>[] = (
   Object.keys(AUDIENCE_DESCRIPTIONS) as TemplateAudience[]
 ).map((value) => ({
   value,
-  label: AUDIENCE_BADGES[value].label,
+  label: AUDIENCE_LABELS[value].label,
   description: AUDIENCE_DESCRIPTIONS[value],
 }));
 
