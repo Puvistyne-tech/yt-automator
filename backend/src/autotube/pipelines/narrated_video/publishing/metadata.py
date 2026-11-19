@@ -26,7 +26,7 @@ class UploadMetadata(BaseModel):
     hashtags: list[str]
     category_id: str
     default_language: str
-    made_for_kids: bool = True
+    made_for_kids: bool
     playlist_title: str
 
 
@@ -44,5 +44,6 @@ def upload_metadata(story: Story, settings: KidsStorySettings, variant: str) -> 
         hashtags=metadata.hashtags.for_language(language),
         category_id=metadata.category.value,
         default_language=language,
+        made_for_kids=settings.safety.for_kids,
         playlist_title=render_template(metadata.playlist_title.for_language(language), values),
     )

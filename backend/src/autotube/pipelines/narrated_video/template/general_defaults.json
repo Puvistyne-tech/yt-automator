@@ -1,0 +1,87 @@
+{
+  "series": {
+    "tagline": {
+      "en": "Short stories worth sharing",
+      "ta": "பகிர வேண்டிய சிறு கதைகள்"
+    },
+    "refrain": {
+      "en": "",
+      "ta": ""
+    },
+    "intro_line": {
+      "en": "Welcome to {series}. Let's begin!",
+      "ta": "{series} உங்களை அன்புடன் வரவேற்கிறது. கதையைத் தொடங்குவோம்!"
+    },
+    "outro_line": {
+      "en": "Thank you for listening. See you in the next story!",
+      "ta": "கதையைக் கேட்டதற்கு நன்றி. அடுத்த கதையில் சந்திப்போம்!"
+    },
+    "editorial_rules": [
+      "Every story is original and suitable for a general audience of adults and teenagers.",
+      "Never speak to the viewer as a child or as a parent of a child.",
+      "No graphic violence, cruelty, or unsafe behaviour shown as fun.",
+      "No brands, products, real people, places of worship or current events.",
+      "Use clear sentences and everyday words."
+    ]
+  },
+  "look": {
+    "visual_style": "ink_and_wash"
+  },
+  "cast": [
+    {
+      "id": "mira",
+      "name": {
+        "en": "Mira",
+        "ta": "மீரா"
+      },
+      "species": "woman",
+      "visual_descriptor": "a woman in her thirties with short dark hair, a mustard scarf, a grey coat and a calm, curious expression",
+      "personality": "observant, patient and quietly funny; notices what others miss",
+      "palette": ["#3E4A61", "#E0A526", "#9AA5B1"]
+    }
+  ],
+  "story": {
+    "tone": "thoughtful, wry",
+    "writing_style": "Clear sentences, everyday words, a calm and confident voice.",
+    "ending_style": "open",
+    "themes": [
+      "a second chance",
+      "an old promise",
+      "a small mystery",
+      "a long way home",
+      "an unexpected friendship",
+      "starting over"
+    ],
+    "morals": [
+      "Small choices shape who we become.",
+      "Listening is a kind of courage.",
+      "What we keep is less than what we give."
+    ],
+    "reading_level": "early_reader",
+    "question_style": "\"What do you think happens next?\" style questions for viewers"
+  },
+  "visuals": {
+    "judge_criteria": "Pick the picture that best matches the scene, keeps every character on model, looks natural and has no text in it.",
+    "motion_prompt": "Slow, natural animation of an illustrated story scene: {visual}. Mood: {mood}. Soft natural movement, no sudden changes."
+  },
+  "music": {
+    "mood_prompt": "warm acoustic music with soft piano and light strings, calm and inviting"
+  },
+  "sound_effects": {
+    "prompt_template": "natural sound effect for an animated story: {cue}"
+  },
+  "metadata": {
+    "description_template": {
+      "en": "{title}\n\nA story from {series} about {theme}. {tagline}.\n\nWhat do you think happens next?\n{questions}\n\n{hashtags}",
+      "ta": "{title}\n\n{series} வழங்கும் ஒரு கதை. {tagline}.\n\nஅடுத்து என்ன நடக்கும் என்று நினைக்கிறீர்கள்?\n{questions}\n\n{hashtags}"
+    },
+    "tags": {
+      "en": ["stories", "short stories", "animated stories", "story time"],
+      "ta": ["தமிழ் கதைகள்", "சிறு கதைகள்", "Tamil stories"]
+    },
+    "hashtags": {
+      "en": ["#Stories", "#AnimatedStories", "#ShortStories"],
+      "ta": ["#தமிழ்கதைகள்", "#Stories", "#AnimatedStories"]
+    }
+  }
+}

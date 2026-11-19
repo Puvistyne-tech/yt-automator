@@ -14,10 +14,10 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.timeline.voices import VoiceLine
 from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, LogBook, as_json
+from tests.fixtures.quick_sections import QUICK_SECTIONS
 
 REFRAIN_EN = "Be kind, be brave, be you!"
 STAGES: tuple[Stage, ...] = tuple(KidsStoryPipeline().stages())
-NO_FONTS: dict[str, list[str]] = {"en": [], "ta": []}
 BOTH = [("en", "episode"), ("en", "short"), ("ta", "episode"), ("ta", "short")]
 
 
@@ -85,33 +85,30 @@ def is_judge(request: TextRequest) -> bool:
     return bool(request.images)
 
 
-def story_answer() -> str:
-    return as_json(draft_dict())
+def story_answer(name: str = "golden_mango") -> str:
+    return as_json(draft_dict(name))
 
 
-def tamil_answer() -> str:
-    return as_json(tamil_text())
+def tamil_answer(name: str = "golden_mango") -> str:
+    return as_json(tamil_text(name))
 
 
-def smart_writer(judge_answer: str = "2") -> FakeWriter:
+def smart_writer(
+    judge_answer: str = "2", name: str = "golden_mango", draft: dict[str, Any] | None = None
+) -> FakeWriter:
+    answer = as_json(draft) if draft else story_answer(name)
+
     def respond(request: TextRequest) -> str:
         if is_judge(request):
             return judge_answer
-        return tamil_answer() if is_translation(request) else story_answer()
+        return tamil_answer(name) if is_translation(request) else answer
 
     return FakeWriter(respond)
 
 
 def quick_settings(**sections: dict[str, Any]) -> KidsStorySettings:
-    base: dict[str, Any] = {
-        "episode": {"resolution": "1280x720"},
-        "short": {"resolution": "720x1280"},
-        "thumbnail": {"width": 640, "height": 360, "font_files": NO_FONTS},
-        "subtitles": {"font_files": NO_FONTS},
-        "visuals": {"image_candidates": 1, "hero_candidates": 2, "sheet_size": 256},
-    }
-    merged = {name: {**base.get(name, {}), **values} for name, values in sections.items()}
-    return KidsStorySettings.model_validate(base | merged)
+    merged = {key: {**QUICK_SECTIONS.get(key, {}), **values} for key, values in sections.items()}
+    return KidsStorySettings.model_validate(QUICK_SECTIONS | merged)
 
 
 @dataclass

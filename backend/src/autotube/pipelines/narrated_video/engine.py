@@ -10,9 +10,18 @@ from autotube.domain.pipeline_templates import (
     TemplateAudience,
     builtin_template,
 )
-from autotube.domain.validation import validated_settings
-from autotube.pipelines.narrated_video.plugin import DESCRIPTION, NAME, TYPE_ID, KidsStoryPipeline
+from autotube.pipelines.narrated_video.plugin import (
+    DESCRIPTION,
+    NAME,
+    TYPE_ID,
+    KidsStoryPipeline,
+    ui_schema,
+)
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
+from autotube.pipelines.narrated_video.template.descriptor import template_descriptor
+from autotube.pipelines.narrated_video.template.problems import template_problems
+from autotube.pipelines.narrated_video.template.settings_model import settings_model_for
 
 ENGINE_ID = "narrated_video"
 ENGINE_NAME = "Narrated video"
@@ -21,12 +30,17 @@ ENGINE_NAME = "Narrated video"
 class TemplatePipeline(KidsStoryPipeline):
     def __init__(self, template: PipelineTemplate) -> None:
         super().__init__()
-        named = {"type_id": template.type_id, "name": template.name}
-        self.named_descriptor = super().descriptor.model_copy(update=named)
+        definition = NarratedDefinition.model_validate(template.definition)
+        self.model = settings_model_for(definition, template.audience)
+        self.built = template_descriptor(super().descriptor, template, definition)
 
     @property
     def descriptor(self) -> PipelineDescriptor:
-        return self.named_descriptor
+        return self.built
+
+    @property
+    def settings_model(self) -> type[KidsStorySettings]:
+        return self.model
 
 
 class NarratedVideoEngine:
@@ -50,10 +64,10 @@ class NarratedVideoEngine:
         return {}
 
     def blank(self, audience: TemplateAudience) -> JsonObject:  # noqa: ARG002
-        return NarratedDefinition().model_dump(mode="json")
+        return NarratedDefinition().model_dump(mode="json", exclude_defaults=True)
 
     def problems(self, template: PipelineTemplate) -> dict[str, str]:
-        _, errors = validated_settings(NarratedDefinition, template.definition, "definition")
+        errors = template_problems(template, ui_schema())
         if template.engine != ENGINE_ID:
             errors["engine"] = f"template belongs to engine {template.engine!r}, not {ENGINE_ID!r}"
         return errors

@@ -21,28 +21,34 @@ from autotube.pipelines.narrated_video.scoring.measures import (
 )
 
 
-def within_limits(found: Artifact) -> bool:
+def within_limits(found: Artifact, made_for_kids: bool) -> bool:
     title = text(found.meta.get("title"))
     description = text(found.meta.get("description"))
     return (
         0 < len(title) <= TITLE_MAX
         and utf8_length(description) <= DESCRIPTION_MAX_BYTES
         and tags_length(text_list(found.meta.get("tags"))) <= TAGS_MAX
-        and found.meta.get("made_for_kids") is True
+        and found.meta.get("made_for_kids") is made_for_kids
     )
+
+
+def audience_note(made_for_kids: bool) -> str:
+    return "made for kids" if made_for_kids else "not made for kids"
 
 
 def metadata_limits(inputs: ScoreInputs) -> ScoreItem | None:
     found = with_role(inputs.artifacts, Role.UPLOAD_METADATA)
     if not found:
         return None
-    good = sum(1 for item in found if within_limits(item))
+    made_for_kids = inputs.settings.safety.for_kids
+    good = sum(1 for item in found if within_limits(item, made_for_kids))
     return ScoreItem(
         id="metadata_limits",
         title="Metadata limits",
         score=FULL * good / len(found),
         weight=inputs.settings.quality.weights.metadata_limits,
-        detail=f"{good} of {len(found)} uploads within YouTube limits and made for kids",
+        detail=f"{good} of {len(found)} uploads within YouTube limits and "
+        f"{audience_note(made_for_kids)}",
     )
 
 

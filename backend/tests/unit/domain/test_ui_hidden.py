@@ -148,5 +148,5 @@ def test_a_malformed_basic_list_is_not_compared_with_hidden_paths() -> None:
     assert hiding(["mood"], "mood") == ["ui:basic must be a list"]
 
 
-def test_the_kids_story_pipeline_hides_no_settings() -> None:
-    assert HIDDEN_KEY not in KidsStoryPipeline().descriptor.ui_schema
+def test_the_kids_story_pipeline_hides_only_the_pinned_audience() -> None:
+    assert KidsStoryPipeline().descriptor.ui_schema[HIDDEN_KEY] == ["safety.audience"]

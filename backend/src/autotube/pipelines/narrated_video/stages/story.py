@@ -20,6 +20,10 @@ from autotube.pipelines.narrated_video.story.shaping import shaped
 from autotube.pipelines.narrated_video.story.themes import choose_theme
 
 BUNDLED_PROVIDER = "bundled"
+NO_GENERAL_FALLBACK = (
+    "the script writer did not produce a usable script, and a general-audience template never "
+    "falls back to the bundled children's stories"
+)
 Written = tuple[dict[str, Story], str]
 
 
@@ -27,6 +31,10 @@ def bundled_refrain(settings: KidsStorySettings, language: str) -> str:
     if not says_refrain(settings.story.ending_style):
         return ""
     return settings.series.refrain.for_language(language)
+
+
+class GeneralScriptUnavailableError(RuntimeError):
+    pass
 
 
 class StoryStage:
@@ -56,6 +64,8 @@ class StoryStage:
     def authored(
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
     ) -> Written:
+        if not settings.safety.for_kids:
+            return self.general_written(context, settings, order, theme)
         if settings.story.source is StorySource.LLM_WITH_FALLBACK:
             written = self.from_writer(context, settings, order, theme)
             if written is not None:
@@ -65,6 +75,14 @@ class StoryStage:
                 LogLevel.WARNING,
             )
         return self.from_bundle(context, settings, order, theme)
+
+    def general_written(
+        self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
+    ) -> Written:
+        written = self.from_writer(context, settings, order, theme)
+        if written is None:
+            raise GeneralScriptUnavailableError(NO_GENERAL_FALLBACK)
+        return written
 
     def from_writer(
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
