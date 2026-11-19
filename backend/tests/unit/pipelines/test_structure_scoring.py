@@ -19,6 +19,7 @@ from tests.fixtures.explainer_data import (
 )
 from tests.fixtures.kids_data import story
 from tests.fixtures.list_data import list_settings, list_story, with_scene
+from tests.fixtures.quiz_data import quiz_settings, quiz_story
 from tests.fixtures.template_settings import GENERAL
 
 
@@ -71,6 +72,35 @@ def test_inapplicable_items_are_left_out_and_the_score_renormalises() -> None:
         score_items(inputs_of(kids_settings_model()(), {"en": story()}))
     ) == pytest.approx(250 / 4.5)
     assert scored(explainer_settings(GENERAL), {}) == {"completeness": (0.0, 2.0)}
+
+
+@pytest.mark.parametrize(
+    ("settings", "good", "broken", "title"),
+    [
+        (
+            list_settings(GENERAL, "countdown"),
+            list_story(countdown=True),
+            list_story(),
+            "Countdown numbering and headings",
+        ),
+        (
+            quiz_settings(GENERAL),
+            quiz_story(),
+            with_scene(quiz_story(), 2, answer=""),
+            "Quiz questions and reveals",
+        ),
+    ],
+)
+def test_each_structure_scores_its_own_shape(
+    settings: KidsStorySettings, good: Story, broken: Story, title: str
+) -> None:
+    [item] = [
+        item for item in score_items(inputs_of(settings, {"en": good})) if item.id == "structure"
+    ]
+    assert (item.title, item.score, item.weight) == (title, 100.0, 1.5)
+    items = scored(settings, {"en": broken})
+    assert items["structure"] == (50.0, 1.5)
+    assert not {"moral_and_refrain", "character_consistency"} & items.keys()
 
 
 def test_the_list_item_scores_its_shape_and_skips_story_items() -> None:
