@@ -7,9 +7,9 @@ import pytest
 from pydantic import BaseModel
 
 from autotube.domain.run_enums import ArtifactKind
-from autotube.pipelines.kids_story.stages.package import PackageStage
-from autotube.pipelines.kids_story.stages.run_settings import kids_settings
-from autotube.pipelines.kids_story.stages.story import StoryStage
+from autotube.pipelines.narrated_video.stages.package import PackageStage
+from autotube.pipelines.narrated_video.stages.run_settings import kids_settings
+from autotube.pipelines.narrated_video.stages.story import StoryStage
 from tests.fixtures.kids_data import (
     BOTH,
     StageRig,

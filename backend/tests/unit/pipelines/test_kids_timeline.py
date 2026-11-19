@@ -4,19 +4,23 @@ from pathlib import Path
 
 import pytest
 
-from autotube.pipelines.kids_story.settings.output import ShortSceneSelection, ShortSettings
-from autotube.pipelines.kids_story.timeline.composition import Sources, composition, subtitle_style
-from autotube.pipelines.kids_story.timeline.cuts import story_cuts
-from autotube.pipelines.kids_story.timeline.needs import clip_needs
-from autotube.pipelines.kids_story.timeline.plan import (
+from autotube.pipelines.narrated_video.settings.output import ShortSceneSelection, ShortSettings
+from autotube.pipelines.narrated_video.timeline.composition import (
+    Sources,
+    composition,
+    subtitle_style,
+)
+from autotube.pipelines.narrated_video.timeline.cuts import story_cuts
+from autotube.pipelines.narrated_video.timeline.needs import clip_needs
+from autotube.pipelines.narrated_video.timeline.plan import (
     Padding,
     SegmentSpec,
     fit_within,
     laid_out,
     total_seconds,
 )
-from autotube.pipelines.kids_story.timeline.selection import short_scene_indexes
-from autotube.pipelines.kids_story.timeline.variants import planned
+from autotube.pipelines.narrated_video.timeline.selection import short_scene_indexes
+from autotube.pipelines.narrated_video.timeline.variants import planned
 from tests.fixtures.fonts import embedded_font, embedded_font_family
 from tests.fixtures.kids_data import quick_settings, story, voices
 

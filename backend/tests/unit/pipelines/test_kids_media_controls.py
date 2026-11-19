@@ -6,12 +6,12 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from autotube.pipelines.kids_story.art.prompts import judge_request, motion_prompt
-from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.stages.music import bed_prompt
-from autotube.pipelines.kids_story.stages.voice import Line, speech_request
-from autotube.pipelines.kids_story.story.model import StoryScene
+from autotube.pipelines.narrated_video.art.prompts import judge_request, motion_prompt
+from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.stages.music import bed_prompt
+from autotube.pipelines.narrated_video.stages.voice import Line, speech_request
+from autotube.pipelines.narrated_video.story.model import StoryScene
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, run_chain
 from tests.fixtures.kids_fakes import FakeProviders
 
