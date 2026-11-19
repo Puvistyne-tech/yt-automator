@@ -948,8 +948,8 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   `description_template` name every structure's own placeholders (tested).
 - Script model (`story/model.py`): `moral` is optional (default empty) on the draft, the stored script and the
   translation text; `story` always requires it through an always-on gate ('write the moral in "moral"'), and
-  `explainer` requires it as the takeaway ('write the takeaway in "moral"') unless `story.ending_style` is
-  `open`, on written and translated scripts. `StructureSpec.moral_required(settings)` says which (story: always;
+  `explainer` requires it as the takeaway ('write the takeaway in "moral"') only when `story.ending_style` is
+  `moral_and_refrain`, on written and translated scripts. `StructureSpec.moral_required(settings)` says which (story: always;
   explainer: when the ending style says the moral; list, countdown, quiz: never). Every built-in whose
   description uses `{takeaway}` or `{moral}` requires it (tested over all eight built-ins);
   `history_in_five_minutes` and `daily_motivation` set `story.ending_style` to `moral_and_refrain` for that. Every scene also carries optional `number` (an integer from
@@ -980,8 +980,10 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   or speaker line and an empty example character list. The fragment says the first
   scene asks the question the video answers, the middle scenes explain it, the last scene recaps and says the
   takeaway word for word; `moral` holds the takeaway; `characters` is empty and `speaker` is the narrator.
-  With `story.ending_style` `open` the recap sums up in its own words and `moral` is an empty string: the
-  takeaway field gate, the takeaway gate and the translation's takeaway rule do not apply. The explainer shows
+  With `story.ending_style` `refrain_only` or `open` (they behave the same on an explainer) the recap sums up
+  in its own words and `moral` is an empty string: the takeaway field gate, the takeaway gate and the
+  translation's takeaway rule do not apply. An explainer never speaks a refrain, whatever the ending style:
+  its prompt has no ending line, it runs no ending gate and its translation rules name no refrain. The explainer shows
   `story.ending_style` (its only shown story path among the cast paths).
   Gate (check `structure`, in `story.enabled_checks`): the first narration contains a question mark ("open the
   first scene with the question this video answers") and the last scene contains the takeaway ("say the
