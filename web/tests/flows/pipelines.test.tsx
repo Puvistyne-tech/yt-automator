@@ -1,7 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
+import { db } from "@/api/mocks/db";
 import { findSection } from "../helpers/editor";
-import { pathOf, renderApp } from "../helpers/renderApp";
+import {
+  cancelDialog,
+  confirmDialog,
+  findDialog,
+  findToast,
+  pathOf,
+  renderApp,
+} from "../helpers/renderApp";
 import { failWith, server } from "../helpers/server";
 
 async function findPipeline(name: string) {
@@ -69,5 +77,93 @@ describe("Pipelines list", () => {
 
     expect(await screen.findByText("Pipelines are unavailable.")).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("button", { name: "Try again" })).toBeVisible());
+  });
+});
+
+async function openDialog(item: string, action: string, title: string | RegExp) {
+  const app = renderApp("/pipelines");
+  await app.user.click(
+    (await findPipeline(item)).getByRole("button", { name: `${action} ${item}` }),
+  );
+  return { ...app, dialog: await findDialog(title) };
+}
+
+describe("Pipelines: duplicate", () => {
+  it("copies with a new name and audience, then opens the copy", async () => {
+    const { user, router, dialog } = await openDialog("Space facts", "Duplicate", /^Duplicate/);
+    expect(dialog.getByRole("radio", { name: /^General audience/ })).toBeChecked();
+
+    await user.type(dialog.getByLabelText(/^Name of the copy/), "Space for kids");
+    await user.click(dialog.getByRole("radio", { name: /^For kids/ }));
+    await user.click(dialog.getByRole("button", { name: "Duplicate" }));
+
+    await findToast("Created “Space for kids”.");
+    const copy = db.state.templates.find((t) => t.name === "Space for kids");
+    expect(copy).toMatchObject({ audience: "kids", status: "draft", origin: "duplicate" });
+    await waitFor(() => expect(pathOf(router)).toBe(`/pipelines/${copy?.id}`));
+  });
+
+  it("shows a refused name in the dialog", async () => {
+    failWith("post", "/templates/:id/duplicate", 400, {
+      message: "Validation failed",
+      fields: { name: "name must be at most 80 characters" },
+    });
+    const { user, dialog } = await openDialog("Space facts", "Duplicate", /^Duplicate/);
+
+    await user.click(dialog.getByRole("button", { name: "Duplicate" }));
+
+    expect(await dialog.findByText("name must be at most 80 characters")).toBeInTheDocument();
+    expect(db.state.templates).toHaveLength(2);
+  });
+
+  it("creates nothing when cancelled", async () => {
+    const { user } = await openDialog("Space facts", "Duplicate", /^Duplicate/);
+
+    await cancelDialog(user, /^Duplicate/);
+
+    expect(db.state.templates).toHaveLength(2);
+  });
+});
+
+describe("Pipelines: delete", () => {
+  it("deletes an unused pipeline after confirming", async () => {
+    const { user } = await openDialog("History in five minutes", "Delete", "Delete pipeline?");
+
+    await confirmDialog(user, "Delete pipeline?", "Delete pipeline");
+
+    await findToast("Deleted “History in five minutes”.");
+    await waitFor(() =>
+      expect(screen.queryByRole("listitem", { name: "History in five minutes" })).toBeNull(),
+    );
+    expect(db.state.templates.map((t) => t.id)).toEqual(["space-facts"]);
+  });
+
+  it("explains a refusal for a pipeline automations still use", async () => {
+    const { user, dialog } = await openDialog("Space facts", "Delete", "Delete pipeline?");
+
+    await user.click(dialog.getByRole("button", { name: "Delete pipeline" }));
+
+    const alert = await dialog.findByRole("alert");
+    expect(alert).toHaveTextContent("This pipeline is still in use.");
+    expect(alert).toHaveTextContent("template is used by automations: Space facts weekly");
+    expect(db.state.templates).toHaveLength(2);
+  });
+
+  it("reports other failures as a notification", async () => {
+    failWith("delete", "/templates/:id", 500, { message: "Disk is full." });
+    const { user, dialog } = await openDialog("Space facts", "Delete", "Delete pipeline?");
+
+    await user.click(dialog.getByRole("button", { name: "Delete pipeline" }));
+
+    await findToast("Disk is full.");
+    expect(dialog.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("keeps the pipeline when deleting is cancelled", async () => {
+    const { user } = await openDialog("History in five minutes", "Delete", "Delete pipeline?");
+
+    await cancelDialog(user, "Delete pipeline?");
+
+    expect(db.state.templates).toHaveLength(2);
   });
 });
