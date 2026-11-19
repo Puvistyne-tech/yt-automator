@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from autotube.pipelines.narrated_video.settings.story import StorySource
-from autotube.pipelines.narrated_video.stages.story import GeneralScriptUnavailableError, StoryStage
+from autotube.pipelines.narrated_video.stages.story import ScriptUnavailableError, StoryStage
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings
 from tests.fixtures.kids_fakes import FakeProviders, failing_writer
 from tests.fixtures.template_settings import GENERAL, KIDS, model_for, quick_template_settings
@@ -28,7 +28,7 @@ def test_a_general_story_never_falls_back_to_a_bundled_story(
     tmp_path: Path, providers: FakeProviders
 ) -> None:
     rig = StageRig(tmp_path, settings=quick_template_settings(), providers=providers)
-    with pytest.raises(GeneralScriptUnavailableError, match="never falls back"):
+    with pytest.raises(ScriptUnavailableError, match="never falls back"):
         rig.run(StoryStage())
     assert meta_of(rig, "story") == []
 
@@ -36,7 +36,7 @@ def test_a_general_story_never_falls_back_to_a_bundled_story(
 def test_a_general_story_refuses_bundled_only_even_when_unpinned(tmp_path: Path) -> None:
     settings = quick_settings(story={"source": "bundled_only"}, safety={"audience": "general"})
     rig = StageRig(tmp_path, settings=settings)
-    with pytest.raises(GeneralScriptUnavailableError):
+    with pytest.raises(ScriptUnavailableError):
         rig.run(StoryStage())
 
 

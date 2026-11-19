@@ -48,7 +48,7 @@ def test_lines_to_speak_follow_settings(
         (
             {"intro_line": {"en": "Hi from {series} and {nope}", "ta": ""}},
             "en",
-            "Hi from Story Time and {nope}",
+            "Hi from Story Time and ",
         ),
         (
             {"name": {"en": "A {series} {title} B", "ta": "x"}, "intro_line": {"en": "{series}!"}},

@@ -18,13 +18,24 @@ from autotube.pipelines.narrated_video.story.bundled import BundledChoice, pick_
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.shaping import shaped
 from autotube.pipelines.narrated_video.story.themes import choose_theme
+from autotube.pipelines.narrated_video.structures.registry import spec_of
 
 BUNDLED_PROVIDER = "bundled"
 NO_GENERAL_FALLBACK = (
     "the script writer did not produce a usable script, and a general-audience template never "
     "falls back to the bundled children's stories"
 )
+NO_STRUCTURE_FALLBACK = (
+    "the script writer did not produce a usable script, and {structure} scripts have no bundled "
+    "fallback"
+)
 Written = tuple[dict[str, Story], str]
+
+
+def no_fallback_reason(settings: KidsStorySettings) -> str:
+    if not settings.safety.for_kids:
+        return NO_GENERAL_FALLBACK
+    return NO_STRUCTURE_FALLBACK.format(structure=spec_of(settings).title.lower())
 
 
 def bundled_refrain(settings: KidsStorySettings, language: str) -> str:
@@ -33,7 +44,7 @@ def bundled_refrain(settings: KidsStorySettings, language: str) -> str:
     return settings.series.refrain.for_language(language)
 
 
-class GeneralScriptUnavailableError(RuntimeError):
+class ScriptUnavailableError(RuntimeError):
     pass
 
 
@@ -64,8 +75,8 @@ class StoryStage:
     def authored(
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
     ) -> Written:
-        if not settings.safety.for_kids:
-            return self.general_written(context, settings, order, theme)
+        if not settings.safety.for_kids or not spec_of(settings).uses_bundled:
+            return self.written_only(context, settings, order, theme)
         if settings.story.source is StorySource.LLM_WITH_FALLBACK:
             written = self.from_writer(context, settings, order, theme)
             if written is not None:
@@ -76,12 +87,12 @@ class StoryStage:
             )
         return self.from_bundle(context, settings, order, theme)
 
-    def general_written(
+    def written_only(
         self, context: StageContext, settings: KidsStorySettings, order: list[str], theme: str
     ) -> Written:
         written = self.from_writer(context, settings, order, theme)
         if written is None:
-            raise GeneralScriptUnavailableError(NO_GENERAL_FALLBACK)
+            raise ScriptUnavailableError(no_fallback_reason(settings))
         return written
 
     def from_writer(

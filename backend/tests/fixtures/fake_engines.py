@@ -20,6 +20,7 @@ from tests.fixtures.fake_pipeline import FakePipeline
 ENGINE_ID = "sample"
 BUILTIN_TYPE = "sample_builtin"
 REFUSED_BRIEF = "refused"
+FIXED_KEY = "fixed"
 
 
 class SampleDefinition(BaseModel):
@@ -27,6 +28,7 @@ class SampleDefinition(BaseModel):
 
     brief: str = ""
     length: Literal["short", "long"] = "short"
+    fixed: str = ""
 
 
 def brief_problems(definition: JsonObject) -> dict[str, str]:
@@ -50,6 +52,13 @@ class FakeEngine:
     def problems(self, template: PipelineTemplate) -> dict[str, str]:
         _, errors = validated_settings(SampleDefinition, template.definition, "definition")
         return errors | brief_problems(template.definition)
+
+    def revision_problems(
+        self, current: PipelineTemplate, proposed: PipelineTemplate
+    ) -> dict[str, str]:
+        if current.definition.get(FIXED_KEY) == proposed.definition.get(FIXED_KEY):
+            return {}
+        return {f"definition.{FIXED_KEY}": "cannot change after creation"}
 
     def pipeline(self, template: PipelineTemplate) -> Pipeline:
         return FakePipeline(type_id=template.type_id)

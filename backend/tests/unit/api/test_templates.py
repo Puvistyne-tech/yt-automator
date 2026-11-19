@@ -50,7 +50,7 @@ def test_engines_route_lists_definition_forms(served: Api) -> None:
         "kids": {"brief": "for a kids audience"},
         "general": {"brief": "for a general audience"},
     }
-    assert set(engine["definition_schema"]["properties"]) == {"brief", "length"}
+    assert set(engine["definition_schema"]["properties"]) == {"brief", "length", "fixed"}
 
 
 def test_create_list_and_get(served: Api) -> None:

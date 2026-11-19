@@ -1,0 +1,5 @@
+Cast (use only these characters, refer to them in "characters" by their id; $lead leads the story):
+$cast
+
+Choose one moral from this list, or a close gentle variation of one:
+$morals

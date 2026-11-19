@@ -2,11 +2,7 @@ from __future__ import annotations
 
 from autotube.domain.pipeline import StageContext
 from autotube.domain.quality import ScoreItem
-from autotube.pipelines.narrated_video.scoring.content_items import (
-    character_consistency,
-    moral_and_refrain,
-    reading_level,
-)
+from autotube.pipelines.narrated_video.scoring.content_items import reading_level
 from autotube.pipelines.narrated_video.scoring.inputs import ScoreInputs, ScoreRule, gathered
 from autotube.pipelines.narrated_video.scoring.output_items import (
     completeness,
@@ -19,23 +15,24 @@ from autotube.pipelines.narrated_video.scoring.timing_items import (
     speaking_rate,
     subtitle_timing,
 )
+from autotube.pipelines.narrated_video.structures.registry import spec_of
 
-RULES: tuple[ScoreRule, ...] = (
+LEADING_RULES: tuple[ScoreRule, ...] = (
     subtitle_timing,
     episode_duration,
     short_duration,
     speaking_rate,
     reading_level,
-    moral_and_refrain,
-    character_consistency,
-    metadata_limits,
-    loudness,
-    completeness,
 )
+TRAILING_RULES: tuple[ScoreRule, ...] = (metadata_limits, loudness, completeness)
+
+
+def score_rules(inputs: ScoreInputs) -> tuple[ScoreRule, ...]:
+    return (*LEADING_RULES, *spec_of(inputs.settings).score_rules, *TRAILING_RULES)
 
 
 def score_items(inputs: ScoreInputs) -> list[ScoreItem]:
-    return [item for rule in RULES if (item := rule(inputs)) is not None]
+    return [item for rule in score_rules(inputs) if (item := rule(inputs)) is not None]
 
 
 def score_run(context: StageContext) -> list[ScoreItem]:

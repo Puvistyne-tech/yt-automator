@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
 from autotube.pipelines.narrated_video.story.gates import (
     Gate,
     banned_word_problems,
@@ -14,8 +15,6 @@ from autotube.pipelines.narrated_video.story.gates import (
     ending_problems,
     reading_level_problems,
     scene_count_problems,
-    story_problems,
-    translation_problems,
     words_per_scene_problems,
 )
 from autotube.pipelines.narrated_video.story.model import Story
@@ -168,9 +167,9 @@ def test_story_problems_combine_every_gate_in_order() -> None:
         "scene 9 has 2 words",
         "say the moral",
         "say the refrain",
+        "only use cast ids; unknown: dragon",
         "remove these words: monster",
         "remove these brand names: Pepsi",
-        "only use cast ids; unknown: dragon",
     ]
     found = iter(problems)
     assert all(any(item.startswith(start) for item in found) for start in expected_starts)

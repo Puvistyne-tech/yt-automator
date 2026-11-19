@@ -55,20 +55,23 @@ class MetadataSettings(SettingsSection):
         "{title} | {series}",
         "{title} | {series}",
         "Episode title",
-        "Episode title per language; {title}, {series}, {moral} and {theme} are filled in.",
+        "Episode title per language; {title}, {series} and {theme} are filled in, plus the "
+        "format's own: {moral} for stories, {takeaway} for explainers.",
     )
     short_title_template: LocalizedText = localized_text(
         "{title} #Shorts",
         "{title} #Shorts",
         "Short title",
-        "Short title per language; {title}, {series}, {moral}, {theme} and {hook} are filled in.",
+        "Short title per language; {title}, {series}, {theme} and {hook} are filled in, plus the "
+        "format's own: {moral} for stories, {takeaway} for explainers.",
     )
     description_template: LocalizedText = localized_text(
         DESCRIPTION_EN,
         DESCRIPTION_TA,
         "Description",
-        "Placeholders: {title} {series} {tagline} {moral} {theme} {questions} {hashtags} "
-        "{characters} {refrain} {hook}.",
+        "Placeholders: {title} {series} {tagline} {theme} {questions} {hashtags} {hook}. Which "
+        "others work depends on the format: stories add {moral} {characters} {refrain}, "
+        "explainers add {takeaway}. Any other placeholder is left empty.",
     )
     tags: LocalizedList = localized_list(
         TAGS_EN,

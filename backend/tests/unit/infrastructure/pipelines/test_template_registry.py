@@ -19,13 +19,14 @@ from autotube.infrastructure.pipelines.pipeline_index import DuplicatePipelineEr
 from autotube.infrastructure.pipelines.template_registry import TemplatePipelineRegistry
 from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
 from autotube.pipelines.registry import installed_engines, installed_pipelines
+from tests.fixtures.fake_engines import FakeEngine
 from tests.fixtures.fake_pipeline import FakePipeline, FakeSettings
 from tests.fixtures.fake_repositories import InMemoryTemplates
 from tests.fixtures.template_records import template
 
 
 @dataclass(frozen=True)
-class TwinEngine:
+class TwinEngine(FakeEngine):
     engine_id: str = "twin"
     name: str = "Twin"
     definition_model: type[BaseModel] = FakeSettings
@@ -36,9 +37,6 @@ class TwinEngine:
 
     def problems(self, template: PipelineTemplate) -> dict[str, str]:
         return {} if template.engine == self.engine_id else {"engine": template.engine}
-
-    def pipeline(self, template: PipelineTemplate) -> Pipeline:
-        return FakePipeline(type_id=template.type_id)
 
     def builtin_templates(self) -> list[PipelineTemplate]:
         twin = builtin_template(self.engine_id, "twin", "Twin", "", TemplateAudience.GENERAL, {})

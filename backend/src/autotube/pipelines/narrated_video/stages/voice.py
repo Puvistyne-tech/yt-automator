@@ -17,7 +17,7 @@ from autotube.pipelines.narrated_video.stages.story_loading import load_story
 from autotube.pipelines.narrated_video.stages.voice_check import check_note, checked_speech
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.normalise import speakable
-from autotube.pipelines.narrated_video.text.templates import render_template
+from autotube.pipelines.narrated_video.text.templates import EMPTY, render_template
 from autotube.pipelines.narrated_video.timeline.variants import HOOK, INTRO, OUTRO
 from autotube.pipelines.narrated_video.timeline.voices import timings_meta
 
@@ -33,7 +33,7 @@ class Line:
 
 
 def filled_line(line: LocalizedText, values: Mapping[str, str], language: str) -> str:
-    return render_template(line.for_language(language), values)
+    return render_template(line.for_language(language), values, EMPTY)
 
 
 def lines_to_speak(story: Story, settings: KidsStorySettings) -> list[Line]:

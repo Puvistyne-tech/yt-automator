@@ -29,10 +29,14 @@ def audience_hidden_paths(audience: TemplateAudience) -> tuple[str, ...]:
     return (AUDIENCE_PATH, *GENERAL_HIDDEN_PATHS)
 
 
+def llm_only_pins() -> dict[str, str]:
+    return {"source": StorySource.LLM_WITH_FALLBACK.value}
+
+
 def audience_pins(audience: TemplateAudience) -> Pins:
     pins: Pins = {"safety": {"audience": audience.value}}
     if audience is TemplateAudience.GENERAL:
-        pins["story"] = {"source": StorySource.LLM_WITH_FALLBACK.value}
+        pins["story"] = llm_only_pins()
     return pins
 
 
@@ -48,11 +52,15 @@ def pinned_section(
 
 
 def with_audience(data: object, audience: TemplateAudience, default: SectionDefault) -> object:
+    return with_pins(data, audience_pins(audience), default)
+
+
+def with_pins(data: object, all_pins: Pins, default: SectionDefault) -> object:
     values = plain(data)
     if not isinstance(values, dict):
         return data
     pinned = dict(values)
-    for section, pins in audience_pins(audience).items():
+    for section, pins in all_pins.items():
         section_values = pinned_section(values, section, pins, default)
         if section_values is None:
             return data

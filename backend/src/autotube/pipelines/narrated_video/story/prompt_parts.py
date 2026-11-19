@@ -19,6 +19,14 @@ OPEN_ENDING = (
 )
 MORAL_RULE = "The moral must appear word for word, as you translate it, inside the last narration."
 NO_CUES = "is always an empty list."
+SPEAKER_RULE = '"speaker" is "narrator", or a character id if that character says the whole scene.'
+ACTION_RULE = (
+    "For each scene, also write `action`: one short present-tense sentence describing the one "
+    "main visible movement in the picture, with one subject doing one thing (for example: "
+    "'{example}'). Do not mention the camera, dialogue, sounds, text or more than one event."
+)
+KIDS_ACTION_EXAMPLE = "The little fox trots along the riverbank and sniffs a paper boat."
+GENERAL_ACTION_EXAMPLE = "The baker slides a tray of bread into the glowing oven."
 
 
 def bullet_lines(items: Sequence[str]) -> str:
@@ -44,6 +52,10 @@ def avoided_topics(topics: Sequence[str]) -> str:
 
 def listeners(for_kids: bool) -> str:
     return KIDS_LISTENERS if for_kids else GENERAL_LISTENERS
+
+
+def action_rule(for_kids: bool) -> str:
+    return ACTION_RULE.format(example=KIDS_ACTION_EXAMPLE if for_kids else GENERAL_ACTION_EXAMPLE)
 
 
 def ending_requirement(style: EndingStyle, refrain: str, for_kids: bool) -> str:

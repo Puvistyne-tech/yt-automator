@@ -22,6 +22,7 @@ from autotube.pipelines.narrated_video.settings.quality import QualitySettings
 from autotube.pipelines.narrated_video.settings.series import SafetySettings, SeriesSettings
 from autotube.pipelines.narrated_video.settings.sound_effects import SoundEffectSettings
 from autotube.pipelines.narrated_video.settings.story import StorySettings
+from autotube.pipelines.narrated_video.settings.story_choices import needs_cast
 from autotube.pipelines.narrated_video.settings.subtitles import SubtitleSettings
 from autotube.pipelines.narrated_video.settings.thumbnail import ThumbnailSettings
 from autotube.pipelines.narrated_video.settings.video_look import FOLLOW_EPISODE_FPS
@@ -40,9 +41,9 @@ class KidsStorySettings(SettingsSection):
     )
     cast: list[Character] = Field(
         default_factory=default_cast,
-        min_length=1,
         title="Cast",
-        description="The recurring characters. The first one leads unless the lead takes turns.",
+        description="The recurring characters. The first one leads unless the lead takes turns. "
+        "A story needs at least one; other structures may have none.",
     )
     story: StorySettings = Field(
         default_factory=StorySettings,
@@ -110,6 +111,8 @@ class KidsStorySettings(SettingsSection):
 
     @model_validator(mode="after")
     def check_cast(self) -> KidsStorySettings:
+        if needs_cast(self.story.structure) and not self.cast:
+            raise ValueError("a story needs at least one cast member")
         ids = [member.id for member in self.cast]
         if len(ids) != len(set(ids)):
             raise ValueError("character ids must be unique")

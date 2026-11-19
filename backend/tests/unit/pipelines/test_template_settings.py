@@ -6,12 +6,11 @@ import pytest
 
 from autotube.domain.pipeline_descriptors import settings_schema_of
 from autotube.domain.pipeline_templates import TemplateAudience
-from autotube.pipelines.narrated_video.publishing.templates import (
-    METADATA_PLACEHOLDERS,
-    template_values,
-)
+from autotube.pipelines.narrated_video.publishing.templates import template_values
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.story.child_terms import child_terms_in
+from autotube.pipelines.narrated_video.structures.registry import metadata_placeholders
 from autotube.pipelines.narrated_video.template.audience import audience_defaults, with_audience
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.merging import deep_merged
@@ -22,7 +21,7 @@ from autotube.pipelines.narrated_video.template.settings_model import (
 from autotube.pipelines.narrated_video.template.text_leaves import text_leaves
 from tests.fixtures.kids_data import story
 from tests.fixtures.prompt_pins import stored_settings
-from tests.fixtures.template_settings import GENERAL, KIDS, defaults_for
+from tests.fixtures.template_settings import GENERAL, KIDS, defaults_for, model_for
 
 ENGINE = KidsStorySettings().model_dump(mode="json")
 
@@ -125,6 +124,11 @@ def test_a_blank_general_template_inherits_no_child_directed_text() -> None:
     assert general == KidsStorySettings.model_validate(pinned).model_dump(mode="json")
 
 
+def test_a_blank_general_explainer_inherits_no_child_directed_text() -> None:
+    explainer = defaults_for(GENERAL, structure="explainer")
+    assert [text for text in text_leaves(explainer) if child_terms_in(text)] == []
+
+
 def test_general_defaults_replace_the_childrens_story_frame() -> None:
     general = defaults_for(GENERAL)
     assert [member["species"] for member in general["cast"]] == ["woman"]
@@ -154,8 +158,10 @@ def test_pinning_leaves_input_it_cannot_read_to_validation() -> None:
     assert with_audience({"safety": 3}, KIDS, no_default) == {"safety": 3}
 
 
-def test_metadata_placeholders_match_the_filled_values() -> None:
-    assert set(template_values(story(), KidsStorySettings())) == set(METADATA_PLACEHOLDERS)
+@pytest.mark.parametrize("structure", list(Structure))
+def test_metadata_placeholders_match_the_filled_values(structure: Structure) -> None:
+    settings = model_for(KIDS, structure=structure.value)()
+    assert set(template_values(story(), settings)) == set(metadata_placeholders(structure))
 
 
 def test_derived_models_are_built_once_per_definition_and_audience() -> None:

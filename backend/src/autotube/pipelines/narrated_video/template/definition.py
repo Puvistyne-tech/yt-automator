@@ -14,7 +14,6 @@ from autotube.pipelines.narrated_video.settings.base import (
 from autotube.pipelines.narrated_video.settings.choices import (
     CATEGORY_CHOICES,
     enum_choices,
-    titled_choices,
 )
 from autotube.pipelines.narrated_video.settings.look_choices import (
     CUSTOM_STYLE,
@@ -22,12 +21,9 @@ from autotube.pipelines.narrated_video.settings.look_choices import (
     style_entries,
 )
 from autotube.pipelines.narrated_video.settings.metadata import YouTubeCategory
+from autotube.pipelines.narrated_video.settings.story_choices import STRUCTURE_CHOICES, Structure
 
 ENGINE_STYLE_ENTRY: JsonDict = {"const": "", "title": "Keep the engine's style"}
-
-
-class Structure(StrEnum):
-    STORY = "story"
 
 
 class Length(StrEnum):
@@ -36,7 +32,6 @@ class Length(StrEnum):
     LONG = "long"
 
 
-STRUCTURE_CHOICES = titled_choices({item.value: item.value.capitalize() for item in Structure})
 LENGTH_CHOICES = enum_choices(
     Length,
     {

@@ -185,9 +185,12 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   defaults: the series name defaults to "Story Time", the brand mark text is empty (no mark is drawn), and
   `{series}` is filled in with the automation's series name in the intro line, outro line, titles,
   descriptions and playlist title; the intro and outro lines take the same placeholders as the description,
-  and unknown placeholders stay as written. The series name must not be blank in any language. When no bundled story
-  fits the automation's cast ids and languages, the story stage fails naming both what the automation has
-  and what the bundled stories need.
+  and any placeholder the structure does not supply (including an unknown one) is left empty there, in titles,
+  descriptions, playlist titles and the card and thumbnail text (`text/templates.py::render_template` with
+  `missing=""`; other callers keep unknown placeholders as written). An episode or Short title that renders
+  empty falls back to the script's title, and `UploadMetadata.title` must not be empty. The series name must not be blank in any language. When no bundled story fits the
+  automation's cast ids and languages, the story stage fails naming both what the automation has and what
+  the bundled stories need.
 - Kids story writing, voice and sound controls. Every default renders the translation, motion and judge
   prompts and the story user prompt exactly as before these settings existed, and stored settings without
   them load unchanged. The default editorial rules no longer include "End with the moral said plainly, then
@@ -206,12 +209,12 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     cast member leads; `per_episode`: the lead is picked from a hash of the run id, as stages have no episode
     counter, so a lead can repeat). The episode cast is the lead followed by the next cast members in cast
     order, wrapping round (`story/casting.py::episode_cast(settings, seed)`). The story prompt lists only the
-    episode cast, and the cast gate (`story_problems(story, settings, seed)`, seeded with the run id) rejects
-    any other cast id. Bundled stories are picked against the whole cast.
+    episode cast, and the cast gate (`story/checks.py::story_problems(story, settings, seed)`, seeded with the
+    run id) rejects any other cast id. Bundled stories are picked against the whole cast.
   - `story.question_style`, `short.hook_style` and `story.translation_style` replace the fixed wording of the
     questions, the hook line and the translation register.
   - `story.enabled_checks`: the story checks that run (`scene_count`, `words_per_scene`, `duration`,
-    `ending`, `reading_level`, `cast`; default all), published as an array of `oneOf` items with
+    `ending`, `reading_level`, `cast`, `structure`; default all), published as an array of `oneOf` items with
     `uniqueItems` and shown as checkboxes. Banned words and brand names are child-safety checks: they always
     run and cannot be listed. Translations run the ending check only when it is enabled.
   - `sound_effects.max_per_scene` (default 2) is stated in the prompt ("zero to two…", or "always an empty
@@ -587,11 +590,14 @@ class PipelineEngine(Protocol):
     definition_ui_schema: JsonObject
     def blank(self, audience) -> JsonObject
     def problems(self, template) -> dict[str, str]
+    def revision_problems(self, current, proposed) -> dict[str, str]
     def pipeline(self, template) -> Pipeline
     def builtin_templates(self) -> list[PipelineTemplate]
 ```
 
 - `problems` maps a field path (`definition.<path>`, or `engine` for a template of another engine) to a message.
+- `revision_problems` reports the definition fields the engine fixes at creation that an update would change,
+  keyed the same way. Updating a template returns 400 with these, its `problems` and the rule errors below.
 - `type_id` is fixed at creation: `t_<id>` for a user template, the engine's own id for a built-in. A rename never
   changes it.
 - Rules (`domain/template_rules.py`): built-ins are read-only (`template_builtin`); audience, engine and type id
@@ -613,7 +619,7 @@ class PipelineEngine(Protocol):
 
 | Field | Type | Maps to |
 | --- | --- | --- |
-| `structure` | `story` (default; more structures are added as enum members) | fixed once created |
+| `structure` | `story` (default) \| `explainer` (see Structures) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
 | `brief` | text, at most 2000 | `story.extra_instructions` as "Every video is about: <brief>" |
 | `length` | `short` \| `standard` (default) \| `long` | short: 60 s ±15, 4–6 scenes; long: 300 s ±45, 14–18 scenes; standard changes nothing |
 | `tone` | text | `story.tone` |
@@ -632,7 +638,8 @@ class PipelineEngine(Protocol):
 - `settings_model_for(definition, audience)` builds a subclass of the engine settings model with
   `pydantic.create_model`. Its schema equals the engine's; only the top-level section defaults change.
 - Defaults are deep-merged in this order (objects merge, lists and scalars replace): engine defaults, the
-  audience defaults (general only: `template/general_defaults.json`), the values mapped from the definition,
+  audience defaults (general only: `template/general_defaults.json`), the structure's defaults, the values mapped
+  from the definition,
   then the `settings` overlay; the kids floor is applied when the result is validated (kids only).
 - The general defaults leave nothing child-directed: tagline, an empty refrain, intro and outro lines,
   editorial rules, the `ink_and_wash` style, a single adult cast member (`mira`), tone, writing style, an open
@@ -643,6 +650,8 @@ class PipelineEngine(Protocol):
   same way. The `kids_story` pipeline uses the same pinned model with audience kids, so stored `kids_story`
   settings validate unchanged.
 - The descriptor's `default_settings` come from this model.
+- `story.structure` is pinned the same way to the definition's structure, and `story.source` to
+  `llm_with_fallback` for every structure without bundled scripts.
 - Derived models are cached per (definition, audience), and the engine schema used by `problems` is built
   once, so checking a template or listing pipelines does not rebuild models or schemas.
 
@@ -652,7 +661,8 @@ class PipelineEngine(Protocol):
   `version` is `"<engine version>+r<revision>"`.
 - `ui_schema` is the engine's with `ui:basic` from the definition (or the engine's list) and `ui:hidden` = the
   definition's `hidden`, then `safety.audience`, then for general templates `story.age_min`, `story.age_max`
-  `story.reading_level` and `story.source`. The engine's own `ui:hidden` is `["safety.audience"]`.
+  `story.reading_level` and `story.source`, then the structure's hidden paths (see Structures). The engine's
+  own `ui:hidden` is `["safety.audience", "story.structure"]`.
 - Capabilities: a kids template keeps `kids_content`; a general template never has it. `domain/kids_rules.py`
   stays the only place that decides the upload's made-for-kids flag.
 
@@ -665,9 +675,11 @@ class PipelineEngine(Protocol):
     missing (compared ignoring case, never duplicated);
   - every engine `picture_exclusions` term is appended if missing;
   - `story.enabled_checks` always contains `reading_level`, the only switchable check that guards
-    age-appropriate language (scene count, words per scene, duration, ending and cast are form checks);
+    age-appropriate language (scene count, words per scene, duration, ending, cast and structure are form
+    checks);
   - `story.age_min`/`age_max` stay capped at 12 by validation.
-  The banned-word and brand gates are always on, and kids templates always use the kids system prompt.
+  The banned-word and brand gates are always on, and kids templates of every structure always use the kids
+  system prompt (`story_system.txt`, with the age range and reading level).
   Behaviour change: a stored kids automation whose settings removed a floored entry gets it back silently when
   it is loaded; defaults that already meet the floor are unchanged.
 - General templates: every prompt with a `_general` variant (`story_system`, `translate_system`, `image_scene`,
@@ -694,11 +706,76 @@ class PipelineEngine(Protocol):
   fails or never passes the gates, the story stage fails with "…never falls back to the bundled children's
   stories" instead.
 
+#### Structures (`pipelines/narrated_video/structures/`)
+
+A structure is the shape of every script. `settings.story.structure` (`story` by default, so stored settings and
+the built-in `kids_story` are unchanged) selects one `StructureSpec` from `structures/registry.py::SPECS`:
+
+```
+StructureSpec   id, title, wording ({format, pieces, piece}: the words the shared story_system and
+                story_user prompts use for this structure), prompt_values(settings, language, seed) -> the
+                structure's own story_user values (structure_rules, ending, speaker, characters), translation_rules(settings, language) -> its translation rule lines,
+                extra_gates(seed), translation_gates, score_rules, placeholders (metadata placeholders beyond
+                the common ones), placeholder_values(story, settings), uses_bundled (may fall back to the
+                bundled stories), basic_paths (the derived `ui:basic` when the definition has none; empty
+                keeps the engine's), hidden_paths (added to the derived `ui:hidden`), defaults_file (JSON in
+                `structures/`, merged after the audience defaults)
+```
+
+- Script checks (`story/checks.py`): the size gates (scene count, words per scene, duration), then the
+  structure's extra gates, then the safety gates (banned words, brand names, child-directed terms), then the
+  reading level. Translations run the structure's translation gates, then the safety gates.
+- Score items: subtitle timing, episode and Short duration, speaking rate and reading level, then the
+  structure's score rules, then metadata limits, loudness and completeness.
+- Metadata placeholders: `{title} {series} {tagline} {theme} {questions} {hashtags} {hook}` for every structure,
+  plus the structure's own.
+- Every scene of every structure carries `action` (text, default empty, so stored scripts and bundled stories
+  validate): "One short present-tense sentence naming the single visible movement in this scene, for the
+  video model." Every script prompt asks for it right after `visual`, with a kids example (a little fox on a
+  riverbank) or, for general audiences, a neutral one (a baker at an oven), and shows it in the JSON shape. The
+  motion prompt does not use it yet. The banned-word, brand-name and child-directed term gates read it with the
+  narration.
+- Every structure shares `story_system.txt` (or its `_general` variant) and `story_user.txt`; a structure fills
+  `$format`, `$pieces` and `$piece`, puts its own block in `$structure_rules`, and may add the ending and
+  speaker requirements and the example character id. The rendered story prompts are unchanged and pinned.
+- `story`: wording "animated story" / "stories" / "story"; `$structure_rules` is `story_cast.txt` with the
+  episode cast, lead and morals; the ending requirement, the speaker line and the lead as example character; ending and cast
+  gates; ending translation gate; `moral_and_refrain` and `character_consistency` score items; placeholders
+  `{moral} {characters} {refrain}`; bundled fallback. Its cast needs at least one member (validated on the
+  settings, "a story needs at least one cast member"); other structures may have an empty cast.
+- `explainer`: a narrated explanation of one topic with no recurring characters. Wording "narrated explainer" /
+  "explainer scripts" / "explainer script"; `$structure_rules` is the `explainer.txt` fragment, with no ending
+  or speaker line and an empty example character list. The fragment says the first
+  scene asks the question the video answers, the middle scenes explain it, the last scene recaps and says the
+  takeaway word for word; `moral` holds the takeaway; `characters` is empty and `speaker` is the narrator.
+  Gate (check `structure`, in `story.enabled_checks`): the first narration contains a question mark ("open the
+  first scene with the question this video answers") and the last scene contains the takeaway ("say the
+  takeaway, word for word, in the last scene"); translations run the same gate, and their prompt names no
+  characters ("none, there are no recurring characters"). The ending and cast gates do not run, and the
+  `moral_and_refrain` and `character_consistency` score items are not scored; the `structure` item ("Explainer
+  hook and takeaway", weight `quality.weights.structure`, default 1.5) scores the explainer gate the way the
+  ending item does. Placeholder `{takeaway}`. No bundled fallback: `story.source` is pinned to
+  `llm_with_fallback`, and when the writer fails the story stage fails ("…explainer scripts have no bundled
+  fallback" for kids, the general message for general). Defaults (`structures/explainer_defaults.json`): an
+  empty cast and refrain, explainer topics as themes, no morals, a "Do you remember?" question style, and an
+  explainer description (with `{takeaway}`), tags and hashtags, all free of child-directed terms. Hidden paths:
+  `cast`, `story.morals`, `story.ending_style`, `story.ending_scenes`, `story.lead_mode`,
+  `story.cast_per_episode`, `series.refrain`, `visuals.character_sheets`, `quality.weights.moral_and_refrain`,
+  `quality.weights.character_consistency`, and `story.source`.
+
+- Safety across structures (tested): a kids template of any structure carries `kids_content`, uploads made for
+  kids, keeps the kids floor and the kids system-prompt lines; a general template of any structure never does;
+  a general explainer runs the child-directed term gate and never uses the bundled stories; a blank template of
+  every structure and audience has no problems and runs offline through the fake providers.
+
 #### Problems
 
 `engine.problems(template)` returns, keyed by field path: definition validation errors (`definition.<field>`);
-an unknown style (`definition.visual_style`, reported alone); unknown placeholders in the metadata templates
-(`definition.title_template` and so on; the placeholders are those of `publishing/templates.py`); `ui:basic`
+an unknown style (`definition.visual_style`, reported alone); placeholders the structure does not supply in the
+metadata templates (`definition.title_template`, `definition.short_title_template`,
+`definition.description_template`, and the overlay's `definition.settings.metadata.<field>` for those and
+`playlist_title`; the message names the field, the unknown placeholders and the usable ones, the common
+placeholders plus the structure's; see Structures); `ui:basic`
 and `ui:hidden` rule failures against the derived ui schema (`definition.basic`, `definition.hidden`); overlay
 validation errors (`definition.settings.<path>`); term screen hits (see Audience); and `engine` for a
 foreign template. An invalid definition returns only its own errors.

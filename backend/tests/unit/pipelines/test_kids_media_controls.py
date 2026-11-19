@@ -114,6 +114,7 @@ def test_enabled_checks_are_offered_as_checkboxes_without_child_safety() -> None
         "ending",
         "reading_level",
         "cast",
+        "structure",
     ]
     ui = cast(dict[str, Any], KidsStoryPipeline().descriptor.ui_schema)
     assert ui["story"]["enabled_checks"] == {"ui:widget": "checkboxes"}

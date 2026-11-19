@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import partial
 
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.settings.story_choices import (
@@ -75,7 +74,8 @@ def ending_problems(story: Story, settings: KidsStorySettings) -> list[str]:
 
 def all_text(story: Story) -> str:
     parts = [story.title, story.moral, story.hook_line, *story.questions]
-    return " ".join([*parts, *(scene.narration for scene in story.scenes)])
+    scenes = [text for scene in story.scenes for text in (scene.narration, scene.action)]
+    return " ".join([*parts, *scenes])
 
 
 def listed_phrases(text: str, phrases: list[str]) -> list[str]:
@@ -136,28 +136,17 @@ def cast_problems(story: Story, settings: KidsStorySettings, seed: str = "") -> 
 
 
 CheckedGate = tuple[StoryCheck | None, Gate]
-
-
-def story_gates(seed: str) -> tuple[CheckedGate, ...]:
-    return (
-        (StoryCheck.SCENE_COUNT, scene_count_problems),
-        (StoryCheck.WORDS_PER_SCENE, words_per_scene_problems),
-        (StoryCheck.DURATION, duration_problems),
-        (StoryCheck.ENDING, ending_problems),
-        (None, banned_word_problems),
-        (None, brand_problems),
-        (None, child_term_problems),
-        (StoryCheck.READING_LEVEL, reading_level_problems),
-        (StoryCheck.CAST, partial(cast_problems, seed=seed)),
-    )
-
-
-TRANSLATION_GATES: tuple[CheckedGate, ...] = (
-    (StoryCheck.ENDING, ending_problems),
+SIZE_GATES: tuple[CheckedGate, ...] = (
+    (StoryCheck.SCENE_COUNT, scene_count_problems),
+    (StoryCheck.WORDS_PER_SCENE, words_per_scene_problems),
+    (StoryCheck.DURATION, duration_problems),
+)
+SAFETY_GATES: tuple[CheckedGate, ...] = (
     (None, banned_word_problems),
     (None, brand_problems),
     (None, child_term_problems),
 )
+READING_GATES: tuple[CheckedGate, ...] = ((StoryCheck.READING_LEVEL, reading_level_problems),)
 
 
 def switched_on(check: StoryCheck | None, settings: KidsStorySettings) -> bool:
@@ -173,11 +162,3 @@ def problems_of(
         if switched_on(check, settings)
         for problem in gate(story, settings)
     ]
-
-
-def story_problems(story: Story, settings: KidsStorySettings, seed: str = "") -> list[str]:
-    return problems_of(story_gates(seed), story, settings)
-
-
-def translation_problems(story: Story, settings: KidsStorySettings) -> list[str]:
-    return problems_of(TRANSLATION_GATES, story, settings)

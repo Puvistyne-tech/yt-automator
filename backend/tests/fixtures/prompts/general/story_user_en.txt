@@ -15,6 +15,7 @@ Requirements:
 - Clear sentences, everyday words, a calm and confident voice.
 - The story ends openly and gently, without saying the moral aloud or a refrain, so viewers can wonder what happens next.
 - "visual" describes what the picture shows in English, with no words, letters or signs in the picture.
+- For each scene, also write `action`: one short present-tense sentence describing the one main visible movement in the picture, with one subject doing one thing (for example: 'The baker slides a tray of bread into the glowing oven.'). Do not mention the camera, dialogue, sounds, text or more than one event.
 - "camera" is one of: push_in, pull_out, pan_left, pan_right, rise, still.
 - Mark exactly 2 of the most beautiful scenes with "hero": true.
 - "sound_effects" lists zero to two gentle sound cues per scene, in English, like "birds chirping".
@@ -32,6 +33,7 @@ Answer with JSON in exactly this shape:
     {
       "narration": "...",
       "visual": "...",
+      "action": "...",
       "characters": ["mira"],
       "setting": "...",
       "mood": "...",

@@ -7,7 +7,7 @@ import pytest
 from autotube.domain.pipeline_templates import TemplateAudience, TemplateOrigin, TemplateStatus
 from autotube.domain.run_enums import RunStatus
 from autotube.shared.errors import RuleConflict, ValidationFailed
-from tests.fixtures.fake_engines import BUILTIN_TYPE, REFUSED_BRIEF
+from tests.fixtures.fake_engines import BUILTIN_TYPE, FIXED_KEY, REFUSED_BRIEF
 from tests.fixtures.template_records import template
 from tests.fixtures.template_rig import TemplateRig, template_input
 
@@ -53,8 +53,9 @@ def test_update_refuses_builtins(rig: TemplateRig) -> None:
         ({"engine": "other"}, ["engine"]),
         ({"name": " ", "definition": {"brief": REFUSED_BRIEF}}, ["definition.brief", "name"]),
         ({"name": "x" * 81}, ["name"]),
+        ({"definition": {"brief": "planets", FIXED_KEY: "moved"}}, [f"definition.{FIXED_KEY}"]),
     ],
-    ids=["audience", "engine", "name-and-definition", "81-characters"],
+    ids=["audience", "engine", "name-and-definition", "81-characters", "engine-fixed-field"],
 )
 def test_update_reports_field_errors_and_keeps_the_template(
     rig: TemplateRig, changes: dict[str, Any], fields: list[str]
