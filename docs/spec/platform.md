@@ -216,6 +216,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   - `story.ending_style`: `moral_and_refrain` (default), `refrain_only` or `open`. The story prompt, the
     translation rules and the ending gate (and so the `moral_and_refrain` score item) follow it: the moral is
     required only for `moral_and_refrain`, the refrain (when the language has one) for every style but `open`.
+    A blank refrain is never asked for: the prompt's ending line then reads "The last scene says the moral word
+    for word." (`moral_and_refrain`) or "Do not say the moral aloud; let the story show it." (`refrain_only`).
     Bundled stories get an empty refrain for `open`; they keep the moral their characters say, because it is
     part of the written dialogue, and no gate runs on them.
   - `story.cast_per_episode` (0, the default, means the whole cast) and `story.lead_mode` (`fixed`: the first

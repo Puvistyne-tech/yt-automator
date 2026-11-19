@@ -19,6 +19,8 @@ OPEN_ENDING = (
     "so {listeners} can wonder what happens next."
 )
 MORAL_RULE = "The moral must appear word for word, as you translate it, inside the last narration."
+SAY_MORAL = "The last scene says the moral word for word."
+SHOW_MORAL = "Do not say the moral aloud; let the story show it."
 NO_CUES = "is always an empty list."
 SPEAKER_RULE = '"speaker" is "narrator", or a character id if that character says the whole scene.'
 ACTION_RULE = (
@@ -68,17 +70,14 @@ def scene_words_rule(span: tuple[int, int]) -> str:
 
 
 def ending_requirement(style: EndingStyle, refrain: str, for_kids: bool) -> str:
-    if style is EndingStyle.MORAL_AND_REFRAIN:
-        return (
-            "The last scene says the moral word for word, then ends with this exact refrain: "
-            f'"{refrain}"'
-        )
-    if style is EndingStyle.REFRAIN_ONLY:
-        return (
-            f'The last scene ends with this exact refrain: "{refrain}". Do not say the moral '
-            "aloud; let the story show it."
-        )
-    return OPEN_ENDING.format(listeners=listeners(for_kids))
+    if style is EndingStyle.OPEN:
+        return OPEN_ENDING.format(listeners=listeners(for_kids))
+    says = style is EndingStyle.MORAL_AND_REFRAIN
+    if not refrain.strip():
+        return SAY_MORAL if says else SHOW_MORAL
+    if says:
+        return f'{SAY_MORAL[:-1]}, then ends with this exact refrain: "{refrain}"'
+    return f'The last scene ends with this exact refrain: "{refrain}". {SHOW_MORAL}'
 
 
 def translation_ending_rules(style: EndingStyle, refrain: str) -> str:
