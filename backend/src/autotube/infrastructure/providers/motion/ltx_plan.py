@@ -7,6 +7,7 @@ from pathlib import Path
 from autotube.domain.capabilities import MotionRequest
 from autotube.infrastructure.providers.even_size import even
 from autotube.infrastructure.providers.ffmpeg_args import ffmpeg_command, x264_args
+from autotube.infrastructure.providers.home_path import home_expanded
 from autotube.infrastructure.providers.motion.ltx_options import LtxOptions
 from autotube.infrastructure.providers.motion.pan_zoom_filter import held_frames
 
@@ -20,10 +21,6 @@ class Segment:
     image: Path
     frames: int
     output: Path
-
-
-def home_expanded(path: str) -> str:
-    return str(Path(path).expanduser())
 
 
 def segment_durations(total: float, longest: float) -> list[float]:
