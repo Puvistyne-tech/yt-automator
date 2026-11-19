@@ -10,6 +10,7 @@ from autotube.pipelines.narrated_video.resources import render_prompt, resource_
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.story.model import StoryDraft, StoryText, text_of
 from autotube.pipelines.narrated_video.story.prompt_parts import (
+    action_rule,
     avoided_topics,
     bullet_lines,
     ending_requirement,
@@ -53,6 +54,7 @@ def style_values(settings: KidsStorySettings, language: str) -> dict[str, str]:
         "sound_effects": sound_effect_rule(settings.sound_effects.max_per_scene),
         "question_style": rules.question_style,
         "hook_style": settings.short.hook_style,
+        "action": action_rule(settings.safety.for_kids),
     }
 
 

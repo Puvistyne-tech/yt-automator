@@ -17,6 +17,11 @@ class StoryScene(BaseModel):
 
     narration: str = Field(min_length=1)
     visual: str = Field(min_length=1)
+    action: str = Field(
+        default="",
+        description="One short present-tense sentence naming the single visible movement in "
+        "this scene, for the video model.",
+    )
     characters: list[str] = Field(default_factory=list)
     setting: str = ""
     mood: str = ""

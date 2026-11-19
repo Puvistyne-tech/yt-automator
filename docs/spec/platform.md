@@ -725,6 +725,11 @@ StructureSpec   id, title, system_prompt, user_prompt (prompt file names; the sy
   structure's score rules, then metadata limits, loudness and completeness.
 - Metadata placeholders: `{title} {series} {tagline} {theme} {questions} {hashtags} {hook}` for every structure,
   plus the structure's own.
+- Every scene of every structure carries `action` (text, default empty, so stored scripts and bundled stories
+  validate): "One short present-tense sentence naming the single visible movement in this scene, for the
+  video model." Every script prompt asks for it right after `visual`, with a kids example (a little fox on a
+  riverbank) or, for general audiences, a neutral one (a baker at an oven), and shows it in the JSON shape. The
+  motion prompt does not use it yet.
 - `story`: the existing `story_system.txt` and `story_user.txt` with the cast, lead and morals; ending and cast
   gates; ending translation gate; `moral_and_refrain` and `character_consistency` score items; placeholders
   `{moral} {characters} {refrain}`; bundled fallback. Its cast needs at least one member (validated on the

@@ -8,6 +8,7 @@ Requirements:
 - The whole narration reads aloud in about $target_seconds seconds at $words_per_minute words per minute.
 - $writing_style$extra_instructions
 - "visual" describes what the picture shows in English, with no words, letters or signs in the picture.
+- $action
 - "camera" is one of: $cameras.
 - Mark exactly $hero_count of the most beautiful scenes with "hero": true.
 - "sound_effects" $sound_effects
@@ -24,6 +25,7 @@ Answer with JSON in exactly this shape:
     {
       "narration": "...",
       "visual": "...",
+      "action": "...",
       "characters": [],
       "setting": "...",
       "mood": "...",
