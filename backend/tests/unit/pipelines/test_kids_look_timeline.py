@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from autotube.domain.srt import SrtEntry, parse_srt
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.timeline.plan import Segment, total_seconds
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.timeline.plan import Segment, total_seconds
 from tests.fixtures.kids_data import story
 from tests.fixtures.look_rig import (
     look_segments,

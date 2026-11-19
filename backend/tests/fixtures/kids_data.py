@@ -8,11 +8,11 @@ from autotube.domain.capabilities import TextRequest
 from autotube.domain.pipeline import Stage, StageContext, StageOutcome
 from autotube.domain.run_enums import ArtifactKind
 from autotube.domain.run_parts import Artifact
-from autotube.pipelines.kids_story.plugin import KidsStoryPipeline
-from autotube.pipelines.kids_story.resources import resource_json
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.story.model import Story
-from autotube.pipelines.kids_story.timeline.voices import VoiceLine
+from autotube.pipelines.narrated_video.plugin import KidsStoryPipeline
+from autotube.pipelines.narrated_video.resources import resource_json
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.story.model import Story
+from autotube.pipelines.narrated_video.timeline.voices import VoiceLine
 from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, LogBook, as_json
 
 REFRAIN_EN = "Be kind, be brave, be you!"

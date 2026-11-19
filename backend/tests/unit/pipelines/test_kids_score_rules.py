@@ -8,11 +8,11 @@ import pytest
 from autotube.domain.model_base import JsonObject
 from autotube.domain.run_enums import ArtifactKind
 from autotube.domain.run_parts import Artifact
-from autotube.pipelines.kids_story.scoring.content_items import moral_and_refrain
-from autotube.pipelines.kids_story.scoring.inputs import ScoreInputs
-from autotube.pipelines.kids_story.scoring.timing_items import episode_duration, subtitle_timing
-from autotube.pipelines.kids_story.story.model import Story
-from autotube.pipelines.kids_story.timeline.voices import VoiceLine
+from autotube.pipelines.narrated_video.scoring.content_items import moral_and_refrain
+from autotube.pipelines.narrated_video.scoring.inputs import ScoreInputs
+from autotube.pipelines.narrated_video.scoring.timing_items import episode_duration, subtitle_timing
+from autotube.pipelines.narrated_video.story.model import Story
+from autotube.pipelines.narrated_video.timeline.voices import VoiceLine
 from tests.fixtures.kids_data import quick_settings, story
 
 TARGET = {"target_duration_seconds": 100, "duration_tolerance_seconds": 10}

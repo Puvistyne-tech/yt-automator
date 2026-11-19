@@ -6,8 +6,8 @@ from typing import Any, Literal, get_args, get_origin
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from autotube.pipelines.kids_story.settings.choices import enum_choices, titled_choices
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.settings.choices import enum_choices, titled_choices
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 
 SCHEMA = KidsStorySettings.model_json_schema()
 Path = tuple[str | int, ...]

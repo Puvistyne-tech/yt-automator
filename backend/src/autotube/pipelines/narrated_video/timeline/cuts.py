@@ -1,0 +1,48 @@
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+
+from autotube.domain.run_parts import Artifact
+from autotube.pipelines.narrated_video.artifacts import VARIANTS
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.story.model import Story
+from autotube.pipelines.narrated_video.timeline.plan import Segment
+from autotube.pipelines.narrated_video.timeline.variants import planned
+from autotube.pipelines.narrated_video.timeline.voices import VoiceLine, voice_lines
+
+
+@dataclass(frozen=True)
+class Cut:
+    story: Story
+    variant: str
+    voices: Mapping[str, VoiceLine]
+    segments: list[Segment]
+
+    @property
+    def language(self) -> str:
+        return self.story.language
+
+    @property
+    def name(self) -> str:
+        return f"{self.story.language}-{self.variant}"
+
+
+def story_cuts(
+    story: Story, voices: Mapping[str, VoiceLine], settings: KidsStorySettings
+) -> list[Cut]:
+    return [
+        Cut(story, variant, voices, segments)
+        for variant in VARIANTS
+        if (segments := planned(story, voices, settings, variant))
+    ]
+
+
+def planned_cuts(
+    stories: Mapping[str, Story], artifacts: Sequence[Artifact], settings: KidsStorySettings
+) -> list[Cut]:
+    return [
+        cut
+        for language, story in stories.items()
+        for cut in story_cuts(story, voice_lines(artifacts, language), settings)
+    ]

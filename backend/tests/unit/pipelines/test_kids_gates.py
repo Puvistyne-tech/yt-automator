@@ -4,8 +4,8 @@ from typing import Any
 
 import pytest
 
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.story.gates import (
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.story.gates import (
     Gate,
     banned_word_problems,
     brand_problems,
@@ -18,7 +18,7 @@ from autotube.pipelines.kids_story.story.gates import (
     translation_problems,
     words_per_scene_problems,
 )
-from autotube.pipelines.kids_story.story.model import Story
+from autotube.pipelines.narrated_video.story.model import Story
 from tests.fixtures.kids_data import quick_settings, story
 
 SETTINGS = KidsStorySettings()
