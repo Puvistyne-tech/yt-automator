@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -16,6 +16,12 @@ from autotube.domain.pipeline_templates import (
     builtin_template,
 )
 from autotube.domain.sample_scripts import SampleScene, SampleScript, SampleUnavailableError
+from autotube.domain.template_suggestions import (
+    SuggestedIdea,
+    SuggestionBrief,
+    SuggestionDrafts,
+    SuggestionsUnavailableError,
+)
 from autotube.domain.validation import validated_settings
 from tests.fixtures.fake_pipeline import FakePipeline
 
@@ -24,6 +30,21 @@ BUILTIN_TYPE = "sample_builtin"
 REFUSED_BRIEF = "refused"
 FIXED_KEY = "fixed"
 UNAVAILABLE_TOPIC = "unavailable"
+
+
+def suggested_drafts(*ideas: SuggestedIdea, dropped: int = 0) -> SuggestionDrafts:
+    return SuggestionDrafts(ideas=ideas, dropped=dropped)
+
+
+def suggested_idea(name: str = "Star facts", **changes: Any) -> SuggestedIdea:
+    fields: dict[str, Any] = {
+        "name": name,
+        "description": "Short facts about stars",
+        "reason": "Space videos are popular",
+        "based_on": ("Night sky",),
+        "definition": {"brief": "stars"},
+    }
+    return SuggestedIdea.model_validate(fields | changes)
 
 
 class SampleDefinition(BaseModel):
@@ -49,6 +70,10 @@ class FakeEngine:
         default_factory=lambda: {"brief": {"ui:widget": "textarea"}}
     )
     samples: list[tuple[PipelineTemplate, str, str]] = field(default_factory=list)
+    suggestions: SuggestionDrafts | None = field(
+        default_factory=lambda: suggested_drafts(suggested_idea())
+    )
+    briefs: list[SuggestionBrief] = field(default_factory=list)
 
     def blank(self, audience: TemplateAudience) -> JsonObject:
         return {"brief": f"for a {audience.value} audience"}
@@ -81,6 +106,15 @@ class FakeEngine:
             upload_description=template.description,
             provider=providers.resolve(Capability.LLM).provider_id,
         )
+
+    def suggested_definitions(
+        self, brief: SuggestionBrief, providers: ProviderResolver
+    ) -> SuggestionDrafts:
+        provider = providers.resolve(Capability.LLM).provider_id
+        self.briefs.append(brief)
+        if self.suggestions is None:
+            raise SuggestionsUnavailableError("the writer is resting")
+        return self.suggestions.model_copy(update={"provider": provider})
 
     def builtin_templates(self) -> list[PipelineTemplate]:
         general = TemplateAudience.GENERAL

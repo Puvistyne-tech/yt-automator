@@ -40,3 +40,61 @@
   flex-direction: column;
   gap: var(--space-4);
 }
+
+.sample-controls {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-4);
+}
+
+.sample-script {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.sample-script-head h3 {
+  margin: var(--space-1) 0 0;
+}
+
+.sample-scenes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.sample-scene p,
+.sample-takeaway p {
+  margin: 0;
+}
+
+.sample-scene-heading {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.sample-upload {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+}
+
+.sample-upload dd {
+  margin: 0;
+}
+
+.sample-description {
+  white-space: pre-line;
+}
+
+@media (max-width: 720px) {
+  .sample-controls {
+    grid-template-columns: 1fr;
+  }
+}

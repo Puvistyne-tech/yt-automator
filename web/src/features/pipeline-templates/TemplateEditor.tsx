@@ -7,11 +7,14 @@ import {
   newTemplateDraft,
   type TemplateDraft,
 } from "@/features/pipeline-templates/model/form";
+import { SampleScriptPanel } from "@/features/pipeline-templates/SampleScriptCard";
 import { TemplateFields } from "@/features/pipeline-templates/TemplateFields";
+import { useDefinitionViewMode } from "@/features/pipeline-templates/useDefinitionView";
 import {
   type TemplateEditorState,
   useTemplateEditor,
 } from "@/features/pipeline-templates/useTemplateEditor";
+import type { SettingsView } from "@/shared/settings-view/settingsView";
 import { Button, ButtonLink, Card, SaveBar } from "@/shared/ui";
 import "@/features/pipeline-templates/pipeline-templates.css";
 
@@ -19,6 +22,7 @@ interface EditorProps {
   engine: EngineSummary;
   template: TemplateSummary | undefined;
   initial: TemplateDraft;
+  startIn?: SettingsView;
 }
 
 function NewTemplateActions({ editor }: { editor: TemplateEditorState }) {
@@ -52,8 +56,15 @@ function SavedTemplateActions({ editor }: { editor: TemplateEditorState }) {
   );
 }
 
-function Editor({ engine, template, initial }: EditorProps) {
-  const editor = useTemplateEditor({ engineId: engine.engine_id, template, initial });
+function Editor({ engine, template, initial, startIn }: EditorProps) {
+  const mode = useDefinitionViewMode(engine, startIn);
+  const editor = useTemplateEditor({
+    engineId: engine.engine_id,
+    definitionSchema: engine.definition_schema,
+    template,
+    initial,
+    onErrorsShown: mode.revealErrors,
+  });
   return (
     <div className="template-form">
       <TemplateFields
@@ -62,6 +73,12 @@ function Editor({ engine, template, initial }: EditorProps) {
         onChange={editor.update}
         errors={editor.problems.errors}
         revision={template?.revision}
+        mode={mode}
+      />
+      <SampleScriptPanel
+        engineId={engine.engine_id}
+        draft={editor.draft}
+        problems={editor.problems}
       />
       <ConflictCallout conflict={editor.problems.conflict} />
       {template === undefined ? (
@@ -109,6 +126,11 @@ export function NewTemplateEditor({ engine }: { engine: EngineSummary }) {
     return <AudienceStep onChoose={setAudience} />;
   }
   return (
-    <Editor engine={engine} template={undefined} initial={newTemplateDraft(engine, audience)} />
+    <Editor
+      engine={engine}
+      template={undefined}
+      initial={newTemplateDraft(engine, audience)}
+      startIn="simple"
+    />
   );
 }

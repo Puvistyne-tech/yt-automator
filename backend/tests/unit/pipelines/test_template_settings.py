@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 
+from autotube.domain.json_text import text_leaves
 from autotube.domain.pipeline_descriptors import settings_schema_of
 from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.publishing.templates import template_values
@@ -19,7 +20,6 @@ from autotube.pipelines.narrated_video.template.settings_model import (
     kids_settings_model,
     settings_model_for,
 )
-from autotube.pipelines.narrated_video.template.text_leaves import text_leaves
 from tests.fixtures.kids_data import story
 from tests.fixtures.prompt_pins import stored_settings
 from tests.fixtures.template_settings import GENERAL, KIDS, defaults_for, model_for

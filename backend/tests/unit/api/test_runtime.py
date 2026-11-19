@@ -9,7 +9,8 @@ from sqlalchemy import text
 
 from autotube.domain.run_enums import RunStatus
 from autotube.infrastructure.config import RuntimeConfig
-from autotube.main import Overrides, Runtime, create_app, youtube_gateway
+from autotube.infrastructure.youtube.factory import youtube_gateway
+from autotube.main import Overrides, Runtime, create_app
 from tests.fixtures.builtin_catalog import BUILTIN_IDS
 from tests.fixtures.template_records import template
 from tests.unit.api.client import Api

@@ -23,3 +23,11 @@ export function templateConflictOf(error: unknown): TemplateConflict | null {
   }
   return { code: error.code, message: error.message };
 }
+
+export const PREVIEW_UNAVAILABLE = "preview_unavailable";
+
+export function previewUnavailableOf(error: unknown): string | null {
+  const unavailable =
+    error instanceof ApiError && error.status === 409 && error.code === PREVIEW_UNAVAILABLE;
+  return unavailable ? error.message : null;
+}

@@ -11,6 +11,7 @@ from autotube.domain.pipeline_templates import (
     builtin_template,
 )
 from autotube.domain.sample_scripts import SampleScript
+from autotube.domain.template_suggestions import SuggestionBrief, SuggestionDrafts
 from autotube.pipelines.narrated_video.plugin import (
     DESCRIPTION,
     NAME,
@@ -26,6 +27,8 @@ from autotube.pipelines.narrated_video.template.problems import template_problem
 from autotube.pipelines.narrated_video.template.revisions import structure_change_problems
 from autotube.pipelines.narrated_video.template.sample import template_sample
 from autotube.pipelines.narrated_video.template.settings_model import settings_model_for
+from autotube.pipelines.narrated_video.template.suggestion_prompt import SuggestionWriting
+from autotube.pipelines.narrated_video.template.suggestions import template_suggestions
 from autotube.pipelines.narrated_video.template.ui import definition_ui_schema
 
 ENGINE_ID = "narrated_video"
@@ -49,8 +52,9 @@ class TemplatePipeline(KidsStoryPipeline):
 
 
 class NarratedVideoEngine:
-    def __init__(self) -> None:
+    def __init__(self, writing: SuggestionWriting | None = None) -> None:
         self.kids_story = KidsStoryPipeline()
+        self.writing = writing or SuggestionWriting()
 
     @property
     def engine_id(self) -> str:
@@ -91,6 +95,11 @@ class NarratedVideoEngine:
         self, template: PipelineTemplate, language: str, topic: str, providers: ProviderResolver
     ) -> SampleScript:
         return template_sample(template, language, topic, providers)
+
+    def suggested_definitions(
+        self, brief: SuggestionBrief, providers: ProviderResolver
+    ) -> SuggestionDrafts:
+        return template_suggestions(brief, providers, self.writing)
 
     def builtin_templates(self) -> list[PipelineTemplate]:
         kids = TemplateAudience.KIDS

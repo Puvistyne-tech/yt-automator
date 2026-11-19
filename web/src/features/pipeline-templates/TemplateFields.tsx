@@ -2,9 +2,13 @@ import type { FieldErrors } from "@/api/errors";
 import { AUDIENCE_LABELS } from "@/api/labels";
 import type { EngineSummary } from "@/api/types";
 import { AUDIENCE_NOTE, audienceDescription } from "@/features/pipeline-templates/AudienceChoice";
+import { DefinitionCard } from "@/features/pipeline-templates/DefinitionCard";
 import type { TemplateDraft } from "@/features/pipeline-templates/model/form";
-import { scopedErrors } from "@/shared/schema-form/errors";
-import { SchemaForm } from "@/shared/schema-form/SchemaForm";
+import {
+  type DefinitionViewMode,
+  useDefinitionFilter,
+} from "@/features/pipeline-templates/useDefinitionView";
+import { SettingsViewBar } from "@/shared/settings-view/SettingsViewBar";
 import { Badge, Card, FormField, Input, Switch, Textarea } from "@/shared/ui";
 
 interface TemplateFieldsProps {
@@ -14,6 +18,7 @@ interface TemplateFieldsProps {
   errors: FieldErrors;
   revision?: number | undefined;
   disabled?: boolean;
+  mode: DefinitionViewMode;
 }
 
 function AudienceSummary({ draft }: { draft: TemplateDraft }) {
@@ -71,24 +76,21 @@ function AboutCard(props: TemplateFieldsProps) {
 }
 
 export function TemplateFields(props: TemplateFieldsProps) {
-  const { engine, draft, onChange, errors, disabled = false } = props;
+  const { engine, draft, onChange, errors, mode } = props;
+  const filter = useDefinitionFilter(engine, mode.view, errors);
   return (
     <div className="template-form">
+      <SettingsViewBar view={mode.view} summary={filter.summary} onView={mode.setView} />
       <AboutCard {...props} />
-      <Card
-        title="What the videos are like"
-        description={`Built from the ${engine.name} template. Automations using this pipeline start from these choices.`}
-      >
-        <SchemaForm
-          idPrefix="definition"
-          schema={engine.definition_schema}
-          uiSchema={engine.definition_ui_schema}
-          value={draft.definition}
-          onChange={(definition) => onChange({ ...draft, definition })}
-          errors={scopedErrors(errors, "definition")}
-          disabled={disabled}
-        />
-      </Card>
+      <DefinitionCard
+        engine={engine}
+        definition={draft.definition}
+        onChange={(definition) => onChange({ ...draft, definition })}
+        errors={errors}
+        disabled={props.disabled ?? false}
+        view={mode.view}
+        filter={filter}
+      />
     </div>
   );
 }

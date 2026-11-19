@@ -20,9 +20,9 @@ interface SchemaFormProps {
   value: FormValue;
   onChange: (value: FormValue) => void;
   errors?: PathErrors;
-  defaults?: FormValue;
+  defaults?: FormValue | undefined;
   idPrefix: string;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   visible?: ReadonlySet<string> | undefined;
   filtered?: boolean;
   concealed?: Concealed | undefined;

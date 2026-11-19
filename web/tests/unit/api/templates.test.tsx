@@ -4,10 +4,11 @@ import { usePipelines } from "@/api/catalog";
 import { ApiError } from "@/api/errors";
 import { keys } from "@/api/keys";
 import { BUILTIN_TEMPLATES, USER_TEMPLATES } from "@/api/mocks/fixtures/templates";
-import { templateConflictOf } from "@/api/templateErrors";
+import { previewUnavailableOf, templateConflictOf } from "@/api/templateErrors";
 import {
   useDeleteTemplate,
   useDuplicateTemplate,
+  usePreviewTemplateScript,
   useSaveTemplate,
   useTemplate,
   useTemplateEngines,
@@ -38,6 +39,21 @@ describe("templateConflictOf", () => {
     null,
   ])("ignores %s", (error) => {
     expect(templateConflictOf(error)).toBeNull();
+  });
+});
+
+describe("previewUnavailableOf", () => {
+  it("reads the server message of an unavailable preview", () => {
+    const error = new ApiError(409, "preview_unavailable", "No writer.");
+    expect(previewUnavailableOf(error)).toBe("No writer.");
+  });
+
+  it.each([
+    new ApiError(409, "template_in_use", "other"),
+    new ApiError(400, "preview_unavailable", "not a conflict status"),
+    new Error("plain"),
+  ])("ignores %s", (error) => {
+    expect(previewUnavailableOf(error)).toBeNull();
   });
 });
 
@@ -124,6 +140,20 @@ describe("template mutation hooks", () => {
 
     await act(() => hooks.result.current.remove.mutateAsync("history-five"));
     expect(client.getQueryData(keys.template("history-five"))).toBeUndefined();
+  });
+
+  it("previews a sample script without refreshing anything", async () => {
+    const client = createQueryClient(false);
+    const invalidate = vi.spyOn(client, "invalidateQueries");
+    const preview = renderHook(() => usePreviewTemplateScript(), {
+      wrapper: ({ children }) => <AppProviders client={client}>{children}</AppProviders>,
+    });
+    const input = { ...TEMPLATE_INPUT, language: "ta", topic: "tides" };
+
+    const sample = await act(() => preview.result.current.mutateAsync(input));
+
+    expect(sample).toMatchObject({ language: "ta", provider: "ollama" });
+    expect(invalidate).not.toHaveBeenCalled();
   });
 
   it("rejects with the conflict for a built-in", async () => {

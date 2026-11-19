@@ -1,6 +1,7 @@
 import { HttpResponse, http } from "msw";
 import { db, noContent, notFound, validationFailed } from "@/api/mocks/db";
 import { USER_TYPE_PREFIX } from "@/api/mocks/fixtures/templates";
+import { previewReply } from "@/api/mocks/templatePreview";
 import {
   allTemplates,
   builtinConflict,
@@ -12,7 +13,12 @@ import {
   summaryOf,
 } from "@/api/mocks/templateRules";
 import { DELETE_REMEDY, DRAFT_REMEDY, inUseConflict } from "@/api/mocks/templateUsage";
-import type { DuplicateTemplateRequest, PipelineTemplate, TemplateInput } from "@/api/types";
+import type {
+  DuplicateTemplateRequest,
+  PipelineTemplate,
+  TemplateInput,
+  TemplatePreviewInput,
+} from "@/api/types";
 
 const findTemplate = (id: unknown) => allTemplates(db.state).find((t) => t.id === id);
 
@@ -109,6 +115,9 @@ export const templateHandlers = [
     }
     return created({ origin: "blank", ...input, name: input.name.trim() });
   }),
+  http.post("/api/templates/preview-script", async ({ request }) =>
+    previewReply(db.state, (await request.json()) as TemplatePreviewInput),
+  ),
   http.put("/api/templates/:id", ({ params, request }) =>
     withEditable(params.id, async (current) =>
       updated(current, (await request.json()) as TemplateInput),

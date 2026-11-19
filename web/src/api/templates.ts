@@ -4,7 +4,9 @@ import { keys } from "@/api/keys";
 import type {
   DuplicateTemplateRequest,
   EngineSummary,
+  SampleScript,
   TemplateInput,
+  TemplatePreviewInput,
   TemplateSummary,
 } from "@/api/types";
 
@@ -70,5 +72,12 @@ export function useDuplicateTemplate() {
     mutationFn: ({ id, request }: { id: string; request: DuplicateTemplateRequest }) =>
       api.post<TemplateSummary>(`${path(id)}/duplicate`, request),
     onSuccess: () => refreshTemplates(client),
+  });
+}
+
+export function usePreviewTemplateScript() {
+  return useMutation({
+    mutationFn: (input: TemplatePreviewInput) =>
+      api.post<SampleScript>("/templates/preview-script", input),
   });
 }

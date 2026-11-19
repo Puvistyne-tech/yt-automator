@@ -12,7 +12,7 @@ export interface TemplateErrors {
   clear: () => void;
 }
 
-export function useTemplateErrors(): TemplateErrors {
+export function useTemplateErrors(onShown?: (errors: FieldErrors) => void): TemplateErrors {
   const notifier = useMutationNotifier();
   const fields = useFieldErrors();
   const [conflict, setConflict] = useState<ConflictNotice | null>(null);
@@ -24,7 +24,8 @@ export function useTemplateErrors(): TemplateErrors {
   const report = (error: unknown) => {
     const notice = conflictNotice(error);
     setConflict(notice);
-    setFromServer(error);
+    const shown = setFromServer(error);
+    onShown?.(shown);
     if (notice === null) {
       notifier.fail(error);
     }

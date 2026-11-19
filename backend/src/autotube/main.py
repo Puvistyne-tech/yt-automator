@@ -17,7 +17,7 @@ from autotube.application.run_doctor import RunDoctor
 from autotube.composition.overrides import Overrides as Overrides
 from autotube.composition.ports import Ports
 from autotube.composition.use_cases import build_use_cases
-from autotube.domain.ports import AppSettingsRepository, EngineCatalog, SecretStore
+from autotube.domain.ports import EngineCatalog, SecretStore
 from autotube.infrastructure.config import RuntimeConfig, load_config
 from autotube.infrastructure.db.database import Database
 from autotube.infrastructure.db.entity_repositories import (
@@ -46,8 +46,8 @@ from autotube.infrastructure.secrets.selection import build_secret_store
 from autotube.infrastructure.settings_env import settings_overrides
 from autotube.infrastructure.storage.artifact_store import FileArtifactStore
 from autotube.infrastructure.storage.run_storage import FileRunStorage
-from autotube.infrastructure.youtube.gateway import GoogleYouTubeGateway
-from autotube.infrastructure.youtube.settings import youtube_settings
+from autotube.infrastructure.youtube.factory import youtube_gateway
+from autotube.infrastructure.youtube.sample_trends import SampleTrendSource
 from autotube.pipelines.registry import installed_engines, installed_pipelines
 
 logger = logging.getLogger("autotube")
@@ -75,13 +75,6 @@ class Runtime:
         if not self.queue.stop(self.config.shutdown_timeout_seconds):
             logger.warning("some runs were still working at shutdown")
         self.database.dispose()
-
-
-def youtube_gateway(
-    config: RuntimeConfig, settings: AppSettingsRepository | None = None
-) -> GoogleYouTubeGateway:
-    name = (lambda: settings.get().caption_track_name) if settings is not None else None
-    return GoogleYouTubeGateway(youtube_settings(config), caption_name=name)
 
 
 def secret_store(config: RuntimeConfig) -> SecretStore:
@@ -133,6 +126,7 @@ def build_ports(
         engines=engines,
         catalog=overrides.catalog or build_provider_catalog(secrets, config.data_dir),
         youtube=overrides.youtube or youtube_gateway(config, settings),
+        trends=SampleTrendSource(),
         inspector=overrides.inspector or build_system_inspector(config),
         doctor_policy=config.doctor_policy,
     )

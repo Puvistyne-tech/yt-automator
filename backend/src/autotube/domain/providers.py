@@ -28,6 +28,7 @@ class ProviderDescriptor(DomainModel):
     options_schema: JsonObject = Field(default_factory=dict)
     required_secrets: tuple[str, ...] = ()
     offline: bool = True
+    placeholder: bool = False
     available: bool = True
     unavailable_reason: str = ""
 
@@ -35,6 +36,10 @@ class ProviderDescriptor(DomainModel):
 class ProvidersView(DomainModel):
     descriptors: tuple[ProviderDescriptor, ...]
     config: tuple[ProviderConfig, ...]
+
+
+def is_placeholder(provider_id: str, descriptors: Sequence[ProviderDescriptor]) -> bool:
+    return any(d.placeholder for d in descriptors if d.provider_id == provider_id)
 
 
 def choice_errors(

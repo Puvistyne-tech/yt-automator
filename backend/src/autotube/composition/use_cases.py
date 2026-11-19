@@ -188,6 +188,6 @@ def build_use_cases(ports: Ports) -> UseCases:
         runs=run_use_cases(ports, shared),
         config=config_use_cases(ports, shared),
         storage=storage_use_cases(ports, shared),
-        templates=template_use_cases(ports),
+        templates=template_use_cases(ports, shared),
         events=ports.events,
     )

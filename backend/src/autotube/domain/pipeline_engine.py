@@ -9,6 +9,7 @@ from autotube.domain.model_base import JsonObject
 from autotube.domain.pipeline import Pipeline, ProviderResolver
 from autotube.domain.pipeline_templates import PipelineTemplate, TemplateAudience
 from autotube.domain.sample_scripts import SampleScript
+from autotube.domain.template_suggestions import SuggestionBrief, SuggestionDrafts
 
 
 class PipelineEngine(Protocol):
@@ -39,6 +40,10 @@ class PipelineEngine(Protocol):
     def sample_script(
         self, template: PipelineTemplate, language: str, topic: str, providers: ProviderResolver
     ) -> SampleScript: ...
+
+    def suggested_definitions(
+        self, brief: SuggestionBrief, providers: ProviderResolver
+    ) -> SuggestionDrafts: ...
 
 
 def builtin_templates_of(engines: Iterable[PipelineEngine]) -> list[PipelineTemplate]:

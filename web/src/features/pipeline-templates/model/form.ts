@@ -8,6 +8,7 @@ import type {
   TemplateInput,
   TemplateStatus,
 } from "@/api/types";
+import { withFormDefaults } from "@/shared/schema-form/formDefaults";
 
 export const NAME_MAX_LENGTH = 80;
 
@@ -36,6 +37,13 @@ export function draftFromTemplate(template: PipelineTemplate): TemplateDraft {
     audience: template.audience,
     status: template.status,
     definition: structuredClone(template.definition),
+  };
+}
+
+export function settledDraft(draft: TemplateDraft, definitionSchema: JsonObject): TemplateDraft {
+  return {
+    ...draft,
+    definition: withFormDefaults(definitionSchema, draft.definition) as JsonObject,
   };
 }
 

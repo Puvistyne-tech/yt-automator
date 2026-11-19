@@ -60,4 +60,5 @@ SPEC = ProviderSpec(
     options=OfflineTextOptions,
     factory=OfflineText,
     offline=True,
+    placeholder=True,
 )

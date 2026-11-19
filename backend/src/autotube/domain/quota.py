@@ -14,6 +14,7 @@ class QuotaPolicy(DomainModel):
     thumbnail_units: int = Field(default=50, ge=0)
     caption_units: int = Field(default=400, ge=0)
     playlist_item_units: int = Field(default=50, ge=0)
+    trending_units: int = Field(default=1, ge=0)
     reset_timezone: str = "America/Los_Angeles"
 
     def quota_day(self, moment: datetime) -> date:

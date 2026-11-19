@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pydantic import JsonValue
 
+from autotube.domain.json_text import text_leaves
 from autotube.domain.model_base import JsonObject
 from autotube.domain.pipeline_templates import PipelineTemplate, TemplateAudience
 from autotube.domain.validation import field_path
@@ -11,7 +12,6 @@ from autotube.pipelines.narrated_video.story.child_terms import (
 )
 from autotube.pipelines.narrated_video.styles.library import style_named
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
-from autotube.pipelines.narrated_video.template.text_leaves import text_leaves
 
 DEFINITION_TEXT_FIELDS = (
     "brief",

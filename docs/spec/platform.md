@@ -102,7 +102,8 @@ RunEvent        run_id, kind: status|stage|log|artifact|upload, at, payload (obj
 ProviderConfig  capability, chain: [ProviderChoice]
 ProviderChoice  provider_id, enabled, options (object)
 ProviderDescriptor  provider_id, capability, name, description, options_schema, required_secrets: [name],
-                    offline: bool, available: bool, unavailable_reason
+                    offline: bool, placeholder: bool (writes stand-in output, not real content; only
+                    `offline_text`), available: bool, unavailable_reason
 AppSettings     timezone = "UTC", max_parallel_runs = 1 (>= 1), keep_runs_days = 30 (>= 0),
                 keep_intermediate_days = 0 (>= 0), auto_cleanup_enabled = false,
                 cleanup_interval_hours = 24 (>= 0, whole hours),
@@ -414,6 +415,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   the delay. With neither, or when the effective privacy is not `public`, `publish_at` is null and the video gets
   its privacy at once. Every upload records the `publish_at` it was planned with.
 - Publishing refuses when the credential's remaining daily quota is below the cost of the upload (1600 units per video, 50 per thumbnail, 400 per caption track, 50 per playlist insertion).
+- Fetching trending videos for suggestions costs 1 unit (`QuotaPolicy.trending_units`, `videos.list`), charged to
+  the credential of the first connected channel before the call, only when its remaining daily quota covers it.
 - The quota day resets at midnight Pacific time (`America/Los_Angeles`), as YouTube's does.
 - Duplicating an automation creates a disabled copy named with the suffix " (copy)" and new target ids.
 - Export and import (`domain/automation_export.py`). An export is an `AutomationDocument`: it never holds ids of
@@ -554,7 +557,13 @@ bad row never breaks `GET /pipelines`), `ProviderConfigRepository` (list, save_a
 `EngineCatalog` (list, get(engine_id) -> PipelineEngine or None; the installed template engines),
 `ProviderCatalog` (descriptors, secrets, option_errors(configs) -> {path: message},
 resolver(configs) -> ProviderResolver), `YouTubeGateway` (authorization_url,
-exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists),
+exchange_code, describe_channel, upload_video, set_thumbnail, upload_captions, add_to_playlist, list_playlists,
+popular_videos(auth, TrendQuery) -> [TrendingVideo]: `videos.list` with `chart=mostPopular`, `regionCode`, the
+optional `videoCategoryId` and `maxResults`; a part of the reply that is not the expected object or list counts as
+empty, and items without a title are skipped, so a malformed reply gives no videos),
+`TrendSource` (trending(TrendQuery) -> [TrendingVideo]; `infrastructure/youtube/sample_trends.py::SampleTrendSource`
+serves the bundled neutral `sample_trends.json`, preferring the query's category and falling back to every sample,
+cut to the limit),
 `ArtifactStore` (workspace for a run, save, open, discard one artifact, delete run),
 `RunFileStore` (run_ids on disk, usage(run_id, final_ids) -> FileUsage, remove_intermediate(run_id, final_ids)
 -> bytes freed, delete_run(run_id) -> bytes freed or a failure when the folder is still there,
@@ -608,12 +617,20 @@ class PipelineEngine(Protocol):
     def pipeline(self, template) -> Pipeline
     def builtin_templates(self) -> list[PipelineTemplate]
     def sample_script(self, template, language, topic, providers: ProviderResolver) -> SampleScript
+    def suggested_definitions(self, brief: SuggestionBrief, providers) -> SuggestionDrafts
 ```
 
 - `problems` maps a field path (`definition.<path>`, or `engine` for a template of another engine) to a message.
 - `sample_script` writes one script for a template that need not be stored, in one language, about `topic` (empty
   lets the template choose), through the same providers a run gets. It raises
   `domain/sample_scripts.py::SampleUnavailableError` with a plain message when no script can be shown.
+- `suggested_definitions` (`domain/template_suggestions.py`) asks the engine's text model for up to
+  `brief.count` template ideas for `brief.audience`, drawn from `brief.trends` (TrendingVideo: title,
+  channel_title, category_id, tags, view_count, duration_seconds, made_for_kids or null when unknown). Each
+  SuggestedIdea has name, description, reason, `based_on` (the trend titles it drew on) and a definition that
+  validates against the engine's definition model. Ideas the engine refuses are left out and counted in
+  `SuggestionDrafts.dropped`, and `SuggestionDrafts.provider` names the provider that answered. It raises `SuggestionsUnavailableError` with a plain message when the text model
+  is missing or fails, or its answer has no list of ideas.
 - `revision_problems` reports the definition fields the engine fixes at creation that an update would change,
   keyed the same way. Updating a template returns 400 with these, its `problems` and the rule errors below.
 - `type_id` is fixed at creation: `t_<id>` for a user template, the engine's own id for a built-in. A rename never
@@ -963,8 +980,9 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
 
 - Preview (`application/preview_template_script.py::PreviewTemplateScript`) takes a TemplatePreviewInput and
   stores nothing: no template, no run, no id. It builds the unsaved template with id `preview` (type id
-  `t_preview`, `preview_template`), then reports field errors (400) exactly as create does: `input_errors`, then
-  an engine that is not installed (`engine`) or the engine's `problems`. The language defaults to the first of
+  `t_preview`, `preview_template`), then reports field errors (400) in sequence, each group alone: `input_errors`
+  first (origin and name), then the engine errors (an engine that is not installed, `engine`, or the
+  engine's `problems`). A `topic` over 300 characters is refused by the request schema before both. The language defaults to the first of
   the template pipeline's languages; any other unoffered language is a `language` field error. It resolves
   providers from the saved provider configs, calls `engine.sample_script` synchronously (each provider call keeps
   its own timeout) and maps `SampleUnavailableError` to 409 `preview_unavailable` with the engine's message.
@@ -980,6 +998,48 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
   The script is shaped like a run's, and the upload title and description are the episode's `upload_metadata`,
   screened for a general audience like the package stage (a hit is `preview_unavailable` with that message).
   Each scene carries its narration and, where the scene has them, its heading and action.
+- Suggest (`application/suggest_templates.py::SuggestTemplates`) takes a SuggestionRequest
+  `{engine, audience, region, category?, count}` (region two capital letters, category a YouTube category id of
+  1 to 4 digits or absent for every category, count 1 to `SUGGESTION_COUNT_MAX` 10, default 5) and stores
+  nothing. An engine that is not installed is an `engine` field error (400). Trends come from
+  `application/trend_finder.py::TrendFinder`: the first connected channel's credential pays the trending call
+  through `QuotaReport` and the channel's stored authorization, inside `ChannelExpiry.watching`; with no connected
+  channel, no credential, too little remaining quota, no stored authorization, any YouTube failure or an empty
+  chart it reads `TrendSource` (the bundled sample) instead and reports `source: sample`, never failing for that
+  reason. A fallback after a YouTube failure logs a warning naming only the error code. It reads
+  `SuggestionPolicy.trend_limit` videos (default 25, 1 to 50). A general request drops trends
+  flagged made for kids before the engine sees them; a kids request keeps every trend. With no trend left it is
+  409 `suggestions_unavailable`. It resolves providers from the saved provider configs and calls
+  `engine.suggested_definitions`; `SuggestionsUnavailableError` becomes 409 `suggestions_unavailable` with the
+  engine's message. When the provider that wrote the ideas (`SuggestionDrafts.provider`) has a descriptor flagged
+  `placeholder` (`domain/providers.py::is_placeholder`), it is 409 `suggestions_unavailable` "Connect a text model
+  under Providers to get suggestions." instead of returning stand-in ideas. Each idea becomes a TemplateInput with the engine, the requested audience, the trimmed name
+  and description, status `draft`, origin `suggested` and the idea's definition
+  (`domain/suggestion_screen.py::suggestion_input`). An idea is dropped, and counted with the engine's drops, when
+  the name, description, reason or any text in its definition mentions a trending channel title as whole words
+  regardless of case (`copied_channels`, over every trend read), when the name, description or any text in its
+  definition contains a whole trending video title the same way (`copied_titles`; the reason may cite titles), or
+  when it fails create's checks
+  (`input_errors`, then the engine's `problems` on the unsaved template with id `suggestion`, which include the
+  general audience's child-term screen; a kids template gets the kids floor through its settings model). With
+  no idea left it is 409 `suggestions_unavailable` "None of the suggested ideas passed the checks…". The answer is
+  TemplateSuggestions `{suggestions: [{name, description, reason, based_on: [trend titles], input:
+  TemplateInput}], source: youtube | sample, dropped, provider}`, `provider` naming the text model that wrote
+  the ideas; a suggestion is saved only by sending its `input` to
+  `POST /templates`.
+- The narrated engine's suggestions (`template/suggestions.py`, `template/suggestion_prompt.py`) send one request
+  with the system prompt `suggest_system.txt` (kids) or `suggest_system_general.txt` (general) and
+  `suggest_user.txt`. The JSON schema asks for `{ideas: [{name (1 to 80 characters), description, reason,
+  based_on: [trend numbers], definition}]}` with at most `count` ideas; the definition schema is the
+  definition model's own minus `settings`, `basic` and `hidden`, so every format the model offers is offered
+  without being named. The trend data is numbered and fenced in `<trend_data>` markers; each line has the title,
+  category, tags, views and minutes, with `<` and `>` removed, whitespace collapsed and lengths cut
+  (`SuggestionWriting`: `max_tokens` 6000, `temperature` 0.9, `title_characters` 120, `tags_per_video` 6).
+  Channel titles are never sent. The system prompt marks the data as untrusted, to be read only as data, and
+  forbids reusing channel names, video titles, brands, products, characters or real people. Ideas past `count`
+  are ignored. An idea is dropped when it does not match the shape, its definition fails the definition model,
+  it sets an expert field, none of its trend numbers exist, or, for a general audience, its name, description or
+  reason holds a child-directed term. Kept ideas carry the definition without its default values.
 
 `infrastructure/pipelines/template_registry.py` holds `TemplatePipelineRegistry(static, engines: EngineCatalog,
 templates)`, the
@@ -1182,6 +1242,7 @@ removal creates a new key. A 500 carries an `X-Request-Id` header; the log names
 | GET `/templates/{id}` | | TemplateSummary; a built-in's id is its type id; 404 `template_not_found` |
 | POST `/templates` | `TemplateInput` | TemplateSummary, 201; 400 with field errors; 409 `template_type_taken` |
 | POST `/templates/preview-script` | `TemplatePreviewInput` | SampleScript; nothing is stored; 400 with the create field errors or `language`; 409 `preview_unavailable` |
+| POST `/templates/suggestions` | `{engine, audience, region, category?, count?}` | `{suggestions: [{name, description, reason, based_on, input: TemplateInput}], source: "youtube" \| "sample", dropped, provider}`; nothing is stored; 400 with field errors (`engine`, `audience`, `region`, `category`, `count`); 409 `suggestions_unavailable` |
 | PUT `/templates/{id}` | `TemplateInput` | TemplateSummary; 409 `template_builtin`; 400 for an audience, engine or type id change and for field errors; 409 `template_in_use` for ready to draft while automations or open runs use it |
 | DELETE `/templates/{id}` | | 204, also for a stored row that no longer decodes; 404 `template_not_found`; 409 `template_builtin`; 409 `template_in_use` naming the automations and open runs |
 | POST `/templates/{id}/duplicate` | optional `{name?, audience?}` | TemplateSummary, 201; 400 with field errors; 404 `template_not_found`; 409 `template_type_taken` |
@@ -1273,7 +1334,32 @@ pipeline type when it is served), `/automations/:id`, `/pipelines`, `/pipelines/
   use in automations" switch (draft or ready) and "Revision <n>"; "Save changes" keeps the chosen status. A
   built-in opens read-only with "Duplicate to customise", which opens the duplicate dialog. An unknown id
   shows "Pipeline not found" with a link back; a template whose engine is not installed shows a warning
-  instead of the form.
+  instead of the form. The editor fills the definition schema's defaults into the draft before it compares
+  it with the saved one (`model/form.ts::settledDraft`, on open and after each save), so an opened pipeline
+  or an untouched new one shows "All changes saved" and leaving it does not ask to discard changes.
+- Pipeline settings views (new, saved and built-in pipelines): the same "Simple" / "All settings" toggle as
+  the automation editor (`shared/settings-view/`), sharing its remembered choice
+  (`autotube.editor.settings-view`). A new pipeline always opens in Simple without changing the remembered
+  choice; a saved or built-in pipeline opens in the remembered view. Simple shows only the definition's
+  `ui:basic` fields under their `ui:sections` titles and says "<n> more options in All settings" with "Show
+  all settings"; name, description and audience show in both views. All settings shows every section and a
+  search box over field titles and descriptions ("No settings match" with "Clear search" when nothing is
+  left); there is no "Changed only" switch, because a definition has no defaults to compare against. A
+  definition field with an error is always shown, and when a save or a sample fails on a field Simple hides,
+  the editor switches to All settings.
+- "Try a sample script" card (new, saved and built-in pipelines), below the definition: a language select,
+  an optional topic and "Write a sample script". It sends the unsaved form (`TemplatePreviewInput`: the
+  draft with its current status, the chosen language and the topic) to `POST /templates/preview-script` and
+  never saves; the card says it writes only the script, with no pictures or voice. While writing, the button
+  shows "Writing…" and is disabled and a progress line says "Writing a sample script". The result shows
+  the title, the scenes in order (heading when present, narration, and the action in a muted line), the
+  takeaway when present, the YouTube title and description, and "Written by <provider>". A 400 puts its field
+  errors on the matching fields (`language` and `topic` in the card, `definition.<path>` in the form, `name`
+  on the name) and shows a toast; a 409 `preview_unavailable` shows the server's message as a calm info
+  notice with "Open Providers" (`/providers`); other failures show as a toast. Known limit: `EngineSummary`
+  carries no languages, so the select offers the languages of the served pipelines built from this engine's
+  templates (`model/preview.ts::engineLanguages`), the first preselected; with none served it sends `null`
+  and the server uses the pipeline's first language.
 - Run detail: live stage timeline, logs, score breakdown, approve or reject with notes, publish, retry from
   stage. A `status` event refetches the open run so score, score details and timestamps update live.
   Artifacts list final outputs first (kinds `video`, `thumbnail`, `subtitle`, `metadata` with a language),
