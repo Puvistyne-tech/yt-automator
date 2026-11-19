@@ -224,6 +224,16 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     presets `kayal`, `vaidehi`, `svara_male`. Any other stored string stays valid. Every `mlx_audio` default
     preset is offered for each language it speaks, and every other English choice is in Kokoro's `voices`
     (both enforced by a test). `music.short_mood_prompt` (default empty) replaces `music.mood_prompt` for Short beds.
+  - `voice.quality_check` (`NarrationCheck`): `enabled` (default true), `languages` (default `["ta"]`),
+    `max_error_rate` (0 to 1, default 0.25) and `retries` (0 to 10, default 2); not in `ui:basic`. For a line
+    whose language (primary subtag) is listed, the voice stage compares `Speech.transcript` with the spoken text
+    by character error rate (`text/error_rate.py`: NFC, casefolded, punctuation removed, whitespace collapsed,
+    Levenshtein distance over the reference length; an empty reference scores 0 against empty and 1 otherwise).
+    Above `max_error_rate` the line is spoken again up to `retries` times, retry n written to
+    `<language>-<segment>-retry<n>.wav`, stopping at the first pass; the attempt with the lowest rate is kept. Each
+    narration artifact records `error_rate` (null when not checked) and `attempts`. The stage logs the rate per
+    checked line, a warning when the kept rate is still above the limit, and a note when the voice gave no
+    transcript, in which case the line is kept unchecked and the run continues.
   - `visuals.motion_prompt` (with `{visual}` and `{mood}`; a card uses "a title card" and "warm") and
     `visuals.judge_criteria` replace the fixed motion and picture-judge wording. A motion prompt naming any
     other lowercase `{placeholder}` fails validation; `$`, `{}` and `{Visual}` pass through as written, as
@@ -669,7 +679,8 @@ image  ImageGenerator.generate(ImageRequest, output) -> Path
 motion MotionGenerator.animate(MotionRequest, output) -> Path
 tts    SpeechSynthesizer.synthesize(SpeechRequest, output) -> Speech
        Speech: path, duration_seconds, words: [WordTiming word, start_seconds, end_seconds],
-               timing_source: synthesizer | alignment | estimate
+               timing_source: synthesizer | alignment | estimate,
+               transcript: what Whisper heard, words joined by spaces (empty when not recognised)
 music  MusicGenerator.compose(MusicRequest, output) -> Path
 media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, output) -> Path,
        extract_frame(video, at_seconds, output) -> Path, loudness_lufs(media)
@@ -723,7 +734,7 @@ media  MediaToolkit.duration_seconds(media), compose_video(VideoComposition, out
   passing a JSON job `{model_dir, text, kwargs, sentence_split, pause_ms, output}` on stdin. The worker writes
   mono 16-bit PCM WAV at the model's rate; with sentence_split it speaks each sentence (split after `.`, `!`,
   `?`, `।`, `॥`) and joins them with pause_ms of silence. Word timings are estimated, then refined with
-  Whisper alignment. It is unavailable when `python` or `models_root` does not exist, so hosts without
+  Whisper alignment, which also fills `Speech.transcript` even when the timings are rejected. It is unavailable when `python` or `models_root` does not exist, so hosts without
   them fall through to the next TTS provider. `python` (default `~/.autotube/venvs/mlx/bin/python`),
   `models_root` (default `~/.autotube/models`) and `hf_home` (default `~/.autotube/hf`) expand `~` when used.
 - A TTS provider refuses a requested voice it cannot speak with an upstream failure `voice_unknown`, so the

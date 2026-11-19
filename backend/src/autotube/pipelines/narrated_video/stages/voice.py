@@ -14,6 +14,7 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.stages.media_types import WAV
 from autotube.pipelines.narrated_video.stages.run_settings import kids_settings
 from autotube.pipelines.narrated_video.stages.story_loading import load_story
+from autotube.pipelines.narrated_video.stages.voice_check import check_note, checked_speech
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.normalise import speakable
 from autotube.pipelines.narrated_video.text.templates import render_template
@@ -97,7 +98,12 @@ class VoiceStage:
     ) -> NewArtifact:
         request = speech_request(settings, line, language)
         output = folder(context, "voice") / f"{language}-{line.segment}.wav"
-        speech = tts.synthesize(request, output)
+        check = settings.voice.quality_check
+        result = checked_speech(tts, request, output, check)
+        note = check_note(result, check, f"{language} {line.segment}")
+        if note is not None:
+            context.log(*note)
+        speech = result.speech
         return artifact(
             ArtifactKind.AUDIO,
             speech.path,
@@ -111,4 +117,6 @@ class VoiceStage:
             duration_seconds=speech.duration_seconds,
             timing_source=speech.timing_source.value,
             words=timings_meta(speech.words),
+            error_rate=result.error_rate,
+            attempts=result.attempts,
         )
