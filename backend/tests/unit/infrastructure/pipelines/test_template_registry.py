@@ -37,6 +37,13 @@ class TwinEngine:
     def problems(self, template: PipelineTemplate) -> dict[str, str]:
         return {} if template.engine == self.engine_id else {"engine": template.engine}
 
+    def revision_problems(
+        self,
+        current: PipelineTemplate,  # noqa: ARG002
+        proposed: PipelineTemplate,  # noqa: ARG002
+    ) -> dict[str, str]:
+        return {}
+
     def pipeline(self, template: PipelineTemplate) -> Pipeline:
         return FakePipeline(type_id=template.type_id)
 

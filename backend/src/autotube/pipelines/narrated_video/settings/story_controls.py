@@ -7,9 +7,11 @@ from autotube.pipelines.narrated_video.settings.story_choices import (
     ENDING_STYLE_CHOICES,
     LEAD_MODE_CHOICES,
     STORY_CHECK_CHOICES,
+    STRUCTURE_CHOICES,
     EndingStyle,
     LeadMode,
     StoryCheck,
+    Structure,
 )
 
 TONE = "warm, gentle"
@@ -19,6 +21,12 @@ TRANSLATION_STYLE = "natural, simple, warm"
 
 
 class StoryWritingSettings(SettingsSection):
+    structure: Structure = Field(
+        default=Structure.STORY,
+        json_schema_extra=STRUCTURE_CHOICES,
+        title="Structure",
+        description="The shape of every script. Fixed by the pipeline template.",
+    )
     tone: str = Field(
         default=TONE,
         min_length=1,

@@ -13,11 +13,10 @@ from autotube.pipelines.narrated_video.scoring.inputs import ScoreInputs
 from autotube.pipelines.narrated_video.scoring.output_items import metadata_limits
 from autotube.pipelines.narrated_video.settings.base import LocalizedText
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
 from autotube.pipelines.narrated_video.story.gates import (
     child_term_problems,
     reading_level_problems,
-    story_problems,
-    translation_problems,
 )
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.prompts import story_request

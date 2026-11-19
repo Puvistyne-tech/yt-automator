@@ -6,12 +6,11 @@ import pytest
 
 from autotube.domain.pipeline_descriptors import settings_schema_of
 from autotube.domain.pipeline_templates import TemplateAudience
-from autotube.pipelines.narrated_video.publishing.templates import (
-    METADATA_PLACEHOLDERS,
-    template_values,
-)
+from autotube.pipelines.narrated_video.publishing.templates import template_values
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.settings.story_choices import Structure
 from autotube.pipelines.narrated_video.story.child_terms import child_terms_in
+from autotube.pipelines.narrated_video.structures.registry import metadata_placeholders
 from autotube.pipelines.narrated_video.template.audience import audience_defaults, with_audience
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.merging import deep_merged
@@ -155,7 +154,9 @@ def test_pinning_leaves_input_it_cannot_read_to_validation() -> None:
 
 
 def test_metadata_placeholders_match_the_filled_values() -> None:
-    assert set(template_values(story(), KidsStorySettings())) == set(METADATA_PLACEHOLDERS)
+    assert set(template_values(story(), KidsStorySettings())) == set(
+        metadata_placeholders(Structure.STORY)
+    )
 
 
 def test_derived_models_are_built_once_per_definition_and_audience() -> None:

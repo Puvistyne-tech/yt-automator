@@ -12,7 +12,7 @@ from autotube.pipelines.narrated_video.story.bundled import (
     bundled_stories,
     pick_bundled,
 )
-from autotube.pipelines.narrated_video.story.gates import story_problems
+from autotube.pipelines.narrated_video.story.checks import story_problems
 from autotube.pipelines.narrated_video.story.words import contains_phrase
 from tests.fixtures.kids_data import bundled_raw
 

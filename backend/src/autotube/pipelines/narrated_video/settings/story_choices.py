@@ -5,6 +5,10 @@ from enum import StrEnum
 from autotube.pipelines.narrated_video.settings.choices import checkbox_choices, enum_choices
 
 
+class Structure(StrEnum):
+    STORY = "story"
+
+
 class EndingStyle(StrEnum):
     MORAL_AND_REFRAIN = "moral_and_refrain"
     REFRAIN_ONLY = "refrain_only"
@@ -25,6 +29,10 @@ class StoryCheck(StrEnum):
     CAST = "cast"
 
 
+def needs_cast(structure: Structure) -> bool:
+    return structure is Structure.STORY
+
+
 def says_moral(style: EndingStyle) -> bool:
     return style is EndingStyle.MORAL_AND_REFRAIN
 
@@ -33,6 +41,7 @@ def says_refrain(style: EndingStyle) -> bool:
     return style is not EndingStyle.OPEN
 
 
+STRUCTURE_CHOICES = enum_choices(Structure, {"story": "Story with a recurring cast"})
 ENDING_STYLE_CHOICES = enum_choices(
     EndingStyle,
     {

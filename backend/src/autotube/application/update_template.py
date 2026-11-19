@@ -24,7 +24,8 @@ class UpdateTemplate:
         current = self.lookup.require(template_id)
         ensure_editable(current)
         proposed = changed(current, data)
-        raise_if_invalid(revision_errors(current, proposed) | self.lookup.problems(proposed))
+        problems = self.lookup.revision_problems(current, proposed)
+        raise_if_invalid(revision_errors(current, proposed) | problems)
         lookup = self.lookup
         ensure_draft_allowed(current, proposed, lookup.all_automations(), lookup.all_runs())
         updated = revised(current, proposed, self.clock.now())

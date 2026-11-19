@@ -8,10 +8,10 @@ from autotube.domain.pipeline_templates import PipelineTemplate, TemplateAudienc
 from autotube.domain.ui_basic import basic_problems
 from autotube.domain.ui_hidden import hidden_problems
 from autotube.domain.validation import validated_settings
-from autotube.pipelines.narrated_video.publishing.templates import METADATA_PLACEHOLDERS
 from autotube.pipelines.narrated_video.settings.base import LocalizedText
 from autotube.pipelines.narrated_video.settings.placeholders import checked_template
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.structures.registry import metadata_placeholders
 from autotube.pipelines.narrated_video.styles.library import style_ids
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.settings_model import (
@@ -38,9 +38,11 @@ def style_problems(definition: NarratedDefinition) -> dict[str, str]:
     return {"definition.visual_style": f"unknown visual style {style!r}"}
 
 
-def placeholder_problem(field: str, value: LocalizedText) -> dict[str, str]:
+def placeholder_problem(
+    field: str, value: LocalizedText, allowed: tuple[str, ...]
+) -> dict[str, str]:
     try:
-        checked_template(field, value, METADATA_PLACEHOLDERS)
+        checked_template(field, value, allowed)
     except ValueError as error:
         return {f"{DEFINITION}.{field}": str(error)}
     return {}
@@ -52,10 +54,11 @@ def placeholder_problems(definition: NarratedDefinition) -> dict[str, str]:
         "short_title_template": definition.short_title_template,
         "description_template": definition.description_template,
     }
+    allowed = metadata_placeholders(definition.structure)
     return {
         path: message
         for field, value in templates.items()
-        for path, message in placeholder_problem(field, value).items()
+        for path, message in placeholder_problem(field, value, allowed).items()
     }
 
 
@@ -77,7 +80,7 @@ def ui_problems(
 
 
 def settings_problems(template: PipelineTemplate, definition: NarratedDefinition) -> dict[str, str]:
-    model = pinned_settings_model(template.audience)
+    model = pinned_settings_model(template.audience, definition.structure)
     defaults = template_defaults(definition, template.audience)
     _, errors = validated_settings(model, defaults, SETTINGS_PREFIX)
     return errors

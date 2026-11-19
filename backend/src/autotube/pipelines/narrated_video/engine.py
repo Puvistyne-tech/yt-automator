@@ -21,6 +21,7 @@ from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from autotube.pipelines.narrated_video.template.definition import NarratedDefinition
 from autotube.pipelines.narrated_video.template.descriptor import template_descriptor
 from autotube.pipelines.narrated_video.template.problems import template_problems
+from autotube.pipelines.narrated_video.template.revisions import structure_change_problems
 from autotube.pipelines.narrated_video.template.settings_model import settings_model_for
 
 ENGINE_ID = "narrated_video"
@@ -71,6 +72,11 @@ class NarratedVideoEngine:
         if template.engine != ENGINE_ID:
             errors["engine"] = f"template belongs to engine {template.engine!r}, not {ENGINE_ID!r}"
         return errors
+
+    def revision_problems(
+        self, current: PipelineTemplate, proposed: PipelineTemplate
+    ) -> dict[str, str]:
+        return structure_change_problems(current, proposed)
 
     def pipeline(self, template: PipelineTemplate) -> Pipeline:
         if template.is_builtin and template.type_id == TYPE_ID:

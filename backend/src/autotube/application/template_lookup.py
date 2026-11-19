@@ -44,6 +44,13 @@ class TemplateLookup:
             return missing_engine_errors(template.engine)
         return engine.problems(template)
 
+    def revision_problems(
+        self, current: PipelineTemplate, proposed: PipelineTemplate
+    ) -> dict[str, str]:
+        engine = self.engines.get(proposed.engine)
+        fixed = {} if engine is None else engine.revision_problems(current, proposed)
+        return self.problems(proposed) | fixed
+
     def taken_type_ids(self) -> set[str]:
         served = (pipeline.descriptor.type_id for pipeline in self.pipelines.list())
         return taken_type_ids(served, self.builtins())

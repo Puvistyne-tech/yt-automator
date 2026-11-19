@@ -7,9 +7,7 @@ from autotube.domain.capabilities import CameraMove, TextRequest
 from autotube.pipelines.narrated_video.audience_prompts import audience_prompt
 from autotube.pipelines.narrated_video.languages import language_name
 from autotube.pipelines.narrated_video.resources import render_prompt, resource_json
-from autotube.pipelines.narrated_video.settings.cast import Character
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.story.casting import episode_cast
 from autotube.pipelines.narrated_video.story.model import StoryDraft, StoryText, text_of
 from autotube.pipelines.narrated_video.story.prompt_parts import (
     avoided_topics,
@@ -17,15 +15,8 @@ from autotube.pipelines.narrated_video.story.prompt_parts import (
     ending_requirement,
     extra_requirements,
     sound_effect_rule,
-    translation_ending_rules,
 )
-
-
-def cast_line(member: Character, language: str) -> str:
-    return (
-        f'id "{member.id}": {member.name.for_language(language)}, a {member.species}. '
-        f"Looks: {member.visual_descriptor}. Personality: {member.personality}"
-    )
+from autotube.pipelines.narrated_video.structures.registry import spec_of
 
 
 def reading_level_text(settings: KidsStorySettings) -> str:
@@ -36,7 +27,7 @@ def reading_level_text(settings: KidsStorySettings) -> str:
 
 def story_system(settings: KidsStorySettings, language: str) -> str:
     return render_prompt(
-        audience_prompt("story_system.txt", settings),
+        audience_prompt(spec_of(settings).system_prompt, settings),
         series=settings.series.name.for_language(language),
         tagline=settings.series.tagline.for_language(language),
         age_min=settings.story.age_min,
@@ -63,15 +54,12 @@ def style_values(settings: KidsStorySettings, language: str) -> dict[str, str]:
 
 def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str = "") -> str:
     rules = settings.story
-    cast = episode_cast(settings, seed)
+    spec = spec_of(settings)
     return render_prompt(
-        "story_user.txt",
+        spec.user_prompt,
         language=language_name(language),
         series=settings.series.name.for_language(language),
         theme=theme,
-        lead=cast[0].id,
-        cast=bullet_lines([cast_line(member, language) for member in cast]),
-        morals=bullet_lines(rules.morals),
         scene_min=rules.scene_count_min,
         scene_max=rules.scene_count_max,
         words_min=f"{rules.words_per_scene_min.for_language(language):g}",
@@ -83,6 +71,7 @@ def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str
         question_count=rules.question_count,
         short_scenes=settings.short.max_scenes,
         **style_values(settings, language),
+        **spec.prompt_values(settings, language, seed),
     )
 
 
@@ -116,14 +105,13 @@ def translation_user(
         for member in settings.cast
     )
     text = text_of(story)
-    refrain = settings.series.refrain.for_language(target)
     return render_prompt(
         "translate_user.txt",
         source_language=language_name(source),
         language=language_name(target),
         scene_count=len(text.narrations),
         question_count=len(text.questions),
-        ending_rules=translation_ending_rules(settings.story.ending_style, refrain),
+        ending_rules=spec_of(settings).translation_rules(settings, target),
         names=names,
         story=json.dumps(text.model_dump(mode="json"), ensure_ascii=False, indent=2),
     )

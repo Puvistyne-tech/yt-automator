@@ -206,8 +206,8 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     cast member leads; `per_episode`: the lead is picked from a hash of the run id, as stages have no episode
     counter, so a lead can repeat). The episode cast is the lead followed by the next cast members in cast
     order, wrapping round (`story/casting.py::episode_cast(settings, seed)`). The story prompt lists only the
-    episode cast, and the cast gate (`story_problems(story, settings, seed)`, seeded with the run id) rejects
-    any other cast id. Bundled stories are picked against the whole cast.
+    episode cast, and the cast gate (`story/checks.py::story_problems(story, settings, seed)`, seeded with the
+    run id) rejects any other cast id. Bundled stories are picked against the whole cast.
   - `story.question_style`, `short.hook_style` and `story.translation_style` replace the fixed wording of the
     questions, the hook line and the translation register.
   - `story.enabled_checks`: the story checks that run (`scene_count`, `words_per_scene`, `duration`,
@@ -587,11 +587,14 @@ class PipelineEngine(Protocol):
     definition_ui_schema: JsonObject
     def blank(self, audience) -> JsonObject
     def problems(self, template) -> dict[str, str]
+    def revision_problems(self, current, proposed) -> dict[str, str]
     def pipeline(self, template) -> Pipeline
     def builtin_templates(self) -> list[PipelineTemplate]
 ```
 
 - `problems` maps a field path (`definition.<path>`, or `engine` for a template of another engine) to a message.
+- `revision_problems` reports the definition fields the engine fixes at creation that an update would change,
+  keyed the same way. Updating a template returns 400 with these, its `problems` and the rule errors below.
 - `type_id` is fixed at creation: `t_<id>` for a user template, the engine's own id for a built-in. A rename never
   changes it.
 - Rules (`domain/template_rules.py`): built-ins are read-only (`template_builtin`); audience, engine and type id
@@ -613,7 +616,7 @@ class PipelineEngine(Protocol):
 
 | Field | Type | Maps to |
 | --- | --- | --- |
-| `structure` | `story` (default; more structures are added as enum members) | fixed once created |
+| `structure` | `story` (default; more structures are added as enum members) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
 | `brief` | text, at most 2000 | `story.extra_instructions` as "Every video is about: <brief>" |
 | `length` | `short` \| `standard` (default) \| `long` | short: 60 s ±15, 4–6 scenes; long: 300 s ±45, 14–18 scenes; standard changes nothing |
 | `tone` | text | `story.tone` |
@@ -632,7 +635,8 @@ class PipelineEngine(Protocol):
 - `settings_model_for(definition, audience)` builds a subclass of the engine settings model with
   `pydantic.create_model`. Its schema equals the engine's; only the top-level section defaults change.
 - Defaults are deep-merged in this order (objects merge, lists and scalars replace): engine defaults, the
-  audience defaults (general only: `template/general_defaults.json`), the values mapped from the definition,
+  audience defaults (general only: `template/general_defaults.json`), the structure's defaults, the values mapped
+  from the definition,
   then the `settings` overlay; the kids floor is applied when the result is validated (kids only).
 - The general defaults leave nothing child-directed: tagline, an empty refrain, intro and outro lines,
   editorial rules, the `ink_and_wash` style, a single adult cast member (`mira`), tone, writing style, an open
@@ -643,6 +647,8 @@ class PipelineEngine(Protocol):
   same way. The `kids_story` pipeline uses the same pinned model with audience kids, so stored `kids_story`
   settings validate unchanged.
 - The descriptor's `default_settings` come from this model.
+- `story.structure` is pinned the same way to the definition's structure, and `story.source` to
+  `llm_with_fallback` for every structure without bundled scripts.
 - Derived models are cached per (definition, audience), and the engine schema used by `problems` is built
   once, so checking a template or listing pipelines does not rebuild models or schemas.
 
@@ -652,7 +658,8 @@ class PipelineEngine(Protocol):
   `version` is `"<engine version>+r<revision>"`.
 - `ui_schema` is the engine's with `ui:basic` from the definition (or the engine's list) and `ui:hidden` = the
   definition's `hidden`, then `safety.audience`, then for general templates `story.age_min`, `story.age_max`
-  `story.reading_level` and `story.source`. The engine's own `ui:hidden` is `["safety.audience"]`.
+  `story.reading_level` and `story.source`, then the structure's hidden paths (see Structures). The engine's
+  own `ui:hidden` is `["safety.audience", "story.structure"]`.
 - Capabilities: a kids template keeps `kids_content`; a general template never has it. `domain/kids_rules.py`
   stays the only place that decides the upload's made-for-kids flag.
 
@@ -693,6 +700,34 @@ class PipelineEngine(Protocol):
 - A general template never uses the bundled stories, which are children's stories: when the writer is missing,
   fails or never passes the gates, the story stage fails with "…never falls back to the bundled children's
   stories" instead.
+
+#### Structures (`pipelines/narrated_video/structures/`)
+
+A structure is the shape of every script. `settings.story.structure` (`story` by default, so stored settings and
+the built-in `kids_story` are unchanged) selects one `StructureSpec` from `structures/registry.py::SPECS`:
+
+```
+StructureSpec   id, title, system_prompt, user_prompt (prompt file names; the system prompt gets its
+                `_general` variant by audience), prompt_values(settings, language, seed) -> the structure's
+                own prompt values, translation_rules(settings, language) -> its translation rule lines,
+                extra_gates(seed), translation_gates, score_rules, placeholders (metadata placeholders beyond
+                the common ones), placeholder_values(story, settings), uses_bundled (may fall back to the
+                bundled stories), basic_paths (the derived `ui:basic` when the definition has none; empty
+                keeps the engine's), hidden_paths (added to the derived `ui:hidden`), defaults_file (JSON in
+                `structures/`, merged after the audience defaults)
+```
+
+- Script checks (`story/checks.py`): the size gates (scene count, words per scene, duration), then the
+  structure's extra gates, then the safety gates (banned words, brand names, child-directed terms), then the
+  reading level. Translations run the structure's translation gates, then the safety gates.
+- Score items: subtitle timing, episode and Short duration, speaking rate and reading level, then the
+  structure's score rules, then metadata limits, loudness and completeness.
+- Metadata placeholders: `{title} {series} {tagline} {theme} {questions} {hashtags} {hook}` for every structure,
+  plus the structure's own.
+- `story`: the existing `story_system.txt` and `story_user.txt` with the cast, lead and morals; ending and cast
+  gates; ending translation gate; `moral_and_refrain` and `character_consistency` score items; placeholders
+  `{moral} {characters} {refrain}`; bundled fallback. Its cast needs at least one member (validated on the
+  settings, "a story needs at least one cast member"); other structures may have an empty cast.
 
 #### Problems
 

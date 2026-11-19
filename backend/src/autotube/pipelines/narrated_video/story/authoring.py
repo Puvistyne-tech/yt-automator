@@ -8,7 +8,7 @@ from autotube.domain.capabilities import TextGenerator
 from autotube.domain.pipeline import StageLog
 from autotube.domain.run_enums import LogLevel
 from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
-from autotube.pipelines.narrated_video.story.gates import story_problems, translation_problems
+from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
 from autotube.pipelines.narrated_video.story.model import Story, StoryDraft, StoryText, with_text
 from autotube.pipelines.narrated_video.story.parsing import StoryFormatError, parse_model
 from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request

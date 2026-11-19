@@ -76,7 +76,8 @@
     "episode.resolution"
   ],
   "ui:hidden": [
-    "safety.audience"
+    "safety.audience",
+    "story.structure"
   ],
   "series": {
     "ui:order": [
@@ -245,6 +246,7 @@
   },
   "story": {
     "ui:order": [
+      "structure",
       "source",
       "primary_language",
       "tone",
@@ -344,6 +346,9 @@
     },
     "enabled_checks": {
       "ui:widget": "checkboxes"
+    },
+    "structure": {
+      "ui:widget": "select"
     }
   },
   "short": {
