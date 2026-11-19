@@ -27,6 +27,8 @@ from tests.fixtures.kids_data import (
     tamil_text,
 )
 from tests.fixtures.kids_fakes import FakeProviders, FakeWriter, as_json, failing_writer
+from tests.fixtures.list_data import list_draft, list_writer
+from tests.fixtures.quiz_data import quiz_draft, quiz_writer
 from tests.fixtures.template_records import template
 from tests.fixtures.template_settings import (
     GENERAL,
@@ -60,7 +62,11 @@ def writing_requests(writer: FakeWriter) -> list[TextRequest]:
         (KIDS, smart_writer(), {}, draft_dict()),
         (GENERAL, general_writer(), {}, general_draft()),
         (GENERAL, explainer_writer(), EXPLAINER, explainer_draft()),
+        (GENERAL, list_writer(), {"structure": "list"}, list_draft()),
+        (KIDS, list_writer(countdown=True), {"structure": "countdown"}, list_draft(True)),
+        (KIDS, quiz_writer(), {"structure": "quiz"}, quiz_draft()),
     ],
+    ids=["kids-story", "general-story", "explainer", "list", "countdown", "quiz"],
 )
 def test_a_sample_comes_from_the_writer(
     audience: TemplateAudience,
@@ -70,8 +76,11 @@ def test_a_sample_comes_from_the_writer(
 ) -> None:
     script = sample(audience, writer, **definition)
     assert (script.language, script.title, script.provider) == ("en", draft["title"], "fake-llm")
-    assert script.takeaway == draft["moral"]
+    assert script.takeaway == draft.get("moral", "")
     assert [scene.narration for scene in script.scenes] == [s["narration"] for s in draft["scenes"]]
+    assert [scene.heading for scene in script.scenes] == [
+        s.get("heading", "") for s in draft["scenes"]
+    ]
     assert script.upload_title and script.upload_description
 
 

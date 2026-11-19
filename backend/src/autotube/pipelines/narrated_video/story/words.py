@@ -32,6 +32,10 @@ def sentences_of(text: str) -> list[str]:
     return [part.strip() for part in SENTENCE_END.split(text) if words_of(part)]
 
 
+def folded(text: str) -> str:
+    return text.strip().casefold()
+
+
 def comparable(text: str) -> str:
     return " ".join(word.casefold() for word in words_of(text))
 

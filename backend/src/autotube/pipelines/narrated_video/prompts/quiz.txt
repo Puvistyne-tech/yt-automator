@@ -1,0 +1,10 @@
+Shape of the quiz script:
+- The first scene is a short intro hook: it names the topic and says there are $count questions. Its "question" and "answer" are empty.
+- Then come exactly $count pairs of scenes, a question scene followed right away by its reveal scene.
+- A question scene's "question" holds the exact question in $language, ending with a question mark, and its narration asks it. $choices_rule
+- A reveal scene's "answer" holds the short answer in $language. Its narration says that answer word for word, then explains it in one sentence.
+- The last scene is a short closing line. Its "question" and "answer" are empty.
+- Every question has one clear, true answer.
+- "heading" is always empty and "number" is always null.
+- "moral" is an empty string.
+- There are no recurring characters: "characters" is always an empty list and "speaker" is always "narrator".

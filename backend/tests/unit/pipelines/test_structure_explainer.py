@@ -6,7 +6,7 @@ from autotube.domain.pipeline_templates import TemplateAudience
 from autotube.pipelines.narrated_video.settings.story import StorySource
 from autotube.pipelines.narrated_video.settings.story_choices import StoryCheck, Structure
 from autotube.pipelines.narrated_video.story.checks import story_problems, translation_problems
-from autotube.pipelines.narrated_video.structures.explainer import HIDDEN_PATHS
+from autotube.pipelines.narrated_video.structures.registry import structure_spec
 from autotube.pipelines.narrated_video.template.settings_model import kids_settings_model
 from tests.fixtures.explainer_data import (
     NARRATIONS_TA,
@@ -74,5 +74,8 @@ def test_a_tamil_translation_needs_the_hook_and_the_takeaway() -> None:
 def test_the_explainer_hides_cast_and_story_only_settings(audience: TemplateAudience) -> None:
     descriptor = explainer_pipeline(audience).descriptor
     hidden = descriptor.ui_schema["ui:hidden"]
-    assert isinstance(hidden, list) and {*HIDDEN_PATHS, "story.source"} <= set(hidden)
+    assert isinstance(hidden, list) and {
+        *structure_spec(Structure.EXPLAINER).hidden_paths,
+        "story.source",
+    } <= set(hidden)
     assert descriptor.default_settings["cast"] == []

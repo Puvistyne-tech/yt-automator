@@ -222,6 +222,10 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
     `ending`, `reading_level`, `cast`, `structure`; default all), published as an array of `oneOf` items with
     `uniqueItems` and shown as checkboxes. Banned words and brand names are child-safety checks: they always
     run and cannot be listed. Translations run the ending check only when it is enabled.
+  - Structure counts (`settings/structure_shape.py`, shown only by the structure that uses them):
+    `story.item_count` (list and countdown items, default 7, 3 to 15), `story.quiz_questions` (default 4, 1 to
+    10) and `story.answer_choices` (choices per quiz question, default 0 for open questions, at most 6; 1 is
+    refused: "a quiz question needs no choices or at least two").
   - `sound_effects.max_per_scene` (default 2) is stated in the prompt ("zero to two…", or "always an empty
     list" for 0) and shaping drops any cue beyond it.
   - `voice.speed` is a per-language speed (0.5 to 1.5, default 0.95); a stored single number is applied to
@@ -632,9 +636,9 @@ class PipelineEngine(Protocol):
 
 | Field | Type | Maps to |
 | --- | --- | --- |
-| `structure` | `story` (default) \| `explainer` (see Structures) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
+| `structure` | `story` (default) \| `explainer` \| `list` \| `countdown` \| `quiz` (see Structures) | `story.structure`, pinned; fixed once created (`revision_problems` reports `definition.structure`) |
 | `brief` | text, at most 2000 | `story.extra_instructions` as "Every video is about: <brief>" |
-| `length` | `short` \| `standard` (default) \| `long` | short: 60 s ±15, 4–6 scenes; long: 300 s ±45, 14–18 scenes; standard changes nothing |
+| `length` | `short` \| `standard` (default) \| `long` | story and explainer: short 60 s ±15, 4–6 scenes; long 300 s ±45, 14–18 scenes. List, countdown and quiz (fixed scene count, length derived, see Structures): short 10–20 English and 6–14 Tamil words per scene; long 40–80 English and 30–60 Tamil. Standard changes nothing |
 | `tone` | text | `story.tone` |
 | `topics` | list of text | `story.themes` |
 | `visual_style` | a style library id | `look.visual_style` |
@@ -683,10 +687,14 @@ and an empty value is called "the default", never "the engine's".
 
 - `type_id`, `name` and `description` from the template (an empty description falls back to the engine's);
   `version` is `"<engine version>+r<revision>"`.
-- `ui_schema` is the engine's with `ui:basic` from the definition (or the engine's list) and `ui:hidden` = the
+- `ui_schema` is the engine's with `ui:basic` from the definition (or else the structure's or the engine's list,
+  without the structure's hidden paths and followed by its shown paths) and `ui:hidden` = the
   definition's `hidden`, then `safety.audience`, then for general templates `story.age_min`, `story.age_max`
-  `story.reading_level` and `story.source`, then the structure's hidden paths (see Structures). The engine's
-  own `ui:hidden` is `["safety.audience", "story.structure", "story.preview_attempts"]`.
+  `story.reading_level` and `story.source`, then the structure's hidden paths (see Structures), leaving out
+  the structure's shown paths. The engine's own `ui:hidden` is `["safety.audience", "story.structure",
+  "story.preview_attempts", "story.item_count", "story.quiz_questions", "story.answer_choices"]`: the
+  counts of the other structures are hidden there, so the plain `kids_story` pipeline and a kids story
+  template look the same.
 - Capabilities: a kids template keeps `kids_content`; a general template never has it. `domain/kids_rules.py`
   stays the only place that decides the upload's made-for-kids flag.
 
@@ -742,9 +750,31 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
                 extra_gates(seed), translation_gates, score_rules, placeholders (metadata placeholders beyond
                 the common ones), placeholder_values(story, settings), uses_bundled (may fall back to the
                 bundled stories), basic_paths (the derived `ui:basic` when the definition has none; empty
-                keeps the engine's), hidden_paths (added to the derived `ui:hidden`), defaults_file (JSON in
-                `structures/`, merged after the audience defaults)
+                keeps the engine's), hidden_paths (added to the derived `ui:hidden`), shown_paths (engine
+                hidden paths this structure shows again), defaults_files (JSON files in `structures/`,
+                merged in order after the audience defaults), fixed_scenes(settings) -> the exact scene
+                count, or none (the configured `story.scene_count_min` to `story.scene_count_max`)
 ```
+
+- Explainer, list, countdown and quiz are built by `structures/shape_spec.py::shape_spec(Shape(...))`: their
+  structure gate (after any leading gates, the explainer's moral gate) is both the written and the translation
+  gate and the `structure` score item; translation rules are a fixed list (`castless.py::fixed_rules`); the
+  prompt values are `castless.py::castless_values(prompt file, fields)` (no ending, speaker or example
+  character); hidden paths start with the cast paths; defaults are `castless_defaults.json` (empty refrain,
+  cast and morals) then `<structure>_defaults.json`. The intro and closing framing check of list and quiz is
+  `framing.py::framing_problems`.
+
+- Length (`structures/length.py`): `scene_range(settings)` is the fixed count twice, or the configured range;
+  the prompt says "Exactly N scenes." or "Between A and B scenes.", and the scene count gate says "use exactly N
+  scenes, not M" or "use between A and B scenes, not M". `duration_target(settings, language)` is the
+  configured `story.target_duration_seconds` and `story.duration_tolerance_seconds`, or, for a fixed count, the
+  middle and half-width (rounded) of the window "scenes × words per scene min to max, at the speaking rate"
+  clipped to 30–600 s (the bounds of `target_duration_seconds`). The prompt's "about N seconds", the duration
+  gate and the episode duration score item (the union of the windows of the run's languages) all use it.
+  `length_problem(settings)` reports a fixed count whose window misses 30–600 s in any language ("N scenes read
+  in A to B s in <language> at these words per scene, but an episode lasts 30 to 600 s; choose another length
+  or count"): it is a settings validation error of every template settings model and the template problem
+  `definition.length` at save.
 
 - Script checks (`story/checks.py`): the size gates (scene count, words per scene, duration), then the
   structure's extra gates, then the safety gates (banned words, brand names, child-directed terms), then the
@@ -752,7 +782,19 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
 - Score items: subtitle timing, episode and Short duration, speaking rate and reading level, then the
   structure's score rules, then metadata limits, loudness and completeness.
 - Metadata placeholders: `{title} {series} {tagline} {theme} {questions} {hashtags} {hook}` for every structure,
-  plus the structure's own.
+  plus the structure's own. The descriptions of `metadata.title_template`, `short_title_template` and
+  `description_template` name every structure's own placeholders (tested).
+- Script model (`story/model.py`): `moral` is optional (default empty) on the draft, the stored script and the
+  translation text; `story` and `explainer` still require it through an always-on gate ('write the moral in
+  "moral"'), on written and translated scripts. Every scene also carries optional `number` (an integer from
+  1, default null: the item's number in a list) and the scene labels `heading`, `question`, `choices` (list)
+  and `answer` (default empty), so stored scripts validate. The banned-word, brand-name and child-directed
+  term gates read every label with the narration, and the kids reading level gate reads each non-empty
+  label as one more sentence after the narration (`story/reading.py::reading_text`). The translation text has optional `scene_labels` (one
+  `{heading, question, choices, answer}` per scene): it is sent, and required back with one entry per scene
+  ("translation must keep one scene_labels entry per scene"), only when the script has any label; otherwise it
+  is left out of the translation prompt, which stays pinned, and ignored in the answer. Numbers are not
+  translated.
 - Every scene of every structure carries `action` (text, default empty, so stored scripts and bundled stories
   validate): "One short present-tense sentence naming the single visible movement in this scene, for the
   video model." Every script prompt asks for it right after `visual`, with a kids example (a little fox on a
@@ -787,9 +829,55 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   `story.cast_per_episode`, `series.refrain`, `visuals.character_sheets`, `quality.weights.moral_and_refrain`,
   `quality.weights.character_consistency`, and `story.source`.
 
+- `list`: a numbered list of `story.item_count` items (default 7, 3 to 15, hidden for other structures) on one
+  topic, with no recurring characters. Wording "numbered list" / "list scripts" / "list script";
+  `$structure_rules` is `numbered_list.txt`: an intro hook scene, then one item scene per item numbered from 1
+  up, each with `number` and a `heading` in the script's language and narration that starts with the number,
+  then a closing scene; intro and closing have no number; headings differ; `moral` is empty; no characters.
+  Fixed scenes: items + 2 (the scene counts and the target duration and tolerance are hidden). Gate (check
+  `structure`): first and last scenes unnumbered ("open with an intro scene and end with a closing scene, both
+  without a number"), exactly `item_count` numbered scenes ("write exactly N numbered items, not M"), numbers
+  1..M in scene order ("number the items from 1 up to M, in that order"), every item has a heading ("give
+  every item a short heading") and no heading repeats, ignoring case ("give every item its own heading").
+  Translations run the same gate and are asked for `scene_labels` and to keep the headings different and
+  the numbers in the narration. Score item `structure` ("List numbering and headings"). Placeholders
+  `{count}` (numbered scenes) and `{items}` (their headings, comma-separated, in scene order). No bundled
+  fallback ("…list scripts have no bundled fallback"). Defaults (`structures/list_defaults.json`): empty cast
+  and refrain, "facts about …" topics, no morals, a "Do you remember?" question style, a description with
+  `{count}` and `{items}`, tags and hashtags free of child-directed terms. Hidden paths: the explainer's cast
+  paths, the scene counts, `story.target_duration_seconds` and `story.duration_tolerance_seconds`; shown path
+  `story.item_count` (so in the Simple view it replaces the target duration).
+- `countdown`: the list with one change of direction (`structures/numbered.py::numbered_spec(..., descending)`
+  builds both). Wording "countdown" / "countdown scripts" / "countdown script"; the same fragment numbers the
+  items "from N down to 1, so the last item is number 1", and the gate wants that order ("number the items
+  from M down to 1, so the last item is number 1"). Score item "Countdown numbering and headings"; the same
+  placeholders (`{items}` in video order, so number one last), hidden and shown paths. No bundled fallback.
+  Defaults (`structures/countdown_defaults.json`): ranking topics ("the fastest animals", …), a countdown
+  description, tags and hashtags.
+- `quiz` (`structures/quiz.py`, `structures/quiz_checks.py`): `story.quiz_questions` questions on one topic, with
+  no recurring characters. Wording "quiz" / "quiz scripts" / "quiz script"; `$structure_rules` is `quiz.txt`:
+  an intro hook scene, then one question scene and its reveal scene per question, then a closing scene. A
+  question scene's `question` holds the question (ending with a question mark) that its narration asks; with
+  `story.answer_choices` > 0 its `choices` lists that many short answers, one of them the answer, read out in
+  the narration, and with 0 `choices` is empty (open questions). The reveal scene's `answer` holds the short
+  answer, which its narration says word for word and explains in one sentence. `heading` is empty, `number`
+  null, `moral` empty. Fixed scenes: 2 × questions + 2. Gate (check `structure`): intro and closing
+  scenes carry no question or answer ("open with an intro scene and end with a closing scene, with no question
+  or answer"); exactly `quiz_questions` question scenes ("ask exactly N questions, not M"); for question K:
+  "end question K with a question mark" (`?` or `？`), "follow question K with a reveal scene that gives its
+  answer" (the next scene has a non-empty answer), "say the answer to question K, word for word, in its
+  reveal", "give question K exactly C choices" or "ask question K as an open question, with no choices", and
+  "make the answer to question K one of its choices" (ignoring case). Translations run the same gate (so
+  Tamil questions keep their question mark and Tamil answers appear in their reveals) and are asked for
+  `scene_labels`. Score item `structure` ("Quiz questions and reveals"). Placeholder `{question_count}` (the
+  question scenes). No bundled fallback ("…quiz scripts have no bundled fallback"). Defaults
+  (`structures/quiz_defaults.json`): general-knowledge topics, a quiz description with `{question_count}`,
+  tags and hashtags. Hidden paths: as for the list; shown paths `story.quiz_questions` and
+  `story.answer_choices`.
+
 - Safety across structures (tested): a kids template of any structure carries `kids_content`, uploads made for
   kids, keeps the kids floor and the kids system-prompt lines; a general template of any structure never does;
-  a general explainer runs the child-directed term gate and never uses the bundled stories; a blank template of
+  a general explainer, list, countdown or quiz runs the child-directed term gate and never uses the bundled stories; a blank template of
   every structure and audience has no problems and runs offline through the fake providers.
 
 #### Problems
@@ -801,7 +889,8 @@ metadata templates (`definition.title_template`, `definition.short_title_templat
 `playlist_title`; the message names the field, the unknown placeholders and the usable ones, the common
 placeholders plus the structure's; see Structures); `ui:basic`
 and `ui:hidden` rule failures against the derived ui schema (`definition.basic`, `definition.hidden`); overlay
-validation errors (`definition.settings.<path>`); term screen hits (see Audience); and `engine` for a
+validation errors (`definition.settings.<path>`, skipped when `definition.length` is reported, see Length under
+Structures); term screen hits (see Audience); and `engine` for a
 foreign template. An invalid definition returns only its own errors.
 
 Template use cases (`application/*_template*.py`, sharing `application/template_lookup.py`) reach engines only

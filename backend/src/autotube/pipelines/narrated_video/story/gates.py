@@ -16,19 +16,29 @@ from autotube.pipelines.narrated_video.story.child_terms import (
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.reading import (
     estimated_seconds,
-    narration_of,
     reading_metrics,
+    reading_text,
 )
 from autotube.pipelines.narrated_video.story.words import contains_phrase, word_count
 
 Gate = Callable[[Story, KidsStorySettings], list[str]]
+SceneRange = Callable[[KidsStorySettings], tuple[int, int]]
+DurationTarget = Callable[[KidsStorySettings, str], tuple[int, int]]
 
 
-def scene_count_problems(story: Story, settings: KidsStorySettings) -> list[str]:
-    low, high = settings.story.scene_count_min, settings.story.scene_count_max
-    if low <= len(story.scenes) <= high:
+def configured_scene_range(settings: KidsStorySettings) -> tuple[int, int]:
+    return settings.story.scene_count_min, settings.story.scene_count_max
+
+
+def scene_count_problems(
+    story: Story, settings: KidsStorySettings, scene_range: SceneRange = configured_scene_range
+) -> list[str]:
+    low, high = scene_range(settings)
+    found = len(story.scenes)
+    if low <= found <= high:
         return []
-    return [f"use between {low} and {high} scenes, not {len(story.scenes)}"]
+    wanted = f"exactly {low}" if low == high else f"between {low} and {high}"
+    return [f"use {wanted} scenes, not {found}"]
 
 
 def words_per_scene_problems(story: Story, settings: KidsStorySettings) -> list[str]:
@@ -41,11 +51,16 @@ def words_per_scene_problems(story: Story, settings: KidsStorySettings) -> list[
     ]
 
 
-def duration_problems(story: Story, settings: KidsStorySettings) -> list[str]:
+def configured_duration(settings: KidsStorySettings, language: str) -> tuple[int, int]:  # noqa: ARG001
+    return settings.story.target_duration_seconds, settings.story.duration_tolerance_seconds
+
+
+def duration_problems(
+    story: Story, settings: KidsStorySettings, duration: DurationTarget = configured_duration
+) -> list[str]:
     rate = settings.story.words_per_minute.for_language(story.language)
     seconds = estimated_seconds(story, rate)
-    target = settings.story.target_duration_seconds
-    tolerance = settings.story.duration_tolerance_seconds
+    target, tolerance = duration(settings, story.language)
     if abs(seconds - target) <= tolerance:
         return []
     return [f"the story reads in about {seconds:.0f} s; aim for {target} s (within {tolerance} s)"]
@@ -72,9 +87,15 @@ def ending_problems(story: Story, settings: KidsStorySettings) -> list[str]:
     return problems
 
 
+def moral_problems(story: Story, settings: KidsStorySettings) -> list[str]:  # noqa: ARG001
+    return [] if story.moral.strip() else ['write the moral in "moral"']
+
+
 def all_text(story: Story) -> str:
     parts = [story.title, story.moral, story.hook_line, *story.questions]
-    scenes = [text for scene in story.scenes for text in (scene.narration, scene.action)]
+    scenes = [
+        text for scene in story.scenes for text in (scene.narration, scene.action, *scene.texts)
+    ]
     return " ".join([*parts, *scenes])
 
 
@@ -118,7 +139,7 @@ def reading_level_problems(story: Story, settings: KidsStorySettings) -> list[st
         return []
     rules = settings.story
     metrics = reading_metrics(
-        narration_of(story), rules.long_word_graphemes.for_language(story.language)
+        reading_text(story), rules.long_word_graphemes.for_language(story.language)
     )
     problems = []
     limit = rules.max_average_sentence_words.for_language(story.language)
@@ -136,11 +157,7 @@ def cast_problems(story: Story, settings: KidsStorySettings, seed: str = "") -> 
 
 
 CheckedGate = tuple[StoryCheck | None, Gate]
-SIZE_GATES: tuple[CheckedGate, ...] = (
-    (StoryCheck.SCENE_COUNT, scene_count_problems),
-    (StoryCheck.WORDS_PER_SCENE, words_per_scene_problems),
-    (StoryCheck.DURATION, duration_problems),
-)
+MORAL_GATE: CheckedGate = (None, moral_problems)
 SAFETY_GATES: tuple[CheckedGate, ...] = (
     (None, banned_word_problems),
     (None, brand_problems),

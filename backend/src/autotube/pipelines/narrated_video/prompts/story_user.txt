@@ -3,7 +3,7 @@ Write a new $language $piece for "$series" about the theme: $theme.
 $structure_rules
 
 Requirements:
-- Between $scene_min and $scene_max scenes.
+- $scene_count
 - Each scene's narration has between $words_min and $words_max words, written in $language.
 - The whole narration reads aloud in about $target_seconds seconds at $words_per_minute words per minute.
 - $writing_style$extra_instructions$ending

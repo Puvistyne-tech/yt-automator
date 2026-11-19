@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from autotube.pipelines.narrated_video.settings.base import SettingsSection
 from autotube.pipelines.narrated_video.settings.story_choices import (
     ENDING_STYLE_CHOICES,
     LEAD_MODE_CHOICES,
@@ -13,6 +12,7 @@ from autotube.pipelines.narrated_video.settings.story_choices import (
     StoryCheck,
     Structure,
 )
+from autotube.pipelines.narrated_video.settings.structure_shape import StructureShapeSettings
 
 TONE = "warm, gentle"
 WRITING_STYLE = "Short sentences, simple everyday words, warm and calm tone."
@@ -20,7 +20,7 @@ QUESTION_STYLE = '"What happens next?" style questions for children'
 TRANSLATION_STYLE = "natural, simple, warm"
 
 
-class StoryWritingSettings(SettingsSection):
+class StoryWritingSettings(StructureShapeSettings):
     structure: Structure = Field(
         default=Structure.STORY,
         json_schema_extra=STRUCTURE_CHOICES,

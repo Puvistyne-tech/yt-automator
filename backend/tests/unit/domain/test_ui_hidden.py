@@ -148,6 +148,13 @@ def test_a_malformed_basic_list_is_not_compared_with_hidden_paths() -> None:
     assert hiding(["mood"], "mood") == ["ui:basic must be a list"]
 
 
-def test_the_kids_story_pipeline_hides_the_pins_and_the_preview_attempts() -> None:
+def test_the_kids_story_pipeline_hides_the_pins_and_other_structures_counts() -> None:
     hidden = KidsStoryPipeline().descriptor.ui_schema[HIDDEN_KEY]
-    assert hidden == ["safety.audience", "story.structure", "story.preview_attempts"]
+    assert hidden == [
+        "safety.audience",
+        "story.structure",
+        "story.preview_attempts",
+        "story.item_count",
+        "story.quiz_questions",
+        "story.answer_choices",
+    ]

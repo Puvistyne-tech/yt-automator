@@ -12,6 +12,7 @@ from autotube.pipelines.narrated_video.scoring.measures import (
     subtitle_track,
 )
 from autotube.pipelines.narrated_video.story.words import word_count
+from autotube.pipelines.narrated_video.structures.length import length_window
 from autotube.pipelines.narrated_video.timeline.voices import VoiceLine
 
 Lengths = list[tuple[str, float]]
@@ -93,15 +94,20 @@ def narration_seconds(inputs: ScoreInputs, language: str) -> float | None:
     return sum(line.seconds for line in lines if is_scene_key(line.segment))
 
 
+def episode_window(inputs: ScoreInputs, found: Lengths) -> tuple[float, float]:
+    windows = [length_window(inputs.settings, language) for language, _ in found]
+    return min(low for low, _ in windows), max(high for _, high in windows)
+
+
 def episode_duration(inputs: ScoreInputs) -> ScoreItem | None:
-    story = inputs.settings.story
     found = [
         (language, seconds)
         for language in inputs.languages
         if (seconds := narration_seconds(inputs, language)) is not None
     ]
-    target, tolerance = story.target_duration_seconds, story.duration_tolerance_seconds
-    return duration_item(inputs, EPISODE, found, (target - tolerance, target + tolerance))
+    if not found:
+        return None
+    return duration_item(inputs, EPISODE, found, episode_window(inputs, found))
 
 
 def short_duration(inputs: ScoreInputs) -> ScoreItem | None:
