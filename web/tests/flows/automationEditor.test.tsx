@@ -1,5 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import { db } from "@/api/mocks/db";
+import { newAutomationPath } from "@/api/paths";
 import { findSection, sectionByName, targetRow } from "../helpers/editor";
 import { findDialog, findToast, pathOf, renderApp } from "../helpers/renderApp";
 import { failWith } from "../helpers/server";
@@ -7,7 +8,7 @@ import { failWith } from "../helpers/server";
 const byName = (name: string) => db.state.automations.find((a) => a.name === name);
 
 async function openNew() {
-  const app = renderApp("/automations/new");
+  const app = renderApp(newAutomationPath("kids_story"));
   const general = await findSection("General");
   return { ...app, general };
 }
@@ -62,7 +63,7 @@ describe("Automation editor: create", () => {
     ).toBeInTheDocument();
     const nav = screen.getByRole("navigation", { name: "Editor sections" });
     expect(nav).toHaveTextContent("General1");
-    expect(db.state.automations).toHaveLength(3);
+    expect(db.state.automations).toHaveLength(4);
   });
 
   it("shows server field errors on the matching inputs", async () => {

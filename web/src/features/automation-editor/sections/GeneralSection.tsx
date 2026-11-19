@@ -1,3 +1,5 @@
+import { pipelineAudience } from "@/api/capabilities";
+import { AUDIENCE_LABELS } from "@/api/labels";
 import type { PipelineDescriptor } from "@/api/types";
 import { applyPipeline } from "@/features/automation-editor/model/draft";
 import { enabledSwitchLabel } from "@/features/automation-editor/model/general";
@@ -15,8 +17,10 @@ interface GeneralSectionProps extends SectionProps {
 }
 
 function PipelineMeta({ pipeline }: { pipeline: PipelineDescriptor }) {
+  const audience = AUDIENCE_LABELS[pipelineAudience(pipeline)];
   return (
     <span className="row pipeline-meta">
+      <Badge tone={audience.tone}>{audience.label}</Badge>
       <Badge>{pluralize(pipeline.languages.length, "language")}</Badge>
       <Badge>{pluralize(pipeline.variants.length, "output")}</Badge>
       <Badge>v{pipeline.version}</Badge>

@@ -49,6 +49,11 @@ describe("draft model", () => {
   it("chooses the only pipeline for a new automation and copies an existing one", () => {
     expect(initialDraft([kidsStoryPipeline], undefined).pipeline_type).toBe("kids_story");
     expect(initialDraft([kidsStoryPipeline, plainPipeline], undefined).pipeline_type).toBe("");
+    const both = [kidsStoryPipeline, plainPipeline];
+    expect(initialDraft(both, undefined, "UTC", plainPipeline.type_id).pipeline_type).toBe(
+      plainPipeline.type_id,
+    );
+    expect(initialDraft(both, undefined, "UTC", "missing").pipeline_type).toBe("");
     const automation = makeAutomation();
     const draft = initialDraft([], automation);
     expect(draft.name).toBe(automation.name);

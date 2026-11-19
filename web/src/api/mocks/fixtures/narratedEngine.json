@@ -1,0 +1,455 @@
+{
+  "engine_id": "narrated_video",
+  "name": "Narrated video",
+  "definition_schema": {
+    "$defs": {
+      "JsonValue": {},
+      "LocalizedList": {
+        "additionalProperties": false,
+        "properties": {
+          "en": {
+            "description": "Entries used for English videos.",
+            "items": {
+              "type": "string"
+            },
+            "title": "English",
+            "type": "array"
+          },
+          "ta": {
+            "description": "Entries used for Tamil videos.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tamil",
+            "type": "array"
+          }
+        },
+        "title": "LocalizedList",
+        "type": "object"
+      },
+      "LocalizedText": {
+        "additionalProperties": false,
+        "properties": {
+          "en": {
+            "default": "",
+            "description": "Text used for English videos.",
+            "title": "English",
+            "type": "string"
+          },
+          "ta": {
+            "default": "",
+            "description": "Text used for Tamil videos, in Tamil script.",
+            "title": "Tamil",
+            "type": "string"
+          }
+        },
+        "title": "LocalizedText",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "structure": {
+        "default": "story",
+        "description": "The shape of every script. Fixed once the template is created.",
+        "oneOf": [
+          {
+            "const": "story",
+            "title": "Story"
+          }
+        ],
+        "title": "Structure",
+        "type": "string"
+      },
+      "brief": {
+        "default": "",
+        "description": "What the videos are about, in a few sentences. Empty adds nothing.",
+        "maxLength": 2000,
+        "title": "Brief",
+        "type": "string"
+      },
+      "length": {
+        "default": "standard",
+        "description": "How long each episode runs. Standard keeps the engine's length.",
+        "oneOf": [
+          {
+            "const": "short",
+            "title": "Short, about a minute"
+          },
+          {
+            "const": "standard",
+            "title": "Standard, two to three minutes"
+          },
+          {
+            "const": "long",
+            "title": "Long"
+          }
+        ],
+        "title": "Length",
+        "type": "string"
+      },
+      "tone": {
+        "default": "",
+        "description": "How the scripts feel. Empty keeps the engine's tone.",
+        "maxLength": 300,
+        "title": "Tone",
+        "type": "string"
+      },
+      "topics": {
+        "description": "Themes the writer rotates through. Empty keeps the engine's themes.",
+        "items": {
+          "type": "string"
+        },
+        "title": "Topics",
+        "type": "array"
+      },
+      "visual_style": {
+        "default": "",
+        "description": "A style from the style library. Empty keeps the engine's style.",
+        "oneOf": [
+          {
+            "const": "",
+            "title": "Keep the engine's style"
+          },
+          {
+            "const": "animated_3d",
+            "description": "Soft, rounded 3D characters with big expressive eyes, like a modern family animated film.",
+            "title": "3D animated film",
+            "x-group": "Animated",
+            "x-swatches": ["#8ED1F5", "#A6E08F", "#6CC46A", "#3F9B55", "#FFB84D"]
+          },
+          {
+            "const": "flat_cartoon_2d",
+            "description": "Simple bold shapes and flat colours, like a bright television cartoon for little ones.",
+            "title": "2D flat cartoon",
+            "x-group": "Animated",
+            "x-swatches": ["#5BC0EB", "#FDE74C", "#9BC53D", "#3E8E41", "#E55934"]
+          },
+          {
+            "const": "classic_cel",
+            "description": "Hand-inked characters over softly painted backgrounds, like a traditional animated classic.",
+            "title": "Classic hand-drawn cel animation",
+            "x-group": "Animated",
+            "x-swatches": ["#A9CBE8", "#B9C98A", "#7FA35B", "#4F7A3A", "#D9654B"]
+          },
+          {
+            "const": "anime",
+            "description": "Clean lines, glossy eyes and bright skies, in the style of gentle Japanese animation.",
+            "title": "Anime",
+            "x-group": "Animated",
+            "x-swatches": ["#6FB7FF", "#BFE6A8", "#7CC48A", "#3F8F6B", "#F9A8C0"]
+          },
+          {
+            "const": "chibi",
+            "description": "Tiny characters with big heads and small bodies, extra cute and playful.",
+            "title": "Chibi",
+            "x-group": "Animated",
+            "x-swatches": ["#B5E3FF", "#FFF0A8", "#C8F2C2", "#9ADBA0", "#FF8FB1"]
+          },
+          {
+            "const": "rubber_hose_retro",
+            "description": "Bendy, bouncy characters with pie-cut eyes and warm faded colours from early cartoons.",
+            "title": "Retro rubber-hose cartoon",
+            "x-group": "Animated",
+            "x-swatches": ["#F4E9D8", "#E9C46A", "#B5A27A", "#3D3B3C", "#E76F51"]
+          },
+          {
+            "const": "low_poly_3d",
+            "description": "Faceted 3D shapes made of simple flat triangles, like a tidy toy world.",
+            "title": "Low-poly 3D",
+            "x-group": "Animated",
+            "x-swatches": ["#9FD8F0", "#F6C85F", "#7FD1B9", "#3E8F7D", "#EF6F6C"]
+          },
+          {
+            "const": "watercolour_storybook",
+            "description": "Soft watercolour washes and warm pastels, like a classic bedtime picture book.",
+            "title": "Watercolour storybook",
+            "x-group": "Painted and illustrated",
+            "x-swatches": ["#A9D3EE", "#CFE8C0", "#A8D5BA", "#7FB89A", "#F3A69A"]
+          },
+          {
+            "const": "gouache_picture_book",
+            "description": "Thick, matte paint with flat bold colour areas, like a modern picture book.",
+            "title": "Gouache picture book",
+            "x-group": "Painted and illustrated",
+            "x-swatches": ["#F4F1DE", "#F2CC8F", "#81B29A", "#3D405B", "#E07A5F"]
+          },
+          {
+            "const": "vintage_storybook",
+            "description": "Muted, slightly faded colours and fine linework, like a well-loved old storybook.",
+            "title": "Vintage storybook",
+            "x-group": "Painted and illustrated",
+            "x-swatches": ["#F2E8CF", "#C9A66B", "#7A9E7E", "#5B4636", "#D98E73"]
+          },
+          {
+            "const": "oil_painting",
+            "description": "Rich, glowing colours with soft visible brushstrokes, like a framed painting.",
+            "title": "Oil painting",
+            "x-group": "Painted and illustrated",
+            "x-swatches": ["#FFD5C2", "#F28F3B", "#588B8B", "#2D3047", "#C8553D"]
+          },
+          {
+            "const": "soft_digital_painting",
+            "description": "Smooth painted light and gentle colour blends, like a polished modern storybook.",
+            "title": "Soft digital painting",
+            "x-group": "Painted and illustrated",
+            "x-swatches": ["#9AD0EC", "#E8A5D0", "#B8E0A0", "#6FAF8F", "#FFC4A3"]
+          },
+          {
+            "const": "folk_art",
+            "description": "Flat figures filled with dots, stripes and borders, like traditional village paintings.",
+            "title": "Folk art painting",
+            "x-group": "Painted and illustrated",
+            "x-swatches": ["#FDF2E0", "#F1C40F", "#27AE60", "#1F3A93", "#C0392B"]
+          },
+          {
+            "const": "woodblock_print",
+            "description": "Bold carved lines and flat layered colours, like an old hand-printed woodcut.",
+            "title": "Woodblock print",
+            "x-group": "Painted and illustrated",
+            "x-swatches": ["#F1FAEE", "#A8DADC", "#457B9D", "#1D3557", "#E63946"]
+          },
+          {
+            "const": "crayon_drawing",
+            "description": "Waxy, scribbly crayon strokes on paper, as if drawn by a happy child.",
+            "title": "Crayon drawing",
+            "x-group": "Hand-drawn",
+            "x-swatches": ["#FFFFFF", "#8AC926", "#FFB703", "#219EBC", "#E63946"]
+          },
+          {
+            "const": "coloured_pencil",
+            "description": "Soft layered pencil strokes with gentle colours and visible paper grain.",
+            "title": "Coloured pencil",
+            "x-group": "Hand-drawn",
+            "x-swatches": ["#FBF8F1", "#A6D1F4", "#B9E4A6", "#F4D9A6", "#F4A6A6"]
+          },
+          {
+            "const": "pencil_sketch",
+            "description": "Grey graphite lines and soft shading, like a page from a sketchbook.",
+            "title": "Pencil sketch",
+            "x-group": "Hand-drawn",
+            "x-swatches": ["#F7F3EA", "#D6D2C8", "#9A9A9A", "#4A4A4A", "#C98B6B"]
+          },
+          {
+            "const": "ink_line_art",
+            "description": "Clean black ink outlines with little or no colour, crisp and simple.",
+            "title": "Ink line art",
+            "x-group": "Hand-drawn",
+            "x-swatches": ["#FFFFFF", "#F2F2F2", "#E4E4E4", "#D0D0D0", "#F2C14E"]
+          },
+          {
+            "const": "ink_and_wash",
+            "description": "Loose ink lines with soft watery washes of colour, light and airy.",
+            "title": "Ink and wash",
+            "x-group": "Hand-drawn",
+            "x-swatches": ["#FAF7F0", "#CAD2C5", "#84A98C", "#2F3E46", "#E9C46A"]
+          },
+          {
+            "const": "marker_doodle",
+            "description": "Bright felt-tip pen doodles with streaky colour and cheerful wobbly lines.",
+            "title": "Felt-tip marker doodle",
+            "x-group": "Hand-drawn",
+            "x-swatches": ["#FFFFFF", "#FFCA3A", "#8AC926", "#1982C4", "#FF595E"]
+          },
+          {
+            "const": "chalkboard",
+            "description": "Dusty chalk drawings on a dark green or black board, like a classroom lesson.",
+            "title": "Chalkboard",
+            "x-group": "Hand-drawn",
+            "x-swatches": ["#2F4F3F", "#46685A", "#06D6A0", "#FFD166", "#EF476F"]
+          },
+          {
+            "const": "paper_cutout",
+            "description": "Layers of cut and torn coloured paper with soft shadows between them.",
+            "title": "Paper cut-out collage",
+            "x-group": "Crafted",
+            "x-swatches": ["#F7F7F7", "#70C1B3", "#FFE066", "#247BA0", "#F25F5C"]
+          },
+          {
+            "const": "claymation",
+            "description": "Soft modelling-clay characters with thumbprints, filmed like stop-motion.",
+            "title": "Claymation",
+            "x-group": "Crafted",
+            "x-swatches": ["#BFE0E8", "#E9C46A", "#8AB17D", "#2A9D8F", "#E76F51"]
+          },
+          {
+            "const": "felt_plush",
+            "description": "Cosy felt and stitched fabric characters, soft like handmade toys.",
+            "title": "Felt and plush craft",
+            "x-group": "Crafted",
+            "x-swatches": ["#A8DADC", "#FFCDB2", "#E5989B", "#B5838D", "#6D6875"]
+          },
+          {
+            "const": "shadow_puppet",
+            "description": "Dark cut-out silhouettes in front of a glowing coloured backdrop.",
+            "title": "Shadow puppet silhouette",
+            "x-group": "Crafted",
+            "x-swatches": ["#E9893A", "#C8673A", "#5A2E22", "#111111", "#F7D08A"]
+          },
+          {
+            "const": "folded_papercraft",
+            "description": "Crisp folded and creased paper shapes, like a tabletop origami world.",
+            "title": "Folded paper craft",
+            "x-group": "Crafted",
+            "x-swatches": ["#FCE8E0", "#A8E6CF", "#F8B195", "#6C5B7B", "#F67280"]
+          },
+          {
+            "const": "knitted_wool",
+            "description": "Everything knitted from chunky yarn, warm and fuzzy.",
+            "title": "Knitted wool",
+            "x-group": "Crafted",
+            "x-swatches": ["#CFE3E8", "#F2CC8F", "#81B29A", "#5B6C5D", "#E07A5F"]
+          },
+          {
+            "const": "wooden_toy",
+            "description": "Painted wooden toys with rounded edges and visible wood grain.",
+            "title": "Wooden toy world",
+            "x-group": "Crafted",
+            "x-swatches": ["#FAEDCD", "#D4A373", "#8FB573", "#457B9D", "#E63946"]
+          },
+          {
+            "const": "comic_book",
+            "description": "Bold ink outlines, bright flat colours and halftone dots, like a comic page.",
+            "title": "Comic book",
+            "x-group": "Graphic",
+            "x-swatches": ["#4FC3F7", "#FFD60A", "#2EC4B6", "#1D4ED8", "#E63946"]
+          },
+          {
+            "const": "pixel_art",
+            "description": "Chunky square pixels and a small colour palette, like a retro video game.",
+            "title": "Pixel art",
+            "x-group": "Graphic",
+            "x-swatches": ["#5FCDE4", "#99E550", "#37946E", "#2B2D42", "#EF233C"]
+          },
+          {
+            "const": "flat_vector",
+            "description": "Clean geometric shapes and smooth flat colours, modern and tidy.",
+            "title": "Flat vector",
+            "x-group": "Graphic",
+            "x-swatches": ["#A8DADC", "#E9C46A", "#2A9D8F", "#264653", "#E76F51"]
+          },
+          {
+            "const": "pastel_kawaii",
+            "description": "Super-cute pastel characters with tiny smiles, sparkles and soft round shapes.",
+            "title": "Pastel kawaii",
+            "x-group": "Graphic",
+            "x-swatches": ["#E8D5FF", "#FFF5BA", "#CDEAC0", "#C5DEFF", "#FFD1DC"]
+          },
+          {
+            "const": "stained_glass",
+            "description": "Glowing coloured glass pieces joined by dark lead lines.",
+            "title": "Stained glass",
+            "x-group": "Graphic",
+            "x-swatches": ["#1B4965", "#F4D35E", "#43AA8B", "#9B5DE5", "#E63946"]
+          },
+          {
+            "const": "realistic_photo",
+            "description": "Looks like a real, softly lit photograph of a gentle, friendly scene.",
+            "title": "Realistic photo",
+            "x-group": "Realistic",
+            "x-swatches": ["#9CC9E8", "#A3B18A", "#588157", "#3A5A40", "#E9C46A"]
+          },
+          {
+            "const": "cinematic_realistic",
+            "description": "Movie-like realism with warm lighting and a wide, dreamy feel.",
+            "title": "Cinematic realistic",
+            "x-group": "Realistic",
+            "x-swatches": ["#F3D9B1", "#8D99AE", "#5E8C61", "#2B2D42", "#F2A541"]
+          },
+          {
+            "const": "miniature_set",
+            "description": "Real photos of a tiny handmade model world with a dreamy tilt-shift blur.",
+            "title": "Miniature model set",
+            "x-group": "Realistic",
+            "x-swatches": ["#8ECAE6", "#E9EDC9", "#A3C585", "#219EBC", "#FB8500"]
+          }
+        ],
+        "title": "Visual style",
+        "type": "string"
+      },
+      "music_mood": {
+        "default": "",
+        "description": "Describes the music to the music model. Empty keeps the engine's mood.",
+        "maxLength": 300,
+        "title": "Music mood",
+        "type": "string"
+      },
+      "title_template": {
+        "$ref": "#/$defs/LocalizedText",
+        "description": "Episode title per language. An empty language keeps the engine's.",
+        "title": "Episode title"
+      },
+      "short_title_template": {
+        "$ref": "#/$defs/LocalizedText",
+        "description": "Short title per language. An empty language keeps the engine's.",
+        "title": "Short title"
+      },
+      "description_template": {
+        "$ref": "#/$defs/LocalizedText",
+        "description": "Description per language. An empty language keeps the engine's.",
+        "title": "Description"
+      },
+      "tags": {
+        "$ref": "#/$defs/LocalizedList",
+        "description": "Search tags per language. An empty language keeps the engine's.",
+        "title": "Tags"
+      },
+      "hashtags": {
+        "$ref": "#/$defs/LocalizedList",
+        "description": "Hashtags per language. An empty language keeps the engine's.",
+        "title": "Hashtags"
+      },
+      "category": {
+        "default": "1",
+        "description": "The YouTube category of every upload.",
+        "oneOf": [
+          {
+            "const": "1",
+            "title": "Film & Animation"
+          },
+          {
+            "const": "24",
+            "title": "Entertainment"
+          },
+          {
+            "const": "27",
+            "title": "Education"
+          }
+        ],
+        "title": "Category",
+        "type": "string"
+      },
+      "basic": {
+        "description": "Dotted settings paths shown in the Simple view. Empty keeps the engine's list.",
+        "items": {
+          "type": "string"
+        },
+        "title": "Simple view settings",
+        "type": "array"
+      },
+      "hidden": {
+        "description": "Dotted settings paths never shown in the automation editor.",
+        "items": {
+          "type": "string"
+        },
+        "title": "Hidden settings",
+        "type": "array"
+      },
+      "settings": {
+        "additionalProperties": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "description": "Settings merged over the engine defaults after every field above.",
+        "title": "Advanced settings",
+        "type": "object"
+      }
+    },
+    "title": "Narrated video template",
+    "type": "object"
+  },
+  "definition_ui_schema": {},
+  "blank": {
+    "kids": {},
+    "general": {}
+  }
+}
