@@ -15,6 +15,7 @@ import {
   concealedBy,
   revealedFields,
   revealedPaths,
+  settingsFilter,
   shownBy,
   withoutConcealed,
 } from "@/shared/schema-form/fieldFilter";
@@ -102,13 +103,19 @@ describe("withErrorPaths", () => {
     expect(visible?.("music.enabled")).toBe(false);
   });
 
-  it("shows a hidden field that has an error, with its parent", () => {
-    const concealed = concealedBy(schemaFields(settingsSchema), ["music"]);
-    const visible = withErrorPaths(withoutConcealed(undefined, concealed), ["music.volume"]);
+  it("shows a hidden field that has an error, with its parent, despite the search", () => {
+    const fields = schemaFields(settingsSchema);
+    const concealed = concealedBy(fields, ["music"]);
+    const searched = settingsFilter(revealedFields(fields, concealed), {
+      query: "zebra",
+      changedOnly: false,
+      changed: [],
+    });
+    const visible = withErrorPaths(withoutConcealed(searched, concealed), ["music.volume"]);
     expect(visible?.("music.volume")).toBe(true);
     expect(visible?.("music")).toBe(true);
     expect(visible?.("music.enabled")).toBe(false);
-    expect(withoutConcealed(undefined, concealed)?.("music.volume")).toBe(false);
+    expect(visible?.("name")).toBe(false);
   });
 
   it("leaves an unfiltered form unfiltered", () => {

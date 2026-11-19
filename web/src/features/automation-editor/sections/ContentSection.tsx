@@ -47,6 +47,8 @@ function PipelineForm(props: ContentSectionProps & { pipeline: PipelineDescripto
       onChange={(settings) => onChange({ ...draft, settings })}
       errors={scopedErrors(errors, "settings")}
       visible={filter.visible}
+      filtered={filter.filtered}
+      concealed={filter.concealed}
     />
   );
 }

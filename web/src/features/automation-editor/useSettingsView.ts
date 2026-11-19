@@ -76,13 +76,13 @@ export function useSettingsFilter(
   const changed = revealedPaths(useChangedPaths(pipeline, draft.settings), concealed);
   const errorPaths = settingsErrorPaths(errors);
   const searched = settingsFilter(fields, { ...search, changed });
-  const shown = withoutConcealed(view === "simple" ? basic : searched, concealed);
-  const rule = withErrorPaths(shown, errorPaths);
+  const chosen = view === "simple" ? basic : searched;
+  const rule = withErrorPaths(withoutConcealed(chosen, concealed), errorPaths);
   const visible = rule === undefined ? undefined : visiblePathSet(all, rule);
   const nothingFound = view === "all" && visible?.size === 0 && errorPaths.length === 0;
   const hiddenRules = applicableAdvancedFields(draft).length;
   const summary = simpleViewSummary(fields, basic, changed, hiddenRules);
-  return { visible, nothingFound, summary, search };
+  return { visible, filtered: chosen !== undefined, concealed, nothingFound, summary, search };
 }
 
 export type SettingsFilterState = ReturnType<typeof useSettingsFilter>;

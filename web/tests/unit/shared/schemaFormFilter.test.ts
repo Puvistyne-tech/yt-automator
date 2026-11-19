@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changedCount, changedPaths } from "@/shared/schema-form/defaults";
+import { changedPaths } from "@/shared/schema-form/defaults";
 import {
   hiddenLeafCount,
   matchingPaths,
@@ -143,10 +143,9 @@ describe("hiddenLeafCount", () => {
 describe("changedPaths", () => {
   const defaults = { name: { en: "Story Time", ta: "Kathai" }, minutes: 5, tags: ["a"] };
 
-  it("lists the changed leaves that changedCount counts", () => {
+  it("lists the changed leaves of the named settings", () => {
     const value = { name: { en: "Bedtime", ta: "Kathai" }, minutes: 5, tags: ["b"] };
     const names = ["name", "minutes", "tags"];
     expect(changedPaths(value, defaults, names)).toEqual(["name.en", "tags"]);
-    expect(changedCount(value, defaults, names)).toBe(2);
   });
 });

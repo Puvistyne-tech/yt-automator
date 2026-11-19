@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  changedCount,
+  changedPaths,
   defaultPreview,
   isChanged,
   resetField,
-  resetFields,
+  resetRevealed,
+  revealedChanges,
   sameSettingValue,
   tracksChanges,
   valueAt,
@@ -75,16 +76,16 @@ describe("change tracking", () => {
   });
 
   it("counts changed leaves under the named fields", () => {
-    expect(changedCount(value, defaults, ["name", "minutes", "tags", "cast"])).toBe(3);
-    expect(changedCount(value, defaults, ["minutes", "extra", "unknown"])).toBe(0);
-    expect(changedCount({ name: "flat" }, defaults, ["name"])).toBe(1);
+    expect(changedPaths(value, defaults, ["name", "minutes", "tags", "cast"]).length).toBe(3);
+    expect(changedPaths(value, defaults, ["minutes", "extra", "unknown"]).length).toBe(0);
+    expect(changedPaths({ name: "flat" }, defaults, ["name"]).length).toBe(1);
   });
 
   it("resets one field or whole sections to copies of the defaults", () => {
     const one = resetField(value, defaults, ["name", "en"]);
     expect(valueAt(one, ["name", "en"])).toBe("Story Time");
     expect(one.tags).toEqual(["kindness"]);
-    const section = resetFields(value, defaults, ["tags", "cast", "unknown"]);
+    const section = resetRevealed(value, defaults, [["tags"], ["cast"], ["unknown"]], undefined);
     expect(section.tags).toEqual(defaults.tags);
     expect(section.tags).not.toBe(defaults.tags);
     expect(section.unknown).toBe("kept");
@@ -105,5 +106,36 @@ describe("defaultPreview", () => {
     expect(defaultPreview(["a"])).toBe("1 item");
     expect(defaultPreview({ a: 1 })).toBe("default values");
     expect(defaultPreview("x".repeat(80))).toBe(`${"x".repeat(47)}…`);
+  });
+});
+
+describe("revealed changes", () => {
+  const base = { music: { enabled: true, volume: 0.3 }, title: "Sun" };
+  const value = { music: { enabled: false, volume: 0.8 }, title: "Moon" };
+  const concealed = (path: string) => path === "music.volume";
+
+  it("lists changed leaves that are not concealed", () => {
+    expect(revealedChanges(value, base, [["music"], ["title"]], concealed)).toEqual([
+      "music.enabled",
+      "title",
+    ]);
+    expect(revealedChanges(value, base, [["music"]], undefined)).toEqual([
+      "music.enabled",
+      "music.volume",
+    ]);
+  });
+
+  it("resets only the revealed leaves and keeps concealed values", () => {
+    expect(resetRevealed(value, base, [["music"]], concealed)).toEqual({
+      ...value,
+      music: { enabled: true, volume: 0.8 },
+    });
+  });
+
+  it("resets whole fields when nothing is concealed", () => {
+    expect(resetRevealed(value, base, [["music"]], undefined)).toEqual({
+      ...value,
+      music: base.music,
+    });
   });
 });

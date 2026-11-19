@@ -4,6 +4,7 @@ import type { RJSFSchema, UiSchema } from "@rjsf/utils";
 import validator from "@rjsf/validator-ajv8";
 import { useMemo } from "react";
 import { useChangeTracking } from "@/shared/schema-form/changeTracking";
+import type { Concealed } from "@/shared/schema-form/defaults";
 import { type PathErrors, toErrorSchema } from "@/shared/schema-form/errors";
 import { templates } from "@/shared/schema-form/templates";
 import { widgets } from "@/shared/schema-form/widgets";
@@ -23,6 +24,8 @@ interface SchemaFormProps {
   idPrefix: string;
   disabled?: boolean;
   visible?: ReadonlySet<string> | undefined;
+  filtered?: boolean;
+  concealed?: Concealed | undefined;
 }
 
 export function SchemaForm({
@@ -35,10 +38,12 @@ export function SchemaForm({
   idPrefix,
   disabled = false,
   visible,
+  filtered = visible !== undefined,
+  concealed,
 }: SchemaFormProps) {
   const extraErrors = useMemo(() => toErrorSchema(errors), [errors]);
-  const changes = useChangeTracking(value, defaults, onChange, disabled);
-  const formContext = useMemo(() => ({ changes, visible }), [changes, visible]);
+  const changes = useChangeTracking(value, defaults, onChange, disabled, concealed);
+  const formContext = useMemo(() => ({ changes, visible, filtered }), [changes, visible, filtered]);
   const resolvedUi = useMemo<UiSchema>(
     () => ({ ...uiSchema, "ui:submitButtonOptions": { norender: true } }),
     [uiSchema],

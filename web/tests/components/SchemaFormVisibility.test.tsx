@@ -105,6 +105,13 @@ describe("SchemaForm visibility", () => {
     expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
   });
 
+  it("leaves out a whole group whose path is hidden", () => {
+    renderForm(hiding(["music"]));
+    expect(screen.queryByRole("heading", { name: "Sound" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Volume")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toBeInTheDocument();
+  });
+
   it("leaves out a group whose every setting is hidden", () => {
     renderForm(hiding(["music.enabled", "music.volume"]));
     expect(screen.queryByRole("heading", { name: "Sound" })).not.toBeInTheDocument();

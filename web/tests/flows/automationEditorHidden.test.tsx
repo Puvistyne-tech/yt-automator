@@ -1,40 +1,20 @@
 import { screen } from "@testing-library/react";
-import { HttpResponse, http } from "msw";
-import { db } from "@/api/mocks/db";
-import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
-import { findSection } from "../helpers/editor";
-import { findToast, renderApp } from "../helpers/renderApp";
-import { server } from "../helpers/server";
+import {
+  hidingPipeline,
+  openBedtimeWith,
+  setBedtimeMusic,
+  storedBedtime,
+} from "../helpers/hiddenPipeline";
+import { findToast } from "../helpers/renderApp";
+import { failWith } from "../helpers/server";
 
-const stored = () => db.state.automations.find((a) => a.id === "auto-bedtime");
-const hiding = {
-  ...kidsStoryPipeline,
-  ui_schema: { ...kidsStoryPipeline.ui_schema, "ui:hidden": ["music.volume"] },
-};
-
-function setVolume(volume: number) {
-  const automation = stored();
-  if (automation !== undefined) {
-    const music = automation.settings.music as Record<string, unknown>;
-    automation.settings = { ...automation.settings, music: { ...music, volume } };
-  }
-}
-
-async function openBedtime() {
-  server.use(
-    http.get("/api/pipelines", () => HttpResponse.json([hiding])),
-    http.get("/api/pipelines/:typeId", () => HttpResponse.json(hiding)),
-  );
-  const app = renderApp("/automations/auto-bedtime");
-  const content = await findSection("Content");
-  return { ...app, content };
-}
+const hidingVolume = () => openBedtimeWith(hidingPipeline(["music.volume"]));
 
 describe("Automation editor: hidden settings", () => {
   it("never shows or counts a hidden setting and keeps its value on save", async () => {
-    setVolume(0.8);
-    const before = structuredClone(stored()?.settings.music);
-    const { user, content } = await openBedtime();
+    setBedtimeMusic({ volume: 0.8 });
+    const before = structuredClone(storedBedtime()?.settings.music);
+    const { user, content } = await hidingVolume();
 
     expect(screen.getByText(/more options in All settings\.$/)).toBeInTheDocument();
     expect(content.getByLabelText(/^Play background music/)).toBeInTheDocument();
@@ -50,17 +30,42 @@ describe("Automation editor: hidden settings", () => {
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await findToast(/^Saved/);
-    expect(stored()?.settings.music).toEqual(before);
+    expect(storedBedtime()?.settings.music).toEqual(before);
+  });
+
+  it("finds nothing with Changed only when the only change is hidden", async () => {
+    setBedtimeMusic({ volume: 0.8 });
+    const { user, content } = await hidingVolume();
+
+    await user.click(screen.getByRole("button", { name: "Show all settings" }));
+    await user.click(content.getByRole("switch", { name: "Changed only" }));
+
+    expect(content.getByText("No settings match")).toBeInTheDocument();
   });
 
   it("shows a hidden setting that blocks the save", async () => {
-    setVolume(5);
-    const { user, content } = await openBedtime();
+    setBedtimeMusic({ volume: 5 });
+    const { user, content } = await hidingVolume();
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await findToast("Fix the highlighted fields before saving.");
     expect(content.getByLabelText(/^Music volume/)).toBeInTheDocument();
     expect(content.getByText(/must be <= 1/i)).toBeInTheDocument();
+  });
+
+  it("shows a hidden setting the server rejects with its message", async () => {
+    failWith("put", "/automations/:id", 400, {
+      code: "validation_failed",
+      message: "Validation failed",
+      fields: { "settings.music.volume": "Too loud for bedtime." },
+    });
+    const { user, content } = await hidingVolume();
+
+    await user.type(content.getByLabelText(/^Series name/), " Plus");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(await content.findByText("Too loud for bedtime.")).toBeInTheDocument();
+    expect(content.getByLabelText(/^Music volume/)).toBeInTheDocument();
   });
 });

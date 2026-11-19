@@ -28,12 +28,16 @@ export function readHiddenPaths(uiSchema: unknown): string[] {
   return listedPaths(uiSchema, HIDDEN_KEY) ?? [];
 }
 
+export function liesUnder(path: string, ancestor: string): boolean {
+  return path.startsWith(`${ancestor}.`);
+}
+
 function within(path: string, ancestor: string): boolean {
-  return path === ancestor || path.startsWith(`${ancestor}.`);
+  return path === ancestor || liesUnder(path, ancestor);
 }
 
 function leavesUnder(fields: readonly SchemaField[], parent: string): SchemaField[] {
-  return fields.filter((field) => field.leaf && field.path.startsWith(`${parent}.`));
+  return fields.filter((field) => field.leaf && liesUnder(field.path, parent));
 }
 
 export function concealedBy(
@@ -111,8 +115,7 @@ export function visiblePathSet(
 }
 
 function showsWholly(parent: string, visible: ReadonlySet<string>): boolean {
-  const head = `${parent}.`;
-  return visible.has(parent) && ![...visible].some((path) => path.startsWith(head));
+  return visible.has(parent) && ![...visible].some((path) => liesUnder(path, parent));
 }
 
 export function visibleProperties<T extends { name: string }>(

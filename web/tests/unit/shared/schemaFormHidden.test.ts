@@ -45,6 +45,19 @@ describe("concealedBy", () => {
     expect(concealed?.("music")).toBe(true);
     expect(concealedBy(fields, ["music.enabled"])?.("music")).toBe(false);
   });
+
+  it("conceals an array setting as one leaf", () => {
+    const concealed = concealedBy(fields, ["cast"]);
+    expect(concealed?.("cast")).toBe(true);
+    expect(fields.filter((field) => concealed?.(field.path)).map((field) => field.path)).toEqual([
+      "cast",
+    ]);
+  });
+
+  it("hides nothing for a path that is not a setting", () => {
+    const concealed = concealedBy(fields, ["nope.deeper"]);
+    expect(fields.some((field) => concealed?.(field.path))).toBe(false);
+  });
 });
 
 describe("hidden settings", () => {
