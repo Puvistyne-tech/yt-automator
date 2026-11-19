@@ -10,12 +10,16 @@ import { kidsStoryPipeline } from "@/api/mocks/fixtures/pipeline";
 import { providerConfig, providerDescriptors, secrets } from "@/api/mocks/fixtures/providers";
 import { seedRuns } from "@/api/mocks/fixtures/runs";
 import { type MockStorage, SETTINGS, STORAGE } from "@/api/mocks/fixtures/settings";
+import { narratedEngine } from "@/api/mocks/fixtures/templateEngine";
+import { USER_TEMPLATES } from "@/api/mocks/fixtures/templates";
 import type {
   AppSettings,
   Automation,
   Channel,
   CredentialView,
+  EngineSummary,
   PipelineDescriptor,
+  PipelineTemplate,
   Playlist,
   ProviderConfig,
   ProviderDescriptor,
@@ -25,6 +29,8 @@ import type {
 
 export interface MockState {
   pipelines: PipelineDescriptor[];
+  engines: EngineSummary[];
+  templates: PipelineTemplate[];
   credentials: CredentialView[];
   channels: Channel[];
   playlists: Record<string, Playlist[]>;
@@ -112,6 +118,23 @@ const FESTIVAL = makeAutomation({
   next_run_at: null,
 });
 
+const SPACE = makeAutomation({
+  id: "auto-space",
+  name: "Space facts weekly",
+  description: "A short space explainer every Saturday.",
+  pipeline_type: "t_space-facts",
+  targets: [makeTarget({ id: "target-space", variants: ["episode"], made_for_kids: false })],
+  schedule: {
+    kind: "cron",
+    every_hours: null,
+    cron: "0 10 * * 6",
+    timezone: "UTC",
+    ...DEFAULT_SCHEDULE_LIMITS,
+  },
+  enabled: false,
+  next_run_at: null,
+});
+
 const CREDENTIALS = [
   makeCredential(),
   makeCredential({
@@ -156,10 +179,12 @@ const PLAYLISTS: Record<string, Playlist[]> = {
 const SEED: Omit<MockState, "runs"> = {
   publishQueue: [],
   pipelines: [kidsStoryPipeline],
+  engines: [narratedEngine],
+  templates: USER_TEMPLATES,
   credentials: CREDENTIALS,
   channels: CHANNELS,
   playlists: PLAYLISTS,
-  automations: [BEDTIME, SHORTS, FESTIVAL],
+  automations: [BEDTIME, SHORTS, FESTIVAL, SPACE],
   descriptors: providerDescriptors,
   providerConfig,
   secrets,

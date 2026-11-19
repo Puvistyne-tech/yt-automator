@@ -1,8 +1,9 @@
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { useAutomation } from "@/api/automations";
 import { usePipelines } from "@/api/catalog";
 import { useChannels } from "@/api/channels";
 import { isNotFound } from "@/api/errors";
+import { PIPELINE_QUERY } from "@/api/paths";
 import { useAppSettings } from "@/api/system";
 import { AutomationEditor, initialDraft } from "@/features/automation-editor";
 import { ButtonLink, EmptyState, ErrorState, Icon, LoadingState, PageHeader } from "@/shared/ui";
@@ -49,7 +50,9 @@ function LoadFailure({ error, retry }: { error: Error; retry: () => void }) {
 
 export function AutomationEditorPage() {
   const { id } = useParams();
+  const [search] = useSearchParams();
   const data = useEditorData(id);
+  const preferredType = search.get(PIPELINE_QUERY) ?? undefined;
   const title =
     id === undefined ? "New automation" : (data.automation.data?.name ?? "Edit automation");
   return (
@@ -69,7 +72,12 @@ export function AutomationEditorPage() {
         <AutomationEditor
           key={id ?? "new"}
           automationId={id}
-          initial={initialDraft(data.pipelines.data ?? [], data.automation.data, data.timezone)}
+          initial={initialDraft(
+            data.pipelines.data ?? [],
+            data.automation.data,
+            data.timezone,
+            preferredType,
+          )}
           pipelines={data.pipelines.data ?? []}
           channels={data.channels.data ?? []}
         />
