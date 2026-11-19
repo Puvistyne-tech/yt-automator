@@ -60,7 +60,10 @@ def test_the_structure_cannot_change_after_creation(
     assert ("definition.structure" in found) is refused
 
 
-@pytest.mark.parametrize("field", ["title_template", "short_title_template", "description_template"])
+METADATA_FIELDS = ["title_template", "short_title_template", "description_template"]
+
+
+@pytest.mark.parametrize("field", METADATA_FIELDS)
 def test_every_metadata_field_names_every_structures_own_placeholders(field: str) -> None:
     description = MetadataSettings.model_fields[field].description or ""
     named = {name for spec in SPECS.values() for name in spec.placeholders}
