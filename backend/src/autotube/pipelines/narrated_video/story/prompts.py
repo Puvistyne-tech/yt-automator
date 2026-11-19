@@ -15,6 +15,7 @@ from autotube.pipelines.narrated_video.story.prompt_parts import (
     avoided_topics,
     bullet_lines,
     extra_requirements,
+    scene_words_rule,
     sound_effect_rule,
 )
 from autotube.pipelines.narrated_video.structures.length import duration_target, scene_line
@@ -73,8 +74,7 @@ def story_user(settings: KidsStorySettings, theme: str, language: str, seed: str
         series=settings.series.name.for_language(language),
         theme=theme,
         scene_count=scene_line(settings),
-        words_min=budget.per_scene[0],
-        words_max=budget.per_scene[1],
+        scene_words=scene_words_rule(budget.per_scene),
         total_min=budget.total[0],
         total_max=budget.total[1],
         total_words=budget.target,

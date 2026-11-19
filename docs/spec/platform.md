@@ -883,7 +883,9 @@ StructureSpec   id, title, wording ({format, pieces, piece}: the words the share
   lands inside `total` (ceil(total low / fewest scenes) to floor(total high / most scenes)); when that is
   empty, narrowed so that some scene count fits (ceil(total low / most) to floor(total high / fewest)); when
   that is empty too, the configured range. The story prompt states both: "Each scene's narration has between
-  A and B words" and "The whole narration has between L and H words in total, about T, so it reads aloud in
+  A and B words", or, when B - A is at most 1 (`story/prompt_parts.py::scene_words_rule`), "Write about M
+  words in each scene's narration, from A to B" (M is the midpoint rounded up; ", from A to B" is left out
+  when A equals B), and "The whole narration has between L and H words in total, about T, so it reads aloud in
   about N seconds at R words per minute. Fewer than L words is too short and more than H is too long: count
   them." The words-per-scene gate still checks the configured range. The duration gate's message names the
   measured words against the same range: "the story is too short: N words, need at least L; it reads in about

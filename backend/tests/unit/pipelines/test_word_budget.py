@@ -60,6 +60,9 @@ def test_the_long_explainer_budget_reaches_its_window() -> None:
         "too short: 182 words, need at least 510"
         in duration_problems(even_story("en", 14, 13), settings)[0]
     )
+    prompt = story_request(settings, "the sea", "en").prompt
+    assert "Write about 38 words in each scene's narration, from 37 to 38, written in" in prompt
+    assert "between 510 and 690 words in total, about 600" in prompt
 
 
 @pytest.mark.parametrize(

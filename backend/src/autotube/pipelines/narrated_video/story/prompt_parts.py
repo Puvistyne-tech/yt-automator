@@ -11,6 +11,7 @@ from autotube.pipelines.narrated_video.story.normalise import speech_rules
 from autotube.pipelines.narrated_video.story.numbers import number_to_words
 
 CUE_LANGUAGE = "en"
+NARROW_SCENE_SPAN = 1
 KIDS_LISTENERS = "children"
 GENERAL_LISTENERS = "viewers"
 OPEN_ENDING = (
@@ -56,6 +57,14 @@ def listeners(for_kids: bool) -> str:
 
 def action_rule(for_kids: bool) -> str:
     return ACTION_RULE.format(example=KIDS_ACTION_EXAMPLE if for_kids else GENERAL_ACTION_EXAMPLE)
+
+
+def scene_words_rule(span: tuple[int, int]) -> str:
+    low, high = span
+    if high - low > NARROW_SCENE_SPAN:
+        return f"Each scene's narration has between {low} and {high} words"
+    about = f"Write about {(low + high + 1) // 2} words in each scene's narration"
+    return about if low == high else f"{about}, from {low} to {high}"
 
 
 def ending_requirement(style: EndingStyle, refrain: str, for_kids: bool) -> str:
