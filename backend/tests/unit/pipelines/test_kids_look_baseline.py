@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
 from tests.fixtures.look_rig import STORED_SETTINGS, rendered_ass, rendered_command
 
 GOLDEN = Path(__file__).parent / "golden" / "look_baseline.json"

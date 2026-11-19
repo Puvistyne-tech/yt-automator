@@ -4,9 +4,9 @@ from typing import Any
 
 import pytest
 
-from autotube.pipelines.kids_story.story import prompt_parts
-from autotube.pipelines.kids_story.story.casting import episode_cast
-from autotube.pipelines.kids_story.story.prompts import story_request, translation_request
+from autotube.pipelines.narrated_video.story import prompt_parts
+from autotube.pipelines.narrated_video.story.casting import episode_cast
+from autotube.pipelines.narrated_video.story.prompts import story_request, translation_request
 from tests.fixtures.kids_data import quick_settings, story
 
 REFRAIN = '"Be kind, be brave, be you!"'

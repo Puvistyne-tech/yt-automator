@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from autotube.pipelines.kids_story.stages.story import StoryStage
-from autotube.pipelines.kids_story.story.casting import episode_cast
-from autotube.pipelines.kids_story.story.gates import ending_problems
-from autotube.pipelines.kids_story.story.model import Story
-from autotube.pipelines.kids_story.story.shaping import shaped
+from autotube.pipelines.narrated_video.stages.story import StoryStage
+from autotube.pipelines.narrated_video.story.casting import episode_cast
+from autotube.pipelines.narrated_video.story.gates import ending_problems
+from autotube.pipelines.narrated_video.story.model import Story
+from autotube.pipelines.narrated_video.story.shaping import shaped
 from tests.fixtures.kids_data import StageRig, meta_of, quick_settings, smart_writer, story
 from tests.fixtures.kids_fakes import FakeProviders
 

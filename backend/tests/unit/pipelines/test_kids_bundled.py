@@ -4,16 +4,16 @@ import unicodedata
 
 import pytest
 
-from autotube.pipelines.kids_story.settings.root import KidsStorySettings
-from autotube.pipelines.kids_story.story.bundled import (
+from autotube.pipelines.narrated_video.settings.root import KidsStorySettings
+from autotube.pipelines.narrated_video.story.bundled import (
     BundledChoice,
     BundledStory,
     bundled_requirements,
     bundled_stories,
     pick_bundled,
 )
-from autotube.pipelines.kids_story.story.gates import story_problems
-from autotube.pipelines.kids_story.story.words import contains_phrase
+from autotube.pipelines.narrated_video.story.gates import story_problems
+from autotube.pipelines.narrated_video.story.words import contains_phrase
 from tests.fixtures.kids_data import bundled_raw
 
 NAMES = ("golden_mango", "leaf_boat", "lost_song")

@@ -12,8 +12,8 @@ from autotube.domain.video_look import (
     VideoQuality,
     Watermark,
 )
-from autotube.pipelines.kids_story.artifacts import VARIANTS
-from autotube.pipelines.kids_story.stages.logo_check import LogoMissingError, require_logo
+from autotube.pipelines.narrated_video.artifacts import VARIANTS
+from autotube.pipelines.narrated_video.stages.logo_check import LogoMissingError, require_logo
 from tests.fixtures.kids_data import StageRig, quick_settings, run_chain, smart_writer, stage_named
 from tests.fixtures.kids_fakes import FakeProviders
 from tests.fixtures.look_rig import look_composition, rendered_command, settings_with
