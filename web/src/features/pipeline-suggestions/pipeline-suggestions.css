@@ -1,0 +1,61 @@
+.suggestions-panel {
+  margin-bottom: var(--space-5);
+}
+
+.suggestion-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.suggestion-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.suggestion-source p {
+  margin: 0;
+}
+
+.idea-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.idea-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.idea-card p {
+  margin: 0;
+}
+
+.idea-head {
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.idea-title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 620;
+}
+
+.idea-trends {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-5);
+}
+
+.idea-card > .row:last-child {
+  margin-top: auto;
+  padding-top: var(--space-2);
+}

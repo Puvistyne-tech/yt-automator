@@ -6,7 +6,9 @@ import { routes } from "@/app/routes";
 
 export type User = ReturnType<typeof userEvent.setup>;
 
-export function renderApp(route: string) {
+export type Route = string | { pathname: string; state: unknown };
+
+export function renderApp(route: Route) {
   const client = createQueryClient(false);
   const router = createMemoryRouter(routes, { initialEntries: [route] });
   const navigateExternal = vi.fn<(url: string) => void>();

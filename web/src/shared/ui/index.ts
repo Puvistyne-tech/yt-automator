@@ -7,6 +7,7 @@ export { FormDialog } from "@/shared/ui/FormDialog";
 export { FormField } from "@/shared/ui/FormField";
 export { Icon, type IconName } from "@/shared/ui/Icon";
 export { Input, NumberInput, Select, type SelectOption, Textarea } from "@/shared/ui/inputs";
+export { LinkCallout, ProgressLine } from "@/shared/ui/notices";
 export { ProgressMeter } from "@/shared/ui/ProgressMeter";
 export { type RadioCardOption, RadioCards } from "@/shared/ui/RadioCards";
 export { SaveBar } from "@/shared/ui/SaveBar";
