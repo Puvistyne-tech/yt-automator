@@ -25,6 +25,8 @@ import { AppProviders, createQueryClient } from "@/app/AppProviders";
 import { rejectionOf, TEMPLATE_INPUT } from "../../helpers/templates";
 
 const SEEDED_TEMPLATES = BUILTIN_TEMPLATES.length + USER_TEMPLATES.length;
+const SERVED_PIPELINES =
+  BUILTIN_TEMPLATES.length + USER_TEMPLATES.filter((t) => t.status === "ready").length;
 
 function wrapper({ children }: { children: ReactNode }) {
   return <AppProviders client={createQueryClient(false)}>{children}</AppProviders>;
@@ -133,7 +135,7 @@ describe("template mutation hooks", () => {
     ],
   ])("refreshes templates and pipelines after %s", async (_name, mutate, check) => {
     const { invalidate, hooks } = renderMutations();
-    await waitFor(() => expect(hooks.result.current.pipelines.data).toHaveLength(2));
+    await waitFor(() => expect(hooks.result.current.pipelines.data).toHaveLength(SERVED_PIPELINES));
     await waitFor(() => expect(hooks.result.current.templates.data).toHaveLength(SEEDED_TEMPLATES));
 
     await act(() => mutate(hooks.result.current));

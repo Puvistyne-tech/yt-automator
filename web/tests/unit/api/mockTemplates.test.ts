@@ -1,6 +1,7 @@
 import { api } from "@/api/client";
 import { db } from "@/api/mocks/db";
 import { narratedEngine } from "@/api/mocks/fixtures/templateEngine";
+import { BUILTIN_TEMPLATES } from "@/api/mocks/fixtures/templates";
 import { copyName, servedPipelines } from "@/api/mocks/templateRules";
 import { DELETE_REMEDY, isOpenRun } from "@/api/mocks/templateUsage";
 import type { PipelineDescriptor, RunStatus, TemplateSummary } from "@/api/types";
@@ -104,12 +105,21 @@ describe("mock template handlers", () => {
       p.type_id,
       p.capabilities,
     ]);
-    expect(types).toEqual([
-      ["kids_story", ["kids_content"]],
-      ["t_space-facts", []],
+    expect(types.map(([typeId]) => typeId)).toEqual([
+      ...BUILTIN_TEMPLATES.map((t) => t.type_id),
+      "t_space-facts",
     ]);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        ["kids_story", ["kids_content"]],
+        ["fun_facts_for_kids", ["kids_content"]],
+        ["amazing_facts", []],
+        ["t_space-facts", []],
+      ]),
+    );
     db.state.templates = db.state.templates.map((t) => ({ ...t, audience: "kids" as const }));
-    expect(servedPipelines(db.state)[1]?.capabilities).toEqual(["kids_content"]);
+    const spaceFacts = servedPipelines(db.state).find((p) => p.type_id === "t_space-facts");
+    expect(spaceFacts?.capabilities).toEqual(["kids_content"]);
     expect(servedPipelines({ ...db.state, pipelines: [] })).toEqual([]);
   });
 });

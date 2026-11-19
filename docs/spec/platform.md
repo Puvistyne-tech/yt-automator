@@ -684,7 +684,8 @@ class PipelineEngine(Protocol):
   fake providers in English and Tamil and checks the score, the audience flags and the upload details.
 - The web mock mode lists the same built-ins: `web/src/api/mocks/fixtures/builtinTemplates.json` holds each packaged
   built-in's id, name, description, audience and definition, generated from `packaged_templates`, and a backend
-  test fails when it drifts.
+  test fails when it drifts. Mock mode also serves every ready built-in and stored template as a pipeline type, so a new
+  automation can pick a built-in there too.
 
 #### Narrated definition (`pipelines/narrated_video/template/definition.py`)
 
