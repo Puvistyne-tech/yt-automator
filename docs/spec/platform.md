@@ -625,9 +625,32 @@ class PipelineEngine(Protocol):
 - Built-ins are packaged with their engine (origin `builtin`, status `ready`, revision 1) and never stored.
   User templates are stored in the `pipeline_templates` table (`id`, unique `type_id`, `status`, `created_at`,
   JSON `payload`), added by migration `0002`.
-- The `narrated_video` engine has one built-in, `kids_story` (audience kids, empty definition), served by the
-  kids story pipeline, so its descriptor is the plugin's own. A stored template is served by the same stages
-  under a derived descriptor (below).
+- The `narrated_video` engine's built-ins, in this order: `kids_story` (audience kids, empty definition), served
+  by the kids story pipeline, so its descriptor is the plugin's own; then one packaged template per JSON file in
+  `pipelines/narrated_video/builtins/`, in file name order. Each file is a `template/builtins.py::PackagedTemplate`
+  (`id`, `name`, `description`, `audience`, `definition`; extra keys refused); its id is also its type id, matches
+  `^[a-z][a-z0-9_]*$` and never starts with `t_`. A packaged built-in and a stored template are served by the same
+  stages under a derived descriptor (below).
+
+  | id | Name | Format | Audience | Length | Visual style |
+  | --- | --- | --- | --- | --- | --- |
+  | `amazing_facts` | Amazing facts | list | general | standard | `flat_vector` |
+  | `daily_motivation` | Daily motivation | explainer | general | short | `cinematic_realistic` |
+  | `fun_facts_for_kids` | Fun facts for kids | list | kids | standard | `flat_cartoon_2d` |
+  | `history_in_five_minutes` | History in five minutes | explainer | general | long | `woodblock_print` |
+  | `quick_quiz` | Quick quiz | quiz | general | standard | `chalkboard` |
+  | `scary_stories` | Scary stories | story | general | standard | `pencil_sketch` |
+  | `top_ten_countdown` | Top 10 countdown | countdown | general | standard | `pixel_art` |
+
+  Every packaged built-in has no `problems`: a brief, tone, music mood, at least 12 topics, a library style,
+  title, Short title and description templates in English and Tamil that use only its format's placeholders,
+  tags, hashtags and a category, plus a `settings` overlay naming its series, tagline and intro and outro lines.
+  A general built-in's name, description, definition and style pass the child-directed term screen.
+  `top_ten_countdown` sets `story.item_count` to 10 and `quick_quiz` sets `story.answer_choices` to 3.
+  `scary_stories` is for teenagers and adults: its editorial rules forbid gore and any child character, its
+  banned words keep violent words but allow suspense words, and its picture exclusions add gore, blood, wounds,
+  weapons, corpses, children and babies.
+- A built-in is served as a pipeline type only while its engine reports no `problems` for it.
 
 #### Narrated definition (`pipelines/narrated_video/template/definition.py`)
 
@@ -910,8 +933,8 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
 - List returns every engine's built-ins, then the stored templates by `created_at`, each as a TemplateSummary.
 - Create assigns a fresh id and type id `t_<id>`, revision 1 and `created_at = updated_at = now`, and stores the
   name trimmed. Field errors (400), each checked once: `origin: builtin` and the name rules (`input_errors`),
-  then an engine that is not installed (`engine`) or the engine's `problems`. A type id already served or built in is
-  `template_type_taken` (409).
+  then an engine that is not installed (`engine`) or the engine's `problems`. An id a built-in or stored template
+  already has is `template_exists` (409); a type id already served or built in is `template_type_taken` (409).
 - Update replaces name, description, audience, status and definition. A built-in is refused first with
   `template_builtin` (409). Field errors (400), reported together: an audience or engine change, the name rules,
   the engine's `problems` (or `engine` when it is no longer installed); the `origin` sent is ignored and the
@@ -926,7 +949,8 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
   status `draft`, revision 1, the source's engine, description and definition, the requested audience or the
   source's, and the requested name or the source name shortened to fit with `COPY_NAME_SUFFIX` " (copy)"
   appended (`domain/copy_names.py`, shared with duplicating an automation). It is validated once: the name rules
-  and the engine's `problems` together (400), then a free type id (409 `template_type_taken`).
+  and the engine's `problems` together (400), then a free id (409 `template_exists`) and a free type id (409
+  `template_type_taken`).
 
 - Preview (`application/preview_template_script.py::PreviewTemplateScript`) takes a TemplatePreviewInput and
   stores nothing: no template, no run, no id. It builds the unsaved template with id `preview` (type id
@@ -952,8 +976,8 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
 templates)`, the
 `PipelineRegistry` adapter the composition root builds from the index and the `TemplateRepository`:
 
-- `list()` returns the static pipelines whose type id no engine built-in serves, then every engine's built-ins,
-  then the stored templates that are `ready`, belong to an installed engine and have no `problems`.
+- `list()` returns the static pipelines whose type id no engine built-in serves, then every engine's built-ins
+  that have no `problems`, then the stored templates that are `ready`, belong to an installed engine and have no `problems`.
 - `get(type_id)` resolves the same set, a stored template through `engine.pipeline(template)`. The pipeline is
   cached per type id together with the template it was built from, and rebuilt when the stored template differs
   in any field. The entry is dropped when the template is deleted or stops being served.
