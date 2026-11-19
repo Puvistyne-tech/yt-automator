@@ -186,9 +186,11 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   `{series}` is filled in with the automation's series name in the intro line, outro line, titles,
   descriptions and playlist title; the intro and outro lines take the same placeholders as the description,
   and any placeholder the structure does not supply (including an unknown one) is left empty there, in titles,
-  descriptions, playlist titles and the card and thumbnail text (`text/templates.py::filled_template`). The series name must not be blank in any language. When no bundled story
-  fits the automation's cast ids and languages, the story stage fails naming both what the automation has
-  and what the bundled stories need.
+  descriptions, playlist titles and the card and thumbnail text (`text/templates.py::filled_template`). An
+  episode or Short title that renders empty falls back to the script's title, and `UploadMetadata.title` must
+  not be empty. The series name must not be blank in any language. When no bundled story fits the
+  automation's cast ids and languages, the story stage fails naming both what the automation has and what
+  the bundled stories need.
 - Kids story writing, voice and sound controls. Every default renders the translation, motion and judge
   prompts and the story user prompt exactly as before these settings existed, and stored settings without
   them load unchanged. The default editorial rules no longer include "End with the moral said plainly, then
