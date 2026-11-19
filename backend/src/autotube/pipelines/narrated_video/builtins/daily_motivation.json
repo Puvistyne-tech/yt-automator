@@ -26,25 +26,35 @@
     ],
     "visual_style": "cinematic_realistic",
     "music_mood": "gentle, uplifting piano with soft strings that slowly builds, hopeful and calm",
-    "title_template": {
-      "en": "{title} | {series}",
-      "ta": "{title} | {series}"
-    },
-    "short_title_template": {
-      "en": "{title} #Shorts",
-      "ta": "{title} #Shorts"
-    },
     "description_template": {
       "en": "{title}\n\n{tagline}.\n\nToday's idea: {takeaway}\n\nThink about it:\n{questions}\n\n{hashtags}",
       "ta": "{title}\n\n{tagline}.\n\nஇன்றைய சிந்தனை: {takeaway}\n\n{questions}\n\n{hashtags}"
     },
     "tags": {
-      "en": ["motivation", "daily motivation", "self improvement", "good habits", "mindset"],
-      "ta": ["தமிழ் ஊக்கம்", "தினசரி ஊக்கம்", "நல்ல பழக்கங்கள்"]
+      "en": [
+        "motivation",
+        "daily motivation",
+        "self improvement",
+        "good habits",
+        "mindset"
+      ],
+      "ta": [
+        "தமிழ் ஊக்கம்",
+        "தினசரி ஊக்கம்",
+        "நல்ல பழக்கங்கள்"
+      ]
     },
     "hashtags": {
-      "en": ["#Motivation", "#DailyMotivation", "#Mindset"],
-      "ta": ["#ஊக்கம்", "#தினசரிஊக்கம்", "#Motivation"]
+      "en": [
+        "#Motivation",
+        "#DailyMotivation",
+        "#Mindset"
+      ],
+      "ta": [
+        "#ஊக்கம்",
+        "#தினசரிஊக்கம்",
+        "#Motivation"
+      ]
     },
     "category": "24",
     "settings": {

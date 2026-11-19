@@ -6,7 +6,6 @@
   "definition": {
     "structure": "countdown",
     "brief": "Each video ranks ten things in one subject, from number ten down to number one: the fastest, biggest, oldest, loudest or strangest. Every entry is real and accurate, gets one short reason for its place, and the countdown builds to a satisfying number one.",
-    "length": "standard",
     "tone": "energetic, playful, confident",
     "topics": [
       "the fastest animals",
@@ -29,21 +28,35 @@
       "en": "{title} | Top {count} Countdown",
       "ta": "{title} | முதல் {count} தரவரிசை"
     },
-    "short_title_template": {
-      "en": "{title} #Shorts",
-      "ta": "{title} #Shorts"
-    },
     "description_template": {
       "en": "{title}\n\nA countdown of {count} from {series}, all about {theme}. {tagline}.\n\nThe countdown: {items}\n\nHow many did you know?\n{questions}\n\n{hashtags}",
       "ta": "{title}\n\n{series} வழங்கும் {count} இடங்களின் தரவரிசை. {tagline}.\n\nவரிசை: {items}\n\nஉங்களுக்கு எத்தனை தெரியும்?\n{questions}\n\n{hashtags}"
     },
     "tags": {
-      "en": ["top 10", "countdown", "rankings", "world records", "top ten facts"],
-      "ta": ["முதல் பத்து", "தமிழ் தரவரிசை", "சாதனைகள்"]
+      "en": [
+        "top 10",
+        "countdown",
+        "rankings",
+        "world records",
+        "top ten facts"
+      ],
+      "ta": [
+        "முதல் பத்து",
+        "தமிழ் தரவரிசை",
+        "சாதனைகள்"
+      ]
     },
     "hashtags": {
-      "en": ["#Top10", "#Countdown", "#Rankings"],
-      "ta": ["#முதல்பத்து", "#தரவரிசை", "#Top10"]
+      "en": [
+        "#Top10",
+        "#Countdown",
+        "#Rankings"
+      ],
+      "ta": [
+        "#முதல்பத்து",
+        "#தரவரிசை",
+        "#Top10"
+      ]
     },
     "category": "24",
     "settings": {

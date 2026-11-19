@@ -48,7 +48,6 @@ def settings_of(template: PipelineTemplate) -> KidsStorySettings:
 
 def test_the_builtins_are_listed_in_a_stable_order_with_kids_story_first() -> None:
     assert [item.id for item in ENGINE.builtin_templates()] == BUILTIN_IDS
-    assert [item.id for item in NarratedVideoEngine().builtin_templates()] == BUILTIN_IDS
 
 
 @pytest.mark.parametrize("template", ENGINE.builtin_templates(), ids=lambda item: item.id)
@@ -75,9 +74,10 @@ def test_every_packaged_builtin_has_a_complete_definition(template: PipelineTemp
     assert len(definition.topics) >= MINIMUM_TOPICS
     assert len(set(definition.topics)) == len(definition.topics)
     assert definition.visual_style in style_ids()
+    metadata = settings_of(template).metadata
     localized = (
-        definition.title_template,
-        definition.short_title_template,
+        metadata.title_template,
+        metadata.short_title_template,
         definition.description_template,
         definition.tags,
         definition.hashtags,

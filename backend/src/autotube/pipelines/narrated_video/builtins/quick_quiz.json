@@ -6,7 +6,6 @@
   "definition": {
     "structure": "quiz",
     "brief": "Each video asks a handful of general-knowledge questions about one subject, offers three choices for each, pauses so viewers can guess, then reveals the answer with one interesting fact. Questions are fair, unambiguous and accurate, and the wrong choices are believable.",
-    "length": "standard",
     "tone": "upbeat, playful, clear",
     "topics": [
       "world capitals",
@@ -26,25 +25,35 @@
     ],
     "visual_style": "chalkboard",
     "music_mood": "bouncy, upbeat game-show style music with light percussion and plucked synths",
-    "title_template": {
-      "en": "{title} | {series}",
-      "ta": "{title} | {series}"
-    },
-    "short_title_template": {
-      "en": "{title} #Shorts",
-      "ta": "{title} #Shorts"
-    },
     "description_template": {
       "en": "{title}\n\nA {question_count}-question quiz from {series} about {theme}. {tagline}.\n\nPause before each answer and keep score!\n\nMore to think about:\n{questions}\n\n{hashtags}",
       "ta": "{title}\n\n{series} வழங்கும் {question_count} கேள்விகள் கொண்ட வினாடி வினா. {tagline}.\n\nஒவ்வொரு விடைக்கும் முன் நிறுத்தி யோசியுங்கள்!\n\n{questions}\n\n{hashtags}"
     },
     "tags": {
-      "en": ["quiz", "trivia", "general knowledge", "test your knowledge", "quick quiz"],
-      "ta": ["தமிழ் வினாடி வினா", "பொது அறிவு", "பொது அறிவு வினா"]
+      "en": [
+        "quiz",
+        "trivia",
+        "general knowledge",
+        "test your knowledge",
+        "quick quiz"
+      ],
+      "ta": [
+        "தமிழ் வினாடி வினா",
+        "பொது அறிவு",
+        "பொது அறிவு வினா"
+      ]
     },
     "hashtags": {
-      "en": ["#Quiz", "#Trivia", "#GeneralKnowledge"],
-      "ta": ["#வினாடிவினா", "#பொதுஅறிவு", "#Quiz"]
+      "en": [
+        "#Quiz",
+        "#Trivia",
+        "#GeneralKnowledge"
+      ],
+      "ta": [
+        "#வினாடிவினா",
+        "#பொதுஅறிவு",
+        "#Quiz"
+      ]
     },
     "category": "27",
     "settings": {

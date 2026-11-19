@@ -7,7 +7,6 @@
     "definition": {
       "structure": "list",
       "brief": "Each video counts through surprising, true facts about one subject from nature, science, space or everyday life. Every fact is accurate and checkable, explained in plain words, and comes with one vivid detail that makes it easy to remember. Never invent numbers or records.",
-      "length": "standard",
       "tone": "curious, lively, clear",
       "topics": [
         "octopuses",
@@ -27,14 +26,6 @@
       ],
       "visual_style": "flat_vector",
       "music_mood": "light, upbeat electronic music with soft plucked synths and a steady beat, curious and bright",
-      "title_template": {
-        "en": "{title} | {series}",
-        "ta": "{title} | {series}"
-      },
-      "short_title_template": {
-        "en": "{title} #Shorts",
-        "ta": "{title} #Shorts"
-      },
       "description_template": {
         "en": "{title}\n\n{count} surprising facts about {theme}, from {series}. {tagline}.\n\nIn this video: {items}\n\nTest yourself:\n{questions}\n\n{hashtags}",
         "ta": "{title}\n\n{series} வழங்கும் {count} வியப்பான உண்மைகள். {tagline}.\n\nஇந்த வீடியோவில்: {items}\n\n{questions}\n\n{hashtags}"
@@ -104,14 +95,6 @@
       ],
       "visual_style": "cinematic_realistic",
       "music_mood": "gentle, uplifting piano with soft strings that slowly builds, hopeful and calm",
-      "title_template": {
-        "en": "{title} | {series}",
-        "ta": "{title} | {series}"
-      },
-      "short_title_template": {
-        "en": "{title} #Shorts",
-        "ta": "{title} #Shorts"
-      },
       "description_template": {
         "en": "{title}\n\n{tagline}.\n\nToday's idea: {takeaway}\n\nThink about it:\n{questions}\n\n{hashtags}",
         "ta": "{title}\n\n{tagline}.\n\nஇன்றைய சிந்தனை: {takeaway}\n\n{questions}\n\n{hashtags}"
@@ -155,7 +138,6 @@
     "definition": {
       "structure": "list",
       "brief": "Each video shares simple, true and cheerful facts about one thing young children love, such as an animal, the weather or the sky. Use short sentences, everyday words and one fun detail per fact. Nothing frightening.",
-      "length": "standard",
       "tone": "cheerful, gentle, curious",
       "topics": [
         "penguins",
@@ -175,14 +157,6 @@
       ],
       "visual_style": "flat_cartoon_2d",
       "music_mood": "bright, playful ukulele and xylophone music, light and happy",
-      "title_template": {
-        "en": "{title} | {series}",
-        "ta": "{title} | {series}"
-      },
-      "short_title_template": {
-        "en": "{title} #Shorts",
-        "ta": "{title} #Shorts"
-      },
       "description_template": {
         "en": "{title}\n\n{count} fun facts about {theme} from {series}. {tagline}.\n\nIn this video: {items}\n\nTalk about it together:\n{questions}\n\n{hashtags}",
         "ta": "{title}\n\n{series} வழங்கும் {count} சுவையான உண்மைகள். {tagline}.\n\nஇந்த வீடியோவில்: {items}\n\n{questions}\n\nசேர்ந்து பாருங்கள், சேர்ந்து கற்றுக்கொள்ளுங்கள்.\n\n{hashtags}"
@@ -251,14 +225,6 @@
       ],
       "visual_style": "woodblock_print",
       "music_mood": "cinematic orchestral music with soft strings and light percussion, curious and stately",
-      "title_template": {
-        "en": "{title} | {series}",
-        "ta": "{title} | {series}"
-      },
-      "short_title_template": {
-        "en": "{title} #Shorts",
-        "ta": "{title} #Shorts"
-      },
       "description_template": {
         "en": "{title}\n\n{series} explains {theme} in about five minutes. {tagline}.\n\nThe takeaway: {takeaway}\n\nThink about it:\n{questions}\n\n{hashtags}",
         "ta": "{title}\n\n{series} வழங்கும் ஐந்து நிமிட வரலாறு. {tagline}.\n\nநினைவில் கொள்ள: {takeaway}\n\n{questions}\n\n{hashtags}"
@@ -308,7 +274,6 @@
     "definition": {
       "structure": "quiz",
       "brief": "Each video asks a handful of general-knowledge questions about one subject, offers three choices for each, pauses so viewers can guess, then reveals the answer with one interesting fact. Questions are fair, unambiguous and accurate, and the wrong choices are believable.",
-      "length": "standard",
       "tone": "upbeat, playful, clear",
       "topics": [
         "world capitals",
@@ -328,14 +293,6 @@
       ],
       "visual_style": "chalkboard",
       "music_mood": "bouncy, upbeat game-show style music with light percussion and plucked synths",
-      "title_template": {
-        "en": "{title} | {series}",
-        "ta": "{title} | {series}"
-      },
-      "short_title_template": {
-        "en": "{title} #Shorts",
-        "ta": "{title} #Shorts"
-      },
       "description_template": {
         "en": "{title}\n\nA {question_count}-question quiz from {series} about {theme}. {tagline}.\n\nPause before each answer and keep score!\n\nMore to think about:\n{questions}\n\n{hashtags}",
         "ta": "{title}\n\n{series} வழங்கும் {question_count} கேள்விகள் கொண்ட வினாடி வினா. {tagline}.\n\nஒவ்வொரு விடைக்கும் முன் நிறுத்தி யோசியுங்கள்!\n\n{questions}\n\n{hashtags}"
@@ -380,9 +337,7 @@
     "description": "Short suspense and mystery stories for teenagers and adults, built on atmosphere and tension rather than gore.",
     "audience": "general",
     "definition": {
-      "structure": "story",
       "brief": "Each video is an original, eerie short story for teenagers and adults: an ordinary place, a small strange detail, and tension that builds to an unsettling twist. Create fear through atmosphere, sound and suggestion. No gore, no graphic violence, no cruelty to animals, and no harm to anyone young. Every character is a teenager or an adult.",
-      "length": "standard",
       "tone": "eerie, quiet, suspenseful",
       "topics": [
         "a knock at midnight",
@@ -401,14 +356,6 @@
       ],
       "visual_style": "pencil_sketch",
       "music_mood": "dark ambient drones with low strings and soft distant chimes, slow, tense and atmospheric",
-      "title_template": {
-        "en": "{title} | {series}",
-        "ta": "{title} | {series}"
-      },
-      "short_title_template": {
-        "en": "{title} #Shorts",
-        "ta": "{title} #Shorts"
-      },
       "description_template": {
         "en": "{title}\n\nA short suspense story from {series} about {theme}. {tagline}.\n\nWhat do you think happened?\n{questions}\n\n{hashtags}",
         "ta": "{title}\n\n{series} வழங்கும் ஒரு திகில் சிறுகதை. {tagline}.\n\nஎன்ன நடந்திருக்கும் என்று நினைக்கிறீர்கள்?\n{questions}\n\n{hashtags}"
@@ -490,7 +437,6 @@
     "definition": {
       "structure": "countdown",
       "brief": "Each video ranks ten things in one subject, from number ten down to number one: the fastest, biggest, oldest, loudest or strangest. Every entry is real and accurate, gets one short reason for its place, and the countdown builds to a satisfying number one.",
-      "length": "standard",
       "tone": "energetic, playful, confident",
       "topics": [
         "the fastest animals",
@@ -512,10 +458,6 @@
       "title_template": {
         "en": "{title} | Top {count} Countdown",
         "ta": "{title} | முதல் {count} தரவரிசை"
-      },
-      "short_title_template": {
-        "en": "{title} #Shorts",
-        "ta": "{title} #Shorts"
       },
       "description_template": {
         "en": "{title}\n\nA countdown of {count} from {series}, all about {theme}. {tagline}.\n\nThe countdown: {items}\n\nHow many did you know?\n{questions}\n\n{hashtags}",

@@ -4,9 +4,7 @@
   "description": "Short suspense and mystery stories for teenagers and adults, built on atmosphere and tension rather than gore.",
   "audience": "general",
   "definition": {
-    "structure": "story",
     "brief": "Each video is an original, eerie short story for teenagers and adults: an ordinary place, a small strange detail, and tension that builds to an unsettling twist. Create fear through atmosphere, sound and suggestion. No gore, no graphic violence, no cruelty to animals, and no harm to anyone young. Every character is a teenager or an adult.",
-    "length": "standard",
     "tone": "eerie, quiet, suspenseful",
     "topics": [
       "a knock at midnight",
@@ -25,25 +23,35 @@
     ],
     "visual_style": "pencil_sketch",
     "music_mood": "dark ambient drones with low strings and soft distant chimes, slow, tense and atmospheric",
-    "title_template": {
-      "en": "{title} | {series}",
-      "ta": "{title} | {series}"
-    },
-    "short_title_template": {
-      "en": "{title} #Shorts",
-      "ta": "{title} #Shorts"
-    },
     "description_template": {
       "en": "{title}\n\nA short suspense story from {series} about {theme}. {tagline}.\n\nWhat do you think happened?\n{questions}\n\n{hashtags}",
       "ta": "{title}\n\n{series} வழங்கும் ஒரு திகில் சிறுகதை. {tagline}.\n\nஎன்ன நடந்திருக்கும் என்று நினைக்கிறீர்கள்?\n{questions}\n\n{hashtags}"
     },
     "tags": {
-      "en": ["scary stories", "suspense stories", "mystery stories", "creepy stories", "short horror stories"],
-      "ta": ["திகில் கதைகள்", "மர்மக் கதைகள்", "தமிழ் திகில் கதைகள்"]
+      "en": [
+        "scary stories",
+        "suspense stories",
+        "mystery stories",
+        "creepy stories",
+        "short horror stories"
+      ],
+      "ta": [
+        "திகில் கதைகள்",
+        "மர்மக் கதைகள்",
+        "தமிழ் திகில் கதைகள்"
+      ]
     },
     "hashtags": {
-      "en": ["#ScaryStories", "#Suspense", "#Mystery"],
-      "ta": ["#திகில்கதைகள்", "#மர்மம்", "#ScaryStories"]
+      "en": [
+        "#ScaryStories",
+        "#Suspense",
+        "#Mystery"
+      ],
+      "ta": [
+        "#திகில்கதைகள்",
+        "#மர்மம்",
+        "#ScaryStories"
+      ]
     },
     "category": "24",
     "settings": {

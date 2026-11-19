@@ -26,25 +26,35 @@
     ],
     "visual_style": "woodblock_print",
     "music_mood": "cinematic orchestral music with soft strings and light percussion, curious and stately",
-    "title_template": {
-      "en": "{title} | {series}",
-      "ta": "{title} | {series}"
-    },
-    "short_title_template": {
-      "en": "{title} #Shorts",
-      "ta": "{title} #Shorts"
-    },
     "description_template": {
       "en": "{title}\n\n{series} explains {theme} in about five minutes. {tagline}.\n\nThe takeaway: {takeaway}\n\nThink about it:\n{questions}\n\n{hashtags}",
       "ta": "{title}\n\n{series} வழங்கும் ஐந்து நிமிட வரலாறு. {tagline}.\n\nநினைவில் கொள்ள: {takeaway}\n\n{questions}\n\n{hashtags}"
     },
     "tags": {
-      "en": ["history", "world history", "history explained", "history in five minutes", "learn history"],
-      "ta": ["தமிழில் வரலாறு", "உலக வரலாறு", "வரலாறு விளக்கம்"]
+      "en": [
+        "history",
+        "world history",
+        "history explained",
+        "history in five minutes",
+        "learn history"
+      ],
+      "ta": [
+        "தமிழில் வரலாறு",
+        "உலக வரலாறு",
+        "வரலாறு விளக்கம்"
+      ]
     },
     "hashtags": {
-      "en": ["#History", "#WorldHistory", "#HistoryExplained"],
-      "ta": ["#வரலாறு", "#உலகவரலாறு", "#History"]
+      "en": [
+        "#History",
+        "#WorldHistory",
+        "#HistoryExplained"
+      ],
+      "ta": [
+        "#வரலாறு",
+        "#உலகவரலாறு",
+        "#History"
+      ]
     },
     "category": "27",
     "settings": {

@@ -6,7 +6,6 @@
   "definition": {
     "structure": "list",
     "brief": "Each video counts through surprising, true facts about one subject from nature, science, space or everyday life. Every fact is accurate and checkable, explained in plain words, and comes with one vivid detail that makes it easy to remember. Never invent numbers or records.",
-    "length": "standard",
     "tone": "curious, lively, clear",
     "topics": [
       "octopuses",
@@ -26,25 +25,35 @@
     ],
     "visual_style": "flat_vector",
     "music_mood": "light, upbeat electronic music with soft plucked synths and a steady beat, curious and bright",
-    "title_template": {
-      "en": "{title} | {series}",
-      "ta": "{title} | {series}"
-    },
-    "short_title_template": {
-      "en": "{title} #Shorts",
-      "ta": "{title} #Shorts"
-    },
     "description_template": {
       "en": "{title}\n\n{count} surprising facts about {theme}, from {series}. {tagline}.\n\nIn this video: {items}\n\nTest yourself:\n{questions}\n\n{hashtags}",
       "ta": "{title}\n\n{series} வழங்கும் {count} வியப்பான உண்மைகள். {tagline}.\n\nஇந்த வீடியோவில்: {items}\n\n{questions}\n\n{hashtags}"
     },
     "tags": {
-      "en": ["amazing facts", "science facts", "nature facts", "did you know", "learn something new"],
-      "ta": ["தமிழ் உண்மைகள்", "அறிவியல் உண்மைகள்", "உங்களுக்குத் தெரியுமா"]
+      "en": [
+        "amazing facts",
+        "science facts",
+        "nature facts",
+        "did you know",
+        "learn something new"
+      ],
+      "ta": [
+        "தமிழ் உண்மைகள்",
+        "அறிவியல் உண்மைகள்",
+        "உங்களுக்குத் தெரியுமா"
+      ]
     },
     "hashtags": {
-      "en": ["#AmazingFacts", "#DidYouKnow", "#LearnSomethingNew"],
-      "ta": ["#தமிழ்உண்மைகள்", "#அறிவியல்", "#DidYouKnow"]
+      "en": [
+        "#AmazingFacts",
+        "#DidYouKnow",
+        "#LearnSomethingNew"
+      ],
+      "ta": [
+        "#தமிழ்உண்மைகள்",
+        "#அறிவியல்",
+        "#DidYouKnow"
+      ]
     },
     "category": "27",
     "settings": {
