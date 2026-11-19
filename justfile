@@ -1,6 +1,7 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 brew_lib := env_var_or_default("BREW_LIB", "/opt/homebrew/lib")
+ffmpeg_full_bin := env_var_or_default("FFMPEG_FULL_BIN", "/opt/homebrew/opt/ffmpeg-full/bin")
 
 default: check
 
@@ -12,13 +13,13 @@ dev:
     just dev-api & just dev-web & wait
 
 dev-api:
-    cd backend && DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m autotube.main
+    cd backend && PATH="{{ffmpeg_full_bin}}:$PATH" DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m autotube.main
 
 dev-web:
     cd web && pnpm dev
 
 doctor:
-    cd backend && DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m autotube.doctor
+    cd backend && PATH="{{ffmpeg_full_bin}}:$PATH" DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH:-{{brew_lib}}}" uv run python -m autotube.doctor
 
 fmt:
     cd backend && uv run ruff format . && uv run ruff check --fix .

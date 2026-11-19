@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
+
+from autotube.infrastructure.providers.ffmpeg_filters import ffmpeg_filter_names
+
+LISTING_TIMEOUT_SECONDS = 30.0
 
 
 def ffmpeg_has(*filters: str) -> bool:
     if not (shutil.which("ffmpeg") and shutil.which("ffprobe")):
         return False
-    listed = subprocess.run(
-        ["ffmpeg", "-hide_banner", "-filters"], capture_output=True, text=True, check=False
-    ).stdout
-    names = {line.split()[1] for line in listed.splitlines() if len(line.split()) > 2}
+    names = ffmpeg_filter_names("ffmpeg", LISTING_TIMEOUT_SECONDS)
     return all(name in names for name in filters)

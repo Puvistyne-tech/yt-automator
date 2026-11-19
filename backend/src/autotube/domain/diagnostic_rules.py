@@ -60,7 +60,7 @@ def disk_check(free_bytes: int | None, policy: DoctorPolicy) -> HealthCheck:
 def tool_check(name: str, version: str) -> HealthCheck:
     if version:
         return ok(name, version)
-    return warning(name, f"{name} not found: video rendering needs it (brew install ffmpeg)")
+    return warning(name, f"{name} not found: video rendering needs it (brew install ffmpeg-full)")
 
 
 def database_check(facts: SystemFacts) -> HealthCheck:

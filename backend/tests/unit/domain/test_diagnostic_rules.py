@@ -79,7 +79,7 @@ def test_disk_space(free: int | None, status: CheckStatus, fragment: str) -> Non
 def test_missing_tool_is_a_warning_with_a_hint() -> None:
     check = tool_check("ffmpeg", "")
     assert check.status is CheckStatus.WARNING
-    assert "brew install ffmpeg" in check.detail
+    assert "brew install ffmpeg-full" in check.detail
 
 
 def test_present_tool_reports_its_version() -> None:

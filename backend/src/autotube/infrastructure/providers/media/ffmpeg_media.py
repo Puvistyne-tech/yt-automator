@@ -21,6 +21,13 @@ from autotube.infrastructure.providers.output_path import ensure_parent, require
 from autotube.infrastructure.providers.spec import ProviderSpec
 from autotube.shared.errors import UpstreamFailure
 
+SUBTITLE_FILTER = "ass"
+LIBASS_FIX = (
+    "subtitles need an ffmpeg built with libass: brew install ffmpeg-full, then set the "
+    "ffmpeg command option to /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg or put that folder "
+    "first on PATH"
+)
+
 
 def has_audio(composition: VideoComposition) -> bool:
     return bool(composition.narration or composition.sound_effects or composition.music)
@@ -38,7 +45,15 @@ class FfmpegMedia:
         return first_reason(
             host.missing_binary(self.options.ffmpeg_binary),
             host.missing_binary(self.options.ffprobe_binary),
+            self.missing_subtitle_filter(),
         )
+
+    def missing_subtitle_filter(self) -> str | None:
+        options = self.options
+        missing = self.context.host.missing_ffmpeg_filter(
+            options.ffmpeg_binary, SUBTITLE_FILTER, options.probe_timeout_seconds
+        )
+        return f"{missing}: {LIBASS_FIX}" if missing else None
 
     def run(self, command: list[str], timeout: float | None = None) -> str:
         limit = timeout or self.options.probe_timeout_seconds
