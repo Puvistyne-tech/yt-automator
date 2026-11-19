@@ -87,7 +87,7 @@ def changed_from_kids_story(audience: TemplateAudience) -> set[str]:
 
 
 def test_a_stored_kids_template_differs_from_kids_story_only_in_its_identity() -> None:
-    identity = {"type_id", "name", "description", "version"}
+    identity = {"type_id", "name", "version"}
     assert changed_from_kids_story(TemplateAudience.KIDS) == identity
     assert changed_from_kids_story(TemplateAudience.GENERAL) == identity | {
         "ui_schema",

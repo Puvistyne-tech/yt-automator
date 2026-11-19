@@ -21,7 +21,7 @@ def template_descriptor(
     changes = {
         "type_id": template.type_id,
         "name": template.name,
-        "description": template.description,
+        "description": template.description or engine.description,
         "version": template_version(engine.version, template.revision),
         "ui_schema": derived_ui_schema(engine.ui_schema, definition, template.audience),
         "capabilities": audience_capabilities(engine.capabilities, template.audience),

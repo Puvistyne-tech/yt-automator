@@ -626,7 +626,8 @@ class PipelineEngine(Protocol):
 
 #### Derived descriptor
 
-- `type_id`, `name` and `description` from the template; `version` is `"<engine version>+r<revision>"`.
+- `type_id`, `name` and `description` from the template (an empty description falls back to the engine's);
+  `version` is `"<engine version>+r<revision>"`.
 - `ui_schema` is the engine's with `ui:basic` from the definition (or the engine's list) and `ui:hidden` = the
   definition's `hidden`, then `safety.audience`, then for general templates `story.age_min`, `story.age_max`
   `story.reading_level` and `story.source`. The engine's own `ui:hidden` is `["safety.audience"]`.

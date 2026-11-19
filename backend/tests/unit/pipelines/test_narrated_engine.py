@@ -67,3 +67,8 @@ def test_a_stored_template_reuses_the_stages_under_its_own_type_and_name() -> No
 def test_problems_name_unknown_definition_fields_and_a_foreign_engine() -> None:
     broken = template(engine="other", definition={"surprise": 1})
     assert sorted(engine().problems(broken)) == ["definition.surprise", "engine"]
+
+
+def test_a_template_without_a_description_uses_the_engines() -> None:
+    pipeline = engine().pipeline(template(description=""))
+    assert pipeline.descriptor.description == KidsStoryPipeline().descriptor.description
