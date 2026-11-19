@@ -1,39 +1,51 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
 
 import pytest
 
-from autotube.domain.pipeline_templates import PipelineTemplate, TemplateAudience, builtin_template
+from autotube.domain.model_base import JsonObject
 from autotube.shared.errors import RuleConflict
-from tests.fixtures.fake_engines import ENGINE_ID, FakeEngine, FakeEngineCatalog
+from tests.fixtures.fake_engines import (
+    ENGINE_ID,
+    BuiltinEngine,
+    FakeEngineCatalog,
+    general_builtin,
+)
+from tests.fixtures.template_records import template
 from tests.fixtures.template_rig import TemplateRig
 
 NEXT_ID = "id-1"
+SAMPLE_DEFINITION: JsonObject = {"brief": "facts"}
 
 
-@dataclass(frozen=True)
-class ClaimingEngine(FakeEngine):
-    def builtin_templates(self) -> list[PipelineTemplate]:
-        general = TemplateAudience.GENERAL
-        return [builtin_template(ENGINE_ID, NEXT_ID, "Claimed", "", general, {"brief": "x"})]
+def held_by_builtin(rig: TemplateRig) -> None:
+    claimed = general_builtin(NEXT_ID, SAMPLE_DEFINITION)
+    rig.engines = FakeEngineCatalog((BuiltinEngine(builtins=(claimed,)),))
 
 
-@pytest.fixture
-def claimed(rig: TemplateRig) -> TemplateRig:
-    rig.engines = FakeEngineCatalog((ClaimingEngine(),))
-    return rig
+def held_by_stored(rig: TemplateRig) -> None:
+    rig.templates.add(template(NEXT_ID, engine=ENGINE_ID, definition=SAMPLE_DEFINITION))
 
 
-def test_create_refuses_an_id_a_builtin_already_has(claimed: TemplateRig) -> None:
+def create(rig: TemplateRig) -> object:
+    return rig.created()
+
+
+def duplicate(rig: TemplateRig) -> object:
+    return rig.duplicate().execute(NEXT_ID)
+
+
+@pytest.mark.parametrize("hold", [held_by_builtin, held_by_stored], ids=["builtin", "stored"])
+@pytest.mark.parametrize("action", [create, duplicate], ids=["create", "duplicate"])
+def test_a_new_template_may_not_take_an_id_already_held(
+    rig: TemplateRig,
+    hold: Callable[[TemplateRig], None],
+    action: Callable[[TemplateRig], object],
+) -> None:
+    hold(rig)
+    before = rig.templates.list()
     with pytest.raises(RuleConflict) as raised:
-        claimed.created()
+        action(rig)
     assert raised.value.code == "template_exists"
-    assert claimed.templates.list() == []
-
-
-def test_duplicate_refuses_an_id_a_builtin_already_has(claimed: TemplateRig) -> None:
-    with pytest.raises(RuleConflict) as raised:
-        claimed.duplicate().execute(NEXT_ID)
-    assert raised.value.code == "template_exists"
-    assert claimed.templates.list() == []
+    assert rig.templates.list() == before

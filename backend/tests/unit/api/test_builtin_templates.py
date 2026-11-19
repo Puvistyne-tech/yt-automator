@@ -7,10 +7,15 @@ from fastapi.testclient import TestClient
 
 from autotube.infrastructure.config import RuntimeConfig
 from autotube.main import Overrides
-from tests.fixtures.builtin_catalog import BUILTIN_IDS, PACKAGED_FORMATS
+from tests.fixtures.builtin_catalog import BUILTIN_IDS, KIDS_STORY, PACKAGED_FORMATS
 from tests.unit.api.client import error_of, ok, wired
 
 PACKAGED = list(PACKAGED_FORMATS)
+
+
+class BuiltinIds:
+    def new(self) -> str:
+        return KIDS_STORY
 
 
 @pytest.fixture
@@ -51,3 +56,13 @@ def test_a_builtin_duplicates_into_an_editable_draft(client: TestClient, templat
     body = {key: renamed[key] for key in ("engine", "name", "audience", "status", "definition")}
     saved = ok(client.put(f"/api/templates/{copy['id']}", json=body))
     assert (saved["name"], saved["revision"]) == ("My copy", 2)
+
+
+def test_creating_a_template_with_a_builtin_id_is_a_conflict(
+    config: RuntimeConfig, overrides: Overrides
+) -> None:
+    body = {"engine": "narrated_video", "name": "Mine", "audience": "general", "definition": {}}
+    with wired(config, overrides, pipelines=None, ids=BuiltinIds()) as client:
+        refused = client.post("/api/templates", json=body)
+        assert error_of(refused, 409)["code"] == "template_exists"
+        assert [item["id"] for item in ok(client.get("/api/templates"))] == BUILTIN_IDS
