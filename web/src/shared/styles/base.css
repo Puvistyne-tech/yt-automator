@@ -132,6 +132,13 @@ textarea {
   flex-wrap: wrap;
 }
 
+.badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
 .row-between {
   display: flex;
   align-items: center;

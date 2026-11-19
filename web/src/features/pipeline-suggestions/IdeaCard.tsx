@@ -13,7 +13,7 @@ function IdeaBadges({ engine, idea }: { engine: EngineSummary; idea: TemplateSug
   const format = formatTitle(engine, idea.input.definition);
   const audience = AUDIENCE_LABELS[idea.input.audience];
   return (
-    <span className="row template-badges">
+    <span className="badge-row">
       {format !== null && <Badge tone="info">{format}</Badge>}
       <Badge tone={audience.tone}>{audience.label}</Badge>
     </span>
