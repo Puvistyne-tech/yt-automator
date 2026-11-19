@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -118,12 +118,20 @@ def no_fit_message(choice: BundledChoice) -> str:
     )
 
 
-def pick_bundled(choice: BundledChoice) -> BundledStory:
+Narrowing = Callable[[list[BundledStory]], list[BundledStory]]
+
+
+def every_story(stories: list[BundledStory]) -> list[BundledStory]:
+    return stories
+
+
+def pick_bundled(choice: BundledChoice, narrowed: Narrowing = every_story) -> BundledStory:
     usable = [
         story for story in bundled_stories() if compatible(story, choice.cast_ids, choice.languages)
     ]
     if not usable:
         raise LookupError(no_fit_message(choice))
+    usable = narrowed(usable)
     by_theme = {story.theme.casefold(): story for story in usable}
     if choice.theme.casefold() in by_theme:
         return by_theme[choice.theme.casefold()]

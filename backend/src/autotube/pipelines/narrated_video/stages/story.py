@@ -25,6 +25,11 @@ from autotube.pipelines.narrated_video.story.authoring import (
     authored_scripts,
 )
 from autotube.pipelines.narrated_video.story.bundled import BundledChoice, pick_bundled
+from autotube.pipelines.narrated_video.story.bundled_fit import (
+    length_pool,
+    length_wish,
+    misfit_warning,
+)
 from autotube.pipelines.narrated_video.story.model import Story
 from autotube.pipelines.narrated_video.story.shaping import shaped
 from autotube.pipelines.narrated_video.story.themes import choose_theme
@@ -130,8 +135,12 @@ class StoryStage:
             avoid=settings.story.avoid_repeat_last,
             seed=context.run_id,
         )
-        bundled = pick_bundled(choice)
+        wish = length_wish(settings, order[0], bundled_refrain(settings, order[0]))
+        bundled = pick_bundled(choice, partial(length_pool, wish=wish))
         context.log(f"using bundled story {bundled.id}")
+        warning = misfit_warning(bundled, wish)
+        if warning:
+            context.log(warning, LogLevel.WARNING)
         stories = {
             language: bundled.to_story(language, bundled_refrain(settings, language))
             for language in order

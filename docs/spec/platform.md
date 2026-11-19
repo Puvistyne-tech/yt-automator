@@ -197,7 +197,13 @@ DoctorPolicy    min_python = (3, 12), min_free_gb = 10 (app setting `doctor_min_
   `missing=""`; other callers keep unknown placeholders as written). An episode or Short title that renders
   empty falls back to the script's title, and `UploadMetadata.title` must not be empty. The series name must not be blank in any language. When no bundled story fits the
   automation's cast ids and languages, the story stage fails naming both what the automation has and what
-  the bundled stories need.
+  the bundled stories need. Among the bundled stories that fit the cast and languages, the fallback keeps those that fit
+  the requested length (`story/bundled_fit.py`: a scene count inside `scene_range(settings)` and an estimated
+  reading time in the writing language, with its refrain, inside `length_window`); when none fits, those with
+  the smallest scene-count gap. The theme choice then runs among them. Stories are never cut. When the chosen
+  story does not fit, the stage logs a `warning` (shown with the run's other warnings): 'the fallback story
+  "<title>" has N scenes and reads in about S s, so it ignores the requested length of A to B scenes and L to
+  H s: no bundled story fits it'. The three bundled stories have 9 scenes and fit the default length.
 - Kids story writing, voice and sound controls. Every default renders the translation, motion and judge
   prompts and the story user prompt exactly as before these settings existed, and stored settings without
   them load unchanged. The default editorial rules no longer include "End with the moral said plainly, then
