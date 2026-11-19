@@ -353,13 +353,22 @@ install_speech() {
   note "Kokoro and Whisper models download from Hugging Face on first use: free, no account."
 }
 
-ace_step_ready() {
-  [ -x "$1/bin/python" ] && "$1/bin/python" -c "import acestep" >/dev/null 2>&1
+venv_imports() {
+  local python="$1" modules
+  shift
+  modules="$(IFS=,; printf '%s' "$*")"
+  [ -x "$python" ] && "$python" -c "import $modules" >/dev/null 2>&1
 }
 
-install_ace_step() {
-  [ -x "$ACE_STEP_DIR/bin/python" ] || run uv venv --python "$ACE_STEP_PYTHON_VERSION" "$ACE_STEP_DIR"
-  run uv pip install --python "$ACE_STEP_DIR/bin/python" "$ACE_STEP_SOURCE"
+install_into_venv() {
+  local folder="$1" version="$2"
+  shift 2
+  [ -x "$folder/bin/python" ] || run uv venv --python "$version" "$folder"
+  run uv pip install --python "$folder/bin/python" "$@"
+}
+
+ace_step_ready() {
+  venv_imports "$1/bin/python" acestep
 }
 
 is_dir() {
@@ -369,7 +378,8 @@ is_dir() {
 install_music() {
   section "music: ACE-Step in its own venv and the CC0 music folder"
   require_uv
-  ensure "ACE-Step venv at $ACE_STEP_DIR" ace_step_ready "$ACE_STEP_DIR" install_ace_step
+  ensure "ACE-Step venv at $ACE_STEP_DIR" ace_step_ready "$ACE_STEP_DIR" \
+    install_into_venv "$ACE_STEP_DIR" "$ACE_STEP_PYTHON_VERSION" "$ACE_STEP_SOURCE"
   ensure "$MUSIC_DIR" is_dir "$MUSIC_DIR" run mkdir -p "$MUSIC_DIR"
   note "ACE-Step checkpoints download from Hugging Face on first use: free, no account, several GB."
   note "Put your own CC0 tracks in $MUSIC_DIR for the music library provider."
@@ -398,12 +408,7 @@ model_folder() {
 }
 
 mlx_venv_ready() {
-  [ -x "$1" ] && "$1" -c "import mlx_audio, mlx_whisper, huggingface_hub" >/dev/null 2>&1
-}
-
-install_mlx_venv() {
-  [ -x "$MLX_PYTHON" ] || run uv venv --python "$PYTHON_VERSION" "$MLX_VENV"
-  run uv pip install --python "$MLX_PYTHON" "$MLX_AUDIO_PACKAGE" mlx-whisper "huggingface_hub[cli]"
+  venv_imports "$1" mlx_audio mlx_whisper huggingface_hub
 }
 
 once() {
@@ -414,7 +419,8 @@ once() {
 
 ensure_mlx_venv() {
   require_uv
-  ensure "mlx venv at $MLX_VENV" mlx_venv_ready "$MLX_PYTHON" install_mlx_venv
+  ensure "mlx venv at $MLX_VENV" mlx_venv_ready "$MLX_PYTHON" \
+    install_into_venv "$MLX_VENV" "$PYTHON_VERSION" "$MLX_AUDIO_PACKAGE" mlx-whisper "huggingface_hub[cli]"
 }
 
 link_shared_cache() {
@@ -477,6 +483,10 @@ fix_svara_tokenizer() {
   folder="$MODELS_DIR/$(model_folder "$SVARA_REPO")"
   if is_dry_run; then
     say "    would set tokenizer_name in $folder/config.json to $folder"
+    return 0
+  fi
+  if [ ! -f "$folder/config.json" ]; then
+    note "No config.json in $folder: the Svara tokenizer fix was skipped."
     return 0
   fi
   "$MLX_PYTHON" - "$folder" <<'PY'
@@ -695,9 +705,7 @@ select_models() {
 
 parse_flag() {
   case "$1" in
-    --ollama | --images | --motion | --speech | --music | --fonts | --video | --voices)
-      select_group "${1#--}" ;;
-    --service | --uninstall-service)
+    --ollama | --images | --motion | --speech | --music | --fonts | --video | --voices | --service | --uninstall-service)
       select_group "${1#--}" ;;
     --models) select_models ;;
     --all) select_models && select_group service ;;
