@@ -39,6 +39,27 @@ export interface DuplicateTemplateRequest {
   audience?: TemplateAudience;
 }
 
+export interface TemplatePreviewInput extends TemplateInput {
+  language: string | null;
+  topic: string;
+}
+
+export interface SampleScene {
+  narration: string;
+  heading: string;
+  action: string;
+}
+
+export interface SampleScript {
+  language: string;
+  title: string;
+  scenes: SampleScene[];
+  takeaway: string;
+  upload_title: string;
+  upload_description: string;
+  provider: string;
+}
+
 export interface EngineSummary {
   engine_id: string;
   name: string;

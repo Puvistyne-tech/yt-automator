@@ -8,7 +8,6 @@ import {
 } from "@/features/automation-editor/model/sections";
 import { shownIn } from "@/features/automation-editor/model/settingsView";
 import { RunNowButton } from "@/features/automation-editor/RunNowButton";
-import { SettingsViewBar } from "@/features/automation-editor/SettingsViewBar";
 import { ContentSection } from "@/features/automation-editor/sections/ContentSection";
 import { GeneralSection } from "@/features/automation-editor/sections/GeneralSection";
 import { LanguagesSection } from "@/features/automation-editor/sections/LanguagesSection";
@@ -20,6 +19,7 @@ import {
   useSettingsFilter,
   useSettingsViewMode,
 } from "@/features/automation-editor/useSettingsView";
+import { SettingsViewBar } from "@/shared/settings-view/SettingsViewBar";
 import { ButtonLink, SaveBar } from "@/shared/ui";
 import "@/features/automation-editor/editor.css";
 
