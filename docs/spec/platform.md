@@ -977,6 +977,9 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
   appended (`domain/copy_names.py`, shared with duplicating an automation). It is validated once: the name rules
   and the engine's `problems` together (400), then a free id (409 `template_exists`) and a free type id (409
   `template_type_taken`).
+- Create and duplicate check the free id and type id through `TemplateLookup.ensure_unclaimed`: an id is taken
+  when a built-in or a stored template has it (`ensure_new_id(template_id, taken)`), then the type id must be
+  free (`ensure_type_id_free`).
 
 - Preview (`application/preview_template_script.py::PreviewTemplateScript`) takes a TemplatePreviewInput and
   stores nothing: no template, no run, no id. It builds the unsaved template with id `preview` (type id

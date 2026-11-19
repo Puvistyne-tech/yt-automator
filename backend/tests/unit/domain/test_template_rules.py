@@ -101,11 +101,11 @@ def test_taken_type_ids_are_refused() -> None:
     ensure_type_id_free("t_new", {"kids_story"})
 
 
-def test_a_stored_id_cannot_be_added_again() -> None:
+def test_a_taken_id_cannot_be_added_again() -> None:
     with pytest.raises(RuleConflict, match="'tpl-1'") as raised:
-        ensure_new_id("tpl-1", stored=True)
+        ensure_new_id("tpl-1", taken=True)
     assert raised.value.code == "template_exists"
-    ensure_new_id("tpl-1", stored=False)
+    ensure_new_id("tpl-1", taken=False)
 
 
 def test_a_type_id_held_by_another_template_is_refused() -> None:
