@@ -19,12 +19,12 @@ function SampleControls({ state }: { state: SampleScriptState }) {
           onChange={(event) => state.setLanguage(event.target.value)}
         />
       </FormField>
-      <FormField
-        label="Topic"
-        hint="Optional. Leave it empty and the pipeline picks one."
-        error={state.errors.topic}
-      >
-        <Input value={state.topic} onChange={(event) => state.setTopic(event.target.value)} />
+      <FormField label="Topic (optional)" error={state.errors.topic}>
+        <Input
+          value={state.topic}
+          placeholder="Leave empty and the pipeline picks one"
+          onChange={(event) => state.setTopic(event.target.value)}
+        />
       </FormField>
       <Button variant="primary" icon="play" loading={state.writing} onClick={state.write}>
         {state.writing ? "Writing…" : "Write a sample script"}
