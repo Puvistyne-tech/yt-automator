@@ -76,18 +76,15 @@ class TemplateRig:
         h = self.harness
         return PreviewTemplateScript(self.lookup, h.catalog, h.provider_configs, h.clock)
 
+    @property
+    def finder(self) -> TrendFinder:
+        h = self.harness
+        collaborators = (h.authorizer, h.youtube, h.quota_report, h.expiry)
+        return TrendFinder(h.channels, h.credentials, *collaborators, self.trends)
+
     def suggest(self) -> SuggestTemplates:
         h = self.harness
-        finder = TrendFinder(
-            h.channels,
-            h.credentials,
-            h.authorizer,
-            h.youtube,
-            h.quota_report,
-            h.expiry,
-            self.trends,
-        )
-        return SuggestTemplates(self.lookup, finder, h.catalog, h.provider_configs, h.clock)
+        return SuggestTemplates(self.lookup, self.finder, h.catalog, h.provider_configs, h.clock)
 
     def created(self, **changes: Any) -> TemplateSummary:
         return self.create().execute(template_input(**changes))

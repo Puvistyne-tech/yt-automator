@@ -44,13 +44,17 @@ def idea_texts(idea: SuggestedIdea) -> list[str]:
     return [idea.name, idea.description, idea.reason, *text_leaves(idea.definition)]
 
 
+def mentioned(texts: Sequence[str], phrases: Sequence[str]) -> list[str]:
+    return [phrase for phrase in phrases if any(mentions(text, phrase) for text in texts)]
+
+
 def copied_channels(idea: SuggestedIdea, trends: Sequence[TrendingVideo]) -> list[str]:
-    texts = idea_texts(idea)
-    return [
-        video.channel_title
-        for video in trends
-        if any(mentions(text, video.channel_title) for text in texts)
-    ]
+    return mentioned(idea_texts(idea), [video.channel_title for video in trends])
+
+
+def copied_titles(idea: SuggestedIdea, trends: Sequence[TrendingVideo]) -> list[str]:
+    texts = [idea.name, idea.description, *text_leaves(idea.definition)]
+    return mentioned(texts, [video.title for video in trends])
 
 
 def suggestion_of(idea: SuggestedIdea, data: TemplateInput) -> TemplateSuggestion:
@@ -69,7 +73,7 @@ def kept_suggestion(
     trends: Sequence[TrendingVideo],
     problems: InputProblems,
 ) -> TemplateSuggestion | None:
-    if copied_channels(idea, trends) or problems(data):
+    if copied_channels(idea, trends) or copied_titles(idea, trends) or problems(data):
         return None
     return suggestion_of(idea, data)
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 from autotube.application.channel_auth import ChannelAuthorizer
@@ -22,6 +23,8 @@ from autotube.domain.trends import (
 )
 from autotube.shared.errors import AppError
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class TrendFinder:
@@ -36,7 +39,8 @@ class TrendFinder:
     def find(self, query: TrendQuery) -> TrendReport:
         try:
             videos = self.from_youtube(query)
-        except AppError:
+        except AppError as error:
+            logger.warning("trending videos unavailable (%s); using the sample", error.code)
             videos = []
         if videos:
             return TrendReport(origin=TrendOrigin.YOUTUBE, videos=tuple(videos))

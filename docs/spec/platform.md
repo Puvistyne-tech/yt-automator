@@ -883,7 +883,8 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
   through `QuotaReport` and the channel's stored authorization, inside `ChannelExpiry.watching`; with no connected
   channel, no credential, too little remaining quota, no stored authorization, any YouTube failure or an empty
   chart it reads `TrendSource` (the bundled sample) instead and reports `source: sample`, never failing for that
-  reason. It reads `SuggestionPolicy.trend_limit` videos (default 25, 1 to 50). A general request drops trends
+  reason. A fallback after a YouTube failure logs a warning naming only the error code. It reads
+  `SuggestionPolicy.trend_limit` videos (default 25, 1 to 50). A general request drops trends
   flagged made for kids before the engine sees them; a kids request keeps every trend. With no trend left it is
   409 `suggestions_unavailable`. It resolves providers from the saved provider configs and calls
   `engine.suggested_definitions`; `SuggestionsUnavailableError` becomes 409 `suggestions_unavailable` with the
@@ -893,7 +894,9 @@ through `EngineCatalog`, which the composition root builds from `installed_engin
   and description, status `draft`, origin `suggested` and the idea's definition
   (`domain/suggestion_screen.py::suggestion_input`). An idea is dropped, and counted with the engine's drops, when
   the name, description, reason or any text in its definition mentions a trending channel title as whole words
-  regardless of case (`copied_channels`, over every trend read), or when it fails create's checks
+  regardless of case (`copied_channels`, over every trend read), when the name, description or any text in its
+  definition contains a whole trending video title the same way (`copied_titles`; the reason may cite titles), or
+  when it fails create's checks
   (`input_errors`, then the engine's `problems` on the unsaved template with id `suggestion`, which include the
   general audience's child-term screen; a kids template gets the kids floor through its settings model). With
   no idea left it is 409 `suggestions_unavailable` "None of the suggested ideas passed the checks…". The answer is
