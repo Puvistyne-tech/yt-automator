@@ -46,8 +46,8 @@ def says_refrain(style: EndingStyle) -> bool:
 STRUCTURE_CHOICES = enum_choices(
     Structure,
     {
-        "story": "Story with a recurring cast",
-        "explainer": "Explainer of one topic, no recurring characters",
+        "story": "Story",
+        "explainer": "Explainer",
     },
 )
 ENDING_STYLE_CHOICES = enum_choices(

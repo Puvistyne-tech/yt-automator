@@ -56,6 +56,10 @@
           {
             "const": "story",
             "title": "Story"
+          },
+          {
+            "const": "explainer",
+            "title": "Explainer"
           }
         ],
         "title": "Structure",
